@@ -18,6 +18,7 @@
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],
     ["Reprocess", BASE + "reprocess/"],
+    ["Arbitrage", BASE + "arbitrage/"],
     ["Decorations", BASE + "decorations/"],
     ["CLASSIFIED", BASE + "bonk-prospects/"],
     ["REDACTED", BASE + "alliance/"]
