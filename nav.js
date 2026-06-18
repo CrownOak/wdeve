@@ -3,6 +3,14 @@
 (function () {
   var ORIGIN = "https://crownoak.github.io";
   var BASE = "/wdeve/";
+
+  // Favicon: project pages must set it explicitly (the browser's auto /favicon.ico
+  // request hits the domain root, not /wdeve/). Inject once if not already present.
+  if (!document.querySelector("link[rel='icon']")) {
+    var fav = document.createElement("link");
+    fav.rel = "icon"; fav.type = "image/png"; fav.href = ORIGIN + BASE + "favicon.png";
+    (document.head || document.documentElement).appendChild(fav);
+  }
   var ITEMS = [
     ["Home", BASE],
     ["Lowsec", BASE + "lowsec/"],
