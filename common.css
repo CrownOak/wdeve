@@ -108,6 +108,21 @@ input:focus{ outline:none; border-color:var(--ore); }
 .gate button:hover{ background:var(--laser); }
 .err{ color:var(--red); font-family:var(--mono); font-size:12px; min-height:16px; margin-top:12px; }
 
+/* ---- shared top nav (injected by nav.js) ---- */
+.topnav{ position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:18px;
+         height:54px; padding:0 28px; background:rgba(7,8,9,.88); backdrop-filter:blur(8px);
+         border-bottom:1px solid var(--line); }
+.topnav .brand{ display:flex; align-items:center; gap:9px; text-decoration:none;
+                font-family:var(--display); font-weight:700; letter-spacing:.06em; font-size:13px; color:var(--silver); }
+.topnav .tick{ font-family:var(--mono); color:#04140a; background:var(--ore); font-size:11px; font-weight:700;
+               padding:3px 7px; letter-spacing:1px; clip-path:polygon(0 0,100% 0,92% 100%,0 100%); }
+.topnav nav{ display:flex; align-items:center; gap:20px; margin-left:auto; }
+.topnav nav a{ font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+               color:var(--muted); text-decoration:none; transition:color .15s; }
+.topnav nav a:hover{ color:var(--silver); }
+.topnav nav a.cur{ color:var(--ore); }
+@media(max-width:620px){ .topnav{ gap:10px; padding:0 14px; } .topnav .brandtext{ display:none; } .topnav nav{ gap:13px; } }
+
 /* ---- recruiting copy templates ---- */
 .templates{ margin:0 0 24px; }
 .thead{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;

@@ -1,0 +1,27 @@
+/* Shared top nav for the Wealthy Dropouts tool pages + hub.
+   Injected on load; styled by common.css (.topnav). Edit once, all pages update. */
+(function () {
+  var ORIGIN = "https://crownoak.github.io";
+  var BASE = "/wdeve/";
+  var ITEMS = [
+    ["Home", BASE],
+    ["Lowsec", BASE + "lowsec/"],
+    ["Prospects", BASE + "bonk-prospects/"],
+    ["Blueprints", BASE + "blueprints/"]
+  ];
+  var path = location.pathname.replace(/index\.html$/, "");
+  if (path.charAt(path.length - 1) !== "/") path += "/";
+  function current(p) { return p === BASE ? (path === BASE) : (path.indexOf(p) === 0); }
+
+  var bar = document.createElement("div");
+  bar.className = "topnav";
+  var html = '<a class="brand" href="' + ORIGIN + BASE + '">'
+           + '<span class="tick">BONK</span><span class="brandtext">WEALTHY DROPOUTS</span></a><nav>';
+  for (var i = 0; i < ITEMS.length; i++) {
+    html += '<a href="' + ORIGIN + ITEMS[i][1] + '"'
+          + (current(ITEMS[i][1]) ? ' class="cur"' : '') + '>' + ITEMS[i][0] + '</a>';
+  }
+  html += '</nav>';
+  bar.innerHTML = html;
+  if (document.body) document.body.insertBefore(bar, document.body.firstChild);
+})();
