@@ -97,6 +97,14 @@ a.card.secret::before{ background:var(--red); }
 a.card.secret .name{ color:var(--red); letter-spacing:.14em; }
 a.card.secret:hover{ border-color:var(--red); }
 a.card.secret .lock{ color:var(--red); border-color:rgba(240,129,122,.4); }
+a.card.soon{ opacity:.6; cursor:default; }
+a.card.soon::before{ background:var(--muted); }
+a.card.soon:hover{ transform:none; border-color:var(--line-soft); }
+a.card.soon .name{ color:var(--silver-dim); }
+.soonbadge{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+            color:#04140a; background:var(--amber); padding:2px 8px; white-space:nowrap; }
+.workbench{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+            color:var(--muted); margin:30px 0 12px; border-top:1px solid var(--line); padding-top:18px; }
 
 /* ---- lock gate ---- */
 .gate{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
