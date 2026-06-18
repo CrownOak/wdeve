@@ -8,7 +8,8 @@
     ["Lowsec", BASE + "lowsec/"],
     ["Prospects", BASE + "bonk-prospects/"],
     ["Blueprints", BASE + "blueprints/"],
-    ["Refine", BASE + "refine/"]
+    ["Refine", BASE + "refine/"],
+    ["Reprocess", BASE + "reprocess/"]
   ];
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";
