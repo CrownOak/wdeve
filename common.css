@@ -183,6 +183,10 @@ th[data-tip]{ cursor:help; text-decoration:underline dotted rgba(70,255,94,.45);
   text-transform:uppercase; transition:border-color .15s,color .15s,background .15s; }
 .toggle button:hover{ border-color:var(--ore); color:var(--ore); }
 .toggle button.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+/* compressed/uncompressed cells: default page state is compressed (body.compressed) */
+.vcmp{ display:none; }
+body.compressed .vunc{ display:none; }
+body.compressed .vcmp{ display:inline; }
 
 @media(max-width:760px){
   header,.wrap,footer{ padding-left:16px; padding-right:16px; }
