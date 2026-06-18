@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Wealthy Dropouts - Tools</title>
+<style>
+  :root { --ink:#14140f; --panel:#1d1c14; --line:#322e20; --txt:#efeadd; --mut:#a59c84; --gold:#f5c518; --link:#7db1ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--ink); color:var(--txt);
+         font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; }
+  .wrap { max-width:680px; margin:0 auto; padding:56px 24px 64px; }
+  h1 { font-size:22px; letter-spacing:.06em; margin:0 0 4px; }
+  .sub { color:var(--mut); margin:0 0 32px; font-size:13px; }
+  a.card { display:block; text-decoration:none; color:inherit; background:var(--panel);
+           border:1px solid var(--line); border-radius:10px; padding:20px 22px; margin-bottom:16px;
+           transition:border-color .15s, transform .05s; }
+  a.card:hover { border-color:var(--gold); transform:translateY(-1px); }
+  .row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .name { font-size:16px; font-weight:700; color:var(--link); }
+  .lock { font-size:11px; color:var(--mut); border:1px solid var(--line); border-radius:20px; padding:2px 9px; white-space:nowrap; }
+  .desc { color:var(--mut); font-size:13px; margin-top:6px; }
+  footer { color:var(--mut); font-size:12px; margin-top:28px; }
+</style></head>
+<body>
+  <div class="wrap">
+    <h1>WEALTHY DROPOUTS &middot; TOOLS</h1>
+    <p class="sub">Operator tools. Pages are password-protected; this index is not.</p>
+
+    <a class="card" href="../lowsec/">
+      <div class="row"><span class="name">Lowsec Scout</span><span class="lock">&#128274; password</span></div>
+      <div class="desc">Safe, low-traffic, ore-suitable systems, ranked from live ESI kills/jumps with a
+      multi-day danger history. Updates hourly.</div>
+    </a>
+
+    <a class="card" href="../bonk-prospects/">
+      <div class="row"><span class="name">Prospect Finder</span><span class="lock">&#128274; password</span></div>
+      <div class="desc">Corp-less, recently-ganked miners to recruit, current corp re-checked, repeat-gank
+      score. Click to invite (copies the name for in-game search). Updates daily.</div>
+    </a>
+
+    <a class="card" href="../blueprints/">
+      <div class="row"><span class="name">Blueprint Scanner</span><span class="lock">&#128274; password</span></div>
+      <div class="desc">Most profitable Tech I builds by ISK/hour, from EVE SDE + live Jita prices.
+      The top picks tell you what to train toward and mine for. Updates monthly.</div>
+    </a>
+
+    <footer>Same password unlocks all three. Hosted in this repo (wdeve); not crawlable.</footer>
+  </div>
+</body></html>
