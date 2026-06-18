@@ -6,10 +6,11 @@
   var ITEMS = [
     ["Home", BASE],
     ["Lowsec", BASE + "lowsec/"],
-    ["Prospects", BASE + "bonk-prospects/"],
+    ["Kills", BASE + "kills/"],
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],
-    ["Reprocess", BASE + "reprocess/"]
+    ["Reprocess", BASE + "reprocess/"],
+    ["CLASSIFIED", BASE + "bonk-prospects/"]
   ];
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";

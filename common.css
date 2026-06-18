@@ -93,6 +93,10 @@ a.card:hover{ transform:translateY(-2px); border-color:var(--ore); }
 .lock{ font-family:var(--mono); font-size:11px; color:var(--muted); border:1px solid var(--line);
        padding:2px 9px; white-space:nowrap; }
 .desc{ color:#a9b2a8; font-size:14px; margin-top:7px; }
+a.card.secret::before{ background:var(--red); }
+a.card.secret .name{ color:var(--red); letter-spacing:.14em; }
+a.card.secret:hover{ border-color:var(--red); }
+a.card.secret .lock{ color:var(--red); border-color:rgba(240,129,122,.4); }
 
 /* ---- lock gate ---- */
 .gate{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
@@ -161,6 +165,16 @@ textarea:focus{ outline:none; border-color:var(--ore); }
 .tlabel{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--silver-dim); }
 .tbox{ margin:0; padding:13px 15px; white-space:pre-wrap; word-wrap:break-word;
        font-family:var(--body); font-size:13.5px; color:var(--silver); line-height:1.55; }
+
+/* ---- kill log ---- */
+.res{ font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em;
+      padding:2px 8px; border:1px solid currentColor; }
+.res.good{ color:var(--ore); } .res.bad{ color:var(--red); }
+.kbadge{ font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.05em;
+         color:var(--muted); border:1px solid var(--line); padding:1px 5px; margin-left:5px; }
+.kbadge.npc{ color:var(--amber); }
+.when{ color:var(--silver-dim); white-space:nowrap; }
+.vcorp{ color:var(--muted); font-family:var(--mono); font-size:11px; }
 
 /* ---- hover tooltips (data-tip on any element; used on table headers) ---- */
 [data-tip]{ position:relative; }
