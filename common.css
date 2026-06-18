@@ -124,6 +124,29 @@ input:focus{ outline:none; border-color:var(--ore); }
 .topnav nav a.cur{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
 @media(max-width:620px){ .topnav{ gap:10px; padding:0 14px; } .topnav .brandtext{ display:none; } .topnav nav{ gap:13px; } }
 
+/* ---- ore calculator ---- */
+.calcgrid{ display:grid; grid-template-columns:1fr 300px; gap:18px; align-items:start; margin-bottom:18px; }
+textarea{ width:100%; min-height:260px; background:var(--black); border:1px solid var(--line); color:var(--silver);
+          font-family:var(--mono); font-size:13px; line-height:1.5; padding:12px; resize:vertical; }
+textarea:focus{ outline:none; border-color:var(--ore); }
+.controls{ display:flex; flex-direction:column; gap:10px; }
+.controls label{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.controls input{ width:100%; padding:9px 11px; background:var(--black); border:1px solid var(--line); color:var(--silver); font-family:var(--mono); }
+.effnote{ color:var(--muted); font-family:var(--mono); font-size:11px; line-height:1.5; }
+.gobtn{ padding:12px; background:var(--ore); border:0; color:#04140a; font-family:var(--display); font-weight:700;
+        text-transform:uppercase; letter-spacing:.06em; cursor:pointer; clip-path:polygon(0 0,100% 0,97% 100%,0 100%); }
+.gobtn:hover{ background:var(--laser); }
+.effpresets{ display:flex; flex-wrap:wrap; gap:6px; }
+.effp{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:5px 9px;
+       cursor:pointer; font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; }
+.effp:hover{ border-color:var(--ore); color:var(--ore); }
+.matline{ color:var(--muted); font-family:var(--mono); font-size:11px; margin-top:3px; text-align:left; }
+.totline{ display:flex; gap:28px; margin:14px 0; font-family:var(--mono); }
+.totline .k{ color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+.totline .v{ color:var(--ore); font-size:20px; font-weight:700; }
+.unmatched{ color:var(--amber); font-family:var(--mono); font-size:12px; margin-top:10px; }
+@media(max-width:680px){ .calcgrid{ grid-template-columns:1fr; } }
+
 /* ---- recruiting copy templates ---- */
 .templates{ margin:0 0 24px; }
 .thead{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
