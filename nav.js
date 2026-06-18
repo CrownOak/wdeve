@@ -10,6 +10,7 @@
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],
     ["Reprocess", BASE + "reprocess/"],
+    ["Alliance", BASE + "alliance/"],
     ["CLASSIFIED", BASE + "bonk-prospects/"]
   ];
   var path = location.pathname.replace(/index\.html$/, "");
