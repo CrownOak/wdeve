@@ -10,6 +10,7 @@
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],
     ["Reprocess", BASE + "reprocess/"],
+    ["Decorations", BASE + "decorations/"],
     ["Alliance", BASE + "alliance/"],
     ["CLASSIFIED", BASE + "bonk-prospects/"]
   ];
