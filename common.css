@@ -23,12 +23,14 @@ code{ font-family:var(--mono); background:var(--black); border:1px solid var(--l
 
 /* ---- page chrome ---- */
 header{ padding:22px 28px 16px; border-bottom:1px solid var(--line);
-        background:linear-gradient(var(--steel),var(--black)); }
+        background:linear-gradient(var(--steel),var(--black));
+        max-width:var(--maxw); margin:0 auto; }
 h1{ margin:0; font-family:var(--display); font-weight:700; text-transform:uppercase;
     letter-spacing:.06em; font-size:20px; color:var(--silver); }
 .sub{ margin-top:8px; font-family:var(--mono); font-size:12px; letter-spacing:.04em; color:var(--muted); }
-.wrap{ padding:20px 28px 48px; max-width:var(--maxw); }
-footer{ color:var(--muted); font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; padding:0 28px 36px; }
+.wrap{ padding:20px 28px 48px; max-width:var(--maxw); margin:0 auto; }
+footer{ color:var(--muted); font-family:var(--mono); font-size:11.5px; letter-spacing:.03em;
+        padding:0 28px 36px; max-width:var(--maxw); margin:0 auto; }
 footer b{ color:var(--silver-dim); }
 
 /* ---- controls bar (prospects) ---- */
@@ -159,6 +161,28 @@ textarea:focus{ outline:none; border-color:var(--ore); }
 .tlabel{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--silver-dim); }
 .tbox{ margin:0; padding:13px 15px; white-space:pre-wrap; word-wrap:break-word;
        font-family:var(--body); font-size:13.5px; color:var(--silver); line-height:1.55; }
+
+/* ---- hover tooltips (data-tip on any element; used on table headers) ---- */
+[data-tip]{ position:relative; }
+th[data-tip]{ cursor:help; text-decoration:underline dotted rgba(70,255,94,.45); text-underline-offset:4px; }
+[data-tip]:hover::after{
+  content:attr(data-tip); position:absolute; left:50%; top:calc(100% + 8px); transform:translateX(-50%);
+  z-index:200; width:max-content; max-width:260px; white-space:normal; text-align:left;
+  background:var(--black); color:var(--silver); border:1px solid var(--ore);
+  font-family:var(--body); font-size:12px; font-weight:400; line-height:1.45; letter-spacing:0; text-transform:none;
+  padding:8px 11px; box-shadow:0 6px 18px rgba(0,0,0,.55); pointer-events:none; }
+[data-tip]:hover::before{
+  content:""; position:absolute; left:50%; top:calc(100% + 3px); transform:translateX(-50%);
+  border:5px solid transparent; border-bottom-color:var(--ore); z-index:200; pointer-events:none; }
+
+/* ---- compressed toggle (reprocess reference) ---- */
+.toggle{ display:flex; align-items:center; gap:10px; margin:2px 0 16px; font-family:var(--mono);
+         font-size:12px; letter-spacing:.04em; color:var(--muted); }
+.toggle button{ background:transparent; color:var(--silver-dim); border:1px solid var(--line);
+  padding:6px 14px; cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+  text-transform:uppercase; transition:border-color .15s,color .15s,background .15s; }
+.toggle button:hover{ border-color:var(--ore); color:var(--ore); }
+.toggle button.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
 
 @media(max-width:760px){
   header,.wrap,footer{ padding-left:16px; padding-right:16px; }
