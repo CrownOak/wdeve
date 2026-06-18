@@ -11,8 +11,8 @@
     ["Refine", BASE + "refine/"],
     ["Reprocess", BASE + "reprocess/"],
     ["Decorations", BASE + "decorations/"],
-    ["REDACTED", BASE + "alliance/"],
-    ["CLASSIFIED", BASE + "bonk-prospects/"]
+    ["CLASSIFIED", BASE + "bonk-prospects/"],
+    ["REDACTED", BASE + "alliance/"]
   ];
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";
