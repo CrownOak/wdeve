@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK - Market Finder</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+  .mtop{ display:grid; grid-template-columns:1fr 280px; gap:18px; align-items:start; margin:2px 0 16px; }
+  textarea#paste{ width:100%; min-height:220px; }
+  .mctl{ display:flex; flex-direction:column; gap:12px; }
+  .mctl .toggle{ flex-wrap:wrap; }
+  .mhelp{ color:var(--muted); font-family:var(--mono); font-size:11px; line-height:1.6; }
+  .mhelp code{ font-size:10.5px; }
+  #status{ color:var(--ore); font-family:var(--mono); font-size:12px; min-height:16px; }
+  .mwait,.empty2{ color:var(--muted); font-family:var(--mono); font-size:12px; padding:22px 4px; }
+  .verr{ color:var(--red); font-family:var(--mono); font-size:12.5px; padding:14px 4px; }
+  .mchips{ display:flex; flex-wrap:wrap; gap:10px; margin:4px 0 16px; }
+  .mchip{ font-family:var(--mono); font-size:12px; letter-spacing:.04em; color:var(--silver-dim);
+    border:1px solid var(--line); padding:7px 12px; }
+  .mchip b{ color:var(--silver); }
+  .mchip.cheap{ border-color:var(--ore); color:var(--ore); }
+  .mchip.cheap b{ color:var(--ore); }
+  table.mtbl th.cheaphdr{ color:#04140a; background:var(--ore); }
+  table.mtbl td.cheapcol{ color:var(--ore); }
+  table.mtbl tr.struck td{ color:var(--muted); text-decoration:line-through; }
+  table.mtbl tr.struck td.nf{ text-decoration:none; color:var(--red); font-family:var(--mono); font-size:11px; }
+  table.mtbl tr.mtot td{ border-top:2px solid var(--line); }
+  .na{ color:var(--muted); }
+  .mfoot{ display:flex; align-items:center; gap:16px; margin-top:14px; font-family:var(--mono); font-size:12px; color:var(--muted); }
+  .mfoot b{ color:var(--silver); }
+  @media(max-width:680px){ .mtop{ grid-template-columns:1fr; } }
+</style></head>
+<body>
+  <header>
+    <h1>BIG ROCK ENERGY [BONK] &middot; MARKET FINDER</h1>
+    <div class="sub">paste one item or a whole multibuy &middot; see what it costs in every hub &middot; live ESI + Fuzzwork prices</div>
+  </header>
+  <div class="wrap">
+    <div class="mtop">
+      <textarea id="paste" placeholder="Paste a multibuy, one item per line:&#10;Tritanium 100000&#10;Mexallon x5000&#10;PLEX&#10;Damage Control II 10&#10;Hammerhead II 25"></textarea>
+      <div class="mctl">
+        <div class="toggle">Price
+          <button id="mBuy" class="on">to buy</button>
+          <button id="mSell">to sell</button>
+        </div>
+        <button id="go" class="gobtn">Price it</button>
+        <div id="status"></div>
+        <div class="mhelp">Accepts <code>Name</code>, <code>Name 1000</code>, <code>Name x50</code>,
+          <code>50 x Name</code>, or tab-pasted from in game. <b>to buy</b> uses the robust cheap sell
+          price (what you pay); <b>to sell</b> uses the top buy order (what you get). Cheapest hub is
+          highlighted. Unknown items are struck. Region prices, live, never logged.</div>
+      </div>
+    </div>
+    <div id="out"><div class="empty2">Paste a multibuy and hit Price it.</div></div>
+  </div>
+  <footer>Resolves each name to its type via ESI, then pulls live region market aggregates for all five
+  hubs (Jita, Amarr, Dodixie, Rens, Hek) from Fuzzwork. Each cell is the line cost (quantity times the
+  robust price), each column totals its hub, and the cheapest hub is highlighted. <b>to buy</b> prices
+  from sell orders using the robust cheapest 5% (so one mispriced order cannot fake a deal); <b>to sell</b>
+  prices into the best buy orders. An item with no order on that side at a hub shows <b>n/a</b> and is left
+  out of that hub total only. Names we cannot find stay in the list, struck, and count for nothing. This is
+  order book data, not a promise: prices move, and the gank on the way home is still your problem.</footer>
+<script src="/nav.js?v=2"></script>
+<script>
+(function(){
+  var ESI="https://esi.evetech.net/latest", FUZZ="https://market.fuzzwork.co.uk/aggregates/";
+  var HUBS=[["Jita",10000002],["Amarr",10000043],["Dodixie",10000032],["Rens",10000030],["Hek",10000042]];
+  var paste=document.getElementById("paste"), go=document.getElementById("go"),
+      out=document.getElementById("out"), st=document.getElementById("status");
+  var mode="buy", last=null, stTimer;
+
+  function status(m){ if(!st) return; st.textContent=m||""; if(stTimer) clearTimeout(stTimer);
+    if(m) stTimer=setTimeout(function(){ st.textContent=""; },4000); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function isk(v){ if(v==null) return "n/a"; var a=Math.abs(v);
+    if(a>=1e9) return (v/1e9).toFixed(2)+"B"; if(a>=1e6) return (v/1e6).toFixed(2)+"M";
+    if(a>=1e3) return (v/1e3).toFixed(1)+"k"; return String(Math.round(v)); }
+  function num(v){ var f=parseFloat(v); return isFinite(f)?f:0; }
+  function chunk(a,n){ var o=[]; for(var i=0;i<a.length;i+=n) o.push(a.slice(i,i+n)); return o; }
+  function fallbackCopy(t){ try{ var ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); }catch(e){} }
+  function copyText(t){ try{ if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(function(){fallbackCopy(t);}); else fallbackCopy(t); }catch(e){ fallbackCopy(t); } }
+
+  // ---- parse a multibuy / clipboard list -> [{name, qty}] (duplicates summed) ----
+  function parsePaste(text){
+    var map={}, order=[];
+    (text||"").split(/\r?\n/).forEach(function(ln){
+      ln=ln.trim(); if(!ln) return;
+      var name, qty=1, m;
+      if(ln.indexOf("\t")>=0){ var parts=ln.split("\t"); name=parts[0].trim();
+        for(var i=1;i<parts.length;i++){ var q=parts[i].replace(/[,\s]/g,""); if(/^\d+$/.test(q)){ qty=parseInt(q,10); break; } } }
+      else if((m=ln.match(/^(.+?)\s+x?([\d.,]+)$/i))){ name=m[1].trim(); qty=parseInt(m[2].replace(/[,.\s]/g,""),10); }
+      else if((m=ln.match(/^([\d.,]+)\s*x\s+(.+)$/i))){ qty=parseInt(m[1].replace(/[,.\s]/g,""),10); name=m[2].trim(); }
+      else { name=ln; }
+      if(!name) return; if(!(qty>0)) qty=1;
+      var k=name.toLowerCase();
+      if(map[k]) map[k].qty+=qty; else { map[k]={name:name, qty:qty}; order.push(k); }
+    });
+    return order.map(function(k){ return map[k]; });
+  }
+
+  // ---- resolve names -> {lowerName: {id, name}} via ESI inventory_types (NOT characters) ----
+  function resolveNames(items){
+    var seen={}, uniq=[];
+    items.forEach(function(it){ var k=it.name.toLowerCase(); if(!seen[k]){ seen[k]=1; uniq.push(it.name); } });
+    var byLower={};
+    return chunk(uniq,500).reduce(function(p,b){
+      return p.then(function(){
+        return fetch(ESI+"/universe/ids/?datasource=tranquility",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(b)})
+          .then(function(r){ if(!r.ok) throw r.status; return r.json(); })
+          .then(function(d){ (d.inventory_types||[]).forEach(function(t){ byLower[t.name.toLowerCase()]={id:t.id,name:t.name}; }); });
+      });
+    }, Promise.resolve()).then(function(){ return byLower; });
+  }
+
+  function robustSell(s){ if(!s) return null; var p=num(s.percentile); if(p>0) return p; var mn=num(s.min); return mn>0?mn:null; }
+  function robustBuy(b){ if(!b) return null; var p=num(b.percentile); if(p>0) return p; var mx=num(b.max); return mx>0?mx:null; }
+
+  function run(){
+    var items=parsePaste(paste.value);
+    if(!items.length){ out.innerHTML="<div class='empty2'>Paste a multibuy and hit Price it.</div>"; last=null; return; }
+    out.innerHTML="<div class='mwait'>pricing "+items.length+" item"+(items.length>1?"s":"")+"...</div>";
+    go.disabled=true; status("");
+    resolveNames(items).then(function(byLower){
+      var ids=[];
+      items.forEach(function(it){ var r=byLower[it.name.toLowerCase()]; if(r){ it.id=r.id; it.cname=r.name; ids.push(r.id); } else { it.notFound=true; } });
+      var uids=ids.filter(function(v,i,a){ return a.indexOf(v)===i; });
+      if(!uids.length){ last={items:items, byRegion:{}}; render(); go.disabled=false; return; }
+      return fetchAll(uids).then(function(byRegion){ last={items:items, byRegion:byRegion}; render(); go.disabled=false; });
+    }).catch(function(e){ out.innerHTML="<div class='verr'>Lookup failed ("+esc(String(e))+"). Give it a moment and try again.</div>"; go.disabled=false; });
+  }
+
+  // pull all 5 hubs (chunked at 100 ids) -> {region:{id:{buy,sell}}}
+  function fetchAll(ids){
+    var idc=chunk(ids,100), result={};
+    return Promise.all(HUBS.map(function(h){
+      return idc.reduce(function(p,c){
+        return p.then(function(acc){
+          return fetch(FUZZ+"?region="+h[1]+"&types="+c.join(","))
+            .then(function(r){ return r.ok?r.json():{}; })
+            .then(function(d){ if(d) Object.keys(d).forEach(function(k){ acc[k]=d[k]; }); return acc; })
+            .catch(function(){ return acc; });
+        });
+      }, Promise.resolve({})).then(function(acc){ result[h[1]]=acc; });
+    })).then(function(){ return result; });
+  }
+
+  function render(){
+    if(!last){ return; }
+    var items=last.items, byRegion=last.byRegion;
+    var totals={}; HUBS.forEach(function(h){ totals[h[1]]=0; });
+    items.forEach(function(it){
+      it.lines={}; if(it.notFound) return;
+      HUBS.forEach(function(h){
+        var agg=(byRegion[h[1]]||{})[it.id];
+        var unit = mode==="buy" ? robustSell(agg&&agg.sell) : robustBuy(agg&&agg.buy);
+        var line = unit!=null ? unit*it.qty : null;
+        it.lines[h[1]]=line; if(line!=null) totals[h[1]]+=line;
+      });
+    });
+    var cheap=null, cheapTot=Infinity;
+    HUBS.forEach(function(h){ if(totals[h[1]]>0 && totals[h[1]]<cheapTot){ cheapTot=totals[h[1]]; cheap=h[1]; } });
+
+    var h="<div class='mchips'>";
+    HUBS.forEach(function(hh){ h+="<span class='mchip"+(hh[1]===cheap?" cheap":"")+"'>"+hh[0]+" <b>"+isk(totals[hh[1]])+"</b></span>"; });
+    h+="</div><table class='mtbl'><thead><tr><th class='who'>ITEM</th><th class='num'>QTY</th>";
+    HUBS.forEach(function(hh){ h+="<th class='num"+(hh[1]===cheap?" cheaphdr":"")+"'>"+hh[0]+"</th>"; });
+    h+="</tr></thead><tbody>";
+    items.forEach(function(it){
+      if(it.notFound){ h+="<tr class='struck'><td class='who'>"+esc(it.name)+"</td><td class='num'>"+it.qty+"</td><td class='num nf' colspan='5'>not found, check spelling</td></tr>"; return; }
+      h+="<tr><td class='who'>"+esc(it.cname||it.name)+"</td><td class='num'>"+it.qty+"</td>";
+      HUBS.forEach(function(hh){ var l=it.lines[hh[1]]; h+="<td class='num"+(hh[1]===cheap?" cheapcol":"")+"'>"+(l==null?"<span class='na'>n/a</span>":isk(l))+"</td>"; });
+      h+="</tr>";
+    });
+    h+="<tr class='mtot'><td class='who strong'>TOTAL</td><td class='num'></td>";
+    HUBS.forEach(function(hh){ h+="<td class='num strong"+(hh[1]===cheap?" cheapcol":"")+"'>"+isk(totals[hh[1]])+"</td>"; });
+    h+="</tr></tbody></table>";
+    if(cheap){ var cn=HUBS.filter(function(x){ return x[1]===cheap; })[0][0];
+      h+="<div class='mfoot'><button id='copymb' class='link'>copy list as multibuy</button><span>cheapest one stop hub: <b>"+cn+"</b> at "+isk(cheapTot)+"</span></div>"; }
+    out.innerHTML=h;
+    var cb=document.getElementById("copymb");
+    if(cb) cb.onclick=function(){ var t=items.filter(function(i){ return !i.notFound; }).map(function(i){ return (i.cname||i.name)+" "+i.qty; }).join("\n"); copyText(t); status("multibuy copied"); };
+  }
+
+  go.addEventListener("click", run);
+  paste.addEventListener("keydown", function(e){ if(e.key==="Enter" && (e.ctrlKey||e.metaKey)){ e.preventDefault(); run(); } });
+  function pick(first){ mode=first?"buy":"sell"; document.getElementById("mBuy").classList.toggle("on",first);
+    document.getElementById("mSell").classList.toggle("on",!first); if(last) render(); }
+  document.getElementById("mBuy").onclick=function(){ pick(true); };
+  document.getElementById("mSell").onclick=function(){ pick(false); };
+})();
+</script>
+</body></html>
