@@ -1,8 +1,8 @@
 /* Shared top nav for the Wealthy Dropouts tool pages + hub.
    Injected on load; styled by common.css (.topnav). Edit once, all pages update. */
 (function () {
-  var ORIGIN = "https://crownoak.github.io";
-  var BASE = "/wdeve/";
+  var ORIGIN = "";        // relative to the current domain (bonkeve.com); no cross-domain redirect hop
+  var BASE = "/";         // the site lives at the domain root now, not under /wdeve/
 
   // Favicon: project pages must set it explicitly (the browser's auto /favicon.ico
   // request hits the domain root, not /wdeve/). Inject once if not already present.
