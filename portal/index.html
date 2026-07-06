@@ -124,12 +124,17 @@
   .med.honor::before{ background:var(--amber); }
   .med.honor .mname{ color:var(--amber); }
   .med.honor .earn b{ color:var(--amber); }
-  /* NOTE: filter must NOT go on .med.lock itself — a CSS filter on a grid item
-     makes the browser size it to max-content, so its text stops wrapping and
-     runs off the card. Dim the card with opacity, desaturate only the emoji. */
-  .med.lock{ opacity:.55; }
-  .med.lock .ico{ filter:grayscale(1); }
-  .med.lock .earn b{ color:var(--silver-dim); }
+  /* Locked medals use class "mlock", NOT "lock": common.css already has a
+     generic .lock rule (the hub's little LOCKED badge) with white-space:nowrap,
+     which inherits into the card and stops the text wrapping (that was the
+     "running off the card" bug). Dimmed with color only. */
+  .med.mlock{ white-space:normal; }
+  .med.mlock .ico{ filter:grayscale(1); opacity:.5; }
+  .med.mlock .mname{ color:var(--muted); }
+  .med.mlock .flav{ color:var(--muted); }
+  .med.mlock .earn{ color:var(--muted); }
+  .med.mlock .earn b{ color:var(--silver-dim); }
+  .med.mlock::before{ background:var(--muted); }
 
   /* ---------- ESI mining ledger panel ---------- */
   .esidisc{ background:var(--black); border:1px solid rgba(70,255,94,.25); border-left:3px solid var(--ore);
@@ -1108,7 +1113,7 @@ function renderTrophies(){
   el.innerHTML = html;
 }
 function medHtml(d, honor){
-  var cls = "med" + (honor ? " honor" : "") + (d.earned ? "" : " lock");
+  var cls = "med" + (honor ? " honor" : "") + (d.earned ? "" : " mlock");
   var html = '<div class="' + cls + '" id="med_' + esc(String(d.key||"")) + '">' +
     '<div class="ico">' + esc(d.emoji || "\u{1F396}️") + '</div>' +
     '<div class="mname">' + esc(d.name) + '</div>' +
