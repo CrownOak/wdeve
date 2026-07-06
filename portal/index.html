@@ -147,6 +147,50 @@
   .moddone{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-top:10px; }
   .acadbanner{ border:1px solid rgba(70,255,94,.4); background:var(--black); color:var(--laser);
                font-family:var(--mono); font-size:12.5px; padding:12px 15px; margin:0 0 14px; line-height:1.6; }
+  .modbody p{ margin:0 0 10px; }
+  .modbody .subtitle{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+                      color:var(--muted); margin:0 0 12px; }
+  .modbody .thepoint{ border-left:3px solid var(--ore); background:var(--steel); padding:10px 14px;
+                      margin:12px 0; color:var(--silver-dim); font-size:13px; }
+  .modbody .thepoint b{ color:var(--ore); }
+  /* ---------- academy quiz ---------- */
+  .quiz{ border-top:1px solid var(--line); margin-top:16px; padding-top:14px; }
+  .quiz .qhdr{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+               color:var(--ore); margin:0 0 12px; }
+  .qitem{ margin:0 0 16px; }
+  .qitem.wrong{ border-left:2px solid var(--red); padding-left:12px; margin-left:-14px; }
+  .qq{ color:var(--silver); font-size:13.5px; margin:0 0 8px; }
+  .qq b{ color:var(--ore); font-family:var(--mono); font-size:11px; margin-right:6px; }
+  .qopt{ display:flex; gap:9px; align-items:flex-start; padding:7px 10px; margin:4px 0; cursor:pointer;
+         border:1px solid var(--line-soft); background:var(--black); color:#a9b2a8; font-size:13px;
+         transition:border-color .12s, color .12s; }
+  .qopt:hover{ border-color:var(--line); color:var(--silver); }
+  .qopt input{ width:auto; margin:2px 0 0; flex:0 0 auto; accent-color:var(--ore); }
+  .qopt.sel{ border-color:var(--ore); color:var(--silver); }
+  .qopt.correct{ border-color:var(--ore); color:var(--laser); }
+  .qexplain{ font-family:var(--mono); font-size:11.5px; color:var(--amber); margin:6px 0 0; line-height:1.55; }
+  .qexplain b{ color:var(--ore); }
+  .quizmsg{ font-family:var(--mono); font-size:12px; margin:8px 0; min-height:16px; }
+  .quizmsg.bad{ color:var(--amber); } .quizmsg.good{ color:var(--ore); }
+  /* ---------- graduation animation ---------- */
+  #gradfx{ position:fixed; inset:0; z-index:400; display:none; align-items:center; justify-content:center;
+           background:rgba(3,5,4,.92); text-align:center; padding:24px; }
+  #gradfx.show{ display:flex; }
+  #gradfx .gcard{ position:relative; z-index:2; }
+  #gradfx .gcap{ font-size:88px; line-height:1; animation:gradpop .6s cubic-bezier(.2,1.4,.4,1) both; }
+  #gradfx h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+              font-size:26px; color:var(--ore); margin:18px 0 6px; }
+  #gradfx p{ font-family:var(--mono); font-size:13px; color:var(--silver-dim); margin:0 0 20px; }
+  #gradfx .gobtn{ padding:11px 22px; }
+  #gradfx .spark{ position:absolute; top:50%; left:50%; width:9px; height:9px; border-radius:2px;
+                  background:var(--ore); opacity:0; }
+  #gradfx.show .spark{ animation:gradspark .9s ease-out forwards; }
+  @keyframes gradpop{ 0%{ transform:scale(0) rotate(-25deg); opacity:0; } 100%{ transform:scale(1) rotate(0); opacity:1; } }
+  @keyframes gradspark{ 0%{ transform:translate(0,0) scale(1); opacity:1; }
+                        100%{ transform:translate(var(--dx),var(--dy)) scale(0); opacity:0; } }
+  @media (prefers-reduced-motion: reduce){
+    #gradfx .gcap{ animation:none; } #gradfx.show .spark{ animation:none; display:none; }
+  }
 
   /* ---------- contracts ---------- */
   .crow{ border-top:1px solid var(--line-soft); padding:11px 2px; cursor:pointer; }
@@ -949,52 +993,210 @@ function medHtml(d, honor){
 }
 
 /* ============ the academy ============ */
-var MODULE_META = {
-  welcome:   { title: "Welcome to the family" },
-  fleet_ops: { title: "How an op runs" },
-  doctrine:  { title: "The survival doctrine" },
-  tools:     { title: "The toolkit" },
-  payday:    { title: "Payday" },
-  medals:    { title: "The Wall of Goblins" }
-};
-function moduleBody(key){
-  var rate = pct((S.me.buyback && S.me.buyback.contract_rate) != null ? S.me.buyback.contract_rate : 0.88);
-  switch(key){
-    case "welcome": return (
-      "We are Wealthy Dropouts, the BONK goblins. Emotionally stable goblins who love rocks. " +
-      "We mine together, we get paid together, and we keep the drama in other people’s corps. " +
-      "Speak plainly, help the new goblin, never let the ore stop. That is the whole culture.");
-    case "fleet_ops": return (
-      "An op is simple. Form up when the ping goes out, warp to the belt, and cluster within 40km of the Orca. " +
-      "Mine aligned, always. Jetcan the raw ore where you float, the Orca compresses it, the MTU pulls the cans, " +
-      "and Fear writes the checks. Your job is to chew rock and stay on the ledger.");
-    case "doctrine": return (
-      "Seven rules keep barges alive. Learn them cold." +
-      "<ol>" +
-      "<li>Never engage.</li>" +
-      "<li>Never assist an engaged corpmate.</li>" +
-      "<li>Core stays down.</li>" +
-      "<li>Watch local practically.</li>" +
-      "<li>Barge drones are for rats.</li>" +
-      "<li>Always mine aligned.</li>" +
-      "<li>No ransoms.</li>" +
-      "</ol>" +
-      "That is the whole doctrine. Follow it and your Hulk lives past day three.");
-    case "tools": return (
-      "The toolkit lives on this site. Refine prices your ore before you haul a single unit. " +
-      "The Fleet Drop Ledger is the book of record: logging your drops there is required to get paid. No log, no check. " +
-      "The passwords live in Discord, pinned where the goblins gather. Learn the tools and the tools feed you.");
-    case "payday": return (
-      "Buyback runs at " + esc(rate) + " of Jita, with 0% tax. You drop, the ledger values it, " +
-      "and the ledger pays your exact share to your payout character. No haggling, no favorites. " +
-      "The ledger saw you drop it, so you get paid for it.");
-    case "medals": return (
-      "The corp keeps a Wall of Goblins: every medal, every criterion, out in the open. " +
-      "Your own trophy case sits right on this page, with the locked ones greyed and the exact bar to clear. " +
-      "Pick one and go earn it. Medals sit on your character sheet forever. " +
-      '<a href="#panelTrophies" onclick="document.getElementById(\'panelTrophies\').scrollIntoView({behavior:\'smooth\'});return false">Look at your case.</a>');
+/* The six modules: real teaching wrapped in the goblin voice, each gated by a
+   certification quiz (100% to pass). Content is authored/trusted (not user
+   input) so it renders as HTML directly. Bodies use template literals so the
+   prose keeps its apostrophes and quotes without escaping. No dashes anywhere. */
+var ACADEMY = [
+  { key:"welcome", title:"You Did This To Yourself", sub:"Module 1 · Welcome",
+    body:[
+      `Alright. Deep breath. You joined a mining corp. On purpose. Nobody made you do this. That is the first thing we need to sit with together.`,
+      `Let me explain what you have actually signed up for, because the recruiter probably made it sound noble. You are now a member of Wealthy Dropouts, flying under BIG ROCK ENERGY. What we do, fundamentally, is fly enormous ships into space, point lasers at rocks, and commit slow, methodical, organized violence against geology. The rocks did nothing to us. We punish them anyway. That is the whole business model and we are extremely good at it.`,
+      `Here is who we are. We are emotionally stable men who love frozen water and gray rocks. That sentence should have scared you and it did not, which means you are exactly our kind of person. Some corps do therapy. We do rocks. It is cheaper, it is quieter, and at the end of it you have ISK instead of a diagnosis.`,
+      `But here is the part the recruiter got right. This is not a sweatshop with a Discord attached. This is a brotherhood of lunatics who genuinely like each other and somehow are always online. We mine together. We teach the new guy instead of laughing at him, mostly. And the single rule of the culture, the one thing that matters more than the buyback rate, is this: <b>nobody mines alone in the cold like a Victorian orphan.</b> You are at the table now. There is a chair. Sit in it.`,
+      `You do not have to be good at the game. You do not have to know what half the buttons do. You have to show up, mine, not be a jerk, and laugh at least occasionally. That is the entire entry requirement. We were all new once. Some of us still act like it.`
+    ],
+    point:`You are one of us now, no proving yourself required. We mine rocks, we get paid, and we do it together. Welcome to the goblin life.`,
+    quiz:[
+      { q:"What is the single rule of the BONK culture that matters more than the buyback rate?",
+        opts:["Always have the most expensive ship in the fleet","Nobody mines alone in the cold like a Victorian orphan","The newest member does all the hauling","You must win an argument in local at least once a week"],
+        correct:1, why:"Nobody mines alone in the cold. You are at the table now, take the chair." },
+      { q:"What is the entry requirement to belong here?",
+        opts:["Be an expert player with a maxed out character","Own a Hulk and a full set of implants before you join","Show up, mine, do not be a jerk, and laugh occasionally","Pay a joining fee to the corp wallet"],
+        correct:2, why:"Show up, mine, do not be a jerk, laugh occasionally. That is the whole door." },
+      { q:"How does BONK describe itself?",
+        opts:["A ruthless PvP corp that tolerates mining","A temporary stop for people passing through","Emotionally stable men who love frozen water and gray rocks","A corporation with strict quotas and performance reviews"],
+        correct:2, why:"Emotionally stable goblins who love frozen water and gray rocks. We do rocks, not therapy." }
+    ] },
+
+  { key:"fleet_ops", title:"The Sacred Choreography of Rock Acquisition", sub:"Module 2 · How We Run A Fleet",
+    body:[
+      `A fleet is what happens when a bunch of goblins agree to be in the same place and point their lasers at the same field of rocks at the same time, which sounds simple and is somehow the thing people mess up most. So here is the choreography. Learn it once and never ask in fleet again.`,
+      `<b>Step one. Get in the fleet.</b> The boosts, which are the reason you make real money instead of peasant money, only reach people who are actually IN the fleet. If you are mining next to the fleet but not in it, you are just a stranger nearby doing manual labor for free, like a raccoon going through the neighbor's trash. Be in the fleet.`,
+      `<b>Step two. Fly out together.</b> We move as one. Together is faster, together is safer, and together means when something goes wrong we all warp out looking like professionals instead of one guy exploding alone while everyone watches.`,
+      `<b>Step three. Stay within 40km of the Orca.</b> The Orca is the big ship in the middle projecting an invisible bubble of pure yield around itself, and inside that bubble you mine roughly 83% faster. Eighty three percent. The moment you drift outside 40km, that bubble does nothing and your yield quietly collapses to the sad numbers of a man mining alone. Stay in the bubble. Get rich.`,
+      `<b>Step four. Mine aligned.</b> Position yourself so you can reach a fat field of rocks WHILE you are pointed at some faraway celestial. You stay pointed at the door the whole time. A goblin who mines aligned dies of old age. A goblin who mines sideways dies on a Tuesday.`,
+      `<b>Step five. When your hold is full, you do TWO things at once, every time, as one habit: you jetcan the ore, AND you log it in the ledger.</b> These are not separate tasks. Jetcan and log. Jetcan and log. Burn it in. Before the op even starts, open the Fleet Drop Ledger at bonkeve.com/fleet, punch in the fleet password and your pilot name, and leave it open. Then when your hold fills: jettison the ore into a can, and in the same breath select that ore with Ctrl+A, copy with Ctrl+C, paste it into the ledger, and hit Drop. The ledger now knows exactly what you dropped and you are on record to get paid for every unit.`,
+      `<b>Step six. The robots and the Orca handle the rest.</b> You do not compress your own ore. A little robot called the MTU reels your cans in automatically, like a Roomba for space rocks, and the Orca crushes the whole pile down when its hold is full and the grid is clear. You just keep mining, keep jetcanning, keep logging.`,
+      `<b>Step seven. The ore goes home, and Fear writes the checks.</b> And because you logged every drop, your check is exactly right, and nobody can argue about it.`
+    ],
+    point:`Get in fleet. Stay within 40km of the Orca (the bubble makes you 83% richer). Mine aligned, pointed at the door. When your hold is full, jetcan the ore AND log it in the ledger in one motion, every time, or you do not get paid for it. The MTU and the Orca handle the rest.`,
+    quiz:[
+      { q:"How close should you stay to the Orca, and why?",
+        opts:["As far as possible, to avoid the crowd","Within 40km, because the boost bubble makes you mine about 83% faster","Exactly 100km, to stay safe","It does not matter where you are"],
+        correct:1, why:"Within 40km. The boost bubble is 83% more yield. Leave it and you mine like a peasant." },
+      { q:"When your ore hold is full, what two things do you do, as one motion?",
+        opts:["Dock up and sell the ore yourself","Compress the ore in your own ship, then warp home","Jetcan the ore AND log that same drop in the Fleet Drop Ledger","Wait for the Orca to come pick you up"],
+        correct:2, why:"Jetcan AND log, one motion. The can gets the ore home, the ledger gets YOU paid." },
+      { q:"What does 'mine aligned' mean?",
+        opts:["Line your ship up neatly next to the other barges for a screenshot","Position so you can reach the rocks while pointed at an off grid celestial, ready to warp","Only mine rocks that are directly in front of you","Match your mining laser color to the fleet"],
+        correct:1, why:"Aligned means pointed at the door while you mine, so you are already leaving when trouble lands." },
+      { q:"Who compresses the ore?",
+        opts:["You do, in your own ship","Nobody, it ships raw","The Orca does, when its hold is full and the grid is clear","The MTU compresses it"],
+        correct:2, why:"The Orca compresses. The MTU just reels the cans in. You only mine, jetcan, and log." },
+      { q:"What happens if you jetcan your ore but forget to log it in the ledger?",
+        opts:["Nothing, the ledger tracks it automatically","You did free labor, because the ledger is the record of what you get paid for","The Orca logs it for you","You get paid double as a bonus"],
+        correct:1, why:"No log, no pay. Unlogged ore is a generous donation. Jetcan and log, together, every time." }
+    ] },
+
+  { key:"doctrine", title:"Seven Rules That Cost Us A Lot To Learn", sub:"Module 3 · The Doctrine",
+    body:[
+      `This is the most important module in the entire Academy. Every one of these seven rules was paid for. Not with theory. With ships. Real ones. Expensive ones. We learned them the hard way so you do not have to. In return you have to read seven bullet points. Deal.`,
+      `None of these rules are obvious. That is the trap. Every one is the exact opposite of what your gut will scream at you in the moment. Your gut is going to get you killed. Follow the rules instead of the gut.`,
+      `<b>Rule 1. Never engage. Ever.</b> The instant you shoot, point, web, or send a drone at a hostile in highsec, you sign a permission slip that turns off your protection. That is a limited engagement. Our safety is not our guns. It is CONCORD, the space police, who delete anyone who attacks us, but only if we did not throw the first punch. <b>Your weapon is the warp drive. Your shield is CONCORD.</b> You do not have guns. Act like it.`,
+      `<b>Rule 2. Never help a corpmate who is already in a fight.</b> This one feels heroic and heroism is a trap. Rush in to rep him or send drones and you flag YOURSELF as a legal target too. You did not save him, you doubled the killmail. We have watched one loss become four this exact way. <b>One loss beats four.</b> Disengage, warp out, regroup, we reship the guy.`,
+      `<b>Rule 3. The Orca's Core stays down.</b> When the Orca turns on its Industrial Core it becomes a building. It cannot move, cannot warp, it is a very expensive statue. The boosts work fine without it, so the Core only comes up for one quick compress cycle when the hold is full and the grid is clear, then straight back down.`,
+      `<b>Rule 4. Watch local, but be a human about it.</b> You do not panic and dock up every time one neutral shows up. But a combat ship on the field, someone burning at you, a name you know is trouble? You are already aligned, so you just warp. Calmly. Use your eyes and use your head.`,
+      `<b>Rule 5. Your barge drones are for killing rats, not people.</b> Here is the trap: five barges see one 'lone' hostile and think 'we outnumber him.' The second your drones touch him, all five of you are flagged, and that lone hostile always has friends one jump away who were counting on exactly this. It is bait. It is always bait. The miners never fight.`,
+      `<b>Rule 6. Always mine aligned.</b> Yes, again. Position so you can reach the rocks while holding an align off grid, so when trouble lands you are already leaving instead of sitting there ten agonizing seconds spooling your warp drive. Mine pointed at the door. Every time.`,
+      `<b>Rule 7. Never pay a ransom.</b> Someone catches a ship and offers to spare it for ISK. Do not pay. We have paid before, and we got shot anyway, every time, because a person who ambushes you for money is not bound by a strong code of honor. A ransom is a donation to the man about to kill you. Keep your wallet shut. We reship our own.`,
+      `In one line, so it lives in your head forever: <b>Core down, aligned out, local watched, nobody engages, nobody plays hero.</b>`
+    ],
+    point:`These seven rules are the difference between a goblin who mines for years and one who mines for three days. Your instinct will tell you to fight, to help, to be a hero. Your instinct is wrong and it is expensive. Trust the doctrine, not the gut.`,
+    quiz:[
+      { q:"A hostile is on grid. What is your weapon?",
+        opts:["Your barge's drones","Your warp drive. You do not engage, you leave","Your mining lasers","A strongly worded message in local"],
+        correct:1, why:"Your warp drive. You have no guns. Your shield is CONCORD, and only if you never swing first." },
+      { q:"A corpmate is being attacked right next to you. What do you do?",
+        opts:["Send your drones to help him fight","Rep him to keep him alive","Nothing offensive. Helping flags you too and turns one loss into two. Warp out, regroup","Ram the attacker with your ship"],
+        correct:2, why:"Never assist an engaged corpmate. Helping flags you and turns one loss into four. One loss beats four." },
+      { q:"Why is throwing the first punch in highsec a fatal mistake?",
+        opts:["It wastes ammo","It creates a limited engagement, so CONCORD will not protect you","It is against the rules and you get banned","It scares the rocks away"],
+        correct:1, why:"The first punch is a limited engagement. It switches CONCORD off, and CONCORD is your whole defense." },
+      { q:"Five barges spot one 'lone' hostile. What is the correct read?",
+        opts:["Easy kill, everyone send drones","It is almost certainly bait with friends nearby, and touching him flags all five of you. Miners never fight","Surround him and mine around him to intimidate him","Challenge him to a fair one on one"],
+        correct:1, why:"It is always bait. Drones on him flag all five of you, and his friends are one jump out. Miners never fight." },
+      { q:"Someone catches your ship and offers to spare it for ISK. What do you do?",
+        opts:["Pay quickly so they let you go","Negotiate a lower price","Do not pay. A ransom is a donation to the man about to kill you anyway. Eat the loss, we reship you","Pay half now and half later"],
+        correct:2, why:"Never pay a ransom. They shoot you anyway. It is a donation to the wolf. Eat the loss, we reship." },
+      { q:"What is the doctrine creed, in one line?",
+        opts:["Mine fast, sell high, trust nobody","Core down, aligned out, local watched, nobody engages, nobody plays hero","Shoot first, ask questions never","Every goblin for himself"],
+        correct:1, why:"Core down, aligned out, local watched, nobody engages, nobody plays hero. Say it in your sleep." }
+    ] },
+
+  { key:"tools", title:"We Built Robots So You Would Not Have To Think", sub:"Module 4 · The Tools",
+    body:[
+      `Most mining corps hand you a spreadsheet and a prayer. We built an arsenal of custom tools because we got tired of doing math like animals. It all lives at bonkeve.com. You do not have to master it today, you just have to know it exists so you stop guessing.`,
+      `<b>The Ore Refinery Calculator.</b> Paste in a pile of rocks, it tells you exactly what they refine into and what they are worth. Or flip it: tell it what minerals you need, it tells you which rocks to go mine. It knows all 439 types of rock, which is 439 more than you need to memorize, because the robot memorized them for you.`,
+      `<b>The Fleet Drop Ledger.</b> This one is not optional. You learned the WHEN in the fleet ops module: during an op, every time you jetcan a full hold, you log that same drop, in one motion. Here is the WHY. You paste what you dropped, the ledger values it live, and tracks your exact share next to everyone else's. At the end you get paid precisely what YOU mined. No guessing, no getting lumped in with the guy who mined twice as much, no getting forgotten.`,
+      `Why is it required? Because <b>the ledger is the witness.</b> If it is not logged, it did not happen, and command cannot pay you for rock it cannot see. This is not a bureaucratic hoop. It is the thing that guarantees you get every ISK you earned and nobody can argue about it. Log your drops. The ledger saw you drop it.`,
+      `<b>The rest of the shed.</b> A market tool that finds the cheapest place to buy things, a blueprint scanner that tells you what is profitable to build, a scout that finds safe quiet systems, a killboard so you can see who got got. Poke around. If you find something missing, say so. The toolkit is yours.`,
+      `<b>The passwords.</b> Some tools are gated behind the corp word. You get the keys in the members channel. Keep them in the family. Do not paste them where a non goblin can see, because the whole point of a secret handshake is that it is secret.`
+    ],
+    point:`The tools do your math so you do not have to. The one that is REQUIRED is the Fleet Drop Ledger: log every drop during an op or you do not get paid, because the ledger is the record and it protects your exact share. Everything else at bonkeve.com is there to make you richer and safer.`,
+    quiz:[
+      { q:"Which tool is REQUIRED during a fleet op?",
+        opts:["The Hub Arbitrage tool","The Blueprint Scanner","The Fleet Drop Ledger","None of them are required"],
+        correct:2, why:"The Fleet Drop Ledger. Log every drop or command cannot pay you for rock it never saw." },
+      { q:"Why is logging your drops required to get paid?",
+        opts:["It is a bureaucratic hoop with no real purpose","The ledger is the witness. If it is not logged, command cannot pay you for rock it cannot see","It makes the Orca pilot's job easier and that is all","It is optional and just for fun"],
+        correct:1, why:"The ledger is the witness. No log, no proof, no check. It is the thing that protects your share." },
+      { q:"What does the Ore Refinery Calculator do?",
+        opts:["Mines the ore for you automatically","Tells you what your ore refines into, or what ore to mine for the minerals you need","Sells your ore at the best price","Flies your ship to the belt"],
+        correct:1, why:"It does the refine math both ways: rocks to minerals, or minerals to the rocks you should go mine." },
+      { q:"What should you do with the corp tool passwords?",
+        opts:["Post them publicly so everyone can find the tools","Keep them in the family and never share them where a non goblin can see","Sell them to other corps","Change them yourself whenever you want"],
+        correct:1, why:"Keep them in the family. A secret handshake only works while it stays secret." }
+    ] },
+
+  { key:"payday", title:"How The Rock Becomes A Paycheck", sub:"Module 5 · Payday",
+    body:[
+      `You are not doing manual labor in space for the scenery. Here is exactly how the rocks in your hold turn into ISK in your wallet, and why our deal beats the corp down the street that is quietly robbing its own miners.`,
+      `<b>Buyback.</b> You do not fly your ore across the galaxy to sell it. You do not sit in a trade hub refreshing prices like a day trader having a breakdown. You mine it, you contract it to us at home, and we buy it from you at <b>90% of its value, paid instantly.</b> The other ten percent is the tiny, honest cost of the corp handling the hauling and the selling so you get to just keep mining instead of becoming a logistics company.`,
+      `<b>Zero percent tax.</b> Read that again. A lot of mining corps tax their miners, which is completely insane. A mining corp taxing mining is like a restaurant charging you to chew. What you mine is what you get. We take nothing off the top. Nothing.`,
+      `<b>How your share is calculated.</b> This is where the Fleet Drop Ledger pays off, literally. Every rock you logged gets valued and pooled with the whole fleet's haul. Your payout is your exact, honest, proportional slice of that pot, down to the tiny stacks. You mined a little, you get a little. You mined a lot, you get a lot. The small guy who only dropped 50 units still gets his fair fraction instead of a zero. The math is transparent on purpose. We WANT you to be able to check it.`,
+      `<b>And then Fear writes the checks.</b> The ore hauls home, gets sorted, and the ISK lands in your wallet. That is the last step of every op and it is a sacred tradition. Nobody mines for free. You get a loud announcement in Discord when it happens, so you do not even have to wonder.`
+    ],
+    point:`You mine it, we buy it back at 90% instantly at home, we tax you zero, and the ledger pays you your exact fair share of every op. No hauling, no selling, no tax, no getting shorted. You do the fun part and the ISK shows up.`,
+    quiz:[
+      { q:"What is the corp buyback rate?",
+        opts:["50%, paid whenever","90% of value, paid instantly at home","100%, but you have to haul it to Jita yourself","It changes every day and nobody knows"],
+        correct:1, why:"90% of value, instant, at home. The ten percent covers hauling and selling so you never have to." },
+      { q:"What is the corp tax rate on what you mine?",
+        opts:["35%","10%","0%. What you mine is what you get","15% on weekends"],
+        correct:2, why:"Zero tax. A mining corp taxing miners is a restaurant charging you to chew. We take nothing." },
+      { q:"How is your payout from an op calculated?",
+        opts:["Everyone gets an equal split no matter what they mined","Your exact proportional share of the pot, based on what you logged in the ledger","The Orca pilot decides based on vibes","First come, first served"],
+        correct:1, why:"Your exact proportional slice of the pooled haul, straight from what you logged. Transparent on purpose." },
+      { q:"Do small drops count toward your payout?",
+        opts:["No, anything under a full hold is ignored","Yes, even a tiny stack gets its fair fraction. Nobody's drops vanish","Only if you ask nicely","Small drops count double"],
+        correct:1, why:"Every stack counts, down to 50 units. Nobody's drops vanish and nobody gets shorted." }
+    ] },
+
+  { key:"medals", title:"Shiny Things You Can Earn And Never Shut Up About", sub:"Module 6 · The Wall of Goblins",
+    body:[
+      `Last module. And now the reward: this corp has medals. Real ones, that sit on your character forever and that you are legally allowed to be insufferable about.`,
+      `They live on the Wall of Goblins, and on YOUR profile you see them as a trophy case. Some are already glowing because you earned them. The rest sit locked and greyed out, quietly taunting you, with the exact instructions for how to earn each one. That is not an accident. We want you looking at that locked shelf thinking 'I am going to get that one.' That feeling is called ambition and we encourage it.`,
+      `Here is the flavor of what is up there. There is a medal for your <b>first haul</b>, which you get just for showing up and mining with the fleet, so you are already on the board. One for becoming a <b>mentor</b> whose recruits actually stick around. One for being <b>the provider</b> who feeds the dynasty a billion ISK of ore through the buyback. One for the rare <b>cornerstone</b>, the pilot the entire dynasty is visibly built on, and there will only ever be a few. And one, my favorite, for the goblin who broke doctrine, stood, fought, and actually walked away with the win. You are not supposed to fight. But if you do and come back with the killmail and the story, we have a medal for that specific brand of magnificent stupidity.`,
+      `You do not chase medals by grinding. You earn them by being the kind of goblin the corp is glad it recruited. Mine a lot. Teach the new guy. Have people's backs. Show up. Do that, and the shelf fills itself, and one day somebody new reads YOUR profile and thinks 'I want those.'`,
+      `And here is a head start: pass this last quiz and you earn your first real one right now, <b>Fresh Off The Rock</b>, for completing the Academy. You are one click from a lit medal. <a href="#" data-gotocase="1">Look at your case.</a>`
+    ],
+    point:`Your profile is your BONK career, and the medals are the proof. Some you already have, the rest are waiting with instructions attached. They sit on your character forever. Pass this quiz to earn Fresh Off The Rock, then go earn the whole shelf.`,
+    quiz:[
+      { q:"Where do your earned medals live?",
+        opts:["They expire after 30 days","On your character and your profile trophy case, forever","Only in a spreadsheet leadership keeps","You have to buy them back each month"],
+        correct:1, why:"On your character and your trophy case, forever. That is the point, they never expire." },
+      { q:"On your profile, what do the locked, greyed out medals show?",
+        opts:["Nothing, they are just decoration","The exact instructions for how to earn each one","Medals other people earned that you cannot have","A countdown timer"],
+        correct:1, why:"The locked ones show exactly how to earn them. That is the aspiration hook, on purpose." },
+      { q:"How do you actually earn medals?",
+        opts:["By grinding a single number as high as possible","By being the kind of goblin the corp is glad it recruited: mine, teach, have people's backs, show up","By paying ISK to leadership","By winning fights in local chat"],
+        correct:1, why:"You earn them by being the goblin the corp is glad it recruited. The shelf fills itself." },
+      { q:"What medal do you earn for completing the Academy?",
+        opts:["There is no medal for it","Fresh Off The Rock","The Cornerstone","The Whale"],
+        correct:1, why:"Fresh Off The Rock. Pass this quiz and it lights up on your shelf right now." }
+    ] }
+];
+var ACAD_INDEX = (function(){ var m={}; for (var i=0;i<ACADEMY.length;i++) m[ACADEMY[i].key]=ACADEMY[i]; return m; })();
+var quizState = {}; // module_key -> { answers:{qIdx:optIdx}, graded:bool }
+function moduleBody(mod){
+  var h = '<div class="subtitle">' + esc(mod.sub) + '</div>';
+  for (var i=0;i<mod.body.length;i++) h += '<p>' + mod.body[i] + '</p>';
+  h += '<div class="thepoint"><b>THE POINT.</b> ' + mod.point + '</div>';
+  return h;
+}
+/* Render one module's certification quiz. A module only completes on a 100%
+   score; wrong answers are shown with the correct one + a goblin explanation so
+   the member LEARNS it. Unlimited retakes. Validation is client side (the stakes
+   are a training quiz, not auth); the server writes completion on the pass. */
+function quizHTML(mod){
+  var st = quizState[mod.key] || (quizState[mod.key] = { answers:{}, graded:false });
+  var h = '<div class="quiz"><div class="qhdr">Certification &middot; ' + esc(mod.quiz.length) +
+          ' questions &middot; 100% to pass</div>';
+  for (var qi=0; qi<mod.quiz.length; qi++){
+    var q = mod.quiz[qi];
+    var picked = st.answers[qi];
+    var isWrong = st.graded && picked !== q.correct;
+    h += '<div class="qitem' + (isWrong ? ' wrong' : '') + '">' +
+         '<div class="qq"><b>Q' + (qi+1) + '</b>' + esc(q.q) + '</div>';
+    for (var oi=0; oi<q.opts.length; oi++){
+      var sel = picked === oi;
+      var showCorrect = st.graded && oi === q.correct;
+      var cls = 'qopt' + (sel ? ' sel' : '') + (showCorrect ? ' correct' : '');
+      h += '<label class="' + cls + '">' +
+             '<input type="radio" name="' + esc(mod.key) + '_q' + qi + '" value="' + oi + '"' +
+             (sel ? ' checked' : '') + ' data-qi="' + qi + '" data-oi="' + oi + '">' +
+             '<span>' + esc(q.opts[oi]) + '</span>' +
+           '</label>';
+    }
+    if (isWrong) h += '<div class="qexplain"><b>Not quite.</b> ' + esc(q.why) + '</div>';
+    h += '</div>';
   }
-  return "Ask an officer what this one covers. It is new to the Academy.";
+  var msg = st.graded
+    ? '<div class="quizmsg bad">Close. Fix the ones marked in red and certify again. The retake is the lesson.</div>'
+    : '<div class="quizmsg"></div>';
+  h += msg + '<button class="gobtn" data-certify="' + esc(mod.key) + '">Certify this module</button></div>';
+  return h;
 }
 function renderAcademy(){
   var el = $("panelAcademy");
@@ -1010,46 +1212,115 @@ function renderAcademy(){
 
   var html = '<div class="ptitle">The Academy</div>';
   if (ob.complete){
-    html += '<div class="acadbanner">You are officially onboarded. The belt is yours. Now go make the number climb.</div>';
+    html += '<div class="acadbanner">You are officially onboarded, and Fresh Off The Rock is on your shelf. The belt is yours. Now go make the number climb.</div>';
   }
   html += '<div class="acadprog"><span>' + n + ' of ' + total + '</span>' +
           '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
   for (var m=0;m<modules.length;m++){
     var key = modules[m];
-    var meta = MODULE_META[key] || { title: key };
+    var mod = ACAD_INDEX[key];
+    if (!mod){ continue; }
     var open = S.openModule === key ? " open" : "";
     var d = isDone(key);
     html += '<div class="mod' + open + '" data-mod="' + esc(key) + '">' +
       '<button class="modhead" data-modkey="' + esc(key) + '">' +
         '<span class="tick2' + (d ? ' done' : '') + '">' + (d ? '&#10003;' : '&#9675;') + '</span>' +
-        '<span>' + esc(meta.title) + '</span>' +
+        '<span>' + esc(mod.title) + '</span>' +
         '<span class="chev">' + (open ? 'close' : 'open') + '</span>' +
       '</button>' +
-      '<div class="modbody">' + moduleBody(key) +
-        (d ? '<div class="moddone">&#10003; Module down.</div>'
-           : '<br><button class="gobtn" data-markdone="' + esc(key) + '">Mark it done</button>') +
+      '<div class="modbody">' + moduleBody(mod) +
+        (d ? '<div class="moddone">&#10003; Certified. You know this one.</div>'
+           : quizHTML(mod)) +
       '</div>' +
     '</div>';
   }
   el.innerHTML = html;
+
   var heads = el.querySelectorAll(".modhead");
-  for (var h=0;h<heads.length;h++) heads[h].addEventListener("click", function(){
+  for (var hh=0; hh<heads.length; hh++) heads[hh].addEventListener("click", function(){
     var k = this.getAttribute("data-modkey");
     S.openModule = (S.openModule === k) ? null : k;
     safeRender(renderAcademy, $("panelAcademy"));
   });
-  var marks = el.querySelectorAll("[data-markdone]");
-  for (var mk=0;mk<marks.length;mk++) marks[mk].addEventListener("click", async function(ev){
+  // "Look at your case" link inside the medals module
+  var caseLink = el.querySelector("[data-gotocase]");
+  if (caseLink) caseLink.addEventListener("click", function(ev){
+    ev.preventDefault();
+    var pc = $("panelTrophies"); if (pc) pc.scrollIntoView({ behavior:"smooth" });
+  });
+  // radio selections: hold the answer in quizState so it survives re-render
+  var radios = el.querySelectorAll(".qopt input");
+  for (var ri=0; ri<radios.length; ri++) radios[ri].addEventListener("change", function(){
+    var modEl = this.closest(".mod"); if (!modEl) return;
+    var key = modEl.getAttribute("data-mod");
+    var st = quizState[key] || (quizState[key] = { answers:{}, graded:false });
+    st.answers[parseInt(this.getAttribute("data-qi"),10)] = parseInt(this.getAttribute("data-oi"),10);
+  });
+  // certify: grade 100% locally, then the server writes completion
+  var certs = el.querySelectorAll("[data-certify]");
+  for (var ci=0; ci<certs.length; ci++) certs[ci].addEventListener("click", async function(ev){
     ev.stopPropagation();
-    var key = this.getAttribute("data-markdone");
-    this.disabled = true;
+    var key = this.getAttribute("data-certify");
+    var mod = ACAD_INDEX[key];
+    var st = quizState[key] || (quizState[key] = { answers:{}, graded:false });
+    var allAnswered = true, allRight = true;
+    for (var qi=0; qi<mod.quiz.length; qi++){
+      if (st.answers[qi] == null){ allAnswered = false; allRight = false; }
+      else if (st.answers[qi] !== mod.quiz[qi].correct){ allRight = false; }
+    }
+    if (!allAnswered){
+      st.graded = false;
+      safeRender(renderAcademy, $("panelAcademy"));
+      S.openModule = key; // keep it open
+      var mm = document.querySelector('.mod[data-mod="' + key + '"] .quizmsg');
+      if (mm){ mm.className = "quizmsg bad"; mm.textContent = "Answer every question first, goblin."; }
+      return;
+    }
+    if (!allRight){
+      st.graded = true;
+      S.openModule = key;
+      safeRender(renderAcademy, $("panelAcademy"));
+      return;
+    }
+    // 100%: tell the server, which writes completion and (on the final module)
+    // awards Fresh Off The Rock and returns the medal for the animation.
+    this.disabled = true; this.textContent = "Certifying...";
     try {
       var j = await api("onboarding", { module_key: key });
-      toast("Module down. You are learning to fly the right way.");
+      quizState[key] = { answers: st.answers, graded:false };
       if (j.complete && S.me.onboarding) S.me.onboarding.complete = true;
       await refreshMe();
-    } catch(e){ if (!isOut(e)) { toast(e.message); this.disabled = false; } }
+      if (j.complete && j.medal) playGraduation(j.medal);
+      else toast("Certified. Module down. You are learning to fly the right way.");
+    } catch(e){ if (!isOut(e)) { toast(e.message); this.disabled = false; this.textContent = "Certify this module"; } }
   });
+}
+
+/* Graduation payoff: the medal pops, a ring of ore-green sparks bursts, and the
+   member lands on their freshly lit shelf. prefers-reduced-motion skips the
+   sparks (handled in CSS). Auto-advances after ~4s or on the button. */
+function playGraduation(medal){
+  var fx = $("gradfx");
+  if (!fx){
+    fx = document.createElement("div");
+    fx.id = "gradfx";
+    document.body.appendChild(fx);
+  }
+  var sparks = "";
+  for (var i=0;i<16;i++){
+    var ang = (i/16) * Math.PI * 2, dist = 120 + (i%3)*26;
+    var dx = Math.round(Math.cos(ang)*dist), dy = Math.round(Math.sin(ang)*dist);
+    sparks += '<span class="spark" style="--dx:' + dx + 'px;--dy:' + dy + 'px;animation-delay:' + (i*18) + 'ms"></span>';
+  }
+  fx.innerHTML = sparks +
+    '<div class="gcard"><div class="gcap">' + esc(medal.emoji || "🎓") + '</div>' +
+    '<h2>Academy Complete</h2>' +
+    '<p>' + esc(medal.name || "Fresh Off The Rock") + ' earned. You are officially a trained goblin. 🪨</p>' +
+    '<button class="gobtn" id="gradgo">To my profile &rarr;</button></div>';
+  fx.classList.add("show");
+  var close = function(){ fx.classList.remove("show"); if (autoT) clearTimeout(autoT); };
+  var btn = $("gradgo"); if (btn) btn.addEventListener("click", function(){ close(); window.scrollTo({ top:0, behavior:"smooth" }); });
+  var autoT = setTimeout(close, 4200);
 }
 
 /* ============ edit profile drawer ============ */
