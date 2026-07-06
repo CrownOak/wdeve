@@ -158,6 +158,8 @@
   .orow{ display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line-soft); padding:3px 0; }
   .orow .oname{ color:var(--silver-dim); font-size:13px; text-transform:capitalize; }
   .orow .onum{ font-family:var(--mono); font-size:12.5px; color:var(--ore); }
+  .orow .oisk{ color:var(--silver-dim); font-size:11px; margin-left:7px; font-family:var(--mono); }
+  .esisub .esitot{ color:var(--ore); }
   .esiacts{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:6px; }
   .esilogin{ display:inline-flex; align-items:center; gap:8px; font-family:var(--display); font-weight:700;
     text-transform:uppercase; letter-spacing:.05em; font-size:13px; color:#04140a; background:var(--ore);
@@ -1057,11 +1059,14 @@ function renderESI(){
   }
   var mining = e.mining || [];
   if (mining.length){
-    var totalU = 0; mining.forEach(function(m){ totalU += Number(m.units)||0; });
-    h += '<div class="esisub">Mined by ore, in game ledger, raw units ('+esiUnits(totalU)+' total)</div><div class="esimining">';
-    mining.slice(0,14).forEach(function(m){
+    var totalU = 0, totalIsk = 0;
+    mining.forEach(function(m){ totalU += Number(m.units)||0; totalIsk += Number(m.isk)||0; });
+    h += '<div class="esisub">Mined by ore, in game ledger &middot; '+esiUnits(totalU)+' units'
+      + (totalIsk>0?' &middot; <span class="esitot">'+esiIsk(totalIsk)+' value</span>':'')+'</div><div class="esimining">';
+    mining.slice(0,16).forEach(function(m){
       h += '<div class="orow"><span class="oname">'+(ICE_BASES[m.base_ore]?"\u{1F9CA} ":"")+esc(m.base_ore)+'</span>'
-        + '<span class="onum">'+esiUnits(m.units)+'</span></div>';
+        + '<span class="onum">'+esiUnits(m.units)
+        + (Number(m.isk)>0?' <span class="oisk">'+esiIsk(m.isk)+'</span>':'')+'</span></div>';
     });
     h += '</div>';
   }
