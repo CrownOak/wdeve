@@ -35,6 +35,24 @@
 .droprow .gobtn{ padding:10px 20px; }
 .dropbox{ margin-bottom:16px; }
 .dmsg{ font-family:var(--mono); font-size:12px; color:var(--red); min-height:16px; margin-top:6px; }
+/* pilot switcher: cycle which of your characters a drop is logged under */
+.pilots{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 10px; }
+.pilots .plabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted); margin-right:2px; }
+.pchip{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:4px 10px;
+  cursor:pointer; font-family:var(--mono); font-size:11.5px; letter-spacing:.03em;
+  transition:border-color .12s,color .12s,background .12s; }
+.pchip:hover{ border-color:var(--ore); color:var(--ore); }
+.pchip.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+.pchip.paddbtn{ color:var(--muted); border-style:dashed; }
+.pchip.paddbtn:hover{ color:var(--ore); }
+.xreassign{ background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+  font-family:var(--mono); font-size:12px; padding:2px 7px; margin-right:4px; }
+.xreassign:hover{ border-color:var(--ore); color:var(--ore); }
+.rkick{ background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+  font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.05em; padding:2px 7px; margin-left:8px; }
+.rkick:hover{ border-color:var(--red); color:var(--red); }
+.ctxmenu .ci.ck:hover{ background:var(--steel-2); color:var(--red); }
 .ub{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.05em;
   color:var(--amber); border:1px solid rgba(233,196,106,.4); padding:1px 5px; margin-left:6px; white-space:nowrap; }
 tr.pend td{ color:var(--muted); font-style:italic; }
@@ -146,8 +164,9 @@ tr.haulrow{ cursor:pointer; }
             <div id="tiles" class="totline"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
             <div id="pxbar" class="thin bad" style="display:none"></div>
-            <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing &mdash; drops are frozen.</div>
+            <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing. Drops are frozen.</div>
             <div id="dropbox" class="dropbox">
+              <div id="pilots" class="pilots"></div>
               <textarea id="oretxt" placeholder="Paste what you dropped, one per line:&#10;Compressed Veldspar	3,000&#10;..."></textarea>
               <div class="droprow">
                 <input id="notein" maxlength="200" placeholder="note (optional)">
@@ -209,7 +228,7 @@ tr.haulrow{ cursor:pointer; }
 (function(){
   var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
   var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
-      LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue";
+      LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots";
 
   // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
@@ -355,6 +374,62 @@ tr.haulrow{ cursor:pointer; }
     bump(); tick(); };
   el("whoin").addEventListener("keydown",function(e){ if(e.key==="Enter") el("whosave").click(); });
 
+  // ---------- pilot switcher (multibox: cycle which of your characters a drop
+  // is logged under). Your pilot list lives in localStorage; the active one is
+  // `who`. "Add alt" nests another of your characters under you locally, and if
+  // you are logged into the portal it auto-seeds your account's characters. The
+  // ledger still writes a normal per-IGN entry, so bonk-fleet is untouched. ----
+  var pilotsSeeded=false;
+  function getPilots(){ var a=[]; try{ a=JSON.parse(lsGet(LS_PILOTS)||"[]"); }catch(e){}
+    if(!Array.isArray(a)) a=[]; a=a.filter(function(x){ return typeof x==="string" && x; });
+    if(who && a.indexOf(who)<0) a.unshift(who); return a; }
+  function setPilots(a){ lsSet(LS_PILOTS, JSON.stringify(a.filter(function(x,i){ return x && a.indexOf(x)===i; }))); }
+  function isMine(w){ return getPilots().indexOf(w)>-1; }
+  function renderPilots(){
+    var box=el("pilots"); if(!box) return;
+    if(!who || !unlocked){ box.innerHTML=""; return; }
+    var list=getPilots();
+    var h="<span class='plabel'>Dropping as</span>";
+    list.forEach(function(p){
+      h+="<button class='pchip"+(p===who?" on":"")+"' data-pilot='"+esc(p)+"' title='"
+        +(p===who?"active":"switch to "+esc(p)+" (right click to remove)")+"'>"+esc(p)+"</button>";
+    });
+    h+="<button class='pchip paddbtn' data-addalt='1' title='add one of your characters'>+ alt</button>";
+    box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-pilot]"), function(b){
+      b.onclick=function(){ setActivePilot(b.getAttribute("data-pilot")); };
+      b.oncontextmenu=function(ev){ ev.preventDefault();
+        var p=b.getAttribute("data-pilot"); if(p===who) return; removeAlt(p); }; });
+    var ab=box.querySelector("[data-addalt]"); if(ab) ab.onclick=addAlt;
+  }
+  function setActivePilot(name){ if(!name) return; who=name; lsSet(LS_WHO,name);
+    var list=getPilots(); if(list.indexOf(name)<0){ list.push(name); setPilots(list); }
+    renderPilots(); bump(); tick(); }
+  function addAlt(){ var n=prompt("Add one of your characters (the exact in game name):"); if(n==null) return;
+    n=n.trim().slice(0,40); if(!n) return;
+    var list=getPilots(); if(list.indexOf(n)<0){ list.push(n); setPilots(list); }
+    setActivePilot(n); }
+  function removeAlt(name){ var list=getPilots().filter(function(x){ return x!==name; }); setPilots(list); renderPilots(); }
+  function seedPilotsFromPortal(){
+    if(pilotsSeeded || !who || !token) return; pilotsSeeded=true;
+    fetch("/api/roster",{ headers:{ "X-Token":token } }).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      if(!d || !d.ok || !d.roster) return;
+      var lc=who.toLowerCase(), mine=null;
+      d.roster.forEach(function(a){ (a.characters||[]).forEach(function(c){ if(String(c.ign).toLowerCase()===lc) mine=a; }); });
+      if(!mine) return;
+      var list=getPilots(); (mine.characters||[]).forEach(function(c){ if(list.indexOf(c.ign)<0) list.push(c.ign); });
+      setPilots(list); renderPilots();
+    }).catch(function(){});
+  }
+  // reassign an already-logged drop onto your next pilot (cycles through your list)
+  function reassignCycle(id, curWho){
+    var list=getPilots(); if(list.length<2){ toast("Add an alt first (the + alt button) to move a drop."); return; }
+    var i=list.indexOf(curWho); var next=list[((i<0?0:i)+1)%list.length];
+    api("POST","/reassign",{id:id, who:next}).then(function(d){
+      if(d&&d.ok){ toast("Moved that drop to "+next+"."); tick(); }
+      else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("reassign failed, still offline?"); });
+  }
+
   // ---------- offline banner ----------
   function offline(s){ el("offbar").style.display=s?"":"none"; }
 
@@ -408,7 +483,7 @@ tr.haulrow{ cursor:pointer; }
         dmsg("Drop rejected: "+String(d.error)); toast("Drop rejected: "+String(d.error));
         renderFeed(); }
       else{ o.state="unsent"; saveOutbox();
-        if(d&&d.error==="frozen") dmsg("Fleet is finishing — drops are frozen.");
+        if(d&&d.error==="frozen") dmsg("Fleet is finishing. Drops are frozen.");
         else if(d&&d.error==="round full") dmsg("Round full — fleet command has to reset for the next op.");
         renderFeed(); }
     }).catch(function(){ o.state="unsent"; saveOutbox(); renderFeed(); });
@@ -416,7 +491,7 @@ tr.haulrow{ cursor:pointer; }
   el("dropbtn").onclick=function(){
     dmsg(""); bump();
     if(!DATA){ dmsg("No price data — cannot value the drop."); return; }
-    if(P && P.finished){ dmsg("Fleet is finishing — drops are frozen."); return; }
+    if(P && P.finished){ dmsg("Fleet is finishing. Drops are frozen."); return; }
     if(!who){ showNamebox(true); el("whoin").focus(); return; }
     var lines=parse(el("oretxt").value);
     if(!lines.length){ dmsg("Nothing parsed — paste ore from your inventory, one per line."); return; }
@@ -440,7 +515,8 @@ tr.haulrow{ cursor:pointer; }
   function rate(){ return (P && P.rate) || 0.88; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
-    renderTiles(); renderCmd(); renderFrozen(); renderFeed(); renderRoster();
+    renderTiles(); renderCmd(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
+    seedPilotsFromPortal();
     if(payoverOpen) maybeRenderPayout(); }
 
   function renderTiles(){
@@ -517,8 +593,15 @@ tr.haulrow{ cursor:pointer; }
           +(r.state==="sending"?"sending":"unsent — retry")+"</span>"+qdel+"</td></tr>";
         return;
       }
-      // own rows get the delete x (UI-side only; the worker trusts any valid id, corp trust)
-      var del=(r.who===who) ? "<button class='xdel' data-del='"+esc(r.id)+"'>&times;</button>" : "";
+      // your own rows get reassign (move to your next pilot) + delete. "Mine" =
+      // the drop's who is one of your pilots (UI-side; the worker trusts any
+      // valid id/token, corp trust). Multiboxers can move a mis-attributed drop.
+      var mine=isMine(r.who);
+      var acts="";
+      if(mine){
+        acts="<button class='xreassign' data-reassign='"+esc(r.id)+"' data-rwho='"+esc(r.who)+"' title='move this drop to your next pilot'>&#8646;</button>"
+            +"<button class='xdel' data-del='"+esc(r.id)+"'>&times;</button>";
+      }
       h+="<tr class='feedrow' data-id='"+esc(r.id)+"'>"
         +"<td class='num'>"+hhmm(r.at)+"</td>"
         +"<td class='who'>"+esc(r.who)+"</td>"
@@ -526,7 +609,7 @@ tr.haulrow{ cursor:pointer; }
         +"<td class='num'>"+(r.units||0).toLocaleString()+"</td>"
         +"<td class='num'>"+m3fmt(r.m3||0)+"</td>"
         +"<td class='num strong good'>"+isk(r.jita88||0)+"</td>"
-        +"<td>"+del+"</td></tr>";
+        +"<td>"+acts+"</td></tr>";
       if(openDetail && openDetail.id===r.id){
         var d=openDetail.entry, dl="";
         (d.detail||[]).forEach(function(ln){
@@ -544,6 +627,9 @@ tr.haulrow{ cursor:pointer; }
         if(!confirm("Delete this drop from the ledger?")) return;
         api("POST","/delete",{id:b.getAttribute("data-del")}).then(function(){ tick(); })
           .catch(function(){ toast("delete failed, still offline?"); }); }; });
+    Array.prototype.forEach.call(box.querySelectorAll("[data-reassign]"), function(b){
+      b.onclick=function(ev){ ev.stopPropagation();
+        reassignCycle(b.getAttribute("data-reassign"), b.getAttribute("data-rwho")); }; });
     Array.prototype.forEach.call(box.querySelectorAll("[data-qdel]"), function(b){
       b.onclick=function(ev){ ev.stopPropagation();
         var qi=parseInt(b.getAttribute("data-qdel"),10);
@@ -566,14 +652,16 @@ tr.haulrow{ cursor:pointer; }
       return (b.tab||0)-(a.tab||0); });
     if(!ms.length){ box.innerHTML="<div class='empty' style='padding:18px'>Nobody here yet.</div>"; }
     else{
+      var isLead = role==="op" && P.lead && P.lead===who; // the crowned fleet lead
       var h="";
       ms.forEach(function(m,i){
         var g = m.lead ? "<span class='glyph crown' title='fleet lead'>♛</span>"
               : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
+        var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
           +"<span class='dot"+(m.online?" on":"")+"'></span>"+g
           +"<span class='rname'>"+esc(m.who)+"</span>"
-          +"<span class='rtab'>"+isk(m.tab||0)+"</span></div>";
+          +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+kick+"</div>";
       });
       box.innerHTML=h;
       if(role==="op"){
@@ -581,6 +669,8 @@ tr.haulrow{ cursor:pointer; }
           row.oncontextmenu=function(ev){ ev.preventDefault();
             showCtx(ev.clientX, ev.clientY, ms[parseInt(row.getAttribute("data-ri"),10)]); }; });
       }
+      Array.prototype.forEach.call(box.querySelectorAll("[data-kick]"), function(b){
+        b.onclick=function(ev){ ev.stopPropagation(); kickMember(b.getAttribute("data-kick")); }; });
     }
     // Take-lead: op with no lead, or the lead's own roster row shows offline
     var tl="", leadRow=null;
@@ -596,18 +686,31 @@ tr.haulrow{ cursor:pointer; }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
   }
 
+  // ---------- kick a member from the current op (op-only on the worker) ----------
+  function kickMember(name){
+    if(!name || name===who) return;
+    if(!confirm("Kick "+name+" from this op?\n\nTheir drops this round are removed and they leave the payout. Their past hauls are untouched.")) return;
+    api("POST","/kick",{who:name}).then(function(d){
+      if(d&&d.ok){ toast(name+" kicked. Removed "+(d.removed||0)+" drop"+(d.removed===1?"":"s")+"."); tick(); }
+      else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("kick failed, still offline?"); });
+  }
+
   // ---------- roster context menu (op only) ----------
   function showCtx(x,y,m){
     var c=el("ctxmenu");
     var ok = !!(m && m.online && m.role==="op");
+    var canKick = !!(m && m.who!==who);
     c.innerHTML="<button class='ci'"+(ok?"":" disabled title='must be signed in as fleet command (operator password) to hold lead'")
-      +">Make fleet lead</button>";
+      +">Make fleet lead</button>"
+      +(canKick ? "<button class='ci ck'>Kick from op</button>" : "");
     c.style.display="block"; c.style.left=Math.min(x, window.innerWidth-200)+"px"; c.style.top=y+"px";
     var b=c.querySelector(".ci");
     if(ok) b.onclick=function(){ hideCtx();
       api("POST","/set-lead",{target:m.who}).then(function(d){
         if(d&&d.ok){ toast(m.who+" holds the lead now."); tick(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
+    var ck=c.querySelector(".ck");
+    if(ck) ck.onclick=function(){ hideCtx(); kickMember(m.who); };
   }
   function hideCtx(){ el("ctxmenu").style.display="none"; }
   document.addEventListener("click", hideCtx);

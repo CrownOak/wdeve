@@ -111,8 +111,8 @@
      panel the cards collapse to one column instead of running off the edge. */
   .medgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr)); gap:14px; margin:0 0 8px; }
   .med{ background:var(--black); border:1px solid var(--line-soft); padding:16px 18px; position:relative;
-        min-width:0; overflow-wrap:break-word; word-break:break-word; }
-  .med .ico, .med .mname, .med .flav, .med .earn, .medprog .pl{ overflow-wrap:break-word; word-break:break-word; }
+        min-width:0; overflow-wrap:break-word; }
+  .med .mname, .med .flav, .med .earn, .medprog .pl{ overflow-wrap:break-word; }
   .med::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ore); opacity:.55; }
   .med .ico{ font-size:26px; line-height:1; }
   .med .mname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
@@ -982,7 +982,9 @@ function medHtml(d, honor){
     if (d.note) bits.push(d.note);
     html += '<div class="earn"><b>Awarded</b>' + (bits.length ? ' &middot; ' + esc(bits.join(" · ")) : '') + '</div>';
   } else {
-    html += '<div class="earn"><b>Locked</b> &middot; ' + esc(d.description) + '. Go get it.</div>';
+    // description already shows in .flav above; the earn line is status only
+    // (repeating the criteria here rendered it twice with a double period).
+    html += '<div class="earn"><b>Locked</b> &middot; Go get it.</div>';
     if (d.progress && d.progress.threshold){
       var cur = Number(d.progress.current) || 0;
       var thr = Number(d.progress.threshold) || 1;
