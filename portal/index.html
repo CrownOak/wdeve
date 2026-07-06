@@ -130,6 +130,40 @@
   .med.lock{ opacity:.55; }
   .med.lock .ico{ filter:grayscale(1); }
   .med.lock .earn b{ color:var(--silver-dim); }
+
+  /* ---------- ESI mining ledger panel ---------- */
+  .esidisc{ background:var(--black); border:1px solid rgba(70,255,94,.25); border-left:3px solid var(--ore);
+    padding:12px 15px; margin:0 0 16px; font-size:13px; line-height:1.6; color:#a9b2a8; }
+  .esidisc b{ color:var(--silver); }
+  .esichar{ border:1px solid var(--line-soft); background:var(--black); padding:14px 15px; margin:0 0 12px; }
+  .esihead{ display:flex; align-items:center; gap:12px; }
+  .esiport{ width:48px; height:48px; flex:0 0 48px; border:1px solid var(--line); background:#0b0d0e; }
+  .esiid{ display:flex; flex-direction:column; min-width:0; }
+  .esiname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    font-size:15px; color:var(--silver); }
+  .esimeta{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; }
+  .esierr{ color:var(--amber); }
+  .esigrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr)); gap:8px 16px; margin-top:12px; }
+  .esikv{ display:flex; flex-direction:column; min-width:0; overflow-wrap:break-word; }
+  .esikv .k{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .esikv .v{ font-size:13px; color:var(--silver); }
+  .esion{ color:var(--ore); }
+  .esisub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:6px 0 8px; }
+  .esimining{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr)); gap:5px 16px; margin-bottom:14px; }
+  .orow{ display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line-soft); padding:3px 0; }
+  .orow .oname{ color:var(--silver-dim); font-size:13px; text-transform:capitalize; }
+  .orow .onum{ font-family:var(--mono); font-size:12.5px; color:var(--ore); }
+  .esiacts{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:6px; }
+  .esilogin{ display:inline-flex; align-items:center; gap:8px; font-family:var(--display); font-weight:700;
+    text-transform:uppercase; letter-spacing:.05em; font-size:13px; color:#04140a; background:var(--ore);
+    padding:11px 18px; text-decoration:none; clip-path:polygon(0 0,100% 0,97% 100%,0 100%); }
+  .esilogin:hover{ background:var(--laser); }
+  .esilogin .ev{ font-family:var(--mono); font-size:10px; background:#04140a; color:var(--ore); padding:2px 6px; letter-spacing:.1em; }
+  .esibtn{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:8px 14px;
+    cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+    transition:border-color .15s, color .15s; }
+  .esibtn:hover{ border-color:var(--ore); color:var(--ore); }
+  .esibtn.wide{ padding:10px 18px; }
   .medprog{ margin-top:9px; }
   .medprog .pl{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-bottom:4px; }
   .pbar{ height:4px; background:var(--steel-3); overflow:hidden; }
@@ -316,6 +350,7 @@
     <div class="panel" id="panelStats"></div>
     <div class="panel" id="panelContracts"></div>
     <div class="panel" id="panelChars"></div>
+    <div class="panel" id="panelESI"></div>
     <div class="panel" id="panelAcademy"></div>
     <div class="panel" id="panelTrophies"></div>
     <div id="corpStripWrap"></div>
@@ -474,6 +509,7 @@ function renderAll(){
   safeRender(renderStats,    $("panelStats"));
   safeRender(renderContractsPanel, $("panelContracts"));
   safeRender(renderChars,    $("panelChars"));
+  safeRender(renderESI,      $("panelESI"));
   safeRender(renderAcademy,  $("panelAcademy"));
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
@@ -946,6 +982,104 @@ function dataUrlBytes(d){
   return Math.floor((d.length - i - 1) * 3 / 4);
 }
 
+/* ============ ESI mining ledger (attach an EVE character) ============ */
+var ICE_BASES = {"blue ice":1,"clear icicle":1,"glacial mass":1,"white glaze":1,"glare crust":1,"dark glitter":1,"gelidus":1,"krystallos":1};
+function esiUnits(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B"; if(n>=1e6) return (n/1e6).toFixed(2)+"M"; if(n>=1e3) return (n/1e3).toFixed(1)+"k"; return String(n); }
+function esiIsk(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B ISK"; if(n>=1e6) return (n/1e6).toFixed(1)+"M ISK"; if(n>=1e3) return (n/1e3).toFixed(0)+"k ISK"; return Math.round(n)+" ISK"; }
+function esiYears(iso){ var ms=Date.now()-Date.parse(iso); if(isNaN(ms)) return "?"; var y=ms/(365.25*86400000); return y>=1?y.toFixed(1)+"y":Math.floor(ms/86400000)+"d"; }
+function esiAgo(iso){ if(!iso) return "never";
+  var s=Math.floor((Date.now()-Date.parse(iso))/1000); if(s<0)s=0;
+  if(s<90) return s+"s ago"; var m=Math.floor(s/60); if(m<90) return m+"m ago";
+  var h=Math.floor(m/60); if(h<48) return h+"h ago"; return Math.floor(h/24)+"d ago"; }
+function renderESI(){
+  var el = $("panelESI");
+  var e = S.me.esi || {};
+  var h = '<div class="ptitle">Mining Ledger &middot; EVE ESI</div>';
+  // Transparency (Kyle): be explicit they LEAVE bonkeve and log in on CCP's site,
+  // that we never see their password/login, and this only reads the mining ledger.
+  h += '<div class="esidisc">'
+    + '<b>You are logging in on EVE\'s own site, not ours.</b> The button below sends you to '
+    + '<b>login.eveonline.com</b>, CCP\'s official login. You type your EVE credentials <b>there</b>. '
+    + 'BONK never sees, stores, or touches your EVE password or login, ever. '
+    + 'The <b>only</b> thing attaching does is let us read your <b>in game mining ledger</b>, so everything '
+    + 'you actually mine (solo or in a fleet) shows up here and counts toward corp events. '
+    + 'Detach any time and the data goes with it.'
+    + '</div>';
+  if (e.configured === false){
+    h += '<div class="pnote">ESI attach is not switched on yet. Leadership is finishing the one time EVE app setup. Check back soon.</div>';
+    el.innerHTML = h; return;
+  }
+  var chars = e.characters || [];
+  if (chars.length){
+    chars.forEach(function(c){
+      var s = c.snapshot || {};
+      h += '<div class="esichar">';
+      h += '<div class="esihead">';
+      if (s.portrait) h += '<img class="esiport" src="'+esc(s.portrait)+'" alt="" onerror="this.style.display=\'none\'">';
+      h += '<div class="esiid"><span class="esiname">'+esc(c.name)+'</span>'
+        + '<span class="esimeta">synced '+esiAgo(c.last_sync_at)
+        + (c.last_error ? ' <span class="esierr">('+esc(c.last_error)+')</span>' : '')+'</span></div>';
+      h += '<button class="esibtn" data-detach="'+esc(String(c.eve_char_id))+'">detach</button>';
+      h += '</div>';
+      // the harvested snapshot
+      var stats = [];
+      if (s.corp && s.corp.name) stats.push(["Corp", esc(s.corp.name)]);
+      if (s.alliance && s.alliance.name) stats.push(["Alliance", esc(s.alliance.name)]);
+      if (s.birthday) stats.push(["Character age", esiYears(s.birthday)]);
+      if (s.security_status != null) stats.push(["Sec status", s.security_status.toFixed(2)]);
+      if (s.total_sp != null) stats.push(["Total SP", esiUnits(s.total_sp)]);
+      if (s.wallet_isk != null) stats.push(["Wallet", esiIsk(s.wallet_isk)]);
+      if (s.ship) stats.push(["Flying", esc((s.ship.type_name||"ship")+(s.ship.name?" · "+s.ship.name:""))]);
+      if (s.system && s.system.name) stats.push(["Location", esc(s.system.name)]);
+      if (s.online) stats.push(["Status", s.online.online?"<span class='esion'>online now</span>":"offline"]);
+      if (s.implants != null) stats.push(["Implants", String(s.implants)]);
+      if (s.jump_clones != null) stats.push(["Jump clones", String(s.jump_clones)]);
+      if (s.industry_jobs != null) stats.push(["Industry jobs", String(s.industry_jobs)]);
+      if (s.kills_recent != null) stats.push(["Recent kills", String(s.kills_recent)]);
+      if (s.assets_count != null) stats.push(["Assets", esiUnits(s.assets_count)+(s.assets_paged?"+":"")]);
+      if (s.corp_history != null) stats.push(["Corp history", s.corp_history+" corps"]);
+      if (stats.length){
+        h += '<div class="esigrid">';
+        stats.forEach(function(kv){ h += '<div class="esikv"><span class="k">'+kv[0]+'</span><span class="v">'+kv[1]+'</span></div>'; });
+        h += '</div>';
+      } else if (!c.last_sync_at){
+        h += '<div class="pnote">Pulling your character data from EVE now. Hit Sync if it does not show in a moment.</div>';
+      }
+      h += '</div>';
+    });
+  } else {
+    h += '<div class="emptyline">No character tied in yet. Attach one below to pull your real EVE data and mined totals.</div>';
+  }
+  var mining = e.mining || [];
+  if (mining.length){
+    var totalU = 0; mining.forEach(function(m){ totalU += Number(m.units)||0; });
+    h += '<div class="esisub">Mined by ore, in game ledger, raw units ('+esiUnits(totalU)+' total)</div><div class="esimining">';
+    mining.slice(0,14).forEach(function(m){
+      h += '<div class="orow"><span class="oname">'+(ICE_BASES[m.base_ore]?"\u{1F9CA} ":"")+esc(m.base_ore)+'</span>'
+        + '<span class="onum">'+esiUnits(m.units)+'</span></div>';
+    });
+    h += '</div>';
+  }
+  h += '<div class="esiacts">'
+    + '<a class="esilogin" href="/api/esi/login">'+(chars.length?'Attach another character':'Log in with EVE Online')+' <span class="ev">EVE</span></a>'
+    + (chars.length ? '<button class="esibtn wide" id="esiSyncBtn">Sync ledger now</button>' : '')
+    + '</div>';
+  el.innerHTML = h;
+  var sy = $("esiSyncBtn");
+  if (sy) sy.addEventListener("click", async function(){
+    sy.disabled = true; sy.textContent = "Syncing...";
+    try { var r = await api("esi/sync", {}); toast(r.message || "Synced."); await refreshMe(); }
+    catch(ev){ if(!isOut(ev)){ toast(ev.message); sy.disabled=false; sy.textContent="Sync ledger now"; } }
+  });
+  Array.prototype.forEach.call(el.querySelectorAll("[data-detach]"), function(b){
+    b.addEventListener("click", async function(){
+      if(!confirm("Detach this character? Its mining ledger data is removed from your profile.")) return;
+      try { await api("esi/detach", { eve_char_id: Number(b.getAttribute("data-detach")) }); toast("Detached."); await refreshMe(); }
+      catch(ev){ if(!isOut(ev)) toast(ev.message); }
+    });
+  });
+}
+
 /* ============ trophy case ============ */
 function renderTrophies(){
   var el = $("panelTrophies");
@@ -1405,6 +1539,17 @@ function renderFoot(){
 
 /* ============ boot ============ */
 (async function boot(){
+  // returning from EVE SSO (/api/esi/callback redirects to /portal/?esi=...)
+  try {
+    var esiP = new URLSearchParams(location.search).get("esi");
+    if (esiP){
+      var msg = { ok:"Character attached. Pulling your EVE data now.", owned:"That character is already tied to another account.",
+        bad:"That did not come back clean from EVE. Try attaching again.", exchange:"EVE would not hand over the token. Try again.",
+        jwt:"Could not read the character from EVE. Try again.", "off":"ESI is not switched on yet." };
+      setTimeout(function(){ toast(msg[esiP] || "Back from EVE."); }, 400);
+      history.replaceState(null, "", location.pathname);
+    }
+  } catch(e){}
   try {
     var j = await api("me");
     S.me = j;
