@@ -189,9 +189,9 @@ tr.haulrow{ cursor:pointer; }
    - Prices (AMEND-2): fetched live by scraping refine's own baked "var DATA = {...}" script
      blob, cached in localStorage. If both the fetch and the cache fail, dropping is disabled
      with a visible error while the log and roster keep working.
-   - Valuation (AMEND-6): valueLines() between the VALUE-FN-START/END markers reproduces refine's
-     calcFwd math exactly (batch floor, whole-paste mineral accumulation, floor at 0.70 eff,
-     Jita sell). Pure function, no DOM, testable.
+   - Valuation (AMEND-6/7): valueLines() between the VALUE-FN-START/END markers uses refine's
+     yield/price data at 0.70 eff and Jita sell, but FRACTIONALLY (no 100-unit batch floor):
+     a ledger credits pro-rata because the fleet pool refines together. Pure, no DOM, testable.
    - Offline: last good /sync payload is cached (bonk_fleet_cache) and rendered with a banner;
      failed drops queue in bonk_fleet_queue marked "unsent" and retry on every sync tick.
    - No password value appears anywhere in this file. Ever. */
@@ -233,24 +233,26 @@ tr.haulrow{ cursor:pointer; }
   /*VALUE-FN-START*/
   var EFF=0.70; // AMEND-3: refine's shipped default efficiency; fixed, not UI-exposed
   function valueLines(lines, DATA){
-    // Pass 1: per line, batches = floor(qty/y.p); accumulate minerals across the WHOLE paste.
-    // Each detail line also gets its own solo value (same math run on that line alone) so the
-    // worker can build per-ore haul summaries; unmatched lines carry 0.
+    // FRACTIONAL valuation (v3.2). Refine floors to 100-unit reprocessing batches —
+    // physically right for refining YOUR OWN paste, but a ledger credits pro-rata:
+    // the fleet pools everyone's ore and the pooled total refines fully, so a
+    // 50-unit stack is worth half a batch, not zero. (Field bug: a 31-stack paste
+    // of small amounts valued to 0 because every line floored to 0 batches.)
+    // Each detail line also gets its own solo value so the worker can build
+    // per-ore haul summaries; unmatched lines carry 0.
     var got={}, n=0, units=0, unmatched=0, detail=[];
     lines.forEach(function(it){
       var y=DATA.yields[it.name.toLowerCase()];
       if(!y){ unmatched++; detail.push([it.name, it.qty, 0]); return; }
       n++; units+=it.qty;
-      var batches=Math.floor(it.qty / y.p), solo=0, mid;
+      var batches=it.qty / y.p, solo=0, mid;
       for(mid in y.m){ got[mid]=(got[mid]||0)+batches*y.m[mid]; }
-      for(mid in y.m){ var samt=Math.floor(batches*y.m[mid]*EFF);
-        solo+=samt*(DATA.prices[mid] ? DATA.prices[mid].j||0 : 0); }
+      for(mid in y.m){ solo+=batches*y.m[mid]*EFF*(DATA.prices[mid] ? DATA.prices[mid].j||0 : 0); }
       detail.push([it.name, it.qty, Math.round(solo)]);
     });
-    // Pass 2: per mineral, floor at efficiency, price at Jita sell.
+    // Pass 2: per mineral, at efficiency, priced at Jita sell. No flooring anywhere.
     var jita=0;
-    for(var mid2 in got){ var amt=Math.floor(got[mid2]*EFF);
-      jita+=amt*(DATA.prices[mid2] ? DATA.prices[mid2].j||0 : 0); }
+    for(var mid2 in got){ jita+=got[mid2]*EFF*(DATA.prices[mid2] ? DATA.prices[mid2].j||0 : 0); }
     return { jita:Math.round(jita), units:units, n:n, unmatched:unmatched, detail:detail };
   }
   /*VALUE-FN-END*/
