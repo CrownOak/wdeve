@@ -171,6 +171,18 @@
     transition:border-color .15s, color .15s; }
   .esibtn:hover{ border-color:var(--ore); color:var(--ore); }
   .esibtn.wide{ padding:10px 18px; }
+  /* two-tally mining block on the stats panel */
+  .minehdr{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px; }
+  .minegrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:12px; }
+  .minecard{ border:1px solid var(--line-soft); background:var(--black); padding:13px 15px; min-width:0; }
+  .minecard .mk{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ore); }
+  .minecard .mv{ font-family:var(--display); font-weight:700; font-size:24px; color:var(--silver); line-height:1.2; margin-top:4px; }
+  .minecard .mv .mu{ font-size:12px; color:var(--silver-dim); font-weight:400; }
+  .minecard .ms{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5; }
+  .minerows{ margin-top:10px; border-top:1px solid var(--line-soft); padding-top:8px; }
+  .mrow{ display:flex; justify-content:space-between; gap:10px; padding:2px 0; }
+  .mrow .mrn{ color:var(--silver-dim); font-size:12.5px; text-transform:capitalize; }
+  .mrow .mn{ font-family:var(--mono); font-size:12px; color:var(--ore); }
   .medprog{ margin-top:9px; }
   .medprog .pl{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-bottom:4px; }
   .pbar{ height:4px; background:var(--steel-3); overflow:hidden; }
@@ -662,6 +674,26 @@ function renderStats(){
       html += '<div class="pnote">Ledger numbers are a touch stale right now. Still yours, still climbing.</div>';
     }
 
+    /* two SEPARATE ore tallies: fleet-hauled (compressed ×100) vs ESI in-game ledger (raw). Never summed. */
+    var esiMine = (S.me.esi && S.me.esi.mining) || [];
+    var esiU = 0, esiIskT = 0;
+    esiMine.forEach(function(m){ esiU += Number(m.units)||0; esiIskT += Number(m.isk)||0; });
+    var fleetU = Number(fleet.oreUnits)||0;
+    if (fleetU > 0 || esiU > 0 || (S.me.esi && S.me.esi.configured)){
+      html += '<div class="minehdr">Ore hauled &middot; two separate tallies</div><div class="minegrid">';
+      html += '<div class="minecard"><div class="mk">In fleet ops</div>' +
+        '<div class="mv">' + esiUnits(fleetU) + ' <span class="mu">units</span></div>' +
+        '<div class="ms">' + fmtIsk(fleet.isk) + ' ISK &middot; compressed counted ×100</div>' +
+        fleetOreRows(fleet.ore) + '</div>';
+      html += '<div class="minecard"><div class="mk">In game ledger (ESI)</div>' +
+        (esiU > 0
+          ? '<div class="mv">' + esiUnits(esiU) + ' <span class="mu">units</span></div>' +
+            '<div class="ms">' + fmtIsk(esiIskT) + ' ISK &middot; raw, everything you mine</div>'
+          : '<div class="ms">Attach your EVE character below to track your real in game mining here.</div>') +
+        '</div>';
+      html += '</div><div class="pnote">These are two different measures, never added together: <b>fleet</b> is what you dropped to the ledger (compressed blocks counted ×100), <b>ESI</b> is your true in game mining ledger (raw units, solo or fleet).</div>';
+    }
+
     /* per character breakdown */
     var cs = S.me.characters || [];
     if (cs.length){
@@ -994,6 +1026,14 @@ var ICE_BASES = {"blue ice":1,"clear icicle":1,"glacial mass":1,"white glaze":1,
 function esiUnits(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B"; if(n>=1e6) return (n/1e6).toFixed(2)+"M"; if(n>=1e3) return (n/1e3).toFixed(1)+"k"; return String(n); }
 function esiIsk(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B ISK"; if(n>=1e6) return (n/1e6).toFixed(1)+"M ISK"; if(n>=1e3) return (n/1e3).toFixed(0)+"k ISK"; return Math.round(n)+" ISK"; }
 function esiYears(iso){ var ms=Date.now()-Date.parse(iso); if(isNaN(ms)) return "?"; var y=ms/(365.25*86400000); return y>=1?y.toFixed(1)+"y":Math.floor(ms/86400000)+"d"; }
+function fleetOreRows(ore){
+  ore = ore || {};
+  var arr = Object.keys(ore).map(function(k){ return [k, ore[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
+  if (!arr.length) return '';
+  var h = '<div class="minerows">';
+  arr.forEach(function(kv){ h += '<div class="mrow"><span class="mrn">'+(ICE_BASES[kv[0]]?"\u{1F9CA} ":"")+esc(kv[0])+'</span><span class="mn">'+esiUnits(kv[1])+'</span></div>'; });
+  return h + '</div>';
+}
 function esiAgo(iso){ if(!iso) return "never";
   var s=Math.floor((Date.now()-Date.parse(iso))/1000); if(s<0)s=0;
   if(s<90) return s+"s ago"; var m=Math.floor(s/60); if(m<90) return m+"m ago";

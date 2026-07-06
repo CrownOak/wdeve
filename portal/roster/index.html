@@ -37,6 +37,9 @@
   .fisk .v.nap{ font-size:12px; font-weight:400; color:var(--muted); text-transform:none; letter-spacing:.03em; }
   .fops{ font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--silver-dim); margin-top:7px; }
   .fops b{ color:var(--muted); font-weight:400; text-transform:uppercase; font-size:10.5px; letter-spacing:.08em; }
+  .fmine{ display:flex; gap:14px; margin-top:7px; font-family:var(--mono); font-size:12px; color:var(--ore); }
+  .fmine .mm{ display:inline-flex; align-items:center; gap:5px; }
+  .fmine .ml{ color:var(--muted); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; }
   .falts{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:11px;
           border-top:1px solid var(--line-soft); padding-top:9px; }
   .falts .albl{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-right:2px; }
@@ -143,6 +146,7 @@
     if (a >= 1e3) return t(n/1e3) + "k";
     return String(Math.round(n));
   }
+  function fmtU(n){ n = Number(n) || 0; if (n >= 1e9) return (n/1e9).toFixed(1)+"B"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(0)+"k"; return String(Math.round(n)); }
 
   function medalCount(r){
     if (Array.isArray(r.decorations)) return r.decorations.length;
@@ -203,6 +207,10 @@
       '</div>' +
       '<div class="fisk"><span class="k">ISK earned</span>' + iskCell + '</div>' +
       '<div class="fops"><b>' + opsLabel + '</b> &middot; ' + opsVal + '</div>' +
+      '<div class="fmine">' +
+        '<span class="mm" title="Ore hauled to fleet ledger (compressed counted ×100)"><span class="ml">Fleet</span> ' + fmtU(r.fleetOreUnits) + ' u</span>' +
+        '<span class="mm" title="Ore mined per the in-game ESI ledger (raw units)"><span class="ml">ESI</span> ' + (Number(r.esiOreUnits) > 0 ? fmtU(r.esiOreUnits) + ' u' : '&middot;') + '</span>' +
+      '</div>' +
       altsRow +
     '</div>';
   }
