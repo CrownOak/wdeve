@@ -79,6 +79,7 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
   color:var(--silver); font-family:var(--mono); font-size:12.5px; }
 .paidok{ font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em;
   padding:2px 8px; border:1px solid currentColor; }
+.copyisk{ cursor:pointer; } .copyisk:hover{ text-decoration:underline dotted; }
 .paidok.yes{ color:var(--ore); } .paidok.no{ color:var(--muted); }
 #toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:300; display:none;
   background:var(--ore); color:#04140a; font-family:var(--mono); font-size:12px; font-weight:700;
@@ -640,7 +641,7 @@ tr.haulrow{ cursor:pointer; }
         var amt = pd && pd.amount!=null ? Math.round(pd.amount) : x.payout;
         h+="<tr><td class='who'>"+esc(x.who)+"</td>"
           +"<td class='num'>"+isk(x.jita)+"</td>"
-          +"<td class='num strong good'>"+isk(x.payout)+"</td>"
+          +"<td class='num strong good copyisk' data-ci='"+i+"' title='click to copy the exact amount for the in-game transfer'>"+isk(x.payout)+"</td>"
           +"<td><input type='checkbox' class='paychk' data-pi='"+i+"'"+(pd&&pd.paid?" checked":"")+(isLead?"":" disabled")+"></td>"
           +"<td class='num'><input class='payamt' id='amt_"+i+"' value='"+amt+"'"+(isLead?"":" disabled")+"></td>"
           +"<td class='num'>"+(pd&&pd.at?hhmm(pd.at):"")+"</td></tr>"; });
@@ -656,6 +657,13 @@ tr.haulrow{ cursor:pointer; }
       +"</div>";
     el("payin").innerHTML=h;
     el("payx").onclick=closePayout;
+    // click a payout figure -> copy the exact amount from its amount field (any op; paste into the EVE transfer box)
+    Array.prototype.forEach.call(el("payin").querySelectorAll(".copyisk"), function(td){
+      td.onclick=function(){ var i=parseInt(td.getAttribute("data-ci"),10);
+        var raw=String((el("amt_"+i)||{}).value||"").replace(/[ ,]/g,"");
+        if(!raw) return;
+        try{ navigator.clipboard.writeText(raw).then(function(){ toast(Number(raw).toLocaleString()+" ISK copied"); }); }
+        catch(e){} }; });
     if(isLead) Array.prototype.forEach.call(el("payin").querySelectorAll(".paychk"), function(cb){
       cb.onchange=function(){ var i=parseInt(cb.getAttribute("data-pi"),10), x=list[i];
         var amt=Math.round(parseFloat(String(el("amt_"+i).value).replace(/[ ,]/g,""))||0);
@@ -771,5 +779,5 @@ tr.haulrow{ cursor:pointer; }
     if(t) unlock(t); else showGate(true); })();
 })();
 </script>
-<script src="/nav.js?v=2"></script>
+<script src="/nav.js?v=3"></script>
 </body></html>
