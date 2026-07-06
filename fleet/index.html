@@ -410,15 +410,36 @@ tr.haulrow{ cursor:pointer; }
     var list=getPilots(); if(list.indexOf(n)<0){ list.push(n); setPilots(list); }
     setActivePilot(n); }
   function removeAlt(name){ var list=getPilots().filter(function(x){ return x!==name; }); setPilots(list); renderPilots(); }
+  // Whatever you are logged into the portal as (your MAIN) is the identity that
+  // holds the credits and shows in the fleet. On unlock we ask the portal who you
+  // are (/api/whoami, same-origin cookie) and DEFAULT your drop name to your main,
+  // replacing any stale nickname, unless you are already dropping as one of your
+  // own real characters (a deliberate alt for multiboxing). The switcher still
+  // lets you drop as an alt; the alt still credits the same account.
   function seedPilotsFromPortal(){
-    if(pilotsSeeded || !who || !token) return; pilotsSeeded=true;
-    fetch("/api/roster",{ headers:{ "X-Token":token } }).then(function(r){ return r.ok?r.json():null; }).then(function(d){
-      if(!d || !d.ok || !d.roster) return;
-      var lc=who.toLowerCase(), mine=null;
-      d.roster.forEach(function(a){ (a.characters||[]).forEach(function(c){ if(String(c.ign).toLowerCase()===lc) mine=a; }); });
-      if(!mine) return;
-      var list=getPilots(); (mine.characters||[]).forEach(function(c){ if(list.indexOf(c.ign)<0) list.push(c.ign); });
-      setPilots(list); renderPilots();
+    if(pilotsSeeded || !token) return; pilotsSeeded=true;
+    fetch("/api/whoami",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(wd){
+      var mainIgn = (wd && wd.loggedIn && wd.ign) ? wd.ign : null;
+      fetch("/api/roster",{ headers:{ "X-Token":token } }).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+        var chars=[];
+        if(d && d.ok && d.roster){
+          var key = (mainIgn || who || "").toLowerCase();
+          d.roster.forEach(function(a){ (a.characters||[]).forEach(function(c){
+            if(String(c.ign).toLowerCase()===key) chars=(a.characters||[]).map(function(x){ return x.ign; }); }); });
+        }
+        if(mainIgn){
+          // default to the portal main unless already dropping as one of your own characters
+          var dropIsMine=chars.some(function(n){ return n.toLowerCase()===String(who||"").toLowerCase(); });
+          if(!who || !dropIsMine){ who=mainIgn; lsSet(LS_WHO,who); showNamebox(false); }
+          var list=getPilots();
+          chars.forEach(function(n){ if(list.indexOf(n)<0) list.push(n); });
+          setPilots([mainIgn].concat(list.filter(function(n){ return n.toLowerCase()!==mainIgn.toLowerCase(); })));
+          renderPilots(); bump(); tick();
+        } else if(who && chars.length){
+          // not logged into the portal: keep the manual name, just seed the alt list
+          var l=getPilots(); chars.forEach(function(n){ if(l.indexOf(n)<0) l.push(n); }); setPilots(l); renderPilots();
+        }
+      }).catch(function(){});
     }).catch(function(){});
   }
   // reassign an already-logged drop onto your next pilot (cycles through your list)
