@@ -1,0 +1,1145 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK &middot; Member Portal</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+  /* ---------- skeletons (C8 first paint) ---------- */
+  @keyframes skpulse{ 0%{opacity:.45} 50%{opacity:.9} 100%{opacity:.45} }
+  .skel{ background:var(--steel-2); animation:skpulse 1.4s ease-in-out infinite; border:1px solid var(--line-soft); }
+  .skel.h96{ width:96px; height:96px; } .skel.h20{ height:20px; width:220px; margin:8px 0; }
+  .skel.h44{ height:44px; width:60%; margin:10px 0; } .skel.h12{ height:12px; width:40%; margin:6px 0; }
+  .skel.block{ height:120px; margin:0 0 18px; }
+
+  /* ---------- panels ---------- */
+  .panel{ background:var(--steel); border:1px solid var(--line-soft); padding:18px 20px 20px;
+          margin:0 0 18px; position:relative; }
+  .panel::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+  .ptitle{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+           color:var(--muted); margin:0 0 12px; }
+  .perr{ color:var(--red); font-family:var(--mono); font-size:12px; padding:14px 0 4px; }
+  .pnote{ color:var(--muted); font-family:var(--mono); font-size:11.5px; margin-top:8px; line-height:1.5; }
+  .emptyline{ color:var(--muted); font-family:var(--mono); font-size:12.5px; padding:10px 0; line-height:1.6; }
+
+  /* ---------- identity header ---------- */
+  .idrow{ display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+  .idav{ width:96px; height:96px; flex:0 0 96px; border:1px solid var(--line); background:#0b0d0e; overflow:hidden; }
+  .idav img, .idav svg{ width:100%; height:100%; display:block; object-fit:cover; }
+  .idname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+           font-size:clamp(20px,5vw,30px); color:var(--silver); line-height:1.15; word-break:break-word; }
+  .idmeta{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:7px;
+           display:flex; gap:14px; flex-wrap:wrap; }
+  .idmeta b{ color:var(--ore); font-weight:400; }
+  .rolechip{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+             padding:3px 9px; border:1px solid var(--line); color:var(--silver-dim); vertical-align:middle;
+             margin-left:10px; white-space:nowrap; }
+  .rolechip.officer{ color:var(--ore); border-color:rgba(70,255,94,.4); }
+  .rolechip.admin{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .idacts{ margin-left:auto; display:flex; gap:10px; align-items:center; }
+  .bell{ position:relative; background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+         font-size:17px; padding:8px 13px; cursor:pointer; line-height:1; transition:border-color .15s,color .15s; }
+  .bell:hover{ border-color:var(--ore); color:var(--ore); }
+  .bellbadge{ position:absolute; top:-7px; right:-7px; background:var(--ore); color:#04140a;
+              font-family:var(--mono); font-size:10px; font-weight:700; padding:1px 6px; }
+  .mini{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:6px 11px;
+         cursor:pointer; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+         transition:border-color .15s,color .15s; }
+  .mini:hover{ border-color:var(--ore); color:var(--ore); }
+  .mini.warn:hover{ border-color:var(--red); color:var(--red); }
+
+  /* ---------- inbox ---------- */
+  .note-row{ display:flex; gap:12px; align-items:baseline; padding:10px 2px; border-top:1px solid var(--line-soft); }
+  .note-row:first-child{ border-top:0; }
+  .note-ico{ flex:0 0 22px; text-align:center; }
+  .note-body{ flex:1; font-size:13.5px; color:var(--silver); line-height:1.5; }
+  .note-body.unread{ color:var(--laser); }
+  .note-ago{ font-family:var(--mono); font-size:11px; color:var(--muted); white-space:nowrap; }
+
+  /* ---------- haul stats ---------- */
+  .herolabel{ font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .heronum{ font-family:var(--mono); font-size:clamp(38px,9vw,58px); color:var(--ore); line-height:1.05;
+            margin:6px 0 2px; font-variant-numeric:tabular-nums; }
+  .herounit{ font-size:.45em; color:var(--ore-deep); }
+  .stattiles{ display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-top:18px; }
+  .tile{ background:var(--black); border:1px solid var(--line-soft); padding:12px 14px; }
+  .tile .tv{ font-family:var(--mono); font-size:20px; color:var(--silver); font-variant-numeric:tabular-nums; }
+  .tile .tk{ font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+             color:var(--muted); margin-top:4px; line-height:1.4; }
+  .tile .ts{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:3px; }
+  details.brk{ margin-top:16px; }
+  details.brk summary{ cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+                       text-transform:uppercase; color:var(--silver-dim); padding:6px 0; }
+  details.brk summary:hover{ color:var(--ore); }
+  details.brk table{ margin-top:8px; }
+  details.brk td, details.brk th{ padding:7px 9px; font-size:12.5px; }
+  .corpstrip{ font-family:var(--mono); font-size:11.5px; color:var(--muted); letter-spacing:.03em;
+              margin-top:16px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .corpstrip b{ color:var(--silver-dim); font-weight:400; }
+  .statbtns{ margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* ---------- characters ---------- */
+  .chrow{ display:flex; gap:14px; align-items:center; padding:12px 2px; border-top:1px solid var(--line-soft); flex-wrap:wrap; }
+  .chrow:first-of-type{ border-top:0; }
+  .chrow.alt{ padding-left:22px; }
+  .chrow.retired{ opacity:.45; }
+  .chav{ width:44px; height:44px; flex:0 0 44px; border:1px solid var(--line); background:#0b0d0e;
+         cursor:pointer; position:relative; overflow:hidden; }
+  .chav img, .chav svg{ width:100%; height:100%; display:block; object-fit:cover; }
+  .chav:hover::after{ content:"pic"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+                      background:rgba(7,8,9,.72); color:var(--ore); font-family:var(--mono); font-size:9px;
+                      letter-spacing:.1em; text-transform:uppercase; }
+  .chinfo{ flex:1 1 160px; min-width:0; }
+  .chname{ font-weight:700; color:var(--silver); font-size:15px; word-break:break-word; }
+  .chsub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; line-height:1.5; word-break:break-word; }
+  .chip{ font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.08em; padding:2px 6px;
+         margin-left:7px; vertical-align:middle; white-space:nowrap; }
+  .chip.main{ background:var(--ore); color:#04140a; }
+  .chip.payout{ border:1px solid var(--amber); color:var(--amber); }
+  .chip.ret{ border:1px solid var(--line); color:var(--muted); }
+  .chacts{ display:flex; gap:6px; flex-wrap:wrap; }
+  .addalt{ display:flex; gap:8px; margin-top:16px; border-top:1px solid var(--line-soft); padding-top:16px; flex-wrap:wrap; }
+  .addalt input{ flex:1 1 180px; width:auto; }
+  .addalt .gobtn{ padding:10px 18px; }
+
+  /* ---------- trophy case (lifted from the live Wall of Goblins) ---------- */
+  .tier{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+         font-size:14px; color:var(--ore); margin:20px 0 10px; }
+  .tier.gold{ color:var(--amber); }
+  .tier:first-of-type{ margin-top:4px; }
+  .medgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; margin:0 0 8px; }
+  .med{ background:var(--black); border:1px solid var(--line-soft); padding:16px 18px; position:relative; }
+  .med::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ore); opacity:.55; }
+  .med .ico{ font-size:26px; line-height:1; }
+  .med .mname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+               font-size:15px; color:var(--silver); margin:8px 0 0; }
+  .med .flav{ color:#a9b2a8; font-size:13px; margin-top:7px; line-height:1.55; }
+  .med .earn{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); line-height:1.55;
+              margin-top:9px; border-top:1px solid var(--line-soft); padding-top:8px; }
+  .med .earn b{ color:var(--ore); text-transform:uppercase; letter-spacing:.06em; font-size:10.5px; }
+  .med.honor::before{ background:var(--amber); }
+  .med.honor .mname{ color:var(--amber); }
+  .med.honor .earn b{ color:var(--amber); }
+  .med.lock{ opacity:.45; filter:grayscale(1); }
+  .med.lock .earn b{ color:var(--silver-dim); }
+  .medprog{ margin-top:9px; }
+  .medprog .pl{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-bottom:4px; }
+  .pbar{ height:4px; background:var(--steel-3); overflow:hidden; }
+  .pbar i{ display:block; height:100%; background:var(--ore); }
+
+  /* ---------- academy ---------- */
+  .acadprog{ display:flex; gap:14px; align-items:center; margin:0 0 14px; font-family:var(--mono);
+             font-size:12px; color:var(--silver-dim); }
+  .acadprog .pbar{ flex:1; height:6px; }
+  .mod{ border:1px solid var(--line-soft); background:var(--black); margin-bottom:8px; }
+  .modhead{ width:100%; display:flex; gap:12px; align-items:center; background:transparent; border:0;
+            color:var(--silver); padding:13px 15px; cursor:pointer; text-align:left;
+            font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:13.5px; }
+  .modhead:hover{ color:var(--ore); }
+  .modhead .tick2{ flex:0 0 20px; font-family:var(--mono); font-size:13px; color:var(--muted); }
+  .modhead .tick2.done{ color:var(--ore); }
+  .modhead .chev{ margin-left:auto; color:var(--muted); font-family:var(--mono); font-size:11px; }
+  .modbody{ display:none; padding:2px 16px 16px 47px; color:#a9b2a8; font-size:13.5px; line-height:1.6; }
+  .mod.open .modbody{ display:block; }
+  .modbody ol{ margin:8px 0 10px; padding-left:20px; }
+  .modbody li{ margin:3px 0; }
+  .modbody .gobtn{ margin-top:10px; padding:9px 18px; font-size:12px; }
+  .moddone{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-top:10px; }
+  .acadbanner{ border:1px solid rgba(70,255,94,.4); background:var(--black); color:var(--laser);
+               font-family:var(--mono); font-size:12.5px; padding:12px 15px; margin:0 0 14px; line-height:1.6; }
+
+  /* ---------- contracts ---------- */
+  .crow{ border-top:1px solid var(--line-soft); padding:11px 2px; cursor:pointer; }
+  .crow:first-of-type{ border-top:0; }
+  .crow:hover .cwhen{ color:var(--ore); }
+  .cmain{ display:flex; gap:14px; align-items:baseline; flex-wrap:wrap; }
+  .cwhen{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); flex:0 0 84px; }
+  .cval{ font-family:var(--mono); font-size:14px; color:var(--silver); font-variant-numeric:tabular-nums; }
+  .cvol{ font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .pill{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+         padding:2px 8px; border:1px solid currentColor; margin-left:auto; }
+  .pill.pend{ color:var(--amber); } .pill.acc{ color:var(--ore); } .pill.rej{ color:var(--red); }
+  .cdetail{ display:none; padding:10px 0 4px; }
+  .crow.open .cdetail{ display:block; }
+  .cdetail table td, .cdetail table th{ padding:6px 9px; font-size:12px; }
+  .cunmatched{ color:var(--amber); font-family:var(--mono); font-size:12px; margin-top:8px; line-height:1.5; }
+
+  /* ---------- modal ---------- */
+  .overlay{ position:fixed; inset:0; z-index:100; background:rgba(7,8,9,.82); display:none;
+            align-items:flex-start; justify-content:center; padding:38px 16px; overflow-y:auto; }
+  .overlay.show{ display:flex; }
+  .mcard{ width:100%; max-width:560px; background:var(--steel); border:1px solid var(--line);
+          padding:24px 24px 26px; position:relative; }
+  .mcard::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+  .mcard h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+             font-size:16px; color:var(--silver); margin:0 0 6px; }
+  .mcard .mhint{ font-family:var(--mono); font-size:11.5px; color:var(--muted); margin:0 0 14px; line-height:1.5; }
+  .mcard label{ display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+                text-transform:uppercase; color:var(--muted); margin:12px 0 5px; }
+  .mcard select{ width:100%; padding:10px 12px; background:var(--black); border:1px solid var(--line);
+                 color:var(--silver); font-family:var(--mono); font-size:13px; }
+  .mcard select:focus{ outline:none; border-color:var(--ore); }
+  .mcard textarea{ min-height:170px; }
+  .mbtns{ display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  .mbtns .gobtn{ padding:11px 22px; }
+  .receipt{ border:1px solid var(--line); background:var(--black); padding:14px 16px; margin-top:14px; }
+  .receipt .rrow{ display:flex; justify-content:space-between; gap:12px; font-family:var(--mono);
+                  font-size:12.5px; padding:3px 0; }
+  .receipt .rk{ color:var(--muted); } .receipt .rv{ color:var(--silver); }
+  .receipt .rv.big{ color:var(--ore); font-size:16px; }
+
+  /* ---------- profile drawer ---------- */
+  #profileDrawer{ display:none; }
+  #profileDrawer.show{ display:block; }
+  #profileDrawer label{ display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.08em;
+                        text-transform:uppercase; color:var(--muted); margin:12px 0 5px; }
+  #profileDrawer textarea{ min-height:90px; }
+  #profileDrawer select{ width:100%; padding:10px 12px; background:var(--black); border:1px solid var(--line);
+                         color:var(--silver); font-family:var(--mono); font-size:13px; }
+  #profileDrawer select:focus{ outline:none; border-color:var(--ore); }
+  .biocount{ font-family:var(--mono); font-size:10.5px; color:var(--muted); text-align:right; margin-top:3px; }
+
+  /* ---------- footer actions + misc ---------- */
+  .footacts{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:6px 0 20px; }
+  .footacts a{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+               color:var(--silver-dim); text-decoration:none; border:1px solid var(--line); padding:7px 13px; }
+  .footacts a:hover{ color:var(--ore); border-color:var(--ore); }
+  .signoff{ font-family:var(--mono); font-size:12.5px; color:var(--silver); letter-spacing:.03em;
+            border-top:1px solid var(--line); padding-top:18px; margin-top:8px; }
+  #toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:200;
+          background:var(--black); border:1px solid var(--ore); color:var(--laser);
+          font-family:var(--mono); font-size:12.5px; padding:11px 18px; display:none; max-width:90vw; }
+  .gate .links{ margin-top:16px; font-family:var(--mono); font-size:11.5px; line-height:2; }
+  .gate .links a{ color:var(--ore); text-decoration:none; }
+  .gate .links a:hover{ color:var(--laser); }
+  .formerr{ color:var(--red); font-family:var(--mono); font-size:12px; min-height:16px; margin-top:10px; line-height:1.5; }
+
+  @media(max-width:480px){
+    .panel{ padding:14px 13px 16px; }
+    .idacts{ margin-left:0; width:100%; }
+    .chacts{ width:100%; }
+    .cwhen{ flex-basis:auto; }
+  }
+</style></head>
+<body>
+
+<!-- ================= SKELETON (first paint) ================= -->
+<div id="skeleton">
+  <header><h1>&#9935; MEMBER PORTAL</h1>
+    <div class="sub">your goblin career, in numbers. checking your credentials...</div></header>
+  <div class="wrap">
+    <div class="panel"><div class="idrow"><div class="skel h96"></div>
+      <div style="flex:1"><div class="skel h20"></div><div class="skel h12"></div></div></div></div>
+    <div class="panel"><div class="skel h12"></div><div class="skel h44"></div><div class="skel h12"></div></div>
+    <div class="skel block"></div><div class="skel block"></div>
+  </div>
+</div>
+
+<!-- ================= LOGGED OUT ================= -->
+<div id="gate" class="gate" style="display:none">
+  <div class="card">
+    <h1>&#9935; MEMBER PORTAL</h1>
+    <p>the career page is inside. main character IGN and password, goblin.</p>
+    <form id="loginForm">
+      <input id="loginIgn" type="text" placeholder="MAIN CHARACTER IGN" autocomplete="username" autofocus>
+      <input id="loginPw" type="password" placeholder="PASSWORD" autocomplete="current-password" style="margin-top:10px">
+      <button type="submit" id="loginBtn">Enter the belt</button>
+    </form>
+    <div class="err" id="loginErr"></div>
+    <div class="links">
+      <a href="/portal/claim/">Have a claim code?</a><br>
+      <a href="/apply/">Want in? Apply.</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= LOGGED IN ================= -->
+<div id="app" style="display:none">
+  <header><h1>&#9935; MEMBER PORTAL</h1>
+    <div class="sub">your goblin career, in numbers. watch it climb.</div></header>
+  <div class="wrap">
+    <div class="panel" id="panelIdentity"></div>
+    <div class="panel" id="panelInbox" style="display:none"></div>
+    <div class="panel" id="profileDrawer"></div>
+    <div class="panel" id="panelStats"></div>
+    <div class="panel" id="panelContracts"></div>
+    <div class="panel" id="panelChars"></div>
+    <div class="panel" id="panelAcademy"></div>
+    <div class="panel" id="panelTrophies"></div>
+    <div id="corpStripWrap"></div>
+    <div class="footacts" id="footActs"></div>
+    <div class="signoff">The ore must flow. The goblins must eat. &#129704;&#129482;</div>
+  </div>
+  <footer>one login, all your pilots. the alts live inside the main. only the payout character gets the check.</footer>
+</div>
+
+<!-- contract modal -->
+<div class="overlay" id="contractOverlay">
+  <div class="mcard" id="contractCard"></div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="avatarFile" accept="image/*" style="display:none">
+
+<script>
+"use strict";
+
+/* ============ state ============ */
+var S = {
+  me: null,
+  contracts: null,
+  inboxOpen: false,
+  drawerOpen: false,
+  openModule: null,
+  avatarTarget: null,
+  openContracts: {}
+};
+
+/* ============ helpers ============ */
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function $(id){ return document.getElementById(id); }
+
+function fmtSig(n){
+  n = Number(n) || 0;
+  var a = Math.abs(n), v, u;
+  if (a >= 1e9){ v = n/1e9; u = "B"; }
+  else if (a >= 1e6){ v = n/1e6; u = "M"; }
+  else if (a >= 1e3){ v = n/1e3; u = "k"; }
+  else return String(Math.round(n));
+  var s = Math.abs(v) < 10 ? v.toFixed(2) : Math.abs(v) < 100 ? v.toFixed(1) : String(Math.round(v));
+  s = s.indexOf(".") > -1 ? s.replace(/0+$/,"").replace(/\.$/,"") : s;
+  return s + u;
+}
+function fmtIsk(n){ return fmtSig(n); }
+function fmtM3(n){ return fmtSig(n) + " m³"; }
+function toDate(x){
+  if (x == null) return null;
+  if (typeof x === "number") return new Date(x < 1e12 ? x*1000 : x);
+  var d = new Date(x); return isNaN(d.getTime()) ? null : d;
+}
+function ymd(x){
+  var d = toDate(x); if (!d) return "";
+  var p = function(n){ return (n<10?"0":"")+n; };
+  return d.getFullYear() + "." + p(d.getMonth()+1) + "." + p(d.getDate());
+}
+function ago(x){
+  var d = toDate(x); if (!d) return "";
+  var s = Math.floor((Date.now() - d.getTime())/1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return Math.floor(s/60) + "m ago";
+  if (s < 86400) return Math.floor(s/3600) + "h ago";
+  return Math.floor(s/86400) + "d ago";
+}
+function pct(rate){
+  var v = (Number(rate)||0) * 100;
+  var s = v.toFixed(1).replace(/\.0$/,"");
+  return s + "%";
+}
+function toast(msg){
+  var t = $("toast"); t.textContent = msg; t.style.display = "block";
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.style.display = "none"; }, 3800);
+}
+
+/* the shared deterministic goblin (identical across pages; do not modify) */
+function goblin(seed, size){
+  let h=2166136261; const s=String(seed||"goblin");
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+  const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
+  const hue=Math.floor(rnd()*360), c1="hsl("+hue+",70%,55%)", c2="hsl("+((hue+40)%360)+",80%,70%)";
+  let cells="";
+  for(let y=0;y<5;y++)for(let x=0;x<3;x++){ if(rnd()>0.45){ const f=rnd()>0.8?c2:c1;
+    cells+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>';
+    if(x<2) cells+='<rect x="'+(4-x)+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>'; } }
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.5 -0.5 6 6" width="'+size+'" height="'+size+'" style="background:#0b0d0e">'+cells+'</svg>';
+}
+function avatarHtml(ch, size){
+  if (ch && ch.avatar_url){
+    /* a dead R2 pic falls back to the generated goblin (C8) */
+    return '<img src="' + esc(ch.avatar_url) + '" alt="" width="' + size + '" height="' + size +
+           '" data-seed="' + esc(ch.avatar_seed || ch.ign || "goblin") + '" onerror="gobFallback(this)">';
+  }
+  return goblin(ch && (ch.avatar_seed || ch.ign), size);
+}
+window.gobFallback = function(img){
+  var size = img.getAttribute("width") || 44;
+  var wrap = document.createElement("span");
+  wrap.innerHTML = goblin(img.getAttribute("data-seed"), size);
+  if (img.parentNode) img.parentNode.replaceChild(wrap.firstChild, img);
+};
+
+/* ============ api ============ */
+var LOGGED_OUT = "__logged_out__";
+async function api(path, body){
+  var opt = body !== undefined
+    ? { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) }
+    : {};
+  var r;
+  try { r = await fetch("/api/" + path, opt); }
+  catch(e){ throw new Error("The comms array is down. Check your connection and try again."); }
+  if (r.status === 401){ showGate(); throw new Error(LOGGED_OUT); }
+  var j = null;
+  try { j = await r.json(); } catch(e){}
+  if (!j || j.ok === false){
+    throw new Error((j && j.error) || "Something rattled loose in the station. Try again in a moment.");
+  }
+  return j;
+}
+function isOut(e){ return e && e.message === LOGGED_OUT; }
+
+/* ============ top level states ============ */
+function showGate(){
+  $("skeleton").style.display = "none";
+  $("app").style.display = "none";
+  $("gate").style.display = "flex";
+}
+function showApp(){
+  $("skeleton").style.display = "none";
+  $("gate").style.display = "none";
+  $("app").style.display = "block";
+}
+
+async function refreshMe(){
+  try {
+    var j = await api("me");
+    S.me = j;
+    renderAll();
+  } catch(e){ if (!isOut(e)) toast(e.message); }
+}
+
+/* every panel fails alone (C8) */
+function safeRender(fn, el){
+  try { fn(); }
+  catch(e){
+    if (el) el.innerHTML = '<div class="perr">This panel tripped over a rock. Reload the page and it should dust itself off.</div>';
+  }
+}
+function renderAll(){
+  safeRender(renderIdentity, $("panelIdentity"));
+  safeRender(renderStats,    $("panelStats"));
+  safeRender(renderContractsPanel, $("panelContracts"));
+  safeRender(renderChars,    $("panelChars"));
+  safeRender(renderAcademy,  $("panelAcademy"));
+  safeRender(renderTrophies, $("panelTrophies"));
+  safeRender(renderCorpStrip,$("corpStripWrap"));
+  safeRender(renderFoot,     $("footActs"));
+}
+
+/* ============ login ============ */
+/* login uses a raw fetch: a failed login can come back 401 WITH a goblin error
+   body, and that error must render verbatim (api() would swallow it as logged out) */
+$("loginForm").addEventListener("submit", async function(ev){
+  ev.preventDefault();
+  var btn = $("loginBtn"), err = $("loginErr");
+  err.textContent = ""; btn.disabled = true;
+  try {
+    var r = await fetch("/api/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ign: $("loginIgn").value.trim(), password: $("loginPw").value })
+    });
+    var j = null; try { j = await r.json(); } catch(e2){}
+    if (j && j.ok){ location.reload(); return; }
+    err.textContent = (j && j.error) || "That did not land. Try again, goblin.";
+  } catch(e){
+    err.textContent = "The comms array is down. Check your connection and try again.";
+  }
+  btn.disabled = false;
+});
+
+/* ============ identity header + bell ============ */
+function mainChar(){
+  var cs = (S.me && S.me.characters) || [];
+  for (var i=0;i<cs.length;i++) if (cs[i].is_main) return cs[i];
+  return cs[0] || null;
+}
+function renderIdentity(){
+  var el = $("panelIdentity"), a = S.me.account, mc = mainChar();
+  var role = String(a.role || "member");
+  var roleChip = role === "admin"
+    ? '<span class="rolechip admin">&#9819; admin</span>'
+    : role === "officer"
+      ? '<span class="rolechip officer">officer</span>'
+      : '<span class="rolechip">member</span>';
+  var unread = Number(S.me.notificationsUnread) || 0;
+  el.innerHTML =
+    '<div class="idrow">' +
+      '<div class="idav">' + avatarHtml(mc, 96) + '</div>' +
+      '<div style="flex:1;min-width:200px">' +
+        '<div class="idname">' + esc(mc ? mc.ign : "unknown goblin") + roleChip + '</div>' +
+        '<div class="idmeta">' +
+          '<span>Days in corp: <b>' + esc(String(a.tenure_days != null ? a.tenure_days : "?")) + '</b></span>' +
+          (a.timezone ? '<span>TZ: ' + esc(a.timezone) + '</span>' : '') +
+          (a.discord_handle ? '<span>@' + esc(a.discord_handle) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="idacts">' +
+        '<button class="mini" id="editProfileBtn">Edit profile</button>' +
+        '<button class="bell" id="bellBtn" title="Your inbox">&#128276;' +
+          (unread > 0 ? '<span class="bellbadge">' + unread + '</span>' : '') +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  $("bellBtn").addEventListener("click", toggleInbox);
+  $("editProfileBtn").addEventListener("click", toggleDrawer);
+}
+
+var NOTE_ICONS = { contract:"\u{1F4DC}", medal:"\u{1F396}️", decoration:"\u{1F396}️",
+                   role:"♛", nudge:"\u{1F440}", announce:"\u{1F4E3}", system:"\u{1FAA8}" };
+async function toggleInbox(){
+  var el = $("panelInbox");
+  S.inboxOpen = !S.inboxOpen;
+  if (!S.inboxOpen){ el.style.display = "none"; return; }
+  el.style.display = "block";
+  el.innerHTML = '<div class="ptitle">Inbox</div><div class="emptyline">Fetching the mail sack...</div>';
+  try {
+    var j = await api("notifications");
+    var list = j.notifications || [];
+    var html = '<div class="ptitle">Inbox</div>';
+    if (!list.length){
+      html += '<div class="emptyline">Nothing new. The belt is quiet.</div>';
+    } else {
+      for (var i=0;i<list.length;i++){
+        var n = list[i];
+        html += '<div class="note-row">' +
+          '<div class="note-ico">' + (NOTE_ICONS[n.kind] || "\u{1FAA8}") + '</div>' +
+          '<div class="note-body' + (n.read ? '' : ' unread') + '">' + esc(n.body) + '</div>' +
+          '<div class="note-ago">' + esc(ago(n.created_at)) + '</div>' +
+        '</div>';
+      }
+    }
+    el.innerHTML = html;
+    if ((Number(S.me.notificationsUnread) || 0) > 0){
+      try {
+        await api("notifications/read", { all: true });
+        S.me.notificationsUnread = 0;
+        safeRender(renderIdentity, $("panelIdentity"));
+      } catch(e){ /* read marking failing is not worth a fuss */ }
+    }
+  } catch(e){
+    if (!isOut(e)) el.innerHTML = '<div class="ptitle">Inbox</div><div class="perr">' + esc(e.message) + '</div>';
+  }
+}
+
+/* ============ haul stats (the retention engine) ============ */
+function renderStats(){
+  var el = $("panelStats");
+  var st = S.me.stats || {};
+  var fleet = st.fleet || {};
+  var con = st.contracts || {};
+  var ledger = S.me.ledger || {};
+  var ledgerDown = ledger.ok === false;
+
+  var html = '<div class="ptitle">The haul ledger</div>';
+
+  if (ledgerDown){
+    html += '<div class="emptyline">The ledger is napping. Numbers back soon.</div>';
+  } else {
+    var hasAnything = (Number(st.lifetimeIsk)||0) > 0 || (Number(fleet.opDrops)||0) > 0 || (Number(con.accepted)||0) > 0;
+    html +=
+      '<div class="herolabel">ISK earned</div>' +
+      '<div class="heronum" title="' + esc((Number(st.lifetimeIsk)||0).toLocaleString()) + ' ISK">' +
+        fmtIsk(st.lifetimeIsk) + ' <span class="herounit">ISK</span></div>';
+    if (!hasAnything){
+      html += '<div class="emptyline">No hauls logged yet. Get in a fleet and watch this number climb.</div>';
+    }
+    html += '<div class="stattiles">';
+    if (fleet.m3 != null){
+      html += '<div class="tile"><div class="tv">' + fmtM3(fleet.m3) + '</div>' +
+              '<div class="tk">Rock moved (fleet)</div></div>';
+    }
+    if (st.opsAttended != null){
+      html += '<div class="tile"><div class="tv">' + esc(String(st.opsAttended)) + '</div>' +
+              '<div class="tk">Ops run</div></div>';
+    } else {
+      html += '<div class="tile"><div class="tv">' + esc(String(Number(fleet.opDrops)||0)) + '</div>' +
+              '<div class="tk">Op drops</div></div>';
+    }
+    html += '<div class="tile"><div class="tv">' + esc(String(Number(con.accepted)||0)) + '</div>' +
+            '<div class="tk">Solo contracts accepted</div>' +
+            '<div class="ts">' + fmtIsk(con.isk) + ' ISK</div></div>';
+    html += '<div class="tile"><div class="tv">' + fmtM3(con.m3) + '</div>' +
+            '<div class="tk">Solo volume (as contracted)</div></div>';
+    html += '</div>';
+    if (ledger.stale){
+      html += '<div class="pnote">Ledger numbers are a touch stale right now. Still yours, still climbing.</div>';
+    }
+
+    /* per character breakdown */
+    var cs = S.me.characters || [];
+    if (cs.length){
+      html += '<details class="brk"><summary>Per character breakdown</summary>' +
+        '<div style="overflow-x:auto"><table><thead><tr>' +
+        '<th>Pilot</th><th>Fleet ISK</th><th>Op drops</th><th>Fleet m&#179;</th><th>Solo ISK</th><th>Solo m&#179;</th>' +
+        '</tr></thead><tbody>';
+      for (var i=0;i<cs.length;i++){
+        var c = cs[i], cst = c.stats || {};
+        html += '<tr><td class="who">' + esc(c.ign) + (c.is_main ? ' <span class="chip main">&#9670; MAIN</span>' : '') + '</td>' +
+          '<td class="num">' + fmtIsk(cst.fleetIsk) + '</td>' +
+          '<td class="num">' + esc(String(Number(cst.opDrops)||0)) + '</td>' +
+          '<td class="num">' + (cst.fleetM3 != null ? fmtM3(cst.fleetM3) : '&middot;') + '</td>' +
+          '<td class="num">' + fmtIsk(cst.soloIsk) + '</td>' +
+          '<td class="num">' + (cst.soloM3 != null ? fmtM3(cst.soloM3) : '&middot;') + '</td></tr>';
+      }
+      html += '</tbody></table></div></details>';
+    }
+  }
+
+  html += '<div class="statbtns"><button class="gobtn" id="addContractBtn" style="padding:11px 22px">Add contract</button>' +
+          '<span class="pnote" style="margin-top:0;align-self:center">Mined solo? Paste the ore, leadership confirms, the number climbs.</span></div>';
+  el.innerHTML = html;
+  $("addContractBtn").addEventListener("click", openContractModal);
+}
+
+function renderCorpStrip(){
+  var el = $("corpStripWrap");
+  var corp = S.me.corp;
+  if (!corp){ el.innerHTML = ""; return; }
+  el.innerHTML = '<div class="corpstrip">Corp lifetime: <b>' + fmtIsk(corp.totalPayout) + ' ISK</b> &middot; <b>' +
+    fmtM3(corp.totalM3) + '</b> &middot; <b>' + esc(String(Number(corp.fleetCount)||0)) + ' ops</b></div>';
+}
+
+/* ============ my contracts list ============ */
+function renderContractsPanel(){
+  var el = $("panelContracts");
+  var html = '<div class="ptitle">My contracts</div>';
+  if (S.contracts === null){
+    html += '<div class="emptyline">Fetching your receipts...</div>';
+  } else if (S.contracts === "error"){
+    html += '<div class="perr">The receipt drawer is stuck. Reload to give it a kick.</div>';
+  } else if (!S.contracts.length){
+    html += '<div class="emptyline">No solo contracts yet. Mined alone? Paste the ore and claim your credit.</div>';
+  } else {
+    for (var i=0;i<S.contracts.length;i++){
+      var c = S.contracts[i];
+      var status = String(c.status || "pending");
+      var pill = status === "accepted" ? '<span class="pill acc">accepted</span>'
+               : status === "rejected" ? '<span class="pill rej">rejected</span>'
+               : '<span class="pill pend">pending review</span>';
+      var when = c.created_at || c.date || c.submitted_at;
+      var open = S.openContracts[c.id] ? " open" : "";
+      html += '<div class="crow' + open + '" data-cid="' + esc(String(c.id)) + '">' +
+        '<div class="cmain">' +
+          '<span class="cwhen">' + (ymd(when) ? esc(ymd(when)) : "&middot;") + '</span>' +
+          '<span class="cval" title="Jita ' + fmtIsk(c.jita) + '">' + fmtIsk(c.payout) + ' ISK</span>' +
+          '<span class="cvol">' + fmtM3(c.m3) + '</span>' +
+          pill +
+        '</div>' +
+        '<div class="cdetail">' + contractDetailHtml(c) + '</div>' +
+      '</div>';
+    }
+  }
+  el.innerHTML = html;
+  var rows = el.querySelectorAll(".crow");
+  for (var r=0;r<rows.length;r++){
+    rows[r].addEventListener("click", function(){
+      var id = this.getAttribute("data-cid");
+      S.openContracts[id] = !S.openContracts[id];
+      this.classList.toggle("open", !!S.openContracts[id]);
+    });
+  }
+}
+function contractDetailHtml(c){
+  var html = '';
+  var det = c.detail;
+  if (det && det.length){
+    html += '<div style="overflow-x:auto"><table><thead><tr><th>Ore</th><th>Qty</th><th>Jita line</th></tr></thead><tbody>';
+    for (var i=0;i<det.length;i++){
+      var L = det[i] || [];
+      html += '<tr><td>' + esc(L[0]) + '</td><td class="num">' + esc(String(Number(L[1])||0)) + '</td>' +
+              '<td class="num">' + fmtIsk(L[2]) + '</td></tr>';
+    }
+    html += '</tbody></table></div>';
+  }
+  var meta = [];
+  if (c.rate != null) meta.push("payout at " + pct(c.rate));
+  if (c.line_count != null) meta.push(String(c.line_count) + " lines");
+  if (c.note) meta.push("note: " + c.note);
+  if (meta.length) html += '<div class="pnote">' + esc(meta.join(" · ")) + '</div>';
+  var un = Number(c.unmatched) || 0;
+  if (un > 0){
+    html += '<div class="cunmatched">&#9888; ' + un +
+      ' lines the table could not price; leadership can override at accept time.</div>';
+  }
+  return html;
+}
+async function loadContracts(){
+  try {
+    var j = await api("contracts");
+    S.contracts = j.contracts || j.receipts || [];
+  } catch(e){
+    if (isOut(e)) return;
+    S.contracts = "error";
+  }
+  safeRender(renderContractsPanel, $("panelContracts"));
+}
+
+/* ============ add contract modal ============ */
+function openContractModal(){
+  var cs = (S.me.characters || []).filter(function(c){ return c.active !== 0 && c.active !== false; });
+  var opts = "";
+  for (var i=0;i<cs.length;i++){
+    opts += '<option value="' + esc(String(cs[i].id)) + '"' + (cs[i].is_main ? ' selected' : '') + '>' +
+            esc(cs[i].ign) + (cs[i].is_main ? ' (main)' : '') + '</option>';
+  }
+  $("contractCard").innerHTML =
+    '<h2>Add a solo contract</h2>' +
+    '<div class="mhint">Paste your ore straight from the EVE client. The Worker prices it, leadership confirms it, then it counts. A pending contract moves nobody’s number.</div>' +
+    '<label>Who mined it</label><select id="conChar">' + opts + '</select>' +
+    '<label>The ore</label>' +
+    '<textarea id="conRaw" placeholder="Compressed Veldspar\t12000\nCompressed Scordite\t8000"></textarea>' +
+    '<label>Note for leadership (optional)</label>' +
+    '<input id="conNote" type="text" maxlength="200" placeholder="matches in game contract from Grumbo">' +
+    '<div class="formerr" id="conErr"></div>' +
+    '<div class="mbtns"><button class="gobtn" id="conSubmit">Price it</button>' +
+    '<button class="mini" id="conCancel">Never mind</button></div>';
+  $("contractOverlay").classList.add("show");
+  $("conCancel").addEventListener("click", closeContractModal);
+  $("conSubmit").addEventListener("click", submitContract);
+}
+function closeContractModal(){ $("contractOverlay").classList.remove("show"); }
+$("contractOverlay").addEventListener("click", function(ev){
+  if (ev.target === this) closeContractModal();
+});
+async function submitContract(){
+  var err = $("conErr"); err.textContent = "";
+  var raw = $("conRaw").value;
+  if (!raw.trim()){ err.textContent = "Paste some ore first, goblin. The box is hungry."; return; }
+  var body = { raw: raw, character_id: $("conChar").value };
+  var note = $("conNote").value.trim();
+  if (note) body.note = note;
+  $("conSubmit").disabled = true;
+  try {
+    var j = await api("contracts/add", body);
+    renderContractReceipt(j);
+    loadContracts();
+    refreshMe();
+  } catch(e){
+    if (!isOut(e)){ err.textContent = e.message; $("conSubmit").disabled = false; }
+  }
+}
+function renderContractReceipt(j){
+  var c = j.contract || {};
+  var matched = Math.max(0, (Number(c.line_count)||0) - (Number(c.unmatched)||0));
+  var html =
+    '<h2>Receipt</h2>' +
+    (j.message ? '<div class="mhint">' + esc(j.message) + '</div>' : '') +
+    '<div class="receipt">' +
+      '<div class="rrow"><span class="rk">Jita value</span><span class="rv">' + fmtIsk(c.jita) + ' ISK</span></div>' +
+      '<div class="rrow"><span class="rk">Payout at ' + esc(pct(c.rate)) + '</span><span class="rv big">' + fmtIsk(c.payout) + ' ISK</span></div>' +
+      '<div class="rrow"><span class="rk">Volume</span><span class="rv">' + fmtM3(c.m3) + '</span></div>' +
+      '<div class="rrow"><span class="rk">Lines priced</span><span class="rv">' + matched + ' of ' + esc(String(Number(c.line_count)||0)) + '</span></div>' +
+      '<div class="rrow"><span class="rk">Status</span><span class="rv"><span class="pill pend" style="margin-left:0">pending review</span></span></div>' +
+    '</div>';
+  var un = Number(c.unmatched) || 0;
+  if (un > 0){
+    html += '<div class="cunmatched">&#9888; ' + un +
+      ' lines the table could not price; leadership can override at accept time. They are on the receipt, not lost.</div>';
+  }
+  if (c.pricesStale){
+    html += '<div class="pnote">Price table is a little stale right now. The receipt still stands.</div>';
+  }
+  html += '<div class="pnote">Leadership reviews it against the real in game contract. Once accepted, your number climbs.</div>' +
+          '<div class="mbtns"><button class="gobtn" id="conDone">Back to the belt</button></div>';
+  $("contractCard").innerHTML = html;
+  $("conDone").addEventListener("click", closeContractModal);
+}
+
+/* ============ my characters ============ */
+function renderChars(){
+  var el = $("panelChars");
+  var cs = (S.me.characters || []).slice();
+  cs.sort(function(a,b){
+    var am = a.is_main?0:1, bm = b.is_main?0:1;
+    if (am !== bm) return am - bm;
+    var ar = (a.active===0||a.active===false)?1:0, br = (b.active===0||b.active===false)?1:0;
+    if (ar !== br) return ar - br;
+    return String(a.ign).localeCompare(String(b.ign));
+  });
+  var html = '<div class="ptitle">My characters</div>';
+  if (!cs.length){
+    html += '<div class="emptyline">No pilots on this account. That should not happen. Ping an officer.</div>';
+  }
+  for (var i=0;i<cs.length;i++){
+    var c = cs[i];
+    var retired = (c.active === 0 || c.active === false);
+    var chips = "";
+    if (c.is_main) chips += '<span class="chip main">&#9670; MAIN</span>';
+    if (c.is_payout) chips += '<span class="chip payout">PAYOUT</span>';
+    if (retired) chips += '<span class="chip ret">RETIRED</span>';
+    var sub = [];
+    if (c.ships) sub.push(esc(c.ships));
+    if (c.aliases && c.aliases.length) sub.push("aka " + esc(c.aliases.join(", ")));
+    var acts = "";
+    if (!retired){
+      if (!c.is_main)   acts += '<button class="mini" data-act="set-main" data-id="' + esc(String(c.id)) + '">Set main</button>';
+      if (!c.is_payout) acts += '<button class="mini" data-act="set-payout" data-id="' + esc(String(c.id)) + '">Set payout</button>';
+      acts += '<button class="mini" data-act="rename" data-id="' + esc(String(c.id)) + '">Rename</button>';
+      if (!c.is_main) acts += '<button class="mini warn" data-act="retire" data-id="' + esc(String(c.id)) + '">Retire</button>';
+    }
+    html += '<div class="chrow' + (c.is_main ? '' : ' alt') + (retired ? ' retired' : '') + '">' +
+      '<div class="chav" data-avid="' + esc(String(c.id)) + '" title="Give this goblin a lil profile pic">' + avatarHtml(c, 44) + '</div>' +
+      '<div class="chinfo"><div class="chname">' + esc(c.ign) + chips + '</div>' +
+        (sub.length ? '<div class="chsub">' + sub.join(" · ") + '</div>' : '') +
+        (c.avatar_url && !retired ? '<div class="chsub"><button class="link" data-act="avatar-remove" data-id="' + esc(String(c.id)) + '" style="font-size:10px">remove pic</button></div>' : '') +
+      '</div>' +
+      '<div class="chacts">' + acts + '</div>' +
+    '</div>';
+  }
+  html += '<div class="addalt">' +
+    '<input id="altIgn" type="text" placeholder="ALT CHARACTER IGN" maxlength="64">' +
+    '<button class="gobtn" id="altAdd">Add alt</button></div>' +
+    '<div class="formerr" id="charErr"></div>' +
+    '<div class="pnote">Every pilot you fly lives here. The alts mine, the payout character gets the check.</div>';
+  el.innerHTML = html;
+
+  $("altAdd").addEventListener("click", addAlt);
+  $("altIgn").addEventListener("keydown", function(ev){ if (ev.key === "Enter") addAlt(); });
+  var btns = el.querySelectorAll("[data-act]");
+  for (var b=0;b<btns.length;b++) btns[b].addEventListener("click", charAction);
+  var avs = el.querySelectorAll(".chav[data-avid]");
+  for (var a2=0;a2<avs.length;a2++) avs[a2].addEventListener("click", function(){
+    S.avatarTarget = this.getAttribute("data-avid");
+    $("avatarFile").value = "";
+    $("avatarFile").click();
+  });
+}
+function charById(id){
+  var cs = S.me.characters || [];
+  for (var i=0;i<cs.length;i++) if (String(cs[i].id) === String(id)) return cs[i];
+  return null;
+}
+async function addAlt(){
+  var err = $("charErr"); err.textContent = "";
+  var ign = $("altIgn").value.trim();
+  if (!ign){ err.textContent = "Type the alt’s IGN first."; return; }
+  try {
+    await api("characters/add", { ign: ign });
+    toast("Alt added. Another mouth for the belt to feed.");
+    await refreshMe();
+  } catch(e){ if (!isOut(e)) err.textContent = e.message; }
+}
+async function charAction(ev){
+  ev.stopPropagation();
+  var act = this.getAttribute("data-act"), id = this.getAttribute("data-id");
+  var err = $("charErr"); err.textContent = "";
+  var ch = charById(id);
+  try {
+    if (act === "set-main"){
+      await api("characters/set-main", { character_id: id });
+      toast("New main. The face of the operation.");
+    } else if (act === "set-payout"){
+      await api("characters/set-payout", { character_id: id });
+      toast("Payout target set. The checks land there now.");
+    } else if (act === "rename"){
+      var nn = prompt("New IGN for " + (ch ? ch.ign : "this pilot") + ":", ch ? ch.ign : "");
+      if (nn == null) return;
+      nn = nn.trim(); if (!nn) return;
+      await api("characters/rename", { character_id: id, ign: nn });
+      toast("Renamed. Same goblin, new name tag.");
+    } else if (act === "retire"){
+      if (!confirm("Retire " + (ch ? ch.ign : "this pilot") + "? The history stays, the pilot stands down.")) return;
+      await api("characters/retire", { character_id: id });
+      toast("Pilot retired. o7");
+    } else if (act === "avatar-remove"){
+      await api("characters/avatar/remove", { character_id: id });
+      toast("Pic removed. Back to the classic goblin.");
+    } else return;
+    await refreshMe();
+  } catch(e){ if (!isOut(e)) err.textContent = e.message; }
+}
+
+/* avatar upload: client side square crop to 128px, webp then png, <=64KB */
+$("avatarFile").addEventListener("change", function(){
+  var f = this.files && this.files[0];
+  if (!f || !S.avatarTarget) return;
+  var target = S.avatarTarget;
+  var url = URL.createObjectURL(f);
+  var img = new Image();
+  img.onload = function(){
+    URL.revokeObjectURL(url);
+    try {
+      var canvas = document.createElement("canvas");
+      canvas.width = 128; canvas.height = 128;
+      var ctx = canvas.getContext("2d");
+      var side = Math.min(img.naturalWidth, img.naturalHeight);
+      var sx = (img.naturalWidth - side)/2, sy = (img.naturalHeight - side)/2;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, 128, 128);
+      var dataUrl = null;
+      var qualities = [0.85, 0.7, 0.55, 0.4];
+      for (var i=0;i<qualities.length;i++){
+        var d = canvas.toDataURL("image/webp", qualities[i]);
+        if (d.indexOf("data:image/webp") === 0 && dataUrlBytes(d) <= 64*1024){ dataUrl = d; break; }
+      }
+      if (!dataUrl){
+        var p = canvas.toDataURL("image/png");
+        if (dataUrlBytes(p) <= 64*1024) dataUrl = p;
+      }
+      if (!dataUrl){ toast("That pic is too chunky even after the squeeze. Try a simpler image."); return; }
+      api("characters/avatar", { character_id: target, image: dataUrl })
+        .then(function(){ toast("Lil profile pic set. Looking sharp, goblin."); return refreshMe(); })
+        .catch(function(e){ if (!isOut(e)) toast(e.message); });
+    } catch(e){
+      toast("Could not read that image. Try a plain png or jpg.");
+    }
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); toast("Could not read that image. Try a plain png or jpg."); };
+  img.src = url;
+});
+function dataUrlBytes(d){
+  var i = d.indexOf(",");
+  return Math.floor((d.length - i - 1) * 3 / 4);
+}
+
+/* ============ trophy case ============ */
+function renderTrophies(){
+  var el = $("panelTrophies");
+  var decs = (S.me.decorations || []).slice();
+  var html = '<div class="ptitle">Trophy case</div>';
+  if (!decs.length){
+    html += '<div class="emptyline">The wall is empty. The medals are coming.</div>';
+    el.innerHTML = html; return;
+  }
+  decs.sort(function(a,b){
+    var t = (Number(a.tier)||99) - (Number(b.tier)||99);
+    return t !== 0 ? t : String(a.name).localeCompare(String(b.name));
+  });
+  var high = decs.filter(function(d){ return (Number(d.tier)||99) <= 4; });
+  var rest = decs.filter(function(d){ return (Number(d.tier)||99) > 4; });
+  if (high.length){
+    html += '<div class="tier gold">The High Honors</div><div class="medgrid">';
+    for (var i=0;i<high.length;i++) html += medHtml(high[i], true);
+    html += '</div>';
+  }
+  if (rest.length){
+    html += '<div class="tier">The Earned Ranks</div><div class="medgrid">';
+    for (var j=0;j<rest.length;j++) html += medHtml(rest[j], false);
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+function medHtml(d, honor){
+  var cls = "med" + (honor ? " honor" : "") + (d.earned ? "" : " lock");
+  var html = '<div class="' + cls + '" id="med_' + esc(String(d.key||"")) + '">' +
+    '<div class="ico">' + esc(d.emoji || "\u{1F396}️") + '</div>' +
+    '<div class="mname">' + esc(d.name) + '</div>' +
+    '<div class="flav">' + esc(d.description) + '</div>';
+  if (d.earned){
+    var bits = [];
+    if (d.awarded_at) bits.push(ymd(d.awarded_at));
+    if (d.awarded_by) bits.push("by " + d.awarded_by);
+    if (d.note) bits.push(d.note);
+    html += '<div class="earn"><b>Awarded</b>' + (bits.length ? ' &middot; ' + esc(bits.join(" · ")) : '') + '</div>';
+  } else {
+    html += '<div class="earn"><b>Locked</b> &middot; ' + esc(d.description) + '. Go get it.</div>';
+    if (d.progress && d.progress.threshold){
+      var cur = Number(d.progress.current) || 0;
+      var thr = Number(d.progress.threshold) || 1;
+      var p = Math.min(100, Math.floor(cur / thr * 100));
+      var fc = thr >= 1e4 ? fmtSig(cur) : String(Math.round(cur));
+      var ft = thr >= 1e4 ? fmtSig(thr) : String(Math.round(thr));
+      html += '<div class="medprog"><div class="pl">' + fc + ' / ' + ft + ' &middot; ' + p + '%</div>' +
+              '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
+    }
+  }
+  return html + '</div>';
+}
+
+/* ============ the academy ============ */
+var MODULE_META = {
+  welcome:   { title: "Welcome to the family" },
+  fleet_ops: { title: "How an op runs" },
+  doctrine:  { title: "The survival doctrine" },
+  tools:     { title: "The toolkit" },
+  payday:    { title: "Payday" },
+  medals:    { title: "The Wall of Goblins" }
+};
+function moduleBody(key){
+  var rate = pct((S.me.buyback && S.me.buyback.contract_rate) != null ? S.me.buyback.contract_rate : 0.88);
+  switch(key){
+    case "welcome": return (
+      "We are Wealthy Dropouts, the BONK goblins. Emotionally stable goblins who love rocks. " +
+      "We mine together, we get paid together, and we keep the drama in other people’s corps. " +
+      "Speak plainly, help the new goblin, never let the ore stop. That is the whole culture.");
+    case "fleet_ops": return (
+      "An op is simple. Form up when the ping goes out, warp to the belt, and cluster within 40km of the Orca. " +
+      "Mine aligned, always. Jetcan the raw ore where you float, the Orca compresses it, the MTU pulls the cans, " +
+      "and Fear writes the checks. Your job is to chew rock and stay on the ledger.");
+    case "doctrine": return (
+      "Seven rules keep barges alive. Learn them cold." +
+      "<ol>" +
+      "<li>Never engage.</li>" +
+      "<li>Never assist an engaged corpmate.</li>" +
+      "<li>Core stays down.</li>" +
+      "<li>Watch local practically.</li>" +
+      "<li>Barge drones are for rats.</li>" +
+      "<li>Always mine aligned.</li>" +
+      "<li>No ransoms.</li>" +
+      "</ol>" +
+      "That is the whole doctrine. Follow it and your Hulk lives past day three.");
+    case "tools": return (
+      "The toolkit lives on this site. Refine prices your ore before you haul a single unit. " +
+      "The Fleet Drop Ledger is the book of record: logging your drops there is required to get paid. No log, no check. " +
+      "The passwords live in Discord, pinned where the goblins gather. Learn the tools and the tools feed you.");
+    case "payday": return (
+      "Buyback runs at " + esc(rate) + " of Jita, with 0% tax. You drop, the ledger values it, " +
+      "and the ledger pays your exact share to your payout character. No haggling, no favorites. " +
+      "The ledger saw you drop it, so you get paid for it.");
+    case "medals": return (
+      "The corp keeps a Wall of Goblins: every medal, every criterion, out in the open. " +
+      "Your own trophy case sits right on this page, with the locked ones greyed and the exact bar to clear. " +
+      "Pick one and go earn it. Medals sit on your character sheet forever. " +
+      '<a href="#panelTrophies" onclick="document.getElementById(\'panelTrophies\').scrollIntoView({behavior:\'smooth\'});return false">Look at your case.</a>');
+  }
+  return "Ask an officer what this one covers. It is new to the Academy.";
+}
+function renderAcademy(){
+  var el = $("panelAcademy");
+  var ob = S.me.onboarding || {};
+  var modules = (ob.modules && ob.modules.length) ? ob.modules
+              : ["welcome","fleet_ops","doctrine","tools","payday","medals"];
+  var done = ob.done || [];
+  var isDone = function(k){ return done.indexOf(k) > -1; };
+  var n = 0;
+  for (var i=0;i<modules.length;i++) if (isDone(modules[i])) n++;
+  var total = modules.length;
+  var p = total ? Math.floor(n/total*100) : 0;
+
+  var html = '<div class="ptitle">The Academy</div>';
+  if (ob.complete){
+    html += '<div class="acadbanner">You are officially onboarded. The belt is yours. Now go make the number climb.</div>';
+  }
+  html += '<div class="acadprog"><span>' + n + ' of ' + total + '</span>' +
+          '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
+  for (var m=0;m<modules.length;m++){
+    var key = modules[m];
+    var meta = MODULE_META[key] || { title: key };
+    var open = S.openModule === key ? " open" : "";
+    var d = isDone(key);
+    html += '<div class="mod' + open + '" data-mod="' + esc(key) + '">' +
+      '<button class="modhead" data-modkey="' + esc(key) + '">' +
+        '<span class="tick2' + (d ? ' done' : '') + '">' + (d ? '&#10003;' : '&#9675;') + '</span>' +
+        '<span>' + esc(meta.title) + '</span>' +
+        '<span class="chev">' + (open ? 'close' : 'open') + '</span>' +
+      '</button>' +
+      '<div class="modbody">' + moduleBody(key) +
+        (d ? '<div class="moddone">&#10003; Module down.</div>'
+           : '<br><button class="gobtn" data-markdone="' + esc(key) + '">Mark it done</button>') +
+      '</div>' +
+    '</div>';
+  }
+  el.innerHTML = html;
+  var heads = el.querySelectorAll(".modhead");
+  for (var h=0;h<heads.length;h++) heads[h].addEventListener("click", function(){
+    var k = this.getAttribute("data-modkey");
+    S.openModule = (S.openModule === k) ? null : k;
+    safeRender(renderAcademy, $("panelAcademy"));
+  });
+  var marks = el.querySelectorAll("[data-markdone]");
+  for (var mk=0;mk<marks.length;mk++) marks[mk].addEventListener("click", async function(ev){
+    ev.stopPropagation();
+    var key = this.getAttribute("data-markdone");
+    this.disabled = true;
+    try {
+      var j = await api("onboarding", { module_key: key });
+      toast("Module down. You are learning to fly the right way.");
+      if (j.complete && S.me.onboarding) S.me.onboarding.complete = true;
+      await refreshMe();
+    } catch(e){ if (!isOut(e)) { toast(e.message); this.disabled = false; } }
+  });
+}
+
+/* ============ edit profile drawer ============ */
+var TZ_OPTIONS = ["US East","US Central","US Mountain","US West","EU West","EU Central","EU East","AU / NZ","Asia","Anywhere in space"];
+function toggleDrawer(){
+  var el = $("profileDrawer");
+  S.drawerOpen = !S.drawerOpen;
+  if (!S.drawerOpen){ el.classList.remove("show"); return; }
+  var a = S.me.account || {};
+  var tz = a.timezone || "";
+  var opts = '<option value="">pick one</option>';
+  var found = false;
+  for (var i=0;i<TZ_OPTIONS.length;i++){
+    var sel = TZ_OPTIONS[i] === tz;
+    if (sel) found = true;
+    opts += '<option' + (sel ? ' selected' : '') + '>' + esc(TZ_OPTIONS[i]) + '</option>';
+  }
+  if (tz && !found) opts += '<option selected>' + esc(tz) + '</option>';
+  el.innerHTML =
+    '<div class="ptitle">Edit profile</div>' +
+    '<label>Bio (your goblin self intro, 500 max)</label>' +
+    '<textarea id="pfBio" maxlength="500" placeholder="three barges, two alts, one dream">' + esc(a.bio || "") + '</textarea>' +
+    '<div class="biocount" id="bioCount"></div>' +
+    '<label>Timezone</label><select id="pfTz">' + opts + '</select>' +
+    '<label>Discord handle (required, the corp reaches you there)</label>' +
+    '<input id="pfDiscord" type="text" maxlength="64" value="' + esc(a.discord_handle || "") + '" placeholder="grumbo">' +
+    '<div class="formerr" id="pfErr"></div>' +
+    '<div class="mbtns"><button class="gobtn" id="pfSave" style="padding:11px 22px">Save profile</button>' +
+    '<button class="mini" id="pfCancel">Close</button></div>';
+  el.classList.add("show");
+  var bio = $("pfBio"), cnt = $("bioCount");
+  var upd = function(){ cnt.textContent = bio.value.length + " / 500"; };
+  bio.addEventListener("input", upd); upd();
+  $("pfCancel").addEventListener("click", function(){ S.drawerOpen = false; el.classList.remove("show"); });
+  $("pfSave").addEventListener("click", saveProfile);
+}
+async function saveProfile(){
+  var err = $("pfErr"); err.textContent = "";
+  var discord = $("pfDiscord").value.trim();
+  if (!discord){ err.textContent = "Discord handle is required. The corp bot has to be able to find you."; return; }
+  $("pfSave").disabled = true;
+  try {
+    await api("profile", { bio: $("pfBio").value, timezone: $("pfTz").value, discord_handle: discord });
+    toast("Profile saved. Looking like a proper goblin.");
+    S.drawerOpen = false; $("profileDrawer").classList.remove("show");
+    await refreshMe();
+  } catch(e){
+    if (!isOut(e)){ err.textContent = e.message; $("pfSave").disabled = false; }
+  }
+}
+
+/* ============ footer actions ============ */
+function renderFoot(){
+  var el = $("footActs");
+  var role = String((S.me.account && S.me.account.role) || "member");
+  var html =
+    '<a href="/portal/roster/">the wall of goblin faces</a>' +
+    (role === "officer" || role === "admin" ? '<a href="/portal/admin/">Command Center</a>' : '') +
+    '<button class="mini" id="logoutBtn">Log out</button>' +
+    '<button class="mini warn" id="logoutAllBtn">Log out everywhere</button>';
+  el.innerHTML = html;
+  $("logoutBtn").addEventListener("click", async function(){
+    try { await api("logout", {}); } catch(e){}
+    location.reload();
+  });
+  $("logoutAllBtn").addEventListener("click", async function(){
+    if (!confirm("Log out every session on every device?")) return;
+    try { await api("logout-all", {}); } catch(e){}
+    location.reload();
+  });
+}
+
+/* ============ boot ============ */
+(async function boot(){
+  try {
+    var j = await api("me");
+    S.me = j;
+    showApp();
+    renderAll();
+    loadContracts();
+  } catch(e){
+    if (isOut(e)) return; /* gate already shown */
+    /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
+    $("skeleton").innerHTML =
+      '<header><h1>&#9935; MEMBER PORTAL</h1><div class="sub">something is off</div></header>' +
+      '<div class="wrap"><div class="panel"><div class="perr"></div>' +
+      '<button class="mini" onclick="location.reload()">Try again</button></div></div>';
+    $("skeleton").querySelector(".perr").textContent = e.message;
+  }
+})();
+</script>
+<script src="/nav.js?v=4"></script>
+</body></html>

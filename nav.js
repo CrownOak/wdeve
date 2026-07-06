@@ -13,6 +13,8 @@
   }
   var ITEMS = [
     ["Home", BASE],
+    ["Apply", BASE + "apply/"],
+    ["Portal", BASE + "portal/"],
     ["Lowsec", BASE + "lowsec/"],
     ["Kills", BASE + "kills/"],
     ["Blueprints", BASE + "blueprints/"],

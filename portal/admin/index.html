@@ -1,0 +1,1701 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK &middot; Command Center</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+/* ---- admin layout: left rail + main ---- */
+.adminlay{ display:flex; max-width:1400px; margin:0 auto; min-height:calc(100vh - 54px); }
+#rail{ width:212px; flex:0 0 212px; border-right:1px solid var(--line); padding:16px 0 30px;
+       position:sticky; top:54px; align-self:flex-start; height:calc(100vh - 54px); overflow:auto; }
+.rtitle{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+         font-size:13px; color:var(--silver); padding:2px 18px 12px; }
+.rsub{ font-family:var(--mono); font-size:10.5px; color:var(--muted); padding:0 18px 14px; letter-spacing:.04em; }
+.rlink{ display:flex; align-items:center; gap:8px; padding:9px 16px; font-family:var(--mono); font-size:11.5px;
+        letter-spacing:.08em; text-transform:uppercase; color:var(--silver-dim); text-decoration:none;
+        border-left:2px solid transparent; }
+.rlink:hover{ color:var(--ore); }
+.rlink.cur{ color:var(--ore); border-left-color:var(--ore); background:var(--steel); }
+.rbadge{ margin-left:auto; font-family:var(--mono); font-size:10px; color:#04140a; background:var(--amber);
+         padding:1px 6px; font-weight:700; }
+#main{ flex:1; padding:20px 24px 70px; min-width:0; }
+.sechead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+          font-size:17px; color:var(--silver); margin:2px 0 4px; }
+.secsub{ font-family:var(--mono); font-size:11.5px; color:var(--muted); letter-spacing:.03em; margin:0 0 16px; }
+@media(max-width:860px){
+  .adminlay{ display:block; }
+  #rail{ position:sticky; top:54px; width:auto; height:auto; display:flex; overflow-x:auto;
+         border-right:0; border-bottom:1px solid var(--line); background:rgba(7,8,9,.94); z-index:40; padding:0; }
+  .rtitle,.rsub{ display:none; }
+  .rlink{ white-space:nowrap; border-left:0; border-bottom:2px solid transparent; padding:11px 12px; }
+  .rlink.cur{ border-bottom-color:var(--ore); background:transparent; }
+  #main{ padding:16px 12px 60px; }
+}
+/* ---- panels / tiles ---- */
+.panel{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 16px; margin:0 0 16px; }
+.ptitle{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+         font-size:13px; color:var(--silver); margin:0 0 10px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.ptitle .pn{ font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:none; letter-spacing:.03em; }
+.nap{ color:var(--muted); font-family:var(--mono); font-size:12px; padding:14px 4px; }
+.pulse{ display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:10px; margin:0 0 16px; }
+.tile{ background:var(--steel); border:1px solid var(--line-soft); padding:11px 13px; }
+.tile .k{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.tile .v{ font-family:var(--mono); font-size:21px; color:var(--ore); margin-top:4px; font-variant-numeric:tabular-nums; }
+.tile .v.warn{ color:var(--amber); }
+.tile .v.dim{ color:var(--silver-dim); font-size:15px; }
+/* ---- queue rows ---- */
+.qrow{ display:flex; gap:10px; align-items:center; padding:8px 8px; border-top:1px solid var(--line-soft);
+       flex-wrap:wrap; font-size:13.5px; }
+.qrow:first-of-type{ border-top:0; }
+.qrow:hover{ background:var(--steel-2); }
+.qwho{ color:var(--silver); font-weight:600; cursor:pointer; display:flex; align-items:center; }
+.qwho:hover{ color:var(--ore); }
+.qmeta{ font-family:var(--mono); font-size:11px; color:var(--muted); }
+.qval{ font-family:var(--mono); font-size:12.5px; color:var(--ore); font-variant-numeric:tabular-nums; }
+.qact{ margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+/* ---- funnel ---- */
+.fun{ display:flex; flex-direction:column; gap:5px; }
+.frow{ display:flex; align-items:center; gap:10px; }
+.frow .fk{ width:96px; flex:0 0 96px; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em;
+           text-transform:uppercase; color:var(--muted); text-align:right; }
+.frow .ft{ flex:1; background:var(--black); border:1px solid var(--line-soft); height:20px; position:relative; }
+.frow .fb{ position:absolute; left:0; top:0; bottom:0; background:var(--ore-deep); opacity:.85; }
+.frow .fc{ width:52px; font-family:var(--mono); font-size:12px; color:var(--silver); font-variant-numeric:tabular-nums; }
+/* ---- avatars ---- */
+.avm{ width:22px; height:22px; display:inline-flex; margin-right:8px; border:1px solid var(--line);
+      vertical-align:middle; flex:0 0 22px; overflow:hidden; }
+.avm img,.avm svg{ display:block; width:100%; height:100%; object-fit:cover; }
+.avm.lg{ width:44px; height:44px; flex-basis:44px; }
+/* ---- skeletons ---- */
+@keyframes skm{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.skel{ background:linear-gradient(90deg,var(--steel) 25%,var(--steel-2) 50%,var(--steel) 75%);
+       background-size:200% 100%; animation:skm 1.3s linear infinite; border:1px solid var(--line-soft);
+       height:64px; margin:0 0 12px; }
+.skel.sm{ height:30px; } .skel.lg{ height:150px; }
+/* ---- toasts ---- */
+#toasts{ position:fixed; right:14px; bottom:14px; z-index:400; display:flex; flex-direction:column; gap:8px; max-width:min(360px,90vw); }
+.toast{ background:var(--steel); border:1px solid var(--ore); color:var(--silver); padding:10px 14px;
+        font-family:var(--mono); font-size:12px; line-height:1.5; box-shadow:0 8px 22px rgba(0,0,0,.5); }
+.toast.bad{ border-color:var(--red); color:var(--red); }
+/* ---- drawer + modal ---- */
+#dback{ position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:110; display:none; }
+#drawer{ position:fixed; top:0; right:0; bottom:0; width:min(720px,100vw); background:var(--black);
+         border-left:1px solid var(--line); z-index:120; overflow:auto; padding:18px 20px 70px; display:none; }
+.dclose{ float:right; background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+         font-family:var(--mono); font-size:12px; padding:5px 12px; cursor:pointer; }
+.dclose:hover{ border-color:var(--ore); color:var(--ore); }
+#mback{ position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:210; display:none;
+        align-items:flex-start; justify-content:center; overflow:auto; padding:40px 14px; }
+.modal{ background:var(--black); border:1px solid var(--line); width:min(640px,100%); padding:20px 22px 26px; }
+/* ---- forms / tabs / buttons ---- */
+.frm{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin:10px 0; }
+.frm label,.flabel{ display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.07em;
+   text-transform:uppercase; color:var(--muted); margin:0 0 4px; }
+.frm .wide{ grid-column:1 / -1; }
+select{ width:100%; padding:10px 12px; background:var(--black); border:1px solid var(--line);
+        color:var(--silver); font-family:var(--mono); font-size:13px; }
+select:focus{ outline:none; border-color:var(--ore); }
+.tabs{ display:flex; gap:8px; margin:0 0 14px; flex-wrap:wrap; }
+.tab{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:6px 13px;
+      cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+.tab:hover{ border-color:var(--ore); color:var(--ore); }
+.tab.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+button.dngr{ background:transparent; color:var(--red); border:1px solid rgba(240,129,122,.5); padding:6px 13px;
+      cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; }
+button.dngr:hover{ background:var(--red); color:#140404; }
+button[disabled]{ opacity:.45; cursor:not-allowed; }
+/* ---- code display / announce ---- */
+.bigcode{ font-family:var(--mono); font-size:19px; color:var(--ore); letter-spacing:.14em;
+          background:var(--black); border:1px solid var(--ore); padding:10px 16px; display:inline-block;
+          user-select:all; word-break:break-all; }
+.annc{ border:1px solid rgba(70,255,94,.5); background:var(--steel); padding:10px 12px; margin:10px 0;
+       font-family:var(--mono); font-size:12px; line-height:1.55; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.hand{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); background:var(--black);
+       border:1px solid var(--line); padding:9px 12px; margin:8px 0; white-space:pre-wrap; word-break:break-word; }
+/* ---- contract cards ---- */
+.ccard{ background:var(--steel); border:1px solid var(--line-soft); padding:13px 15px; margin:0 0 12px; position:relative; }
+.ccard::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ore); opacity:.5; }
+.ccard.rej::before{ background:var(--red); } .ccard.acc::before{ background:var(--ore); opacity:1; }
+.chead{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.cnums{ display:flex; gap:22px; margin:9px 0 4px; font-family:var(--mono); flex-wrap:wrap; }
+.cnums .k{ color:var(--muted); font-size:10px; letter-spacing:.07em; text-transform:uppercase; display:block; }
+.cnums .v{ color:var(--ore); font-size:16px; font-variant-numeric:tabular-nums; }
+.cnums .v.warn{ color:var(--amber); }
+.rcpt{ background:var(--black); border:1px solid var(--line-soft); font-family:var(--mono); font-size:11.5px;
+       color:var(--silver-dim); padding:9px 12px; margin:8px 0 2px; max-height:220px; overflow:auto; }
+.rcpt .z{ color:var(--amber); }
+details summary{ cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+                 text-transform:uppercase; color:var(--silver-dim); margin-top:6px; }
+details summary:hover{ color:var(--ore); }
+/* ---- roster table extras ---- */
+th.sortable{ cursor:pointer; user-select:none; }
+th.sortable:hover{ color:var(--laser); }
+tr.altrow td{ background:var(--black); color:var(--silver-dim); font-size:12.5px; }
+td.tl{ text-align:left; }
+.rowmeta{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+/* ---- medal compact grid ---- */
+.medgrid.compact{ grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:10px; }
+.medgrid.compact .med{ padding:11px 13px; }
+.med.locked{ opacity:.45; } .med.locked::before{ background:var(--muted); }
+.med .mtop{ display:flex; align-items:center; gap:9px; }
+.med .mtop .ico{ font-size:20px; } .med .mtop .mname{ margin:0; font-size:13px; }
+.med .mact{ margin-top:8px; display:flex; gap:6px; align-items:center; }
+.prog{ height:5px; background:var(--black); border:1px solid var(--line-soft); margin-top:8px; }
+.prog i{ display:block; height:100%; background:var(--ore-deep); }
+/* ---- gate states ---- */
+.state{ max-width:430px; margin:80px auto; text-align:center; padding:0 16px; }
+.state h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.06em; color:var(--silver); font-size:18px; }
+.state p{ font-family:var(--mono); font-size:12.5px; color:var(--muted); line-height:1.7; }
+.footline{ color:var(--muted); font-family:var(--mono); font-size:11.5px; letter-spacing:.03em;
+           margin:34px 0 0; border-top:1px solid var(--line); padding-top:16px; }
+.footline b{ color:var(--silver-dim); }
+pre.jsonp{ margin:0; font-family:var(--mono); font-size:11px; color:var(--silver-dim); white-space:pre-wrap;
+           word-break:break-word; max-width:420px; text-align:left; }
+.filterbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:0 0 12px; }
+.filterbar input[type=text]{ width:220px; }
+.filterbar .chk{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); display:flex; gap:6px; align-items:center; }
+.filterbar input[type=checkbox]{ width:auto; }
+</style></head>
+<body>
+<div id="boot"><div class="wrap"><div class="skel sm" style="width:40%"></div><div class="skel lg"></div><div class="skel"></div></div></div>
+<div id="stateout" class="state" style="display:none">
+  <h2>Door is locked</h2>
+  <p>You are not logged in. Leadership or not, everyone knocks.</p>
+  <p><a href="/portal/">To the portal gate</a></p>
+</div>
+<div id="state403" class="state" style="display:none">
+  <h2>Not your clearance</h2>
+  <p>This room is for leadership, goblin. The belt misses you already.</p>
+  <p><a href="/portal/">Back to your career page</a></p>
+</div>
+<div id="app" class="adminlay" style="display:none">
+  <aside id="rail"></aside>
+  <main id="main"></main>
+</div>
+<div id="dback"></div>
+<div id="drawer"></div>
+<div id="mback"></div>
+<div id="toasts"></div>
+<script>
+"use strict";
+/* ================= helpers ================= */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+
+function goblin(seed, size){
+  let h=2166136261; const s=String(seed||"goblin");
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+  const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
+  const hue=Math.floor(rnd()*360), c1="hsl("+hue+",70%,55%)", c2="hsl("+((hue+40)%360)+",80%,70%)";
+  let cells="";
+  for(let y=0;y<5;y++)for(let x=0;x<3;x++){ if(rnd()>0.45){ const f=rnd()>0.8?c2:c1;
+    cells+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>';
+    if(x<2) cells+='<rect x="'+(4-x)+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>'; } }
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.5 -0.5 6 6" width="'+size+'" height="'+size+'" style="background:#0b0d0e">'+cells+'</svg>';
+}
+function avat(p, size, cls){
+  const px=size||22, c="avm"+(cls?" "+cls:"");
+  if(p && p.avatar_url) return '<span class="'+c+'"><img alt="" src="'+esc(p.avatar_url)+'" width="'+px+'" height="'+px+'"></span>';
+  const seed=p&&(p.avatar_seed||p.main_ign||p.ign||p.name);
+  return '<span class="'+c+'">'+goblin(seed,px)+'</span>';
+}
+function sig(x){ if(x>=100) return String(Math.round(x)); if(x>=10) return x.toFixed(1); return x.toFixed(2); }
+function fmtIsk(n){
+  n=Number(n); if(!isFinite(n)) return "0";
+  const a=Math.abs(n), s=n<0?"−":"";
+  if(a>=1e9) return s+sig(a/1e9)+"B";
+  if(a>=1e6) return s+sig(a/1e6)+"M";
+  if(a>=1e3) return s+sig(a/1e3)+"k";
+  return s+String(Math.round(a));
+}
+function fmtM3(n){ if(n==null||!isFinite(Number(n))) return null; return fmtIsk(n)+" m³"; }
+function fmtN(n){ n=Number(n); return isFinite(n)?n.toLocaleString("en-US"):"0"; }
+function ago(ts){
+  if(!ts) return "never";
+  let t=ts; if(typeof t==="number" && t<2e10) t=t*1000;
+  const d=new Date(t); if(isNaN(d)) return String(ts);
+  const s=(Date.now()-d.getTime())/1000;
+  if(s<0) return "just now";
+  if(s<3600) return Math.max(1,Math.round(s/60))+"m ago";
+  if(s<86400) return Math.round(s/3600)+"h ago";
+  return Math.round(s/86400)+"d ago";
+}
+function daysSince(ts){
+  if(!ts) return Infinity;
+  let t=ts; if(typeof t==="number" && t<2e10) t=t*1000;
+  const d=new Date(t); if(isNaN(d)) return Infinity;
+  return (Date.now()-d.getTime())/86400000;
+}
+function fmtDate(ts){
+  if(!ts) return "unknown";
+  let t=ts; if(typeof t==="number" && t<2e10) t=t*1000;
+  const d=new Date(t); if(isNaN(d)) return String(ts);
+  return d.toISOString().slice(0,10);
+}
+/* clipboard: registry keeps hostile text out of attributes */
+const CP={}; let CPN=0;
+function cp(text){ CPN++; CP["c"+CPN]=String(text); return "c"+CPN; }
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast("Copied. Go paste it, goblin."); },
+      function(){ copyFallback(t); });
+  } else copyFallback(t);
+}
+function copyFallback(t){
+  const ta=document.createElement("textarea"); ta.value=t;
+  ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("Copied. Go paste it, goblin."); }
+  catch(e){ toast("Copy failed. Select it by hand.", true); }
+  document.body.removeChild(ta);
+}
+document.addEventListener("click", function(e){
+  const b=e.target.closest("[data-copy]");
+  if(b){ copyText(CP[b.getAttribute("data-copy")]||""); }
+});
+function cpBtn(text, label){
+  return '<button class="cmail" type="button" data-copy="'+cp(text)+'">'+esc(label||"Copy")+"</button>";
+}
+function toast(msg, bad){
+  const t=document.createElement("div");
+  t.className="toast"+(bad?" bad":""); t.textContent=String(msg);
+  document.getElementById("toasts").appendChild(t);
+  setTimeout(function(){ t.remove(); }, bad?8000:4000);
+}
+/* ================= api ================= */
+const SILENT="__silent__";
+async function api(path, body){
+  const opt = body!==undefined
+    ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)}
+    : {};
+  let r;
+  try{ r=await fetch(path, opt); }
+  catch(e){ throw new Error("The wire is down. Check your link and try again."); }
+  if(r.status===401){ show("stateout"); throw new Error(SILENT); }
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(r.status===403) throw new Error((j&&j.error)||"Not your clearance, goblin.");
+  if(!r.ok || !j || j.ok===false) throw new Error((j&&j.error)||"Something jammed in the machine. Try again.");
+  return j;
+}
+function errToast(e){ if(e && e.message!==SILENT) toast(e.message, true); }
+/* busy helper: disable a button while an async action runs */
+async function busy(btn, fn){
+  if(btn){ btn.disabled=true; var old=btn.textContent; btn.textContent="Working…"; }
+  try{ await fn(); }
+  catch(e){ errToast(e); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent=old; } }
+}
+/* ================= boot / state ================= */
+let ME=null, ISADMIN=false, ROLE="member", PENDING_OPEN=null, CATALOG=null;
+function show(id){
+  ["boot","stateout","state403","app"].forEach(function(x){
+    document.getElementById(x).style.display = (x===id) ? (x==="app"?"flex":"block") : "none";
+  });
+}
+async function boot(){
+  let j;
+  try{ j=await api("/api/me"); }
+  catch(e){
+    if(e.message!==SILENT){ show("stateout");
+      document.querySelector("#stateout p").textContent=e.message; }
+    return;
+  }
+  ME=j; ROLE=(j.account&&j.account.role)||"member";
+  ISADMIN=(ROLE==="admin");
+  if(ROLE!=="admin" && ROLE!=="officer"){ show("state403"); return; }
+  show("app"); renderRail(); route();
+}
+/* ================= router + rail ================= */
+const NAVS=[
+  ["","Command Center"],["members","Members"],["contracts","Contracts"],
+  ["recruiting","Recruiting"],["decorations","Decorations"],["reconcile","Reconcile"],
+  ["backfill","Backfill"],["audit","Audit"],["settings","Settings"]
+];
+function renderRail(){
+  let h='<div class="rtitle">Command Center</div>'
+       +'<div class="rsub">'+esc(ROLE)+' &middot; eyes of leadership</div>';
+  NAVS.forEach(function(n){
+    h+='<a class="rlink" id="rl_'+(n[0]||"home")+'" href="#'+n[0]+'">'+esc(n[1])+"</a>";
+  });
+  document.getElementById("rail").innerHTML=h;
+}
+function curSection(){ return location.hash.replace(/^#/,"").split("/")[0]; }
+function route(){
+  closeDrawer(); closeModal();
+  const h=curSection();
+  document.querySelectorAll(".rlink").forEach(function(a){ a.classList.remove("cur"); });
+  const cur=document.getElementById("rl_"+(h||"home")); if(cur) cur.classList.add("cur");
+  const fn=SECTIONS[h]||secOverview;
+  fn();
+  const m=document.getElementById("main"); if(m) m.focus && m.focus();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+function skel(n){
+  let h=""; for(let i=0;i<(n||3);i++) h+='<div class="skel'+(i===0?" sm":"")+'"></div>';
+  return h;
+}
+function head(title, sub){
+  return '<div class="sechead">'+title+'</div><div class="secsub">'+sub+"</div>";
+}
+function napPanel(title, msg){
+  return '<div class="panel"><div class="ptitle">'+esc(title)+'</div><div class="nap">'+esc(msg||"The ledger is napping. Numbers back soon.")+"</div></div>";
+}
+function footLine(){
+  return '<div class="footline"><b>The ore must flow. The goblins must eat. 🪨🧊</b></div>';
+}
+/* drawer / modal plumbing */
+function openDrawer(html){
+  document.getElementById("drawer").innerHTML=html;
+  document.getElementById("drawer").style.display="block";
+  document.getElementById("dback").style.display="block";
+  document.getElementById("drawer").scrollTop=0;
+}
+function closeDrawer(){
+  document.getElementById("drawer").style.display="none";
+  document.getElementById("dback").style.display="none";
+}
+document.getElementById("dback").addEventListener("click", closeDrawer);
+function openModal(html){
+  const mb=document.getElementById("mback");
+  mb.innerHTML='<div class="modal">'+html+"</div>";
+  mb.style.display="flex";
+}
+function closeModal(){ const mb=document.getElementById("mback"); mb.style.display="none"; mb.innerHTML=""; }
+document.getElementById("mback").addEventListener("click", function(e){ if(e.target===this) closeModal(); });
+document.addEventListener("keydown", function(e){ if(e.key==="Escape"){ closeModal(); closeDrawer(); } });
+/* generic member id + name pulls (shapes are defensive on purpose) */
+function accId(x){ return x==null?null:(x.account_id!=null?x.account_id:(x.id!=null?x.id:null)); }
+function accName(x){ return x?(x.main_ign||x.ign||x.name||"unknown goblin"):"unknown goblin"; }
+function announceBar(line, host){
+  const id="an"+(++CPN);
+  const div=document.createElement("div");
+  div.className="annc";
+  div.innerHTML='<span style="flex:1;min-width:200px">'+esc(line)+"</span>"
+    +cpBtn(line,"Copy")
+    +'<button class="inv" type="button" id="'+id+'">Announce</button>';
+  host.prepend(div);
+  div.querySelector("#"+id).addEventListener("click", function(){
+    const b=this;
+    busy(b, async function(){
+      await api("/api/admin/announce",{text:line});
+      toast("Announced. The wall grows.");
+    });
+  });
+}
+</script>
+<script>
+"use strict";
+/* ================= 1. COMMAND CENTER ================= */
+function tile(k, v, cls){
+  return '<div class="tile"><div class="k">'+esc(k)+'</div><div class="v'+(cls?" "+cls:"")+'">'+v+"</div></div>";
+}
+function openMember(id){
+  if(id==null) return;
+  if(curSection()!=="members"){ PENDING_OPEN=id; location.hash="#members"; }
+  else openMemberDrawer(id);
+}
+function whoSpan(x, extra){
+  return '<span class="qwho" data-open="'+esc(String(accId(x)))+'">'+avat(x,22)+esc(accName(x))+"</span>"
+    +(extra?' <span class="qmeta">'+extra+"</span>":"");
+}
+document.addEventListener("click", function(e){
+  const w=e.target.closest("[data-open]");
+  if(w){ openMember(w.getAttribute("data-open")); }
+});
+async function secOverview(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Command Center","how is the corp doing, and what needs you &middot; no clicks required")+skel(5);
+  let j;
+  try{ j=await api("/api/admin/overview"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Command Center","how is the corp doing, and what needs you")
+      +napPanel("Corp pulse", e.message)
+      +'<button class="inv" onclick="secOverview()">Try again</button>'+footLine();
+    return;
+  }
+  const p=j.pulse||{}, ny=j.needsYou||{}, bd=j.boards||{}, co=j.cohort||null;
+  const ledgerDown = j.ledger && j.ledger.ok===false;
+  const corp=p.corp||{};
+  const corpIsk = corp.totalPayout!=null?corp.totalPayout:corp.isk;
+  const corpM3  = corp.totalM3!=null?corp.totalM3:corp.m3;
+  const corpOps = corp.fleetCount!=null?corp.fleetCount:corp.ops;
+  let h=head("Command Center","how is the corp doing, and what needs you");
+  /* pulse strip */
+  h+='<div class="pulse">';
+  h+=tile("Goblins", fmtN(p.members));
+  h+=tile("Active this week", fmtN(p.activeThisWeek));
+  h+=tile("Onboarded", p.onboardingRate!=null?Math.round(Number(p.onboardingRate)*(Number(p.onboardingRate)<=1?100:1))+"%":"…");
+  if(ledgerDown){
+    h+=tile("Corp ISK, lifetime", "napping", "dim")+tile("Corp rock moved", "napping", "dim")+tile("Corp ops", "napping", "dim");
+  }else{
+    h+=tile("Corp ISK, lifetime", corpIsk!=null?fmtIsk(corpIsk):"…");
+    h+=tile("Corp rock moved", corpM3!=null?(fmtM3(corpM3)||"…"):"…");
+    h+=tile("Corp ops", corpOps!=null?fmtN(corpOps):"…");
+  }
+  h+=tile("Applications waiting", fmtN(p.pendingApplications), Number(p.pendingApplications)>0?"warn":"");
+  h+=tile("Codes outstanding", fmtN(p.outstandingCodes), Number(p.outstandingCodes)>0?"warn":"");
+  h+=tile("Contracts pending", fmtN(p.pendingContracts), Number(p.pendingContracts)>0?"warn":"");
+  h+="</div>";
+  if(ledgerDown) h+='<div class="nap">The ledger is napping. Numbers back soon.</div>';
+  /* needs you */
+  h+='<div class="panel"><div class="ptitle">Needs you <span class="pn">clear this and the corp hums</span></div><div id="nyq"></div></div>';
+  /* cohort funnel */
+  h+='<div class="panel"><div class="ptitle">The funnel <span class="pn">applied to still swinging the pick</span></div><div id="cohort"></div></div>';
+  /* boards */
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">'
+    +'<div class="panel" style="margin:0"><div class="ptitle">Top haulers this month</div><div id="bd1"></div></div>'
+    +'<div class="panel" style="margin:0"><div class="ptitle">Newest goblins</div><div id="bd2"></div></div>'
+    +'<div class="panel" style="margin:0"><div class="ptitle">Longest tenure</div><div id="bd3"></div></div>'
+    +"</div>";
+  h+=footLine();
+  m.innerHTML=h;
+  renderNeedsYou(ny);
+  renderCohort(co);
+  renderBoard("bd1", bd.topMonth, function(r){ return '<span class="qval">'+fmtIsk(r.isk!=null?r.isk:(r.payout!=null?r.payout:r.lifetimeIsk))+"</span>"; },
+    "No hauls this month yet. The belts are patient.");
+  renderBoard("bd2", bd.newest, function(r){ return '<span class="qmeta">joined '+esc(fmtDate(r.tenure_start||r.joined||r.created_at))+"</span>"; },
+    "No fresh goblins in 30 days. Feed the funnel.");
+  renderBoard("bd3", bd.tenured, function(r){ return '<span class="qmeta">'+fmtN(r.tenure_days||r.days)+" days</span>"; },
+    "Tenure records are quiet.");
+}
+function renderBoard(id, rows, valFn, empty){
+  const el=document.getElementById(id); if(!el) return;
+  if(!rows || !rows.length){ el.innerHTML='<div class="nap">'+esc(empty)+"</div>"; return; }
+  let h="";
+  rows.slice(0,8).forEach(function(r,i){
+    h+='<div class="qrow"><span class="rank">'+(i+1)+"</span>"+whoSpan(r)
+      +'<span class="qact">'+valFn(r)+"</span></div>";
+  });
+  el.innerHTML=h;
+}
+function renderCohort(co){
+  const el=document.getElementById("cohort"); if(!el) return;
+  if(!co){ el.innerHTML='<div class="nap">Funnel data is still warming up.</div>'; return; }
+  const stages=[["applied","Applied"],["approved","Approved"],["claimed","Claimed"],
+    ["onboarded","Onboarded"],["active30","Active 30d"],["active60","Active 60d"],["active90","Active 90d"]];
+  let max=1; stages.forEach(function(s){ max=Math.max(max, Number(co[s[0]])||0); });
+  let h='<div class="fun">';
+  stages.forEach(function(s){
+    const n=Number(co[s[0]])||0, w=Math.round(n/max*100);
+    h+='<div class="frow"><span class="fk">'+esc(s[1])+'</span>'
+      +'<span class="ft"><span class="fb" style="width:'+w+'%"></span></span>'
+      +'<span class="fc">'+fmtN(n)+"</span></div>";
+  });
+  el.innerHTML=h+"</div>";
+}
+function renderNeedsYou(ny){
+  const el=document.getElementById("nyq"); if(!el) return;
+  let h="", any=false;
+  (ny.contracts||[]).forEach(function(c){
+    any=true;
+    h+='<div class="qrow">'+whoSpan(c)
+      +'<span class="qval">'+fmtIsk(c.payout!=null?c.payout:c.jita)+"</span>"
+      +'<span class="qmeta">'+esc(ago(c.created_at||c.submitted_at))+"</span>"
+      +'<span class="qact"><a class="link" href="#contracts">Review contract</a></span></div>';
+  });
+  (ny.applications||[]).forEach(function(a){
+    any=true;
+    h+='<div class="qrow"><span class="qwho">'+avat(a,22)+esc(a.ign||"applicant")+"</span>"
+      +'<span class="qmeta">applied '+esc(ago(a.created_at))+"</span>"
+      +'<span class="qact"><a class="link" href="#recruiting">Review application</a></span></div>';
+  });
+  (ny.agingCodes||[]).forEach(function(c){
+    any=true;
+    const cid=c.code_id!=null?c.code_id:c.id;
+    h+='<div class="qrow"><span class="qwho">'+esc(c.main_ign||c.code||"unclaimed code")+"</span>"
+      +'<span class="qmeta">code minted '+esc(ago(c.created_at||c.minted_at))+", never redeemed</span>"
+      +'<span class="qact"><button class="inv" data-handoff="'+esc(String(cid))+'">Mark handed off</button></span></div>';
+  });
+  (ny.quiet||[]).forEach(function(q){
+    any=true;
+    h+='<div class="qrow">'+whoSpan(q, "quiet since "+esc(ago(q.last_login||q.last_seen)))
+      +'<span class="qact"><button class="inv" data-nudge="'+esc(String(accId(q)))+'">Nudge</button></span></div>';
+  });
+  (ny.noMedals||[]).forEach(function(q){
+    any=true;
+    h+='<div class="qrow">'+whoSpan(q, "onboarded, wall still bare")
+      +'<span class="qact"><button class="inv" data-open="'+esc(String(accId(q)))+'">Pick a medal</button></span></div>';
+  });
+  const un=Number(ny.unmatchedLedgerNames)||0;
+  if(un>0){
+    any=true;
+    h+='<div class="qrow"><span class="qwho">'+fmtN(un)+" ledger names unmatched</span>"
+      +'<span class="qmeta">payout credited to nobody until you fix it</span>'
+      +'<span class="qact"><a class="link" href="#reconcile">Reconcile</a></span></div>';
+  }
+  el.innerHTML = any?h:'<div class="nap">Queue is clear. The corp runs itself today. Go mine something.</div>';
+  el.querySelectorAll("[data-handoff]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-handoff");
+      busy(btn, async function(){
+        await api("/api/admin/codes/action",{code_id:isNaN(Number(id))?id:Number(id), action:"handoff"});
+        toast("Marked handed off. Now chase the redeem.");
+        secOverview();
+      });
+    });
+  });
+  el.querySelectorAll("[data-nudge]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-nudge");
+      busy(btn, async function(){
+        const r=await api("/api/admin/nudge",{account_id:isNaN(Number(id))?id:Number(id)});
+        const draft=r.dmDraft||r.draft||"";
+        openModal('<div class="ptitle">Nudge draft</div>'
+          +'<div class="hand">'+esc(draft)+"</div>"
+          +cpBtn(draft,"Copy the DM")
+          +' <button class="inv" onclick="closeModal()">Done</button>');
+      });
+    });
+  });
+}
+</script>
+<script>
+"use strict";
+/* ================= 2. MEMBERS ================= */
+const MSTATE={rows:[], sort:"isk", dir:-1, q:"", quiet:false, open:{}};
+function onbPct(m){
+  if(m==null) return null;
+  if(m.onboardingPct!=null) return Math.round(Number(m.onboardingPct)*(Number(m.onboardingPct)<=1?100:1));
+  if(m.onboarding_pct!=null) return Math.round(Number(m.onboarding_pct)*(Number(m.onboarding_pct)<=1?100:1));
+  const o=m.onboarding;
+  if(o==null) return null;
+  if(typeof o==="number") return Math.round(o*(o<=1?100:1));
+  if(o.done && o.modules && o.modules.length) return Math.round(o.done.length/o.modules.length*100);
+  if(o.done!=null && o.total) return Math.round(Number(o.done)/Number(o.total)*100);
+  return null;
+}
+function medCount(m){
+  const d=m.decorations;
+  if(d==null) return 0;
+  if(typeof d==="number") return d;
+  if(Array.isArray(d)) return d.filter(function(x){ return x.earned!==false; }).length;
+  return 0;
+}
+function mIsk(m){ return Number(m.lifetimeIsk!=null?m.lifetimeIsk:(m.stats&&m.stats.lifetimeIsk))||0; }
+function mOps(m){
+  if(m.opsAttended!=null) return {n:Number(m.opsAttended), label:"ops"};
+  const od=m.opDrops!=null?m.opDrops:(m.stats&&m.stats.fleet&&m.stats.fleet.opDrops);
+  return {n:Number(od)||0, label:"op drops"};
+}
+function mAlts(m){
+  if(Array.isArray(m.characters)) return m.characters.filter(function(c){ return !c.is_main; });
+  if(Array.isArray(m.alts)) return m.alts;
+  return [];
+}
+function mVal(m, key){
+  switch(key){
+    case "ign": return accName(m).toLowerCase();
+    case "role": return String(m.role||"").toLowerCase();
+    case "tenure": return Number(m.tenure_days)||0;
+    case "last": return -daysSince(m.last_login);
+    case "onb": return onbPct(m)||0;
+    case "meds": return medCount(m);
+    case "isk": return mIsk(m);
+    case "ops": return mOps(m).n;
+    default: return 0;
+  }
+}
+async function secMembers(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Members","the roster &middot; every goblin, every alt, every number")+skel(4);
+  let j;
+  try{ j=await api("/api/admin/members"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Members","the roster")+napPanel("Roster", e.message)
+      +'<button class="inv" onclick="secMembers()">Try again</button>';
+    return;
+  }
+  MSTATE.rows=j.members||j.roster||[];
+  let h=head("Members","the roster &middot; every goblin, every alt, every number");
+  h+='<div class="filterbar">'
+    +'<input type="text" id="mq" placeholder="filter by IGN or alias" value="'+esc(MSTATE.q)+'">'
+    +'<label class="chk"><input type="checkbox" id="mquiet"'+(MSTATE.quiet?" checked":"")+'> quiet only (14d+)</label>'
+    +'<button class="cmail" type="button" id="mcsv">Export CSV</button>'
+    +'<span style="margin-left:auto"></span>'
+    +'<button class="inv" type="button" id="maddbtn">Add member</button>'
+    +"</div>"
+    +'<div style="overflow-x:auto"><table id="mtable"></table></div>'
+    +footLine();
+  m.innerHTML=h;
+  document.getElementById("mq").addEventListener("input", function(){ MSTATE.q=this.value; drawRoster(); });
+  document.getElementById("mquiet").addEventListener("change", function(){ MSTATE.quiet=this.checked; drawRoster(); });
+  document.getElementById("mcsv").addEventListener("click", exportRosterCsv);
+  document.getElementById("maddbtn").addEventListener("click", addMemberModal);
+  drawRoster();
+  if(PENDING_OPEN!=null){ const id=PENDING_OPEN; PENDING_OPEN=null; openMemberDrawer(id); }
+}
+function rosterFiltered(){
+  const q=MSTATE.q.trim().toLowerCase();
+  let rows=MSTATE.rows.filter(function(r){
+    if(MSTATE.quiet && daysSince(r.last_login)<14) return false;
+    if(!q) return true;
+    if(accName(r).toLowerCase().indexOf(q)>=0) return true;
+    let hit=false;
+    (r.characters||[]).forEach(function(c){
+      if(String(c.ign||"").toLowerCase().indexOf(q)>=0) hit=true;
+      (c.aliases||[]).forEach(function(a){ if(String(a).toLowerCase().indexOf(q)>=0) hit=true; });
+    });
+    (r.aliases||[]).forEach(function(a){ if(String(a).toLowerCase().indexOf(q)>=0) hit=true; });
+    return hit;
+  });
+  rows.sort(function(a,b){
+    const va=mVal(a,MSTATE.sort), vb=mVal(b,MSTATE.sort);
+    if(va<vb) return 1*MSTATE.dir*-1;
+    if(va>vb) return -1*MSTATE.dir*-1;
+    return 0;
+  });
+  return rows;
+}
+function drawRoster(){
+  const t=document.getElementById("mtable"); if(!t) return;
+  const cols=[["ign","Goblin"],["role","Role"],["tenure","Days"],["last","Last login"],
+    ["onb","Onboarding"],["meds","Medals"],["isk","Lifetime ISK"],["ops","Ops"],["alts","Alts"]];
+  let h="<thead><tr>";
+  cols.forEach(function(c){
+    const cur=MSTATE.sort===c[0];
+    h+='<th class="sortable" data-sort="'+c[0]+'">'+esc(c[1])+(cur?(MSTATE.dir<0?" ▾":" ▴"):"")+"</th>";
+  });
+  h+="</tr></thead><tbody>";
+  const rows=rosterFiltered();
+  if(!rows.length){
+    h+='<tr><td colspan="9"><div class="nap">No goblins match. Widen the net.</div></td></tr>';
+  }
+  rows.forEach(function(r){
+    const id=accId(r), alts=mAlts(r), ops=mOps(r), pct=onbPct(r);
+    const quiet=daysSince(r.last_login)>=14;
+    h+='<tr data-open="'+esc(String(id))+'" style="cursor:pointer">'
+      +'<td class="tl">'+avat(r,22)+'<b>'+esc(accName(r))+"</b></td>"
+      +'<td class="kind">'+esc(r.role||"member")+"</td>"
+      +'<td class="num">'+fmtN(r.tenure_days)+"</td>"
+      +'<td class="'+(quiet?"warn":"")+'">'+esc(ago(r.last_login))+"</td>"
+      +'<td class="num">'+(pct==null?"…":pct+"%")+"</td>"
+      +'<td class="num">'+medCount(r)+"</td>"
+      +'<td class="num good">'+fmtIsk(mIsk(r))+"</td>"
+      +'<td class="num" title="'+esc(ops.label)+'">'+fmtN(ops.n)+'<span class="rowmeta"> '+esc(ops.label)+"</span></td>"
+      +'<td class="num">'+(alts.length? '<button class="cmail" data-alts="'+esc(String(id))+'">'+alts.length+" ▸</button>":"0")+"</td>"
+      +"</tr>";
+    if(MSTATE.open[id] && alts.length){
+      alts.forEach(function(c){
+        h+='<tr class="altrow"><td class="tl" colspan="9" style="padding-left:40px">'
+          +avat(c,18)+esc(c.ign||String(c))
+          +(c.is_payout?' <span class="badge">PAYOUT</span>':"")
+          +(c.aliases&&c.aliases.length?' <span class="rowmeta">aka '+esc(c.aliases.join(", "))+"</span>":"")
+          +"</td></tr>";
+      });
+    }
+  });
+  t.innerHTML=h+"</tbody>";
+  t.querySelectorAll("th.sortable").forEach(function(th){
+    th.addEventListener("click", function(){
+      const k=this.getAttribute("data-sort");
+      if(k==="alts") return;
+      if(MSTATE.sort===k) MSTATE.dir*=-1; else { MSTATE.sort=k; MSTATE.dir=-1; }
+      drawRoster();
+    });
+  });
+  t.querySelectorAll("[data-alts]").forEach(function(b){
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      const id=this.getAttribute("data-alts");
+      MSTATE.open[id]=!MSTATE.open[id]; drawRoster();
+    });
+  });
+}
+function csvCell(v){ v=String(v==null?"":v); return '"'+v.replace(/"/g,'""')+'"'; }
+function exportRosterCsv(){
+  const rows=rosterFiltered();
+  let out="main_ign,role,tenure_days,last_login,onboarding_pct,medals,lifetime_isk,ops,ops_label,alts\n";
+  rows.forEach(function(r){
+    const ops=mOps(r);
+    out+=[csvCell(accName(r)),csvCell(r.role||"member"),r.tenure_days||0,csvCell(r.last_login||""),
+      onbPct(r)||0,medCount(r),mIsk(r),ops.n,csvCell(ops.label),
+      csvCell(mAlts(r).map(function(c){return c.ign||c;}).join("; "))].join(",")+"\n";
+  });
+  downloadFile("bonk-roster.csv", out, "text/csv");
+  toast("Roster exported. Guard it like ore.");
+}
+function downloadFile(name, content, type){
+  const b=new Blob([content],{type:type||"text/plain"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+async function getCatalog(){
+  if(CATALOG) return CATALOG;
+  try{ const j=await api("/api/admin/decorations"); CATALOG=j.decorations||j.catalog||[]; }
+  catch(e){ CATALOG=[]; }
+  return CATALOG;
+}
+async function addMemberModal(){
+  const cat=await getCatalog();
+  let decs="";
+  cat.forEach(function(d){
+    decs+='<label class="chk" style="display:inline-flex;margin:2px 10px 2px 0"><input type="checkbox" class="amdec" value="'+esc(d.key)+'"> '+esc((d.emoji||"")+" "+d.name)+"</label>";
+  });
+  openModal('<div class="ptitle">Add a goblin</div>'
+    +'<div class="secsub">a backfill of one &middot; they redeem the code with their main and set their own password</div>'
+    +'<div class="frm">'
+    +'<div><label>Main IGN (required)</label><input id="am_ign"></div>'
+    +'<div><label>Alts, comma separated</label><input id="am_alts"></div>'
+    +'<div><label>Ledger aliases, comma separated</label><input id="am_alias"></div>'
+    +'<div><label>Tenure start</label><input id="am_ten" type="date"></div>'
+    +'<div><label>Timezone</label><input id="am_tz" placeholder="US East, EU, AU…"></div>'
+    +'<div><label>Discord handle</label><input id="am_dc"></div>'
+    +(ISADMIN?'<div><label>Role</label><select id="am_role"><option value="member">member</option><option value="officer">officer</option><option value="admin">admin</option></select></div>':"")
+    +'<div class="wide"><label>Decorations to seed</label>'+(decs||'<span class="rowmeta">catalog unavailable right now</span>')+"</div>"
+    +"</div>"
+    +'<div id="am_out"></div>'
+    +'<button class="gobtn" type="button" id="am_go">Mint the code</button> '
+    +'<button class="inv" type="button" onclick="closeModal()">Cancel</button>');
+  document.getElementById("am_go").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const ign=document.getElementById("am_ign").value.trim();
+      if(!ign){ toast("A goblin needs a name. Main IGN first.", true); return; }
+      const body={ main_ign:ign };
+      const alts=document.getElementById("am_alts").value.split(",").map(function(s){return s.trim();}).filter(Boolean);
+      const alias=document.getElementById("am_alias").value.split(",").map(function(s){return s.trim();}).filter(Boolean);
+      if(alts.length) body.alts=alts;
+      if(alias.length) body.aliases=alias;
+      const ten=document.getElementById("am_ten").value; if(ten) body.tenure_start=ten;
+      const tz=document.getElementById("am_tz").value.trim(); if(tz) body.timezone=tz;
+      const dc=document.getElementById("am_dc").value.trim(); if(dc) body.discord_handle=dc;
+      const rs=document.getElementById("am_role"); if(rs && rs.value!=="member") body.role=rs.value;
+      const decs=[].slice.call(document.querySelectorAll(".amdec:checked")).map(function(c){return c.value;});
+      if(decs.length) body.decorations=decs;
+      const r=await api("/api/admin/members/add", body);
+      const code=r.code||"", hand=r.handoff||("Your BONK portal code: "+code);
+      document.getElementById("am_out").innerHTML=
+        '<div style="margin:14px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
+        +'<div class="hand">'+esc(hand)+"</div>"
+        +cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+      toast("Code minted. Hand it off and mark it when you do.");
+      secMembers();
+    });
+  });
+}
+</script>
+<script>
+"use strict";
+/* ================= 2b. PROFILE EDITOR DRAWER ================= */
+async function openMemberDrawer(id){
+  openDrawer('<button class="dclose" onclick="closeDrawer()">Close ✕</button>'+skel(5));
+  let j;
+  try{ j=await api("/api/admin/members/"+encodeURIComponent(id)); }
+  catch(e){
+    if(e.message===SILENT) return;
+    openDrawer('<button class="dclose" onclick="closeDrawer()">Close ✕</button>'
+      +napPanel("This goblin", e.message));
+    return;
+  }
+  const a=j.account||j.member||{}, chars=j.characters||a.characters||[];
+  const decs=j.decorations||[], contracts=j.contracts||[];
+  const al=j.aliases||{}; const matched=al.matched||[]; const sugg=al.suggestions||al.unmatched||[];
+  const onb=j.onboarding||{}; const stats=j.stats||{}; const notes=j.notes||[];
+  const aid=accId(a)!=null?accId(a):id;
+  const main=chars.find(function(c){return c.is_main;})||chars[0]||{ign:accName(a)};
+  let h='<button class="dclose" onclick="closeDrawer()">Close ✕</button>';
+  h+='<div style="display:flex;align-items:center;gap:12px;margin:0 0 4px">'
+    +avat(main,44,"lg")
+    +'<div><div class="sechead" style="margin:0">'+esc(accName(a)||main.ign)+"</div>"
+    +'<div class="rowmeta">'+esc(a.role||"member")+" &middot; "+fmtN(a.tenure_days)+" days in corp &middot; last login "+esc(ago(a.last_login))+"</div></div></div>";
+  h+='<div id="dw_annc"></div>';
+  /* stats strip */
+  const st=stats||{};
+  h+='<div class="pulse" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">'
+    +tile("ISK earned", st.lifetimeIsk!=null?fmtIsk(st.lifetimeIsk):"…")
+    +tile("Fleet ISK", st.fleet&&st.fleet.isk!=null?fmtIsk(st.fleet.isk):"…")
+    +tile("Contract ISK", st.contracts&&st.contracts.isk!=null?fmtIsk(st.contracts.isk):"…")
+    +tile(st.opsAttended!=null?"Ops run":"Op drops", st.opsAttended!=null?fmtN(st.opsAttended):fmtN(st.fleet&&st.fleet.opDrops))
+    +(st.fleet&&st.fleet.m3!=null?tile("Rock moved", fmtM3(st.fleet.m3)):"")
+    +(st.contracts&&st.contracts.m3!=null?tile("Contracted volume", fmtM3(st.contracts.m3)):"")
+    +"</div>";
+  /* identity */
+  h+='<div class="panel"><div class="ptitle">Identity</div><div class="frm">'
+    +'<div><label>Tenure start</label><input id="dw_ten" type="date" value="'+esc(fmtDate(a.tenure_start)!=="unknown"?fmtDate(a.tenure_start):"")+'"></div>'
+    +'<div><label>Timezone</label><input id="dw_tz" value="'+esc(a.timezone||"")+'"></div>'
+    +'<div><label>Discord handle</label><input id="dw_dc" value="'+esc(a.discord_handle||"")+'"></div>'
+    +(ISADMIN?'<div><label>Role</label><select id="dw_role">'
+      +["member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(a.role===r?" selected":"")+">"+r+"</option>";}).join("")
+      +"</select></div>":"")
+    +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
+    +'</div><button class="inv" id="dw_save">Save identity</button> '
+    +'<button class="cmail" id="dw_viewas">View as member</button></div>';
+  /* characters */
+  h+='<div class="panel"><div class="ptitle">Characters <span class="pn">one main, one payout, the rest grind</span></div><div id="dw_chars">';
+  if(!chars.length) h+='<div class="nap">No characters on file. That is a ghost, not a goblin.</div>';
+  chars.forEach(function(c){
+    h+='<div class="qrow">'+avat(c,22)+'<span class="qwho" style="cursor:default">'+esc(c.ign)+"</span>"
+      +(c.is_main?' <span class="badge">MAIN</span>':"")
+      +(c.is_payout?' <span class="badge">PAYOUT</span>':"")
+      +(c.active===false?' <span class="rowmeta">retired</span>':"")
+      +'<span class="qact">'
+      +(!c.is_main?'<button class="cmail" data-chact="set-main" data-cid="'+esc(String(c.id))+'">Set main</button>':"")
+      +(!c.is_payout?'<button class="cmail" data-chact="set-payout" data-cid="'+esc(String(c.id))+'">Set payout</button>':"")
+      +'<button class="cmail" data-chact="rename" data-cid="'+esc(String(c.id))+'">Rename</button>'
+      +(!c.is_main && c.active!==false?'<button class="cmail" data-chact="retire" data-cid="'+esc(String(c.id))+'">Retire</button>':"")
+      +"</span></div>";
+  });
+  h+='</div><div style="display:flex;gap:8px;margin-top:10px"><input id="dw_newalt" placeholder="new alt IGN" style="max-width:220px">'
+    +'<button class="inv" id="dw_addalt">Add alt</button></div></div>';
+  /* decorations */
+  h+='<div class="panel"><div class="ptitle">The wall <span class="pn">earned bright, locked grey</span></div><div class="medgrid compact">';
+  if(!decs.length) h+='<div class="nap">Catalog did not load. The wall will be back.</div>';
+  decs.forEach(function(d){
+    const earned=!!d.earned;
+    h+='<div class="med'+(earned?"":" locked")+(d.tier!=null&&Number(d.tier)<=4?" honor":"")+'">'
+      +'<div class="mtop"><span class="ico">'+esc(d.emoji||"🎖")+'</span><span class="mname">'+esc(d.name)+"</span></div>";
+    if(earned){
+      h+='<div class="rowmeta" style="margin-top:6px">'+esc(d.awarded_at?("awarded "+fmtDate(d.awarded_at)):"earned")
+        +(d.awarded_by?(" by "+esc(d.awarded_by)):"")+"</div>"
+        +(d.note?'<div class="rowmeta">note: '+esc(d.note)+"</div>":"")
+        +'<div class="mact"><button class="dngr" data-rescind="'+esc(d.key)+'">Rescind ✕</button></div>';
+    }else{
+      if(d.progress && d.progress.threshold){
+        const pc=Math.min(100, Math.round(Number(d.progress.current)/Number(d.progress.threshold)*100));
+        h+='<div class="prog"><i style="width:'+pc+'%"></i></div>'
+          +'<div class="rowmeta">'+fmtIsk(d.progress.current)+" / "+fmtIsk(d.progress.threshold)+" &middot; "+pc+"%</div>";
+      }else if(d.description){
+        h+='<div class="rowmeta" style="margin-top:6px">LOCKED &middot; '+esc(d.description)+"</div>";
+      }
+      h+='<div class="mact"><button class="inv" data-award="'+esc(d.key)+'">Award</button></div>';
+    }
+    h+="</div>";
+  });
+  h+="</div></div>";
+  /* contracts mini queue */
+  h+='<div class="panel"><div class="ptitle">Solo contracts</div><div id="dw_contracts">';
+  if(!contracts.length) h+='<div class="nap">No solo contracts yet. The belts await.</div>';
+  contracts.forEach(function(c){
+    const pend=(c.status||"")==="pending";
+    h+='<div class="qrow"><span class="qval">'+fmtIsk(c.payout!=null?c.payout:c.jita)+"</span>"
+      +'<span class="qmeta">'+esc(c.status||"?")+" &middot; "+esc(ago(c.created_at))+"</span>"
+      +(Number(c.unmatched)>0?'<span class="warn qmeta">'+fmtN(c.unmatched)+" unpriced</span>":"")
+      +(pend?'<span class="qact"><button class="inv" data-cacc="'+esc(String(c.id))+'">Accept</button>'
+        +'<button class="dngr" data-crej="'+esc(String(c.id))+'">Reject</button></span>':"")
+      +"</div>";
+  });
+  h+='</div><div class="rowmeta" style="margin-top:8px">For overrides on unpriced ore, use the Contracts room.</div></div>';
+  /* ledger names */
+  h+='<div class="panel"><div class="ptitle">Ledger names</div>';
+  h+='<div class="rowmeta" style="margin-bottom:6px">Matched: '
+    +(matched.length?esc(matched.map(function(x){return x.ledger_name||x.name||x;}).join(", ")):"none yet")+"</div>";
+  if(sugg.length){
+    sugg.forEach(function(s){
+      const cid=s.character_id!=null?s.character_id:(main.id);
+      h+='<div class="qrow"><span class="qwho" style="cursor:default">'+esc(s.ledger_name||s.name)+"</span>"
+        +(s.candidate?'<span class="qmeta">looks like '+esc(s.candidate)+"</span>":"")
+        +'<span class="qact"><button class="inv" data-attach="'+esc(String(s.ledger_name||s.name))+'" data-attachcid="'+esc(String(cid))+'">Attach</button></span></div>';
+    });
+  }else{
+    h+='<div class="nap">Every name on this goblin is matched. Clean books.</div>';
+  }
+  h+="</div>";
+  /* onboarding */
+  const mods=onb.modules||["welcome","fleet_ops","doctrine","tools","payday","medals"];
+  const done=onb.done||[];
+  h+='<div class="panel"><div class="ptitle">Academy</div>';
+  mods.forEach(function(k){
+    const key=k.key||k, name=k.name||String(k).replace(/_/g," ");
+    const isDone=done.indexOf(key)>=0 || (k.done===true);
+    h+='<label class="chk" style="display:flex;padding:4px 0"><input type="checkbox" class="dw_onb" value="'+esc(key)+'"'+(isDone?" checked":"")+"> "+esc(name)+"</label>";
+  });
+  h+="</div>";
+  /* officer notes */
+  h+='<div class="panel"><div class="ptitle">Officer notes <span class="pn">leadership eyes only</span></div><div id="dw_notes">';
+  if(!notes.length) h+='<div class="nap">No notes. Write down why this goblin matters.</div>';
+  notes.forEach(function(n){
+    h+='<div class="qrow"><span style="flex:1;min-width:180px">'+esc(n.note||n.body||n.text||"")+"</span>"
+      +'<span class="qmeta">'+esc(n.actor||n.author||"")+" &middot; "+esc(ago(n.created_at))+"</span></div>";
+  });
+  h+='</div><div style="display:flex;gap:8px;margin-top:10px"><input id="dw_note" placeholder="add a note" style="flex:1">'
+    +'<button class="inv" id="dw_addnote">Add</button></div></div>';
+  /* danger zone */
+  if(ISADMIN){
+    h+='<div class="panel" style="border-color:rgba(240,129,122,.4)"><div class="ptitle" style="color:var(--red)">Danger zone</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+      +'<button class="dngr" id="dw_reset">Mint password reset</button>'
+      +'<button class="dngr" id="dw_deact">Deactivate</button>'
+      +'<label class="chk"><input type="checkbox" id="dw_purge"> also purge everything. Characters, avatars, history. This is the airlock. There is no undo.</label>'
+      +'</div><div id="dw_danger_out"></div></div>';
+  }
+  openDrawer(h);
+  wireDrawer(aid, chars, main);
+}
+function wireDrawer(aid, chars, main){
+  const D=document.getElementById("drawer");
+  const q=function(s){ return D.querySelector(s); };
+  q("#dw_save").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const body={ discord_handle:q("#dw_dc").value.trim() };
+      const ten=q("#dw_ten").value; if(ten) body.tenure_start=ten;
+      body.timezone=q("#dw_tz").value.trim();
+      body.bio=q("#dw_bio").value;
+      await api("/api/admin/members/"+encodeURIComponent(aid)+"/profile", body);
+      if(ISADMIN && q("#dw_role")) await api("/api/admin/role",{account_id:aid, role:q("#dw_role").value});
+      toast("Saved. The record stands.");
+      openMemberDrawer(aid);
+    });
+  });
+  q("#dw_viewas").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const r=await api("/api/admin/members/"+encodeURIComponent(aid)+"/as-member");
+      const st=r.stats||{}, ds=r.decorations||[], ob=r.onboarding||{};
+      const earned=ds.filter(function(d){return d.earned;}).length;
+      const pct=(ob.done&&ob.modules&&ob.modules.length)?Math.round(ob.done.length/ob.modules.length*100):(ob.complete?100:null);
+      openModal('<div class="ptitle">Through their eyes <span class="pn">read only &middot; exactly what they see</span></div>'
+        +'<div class="pulse" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">'
+        +tile("ISK earned", st.lifetimeIsk!=null?fmtIsk(st.lifetimeIsk):"napping")
+        +tile("Medals", earned+" / "+ds.length)
+        +tile("Academy", pct==null?"…":pct+"%")
+        +tile("Days in corp", fmtN(r.account&&r.account.tenure_days))
+        +"</div>"
+        +'<div class="rowmeta">If this looks wrong to you, it looks wrong to them. Fix it here.</div>'
+        +'<div style="margin-top:12px"><button class="inv" onclick="closeModal()">Done</button></div>');
+    });
+  });
+  D.querySelectorAll("[data-chact]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, act=btn.getAttribute("data-chact"), cid=btn.getAttribute("data-cid");
+      busy(btn, async function(){
+        const body={ action:act, character_id:isNaN(Number(cid))?cid:Number(cid) };
+        if(act==="rename"){
+          const nn=prompt("New IGN for this character:"); if(!nn) return;
+          body.ign=nn.trim();
+        }
+        if(act==="retire" && !confirm("Retire this character? Its history stays on the books.")) return;
+        await api("/api/admin/members/"+encodeURIComponent(aid)+"/characters", body);
+        toast("Done. The roster remembers.");
+        openMemberDrawer(aid);
+      });
+    });
+  });
+  q("#dw_addalt").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const ign=q("#dw_newalt").value.trim();
+      if(!ign){ toast("An alt needs a name.", true); return; }
+      await api("/api/admin/members/"+encodeURIComponent(aid)+"/characters",{action:"add", ign:ign});
+      toast("Alt added. More hands on the rock.");
+      openMemberDrawer(aid);
+    });
+  });
+  D.querySelectorAll("[data-award]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, key=btn.getAttribute("data-award");
+      busy(btn, async function(){
+        const note=prompt("Note for the award (optional, shows on their shelf):")||"";
+        const r=await api("/api/admin/award",{account_id:aid, decoration_key:key, note:note});
+        toast("Awarded. The wall grows.");
+        openMemberDrawer(aid).then(function(){
+          if(r.announce) announceBar(r.announce, document.getElementById("dw_annc"));
+        });
+      });
+    });
+  });
+  D.querySelectorAll("[data-rescind]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, key=btn.getAttribute("data-rescind");
+      busy(btn, async function(){
+        if(!confirm("Rescind this medal? It comes off the shelf.")) return;
+        await api("/api/admin/rescind",{account_id:aid, decoration_key:key});
+        toast("Rescinded. The wall shrinks.");
+        openMemberDrawer(aid);
+      });
+    });
+  });
+  D.querySelectorAll("[data-cacc]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-cacc");
+      busy(btn, async function(){
+        const r=await api("/api/admin/contracts/"+encodeURIComponent(id)+"/review",{action:"accept"});
+        toast("Accepted. The number climbs.");
+        openMemberDrawer(aid).then(function(){
+          if(r.announce) announceBar(r.announce, document.getElementById("dw_annc"));
+        });
+      });
+    });
+  });
+  D.querySelectorAll("[data-crej]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-crej");
+      busy(btn, async function(){
+        const why=prompt("Reason for the reject (the member sees this):"); if(why==null) return;
+        await api("/api/admin/contracts/"+encodeURIComponent(id)+"/review",{action:"reject", note:why});
+        toast("Rejected. Honesty keeps the books clean.");
+        openMemberDrawer(aid);
+      });
+    });
+  });
+  D.querySelectorAll("[data-attach]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, name=btn.getAttribute("data-attach"), cid=btn.getAttribute("data-attachcid");
+      busy(btn, async function(){
+        await api("/api/admin/aliases",{character_id:isNaN(Number(cid))?cid:Number(cid), ledger_name:name});
+        toast("Attached. Their number just got honest.");
+        openMemberDrawer(aid);
+      });
+    });
+  });
+  D.querySelectorAll(".dw_onb").forEach(function(c){
+    c.addEventListener("change", function(){
+      const cb=this;
+      busy(null, async function(){
+        await api("/api/admin/onboarding",{account_id:aid, module_key:cb.value, done:cb.checked});
+        toast(cb.checked?"Module marked. They are learning to fly the right way.":"Module reset.");
+      });
+    });
+  });
+  q("#dw_addnote").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const n=q("#dw_note").value.trim();
+      if(!n){ toast("An empty note helps nobody.", true); return; }
+      await api("/api/admin/notes",{account_id:aid, note:n});
+      toast("Noted.");
+      openMemberDrawer(aid);
+    });
+  });
+  if(ISADMIN){
+    q("#dw_reset").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        if(!confirm("Mint a single use password reset code? Their current sessions all die.")) return;
+        const r=await api("/api/admin/reset-password",{account_id:aid});
+        const code=r.code||"", hand=r.handoff||("Your BONK reset code: "+code);
+        q("#dw_danger_out").innerHTML='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
+          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+        toast("Reset minted. Hand it to them yourself.");
+      });
+    });
+    q("#dw_deact").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        const purge=q("#dw_purge").checked;
+        const warn=purge
+          ? "PURGE this account? Characters, avatars, history, all of it, gone for good. Type the airlock open?"
+          : "Deactivate this account? Sessions die, roster hides them, history stays.";
+        if(!confirm(warn)) return;
+        if(purge && !confirm("Last chance. Purge is forever.")) return;
+        await api("/api/admin/deactivate",{account_id:aid, purge:purge});
+        toast(purge?"Purged. The void has them now.":"Deactivated. The books remember.");
+        closeDrawer(); secMembers();
+      });
+    });
+  }
+}
+</script>
+<script>
+"use strict";
+/* ================= 3. CONTRACTS ================= */
+const CSTATE={tab:"pending", bulk:false, sel:{}};
+async function secContracts(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Contracts","the honesty gate &middot; nothing counts until leadership says it counts")+skel(4);
+  let j;
+  try{ j=await api("/api/admin/contracts?status="+encodeURIComponent(CSTATE.tab)); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Contracts","the honesty gate")+napPanel("Contract queue", e.message)
+      +'<button class="inv" onclick="secContracts()">Try again</button>';
+    return;
+  }
+  const list=j.contracts||[];
+  let h=head("Contracts","the honesty gate &middot; nothing counts until leadership says it counts");
+  h+='<div class="tabs">';
+  ["pending","accepted","rejected","all"].forEach(function(t){
+    h+='<button class="tab'+(CSTATE.tab===t?" on":"")+'" data-ctab="'+t+'">'+t+"</button>";
+  });
+  if(CSTATE.tab==="pending"){
+    h+='<button class="tab'+(CSTATE.bulk?" on":"")+'" id="cbulk" style="margin-left:auto">Bulk accept mode</button>';
+  }
+  h+="</div>";
+  h+='<div id="c_annc"></div><div id="clist">';
+  if(!list.length){
+    h+='<div class="empty">'+(CSTATE.tab==="pending"
+      ?"Queue is empty. Every haul is counted. The goblins are fed."
+      :"Nothing in this pile.")+"</div>";
+  }
+  list.forEach(function(c){
+    const un=Number(c.unmatched)||0;
+    const detail=c.detail||[];
+    const unl=detail.filter(function(l){ return !Number(l[2]); });
+    h+='<div class="ccard'+(c.status==="rejected"?" rej":(c.status==="accepted"?" acc":""))+'">'
+      +'<div class="chead">'
+      +(CSTATE.bulk && c.status==="pending"?'<input type="checkbox" class="csel" value="'+esc(String(c.id))+'" style="width:auto">':"")
+      +whoSpan(c, c.ign && c.ign!==accName(c)?("via "+esc(c.ign)):"")
+      +'<span class="qmeta">'+esc(ago(c.created_at))+" &middot; "+fmtN(c.line_count)+" lines &middot; status "+esc(c.status||"?")+"</span>"
+      +"</div>";
+    h+='<div class="cnums">'
+      +'<span><span class="k">Jita value</span><span class="v">'+fmtIsk(c.jita)+"</span></span>"
+      +'<span><span class="k">Payout</span><span class="v">'+fmtIsk(c.payout)+"</span></span>"
+      +'<span><span class="k">Volume</span><span class="v">'+(fmtM3(c.m3)||"…")+"</span></span>"
+      +'<span><span class="k">Matched</span><span class="v">'+fmtN((Number(c.line_count)||0)-un)+"</span></span>"
+      +'<span><span class="k">Unmatched</span><span class="v'+(un>0?" warn":"")+'">'+fmtN(un)+"</span></span>"
+      +"</div>";
+    if(un>0){
+      h+='<details><summary class="warn">'+fmtN(un)+' unpriced lines &middot; the market does not know this ore</summary><div class="rcpt">';
+      if(unl.length) unl.forEach(function(l){ h+='<div class="z">'+esc(l[0])+" × "+fmtN(l[1])+" &middot; no price</div>"; });
+      else h+='<div class="z">Line detail unavailable here. The receipt knows.</div>';
+      h+="</div></details>";
+    }
+    if(detail.length){
+      h+='<details><summary>Raw receipt</summary><div class="rcpt">';
+      detail.forEach(function(l){
+        h+='<div'+(!Number(l[2])?' class="z"':"")+">"+esc(l[0])+" × "+fmtN(l[1])+" &middot; "+fmtIsk(l[2])+"</div>";
+      });
+      h+="</div></details>";
+    }
+    if(c.status==="pending"){
+      h+='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">';
+      if(un>0){
+        h+='<input type="number" class="c_ovj" data-for="'+esc(String(c.id))+'" placeholder="override Jita ISK" style="max-width:170px">'
+          +'<input type="number" class="c_ovm" data-for="'+esc(String(c.id))+'" placeholder="override m³" style="max-width:140px">';
+      }
+      h+='<button class="inv" data-acc="'+esc(String(c.id))+'" data-un="'+un+'">Accept</button>'
+        +'<button class="dngr" data-rej="'+esc(String(c.id))+'">Reject</button></div>';
+    }
+    if(c.status==="rejected" && c.note) h+='<div class="rowmeta" style="margin-top:6px">reason: '+esc(c.note)+"</div>";
+    h+="</div>";
+  });
+  h+="</div>";
+  if(CSTATE.bulk && CSTATE.tab==="pending" && list.length){
+    h+='<button class="gobtn" id="cbulkgo">Accept every checked contract</button>';
+  }
+  h+=footLine();
+  m.innerHTML=h;
+  m.querySelectorAll("[data-ctab]").forEach(function(b){
+    b.addEventListener("click", function(){ CSTATE.tab=this.getAttribute("data-ctab"); CSTATE.bulk=false; secContracts(); });
+  });
+  const cb=document.getElementById("cbulk");
+  if(cb) cb.addEventListener("click", function(){ CSTATE.bulk=!CSTATE.bulk; secContracts(); });
+  m.querySelectorAll("[data-acc]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-acc"), un=Number(btn.getAttribute("data-un"))||0;
+      busy(btn, async function(){
+        const body={action:"accept"};
+        if(un>0){
+          const oj=document.querySelector('.c_ovj[data-for="'+id+'"]');
+          const om=document.querySelector('.c_ovm[data-for="'+id+'"]');
+          const ov={};
+          if(oj && oj.value!=="") ov.jita=Number(oj.value);
+          if(om && om.value!=="") ov.m3=Number(om.value);
+          if(ov.jita!=null || ov.m3!=null) body.override=ov;
+        }
+        const r=await api("/api/admin/contracts/"+encodeURIComponent(id)+"/review", body);
+        toast("Accepted. Their number climbs tonight.");
+        await secContracts();
+        if(r.announce) announceBar(r.announce, document.getElementById("c_annc"));
+      });
+    });
+  });
+  m.querySelectorAll("[data-rej]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-rej");
+      busy(btn, async function(){
+        const why=prompt("Reason for the reject (the member sees this):"); if(why==null) return;
+        await api("/api/admin/contracts/"+encodeURIComponent(id)+"/review",{action:"reject", note:why});
+        toast("Rejected. The books stay honest.");
+        secContracts();
+      });
+    });
+  });
+  const bg=document.getElementById("cbulkgo");
+  if(bg) bg.addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const ids=[].slice.call(document.querySelectorAll(".csel:checked")).map(function(c){return c.value;});
+      if(!ids.length){ toast("Check some contracts first, chief.", true); return; }
+      if(!confirm("Accept "+ids.length+" contracts? Only do this for a batch you trust.")) return;
+      let ok=0, fail=0;
+      for(const id of ids){
+        try{ await api("/api/admin/contracts/"+encodeURIComponent(id)+"/review",{action:"accept"}); ok++; }
+        catch(e){ fail++; if(e.message!==SILENT) toast(e.message, true); }
+      }
+      toast(ok+" accepted"+(fail?(", "+fail+" jammed"):"")+". The ore flows.");
+      secContracts();
+    });
+  });
+}
+/* ================= 4. RECRUITING ================= */
+const RSTATE={tab:"pending"};
+async function secRecruiting(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table")+skel(4);
+  let j;
+  try{ j=await api("/api/admin/applications?status="+encodeURIComponent(RSTATE.tab)); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Recruiting","the pipeline")+napPanel("Applications", e.message)
+      +'<button class="inv" onclick="secRecruiting()">Try again</button>';
+    return;
+  }
+  const list=j.applications||[];
+  let h=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table");
+  h+='<div class="tabs">';
+  ["pending","approved","rejected","joined"].forEach(function(t){
+    h+='<button class="tab'+(RSTATE.tab===t?" on":"")+'" data-rtab="'+t+'">'+t+"</button>";
+  });
+  h+="</div>";
+  if(!list.length){
+    h+='<div class="empty">'+(RSTATE.tab==="pending"
+      ?"No applications waiting. Go rattle the recruitment drum."
+      :"Nothing in this pile.")+"</div>";
+  }
+  list.forEach(function(a){
+    const id=a.id;
+    h+='<div class="ccard"><div class="chead">'
+      +'<span class="qwho" style="cursor:default">'+avat(a,22)+"<b>"+esc(a.ign||"no IGN given")+"</b></span>"
+      +'<span class="qmeta">applied '+esc(ago(a.created_at))+" &middot; status "+esc(a.status||"?")+"</span></div>";
+    const fields=[["timezone","Timezone"],["experience","Experience"],["ships","Ships"],
+      ["looking_for","Looking for"],["found_us","Found us via"],["contact","Reach them at"],["notes","Notes"]];
+    h+='<div class="frm" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">';
+    fields.forEach(function(f){
+      const v=a[f[0]];
+      if(v==null||v==="") return;
+      h+='<div><span class="flabel">'+esc(f[1])+"</span><span>"+esc(Array.isArray(v)?v.join(", "):v)+"</span></div>";
+    });
+    if(Array.isArray(a.activities)&&a.activities.length)
+      h+='<div><span class="flabel">Into</span><span>'+esc(a.activities.join(", "))+"</span></div>";
+    h+="</div>";
+    if(a.review_note||a.note) h+='<div class="rowmeta">note: '+esc(a.review_note||a.note)+"</div>";
+    h+='<div id="r_out_'+esc(String(id))+'"></div>';
+    if(a.status==="pending"){
+      h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+        +'<button class="inv" data-appr="'+esc(String(id))+'">Approve, mint the code</button>'
+        +'<button class="dngr" data-rrej="'+esc(String(id))+'">Reject</button>'
+        +'<button class="cmail" data-rnote="'+esc(String(id))+'">Add note</button></div>';
+    }else{
+      h+='<div style="margin-top:8px"><button class="cmail" data-rnote="'+esc(String(id))+'">Add note</button></div>';
+    }
+    h+="</div>";
+  });
+  h+=footLine();
+  m.innerHTML=h;
+  m.querySelectorAll("[data-rtab]").forEach(function(b){
+    b.addEventListener("click", function(){ RSTATE.tab=this.getAttribute("data-rtab"); secRecruiting(); });
+  });
+  m.querySelectorAll("[data-appr]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-appr");
+      busy(btn, async function(){
+        const r=await api("/api/admin/applications/"+encodeURIComponent(id)+"/review",{action:"approve"});
+        const code=r.code||"", hand=r.handoff||("Your BONK portal code: "+code);
+        let out='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
+          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+        const cid=r.code_id!=null?r.code_id:(r.codeId);
+        if(cid!=null) out+=' <button class="inv" data-handoff2="'+esc(String(cid))+'">Mark handed off</button>';
+        const host=document.getElementById("r_out_"+id);
+        if(host){
+          host.innerHTML=out;
+          const hb=host.querySelector("[data-handoff2]");
+          if(hb) hb.addEventListener("click", function(){
+            const b2=this;
+            busy(b2, async function(){
+              await api("/api/admin/codes/action",{code_id:isNaN(Number(cid))?cid:Number(cid), action:"handoff"});
+              toast("Marked handed off. Now watch for the redeem.");
+            });
+          });
+        }
+        toast("Approved. A new goblin approaches the table.");
+      });
+    });
+  });
+  m.querySelectorAll("[data-rrej]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-rrej");
+      busy(btn, async function(){
+        const why=prompt("Reason for the reject:"); if(why==null) return;
+        await api("/api/admin/applications/"+encodeURIComponent(id)+"/review",{action:"reject", note:why});
+        toast("Rejected. Not every rock is ore.");
+        secRecruiting();
+      });
+    });
+  });
+  m.querySelectorAll("[data-rnote]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-rnote");
+      busy(btn, async function(){
+        const n=prompt("Review note:"); if(!n) return;
+        await api("/api/admin/applications/"+encodeURIComponent(id)+"/review",{action:"note", note:n});
+        toast("Noted.");
+        secRecruiting();
+      });
+    });
+  });
+}
+</script>
+<script>
+"use strict";
+/* ================= 5. DECORATIONS ================= */
+async function secDecorations(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Decorations","the catalog behind the Wall of Goblins")+skel(3);
+  let j;
+  try{ j=await api("/api/admin/decorations"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Decorations","the catalog")+napPanel("Catalog", e.message)
+      +'<button class="inv" onclick="secDecorations()">Try again</button>';
+    return;
+  }
+  CATALOG=j.decorations||j.catalog||[];
+  const remind=j.reminder||j.message||"When the catalog changes, update the static Wall of Goblins page so the wall and the shelf never drift.";
+  let h=head("Decorations","the catalog behind the Wall of Goblins");
+  h+='<div class="nap" style="padding:8px 0 14px">'+esc(remind)+"</div>";
+  h+='<div style="overflow-x:auto"><table><thead><tr><th></th><th>Name</th><th>Key</th><th>Tier</th><th>Grant</th><th>Source</th><th>Threshold</th>'
+    +(ISADMIN?"<th></th>":"")+"</tr></thead><tbody>";
+  if(!CATALOG.length) h+='<tr><td colspan="8"><div class="nap">The wall is bare. That cannot be right.</div></td></tr>';
+  CATALOG.forEach(function(d,i){
+    h+="<tr>"
+      +'<td style="font-size:19px">'+esc(d.emoji||"")+"</td>"
+      +'<td class="tl"><b>'+esc(d.name)+"</b>"
+      +(d.description?'<div class="rowmeta">'+esc(d.description)+"</div>":"")+"</td>"
+      +"<td><code>"+esc(d.key)+"</code></td>"
+      +'<td class="num">'+esc(d.tier!=null?d.tier:"")+"</td>"
+      +'<td class="kind">'+esc(d.auto?"auto":"manual")+"</td>"
+      +'<td class="kind">'+esc(d.data_source||"")+"</td>"
+      +'<td class="num">'+(d.threshold!=null?fmtIsk(d.threshold):"")+"</td>"
+      +(ISADMIN?'<td><button class="cmail" data-dedit="'+i+'">Edit</button></td>':"")
+      +"</tr>";
+  });
+  h+="</tbody></table></div>";
+  if(ISADMIN) h+='<div style="margin-top:14px"><button class="inv" id="dadd">Add a medal</button></div><div id="dform"></div>';
+  h+=footLine();
+  m.innerHTML=h;
+  if(ISADMIN){
+    document.getElementById("dadd").addEventListener("click", function(){ decForm({}); });
+    m.querySelectorAll("[data-dedit]").forEach(function(b){
+      b.addEventListener("click", function(){ decForm(CATALOG[Number(this.getAttribute("data-dedit"))]||{}); });
+    });
+  }
+}
+function decForm(d){
+  const host=document.getElementById("dform");
+  host.innerHTML='<div class="panel" style="margin-top:12px"><div class="ptitle">'+(d.key?"Edit medal":"New medal")+"</div>"
+    +'<div class="frm">'
+    +'<div><label>Key</label><input id="df_key" value="'+esc(d.key||"")+'"'+(d.key?" readonly":"")+"></div>"
+    +'<div><label>Name</label><input id="df_name" value="'+esc(d.name||"")+'"></div>'
+    +'<div><label>Emoji</label><input id="df_emoji" value="'+esc(d.emoji||"")+'"></div>'
+    +'<div><label>Tier (4 or less is High Honors)</label><input id="df_tier" type="number" value="'+esc(d.tier!=null?d.tier:"")+'"></div>'
+    +'<div><label>Grant</label><select id="df_auto"><option value="0"'+(!d.auto?" selected":"")+'>manual</option><option value="1"'+(d.auto?" selected":"")+">auto</option></select></div>"
+    +'<div><label>Data source</label><input id="df_src" value="'+esc(d.data_source||"")+'" placeholder="lifetime_isk, tenure_days, first_op…"></div>'
+    +'<div><label>Threshold</label><input id="df_thr" type="number" value="'+esc(d.threshold!=null?d.threshold:"")+'"></div>'
+    +'<div class="wide"><label>Criteria text (the wall shows this)</label><textarea id="df_desc" style="min-height:52px">'+esc(d.description||"")+"</textarea></div>"
+    +"</div>"
+    +'<button class="gobtn" id="df_save">Save to the catalog</button> '
+    +'<button class="inv" id="df_cancel" type="button">Cancel</button></div>';
+  document.getElementById("df_cancel").addEventListener("click", function(){ host.innerHTML=""; });
+  document.getElementById("df_save").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      const g=function(id){ return document.getElementById(id).value.trim(); };
+      const body={ key:g("df_key"), name:g("df_name"), emoji:g("df_emoji"),
+        description:document.getElementById("df_desc").value,
+        auto:document.getElementById("df_auto").value==="1",
+        data_source:g("df_src")||null };
+      if(!body.key||!body.name){ toast("A medal needs a key and a name.", true); return; }
+      const tier=g("df_tier"); if(tier!=="") body.tier=Number(tier);
+      const thr=g("df_thr"); if(thr!=="") body.threshold=Number(thr);
+      await api("/api/admin/decorations", body);
+      CATALOG=null;
+      toast("Catalog saved. Now go keep the static wall in step.");
+      secDecorations();
+    });
+  });
+}
+/* ================= 6. RECONCILE ================= */
+async function secReconcile(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Reconcile","unmatched ledger names &middot; payout credited to nobody until you act")+skel(3);
+  let j;
+  try{ j=await api("/api/admin/aliases"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Reconcile","unmatched ledger names")+napPanel("Reconciliation", e.message)
+      +'<button class="inv" onclick="secReconcile()">Try again</button>';
+    return;
+  }
+  const un=j.unmatched||[];
+  let h=head("Reconcile","unmatched ledger names &middot; payout credited to nobody until you act");
+  if(!un.length){
+    h+='<div class="empty">Every ledger name is matched. Clean books.</div>';
+  }else{
+    un.forEach(function(u,i){
+      const cands=u.candidates||u.suggestions||[];
+      h+='<div class="ccard"><div class="chead"><b>'+esc(u.ledger_name||u.name)+"</b>"
+        +'<span class="qval">'+fmtIsk(u.payout!=null?u.payout:u.isk)+" at stake</span>"
+        +'<span class="qmeta">'+fmtN(u.ops!=null?u.ops:u.opDrops)+" ops</span></div>";
+      if(cands.length){
+        h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center">';
+        cands.forEach(function(c){
+          h+='<button class="inv" data-rcattach="'+esc(String(u.ledger_name||u.name))+'" data-rccid="'+esc(String(c.character_id!=null?c.character_id:c.id))+'">'
+            +"Attach to "+esc(c.ign||c.name)+(c.score!=null?' <span class="qmeta">'+Math.round(Number(c.score)*(Number(c.score)<=1?100:1))+"%</span>":"")+"</button>";
+        });
+        h+="</div>";
+      }else{
+        h+='<div class="rowmeta" style="margin-top:6px">No lookalikes found. Attach by hand:</div>';
+      }
+      h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+        +'<input class="rc_manual" data-name="'+esc(String(u.ledger_name||u.name))+'" placeholder="character id" style="max-width:150px">'
+        +'<button class="cmail" data-rcman="'+esc(String(u.ledger_name||u.name))+'" data-idx="'+i+'">Attach by id</button></div>'
+        +"</div>";
+    });
+  }
+  h+=footLine();
+  m.innerHTML=h;
+  async function attach(cid, name, btn){
+    busy(btn, async function(){
+      await api("/api/admin/aliases",{character_id:isNaN(Number(cid))?cid:Number(cid), ledger_name:name});
+      toast("Attached. Somebody just got their ISK back.");
+      secReconcile();
+    });
+  }
+  m.querySelectorAll("[data-rcattach]").forEach(function(b){
+    b.addEventListener("click", function(){ attach(this.getAttribute("data-rccid"), this.getAttribute("data-rcattach"), this); });
+  });
+  m.querySelectorAll("[data-rcman]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const name=this.getAttribute("data-rcman");
+      const inp=m.querySelector('.rc_manual[data-name="'+CSS.escape(name)+'"]');
+      if(!inp || !inp.value.trim()){ toast("Give me a character id first.", true); return; }
+      attach(inp.value.trim(), name, this);
+    });
+  });
+}
+</script>
+<script>
+"use strict";
+/* ================= 7. BACKFILL ================= */
+const BF={ previewOk:false, members:null };
+const BF_EXAMPLE=[
+  { main_ign:"Fear Cleary", alts:["Fear Alt"], aliases:["FearC"], tenure_start:"2025-11-01",
+    decorations:["first_haul"], timezone:"US East", discord_handle:"fear_cleary", role:"member" }
+];
+async function secBackfill(){
+  const m=document.getElementById("main");
+  if(!ISADMIN){
+    m.innerHTML=head("Backfill","launch day, all 45 at once")
+      +'<div class="empty">This lever is for the admin. Ask the boss to pull it.</div>'+footLine();
+    return;
+  }
+  const cat=await getCatalog();
+  let decs="";
+  cat.forEach(function(d){
+    decs+='<label class="chk" style="display:inline-flex;margin:2px 10px 2px 0"><input type="checkbox" class="bfdec" value="'+esc(d.key)+'"> '+esc((d.emoji||"")+" "+d.name)+"</label>";
+  });
+  let h=head("Backfill","launch day &middot; seed every veteran, mint every code, stay calm");
+  h+='<div class="panel"><div class="ptitle">1 &middot; The list</div>'
+    +'<div class="rowmeta" style="margin-bottom:8px">Paste a JSON array of members. Every field except main_ign is optional. Example:</div>'
+    +'<div class="rcpt" style="max-height:120px">'+esc(JSON.stringify(BF_EXAMPLE, null, 1))+"</div>"
+    +'<textarea id="bf_json" style="min-height:180px" placeholder="[ ]"></textarea>'
+    +'<details><summary>Or build it one goblin at a time</summary>'
+    +'<div class="frm" style="margin-top:10px">'
+    +'<div><label>Main IGN</label><input id="bf_ign"></div>'
+    +'<div><label>Alts, comma separated</label><input id="bf_alts"></div>'
+    +'<div><label>Ledger aliases</label><input id="bf_alias"></div>'
+    +'<div><label>Tenure start</label><input id="bf_ten" type="date"></div>'
+    +'<div><label>Timezone</label><input id="bf_tz"></div>'
+    +'<div><label>Discord handle</label><input id="bf_dc"></div>'
+    +'<div><label>Role</label><select id="bf_role"><option value="member">member</option><option value="officer">officer</option><option value="admin">admin</option></select></div>'
+    +'<div class="wide"><label>Decorations</label>'+(decs||'<span class="rowmeta">catalog unavailable</span>')+"</div>"
+    +'</div><button class="inv" id="bf_append">Append to the list</button></details></div>';
+  h+='<div class="panel"><div class="ptitle">2 &middot; Preview <span class="pn">mints nothing, promises everything</span></div>'
+    +'<button class="inv" id="bf_prev">Preview the seeding</button>'
+    +'<div id="bf_report" style="margin-top:10px"></div></div>';
+  h+='<div class="panel"><div class="ptitle">3 &middot; Commit <span class="pn">mints every code &middot; only lights up on a clean preview</span></div>'
+    +'<button class="gobtn" id="bf_commit" disabled>Commit the backfill</button>'
+    +'<div id="bf_handout" style="margin-top:10px"></div></div>';
+  h+=footLine();
+  m.innerHTML=h;
+  document.getElementById("bf_append").addEventListener("click", function(){
+    const ign=document.getElementById("bf_ign").value.trim();
+    if(!ign){ toast("A goblin needs a name. Main IGN first.", true); return; }
+    const g=function(id){ return document.getElementById(id).value.trim(); };
+    const row={ main_ign:ign };
+    const alts=g("bf_alts").split(",").map(function(s){return s.trim();}).filter(Boolean);
+    const alias=g("bf_alias").split(",").map(function(s){return s.trim();}).filter(Boolean);
+    if(alts.length) row.alts=alts;
+    if(alias.length) row.aliases=alias;
+    if(g("bf_ten")) row.tenure_start=g("bf_ten");
+    if(g("bf_tz")) row.timezone=g("bf_tz");
+    if(g("bf_dc")) row.discord_handle=g("bf_dc");
+    if(document.getElementById("bf_role").value!=="member") row.role=document.getElementById("bf_role").value;
+    const decs=[].slice.call(document.querySelectorAll(".bfdec:checked")).map(function(c){return c.value;});
+    if(decs.length) row.decorations=decs;
+    const ta=document.getElementById("bf_json");
+    let arr=[];
+    if(ta.value.trim()){
+      try{ arr=JSON.parse(ta.value); if(!Array.isArray(arr)) throw 0; }
+      catch(e){ toast("The list is not valid JSON yet. Fix it before appending.", true); return; }
+    }
+    arr.push(row);
+    ta.value=JSON.stringify(arr, null, 1);
+    ["bf_ign","bf_alts","bf_alias","bf_ten","bf_tz","bf_dc"].forEach(function(id){ document.getElementById(id).value=""; });
+    document.querySelectorAll(".bfdec:checked").forEach(function(c){ c.checked=false; });
+    toast("Appended. "+arr.length+" on the list.");
+  });
+  document.getElementById("bf_prev").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      let arr;
+      try{ arr=JSON.parse(document.getElementById("bf_json").value); if(!Array.isArray(arr)) throw 0; }
+      catch(e){ toast("That is not a JSON array. Check the example.", true); return; }
+      if(!arr.length){ toast("The list is empty. Nobody to seed.", true); return; }
+      const r=await api("/api/admin/backfill/preview",{members:arr});
+      const rep=r.report||[];
+      let problems=0;
+      let t='<div style="overflow-x:auto"><table><thead><tr><th>Goblin</th><th>Will be seeded</th><th>Problems</th></tr></thead><tbody>';
+      rep.forEach(function(row){
+        const probs=row.problems||[];
+        problems+=probs.length;
+        const seeds=[];
+        if(row.alts&&row.alts.length) seeds.push(row.alts.length+" alts");
+        if(row.aliases&&row.aliases.length) seeds.push(row.aliases.length+" aliases");
+        if(row.decorations&&row.decorations.length) seeds.push(row.decorations.length+" medals");
+        if(row.tenure_start) seeds.push("tenure "+esc(fmtDate(row.tenure_start)));
+        if(row.role&&row.role!=="member") seeds.push("role "+esc(row.role));
+        if(row.seeds) seeds.push(esc(String(row.seeds)));
+        t+="<tr><td class=\"tl\"><b>"+esc(row.main_ign||"?")+"</b></td>"
+          +'<td class="tl">'+(seeds.join(" &middot; ")||'<span class="rowmeta">code only</span>')+"</td>"
+          +'<td class="tl">'+(probs.length?'<span class="bad">'+esc(probs.join("; "))+"</span>":'<span class="good">clean</span>')+"</td></tr>";
+      });
+      t+="</tbody></table></div>";
+      t+='<div style="margin-top:8px" class="'+(problems?"bad":"good")+'">'
+        +(problems? problems+" problems. Fix the list and preview again. Commit stays locked."
+                  : rep.length+" goblins, zero problems. Commit is unlocked. Breathe.")
+        +"</div>";
+      document.getElementById("bf_report").innerHTML=t;
+      BF.previewOk=(problems===0 && rep.length>0);
+      BF.members=arr;
+      document.getElementById("bf_commit").disabled=!BF.previewOk;
+    });
+  });
+  document.getElementById("bf_commit").addEventListener("click", function(){
+    const btn=this;
+    busy(btn, async function(){
+      if(!BF.previewOk || !BF.members){ toast("Preview first. Calm and obvious, remember.", true); return; }
+      if(!confirm("Commit the backfill? Every code on the list gets minted. Take the D1 snapshot first if you have not.")) return;
+      const r=await api("/api/admin/backfill",{members:BF.members});
+      const hand=r.handout||[];
+      let block="", csv="main_ign,code\n";
+      hand.forEach(function(x){
+        block+=x.main_ign+" · "+x.code+"\n";
+        csv+=csvCell(x.main_ign)+","+csvCell(x.code)+"\n";
+      });
+      document.getElementById("bf_handout").innerHTML=
+        '<div class="good" style="margin-bottom:8px">'+hand.length+" codes minted. DM each goblin their own. Never post the list in a channel.</div>"
+        +'<div class="hand" style="max-height:280px;overflow:auto">'+esc(block||"(empty handout, check the worker)")+"</div>"
+        +cpBtn(block,"Copy the handout")+' <button class="cmail" id="bf_csv">Download CSV</button>';
+      document.getElementById("bf_csv").addEventListener("click", function(){
+        downloadFile("bonk-backfill-codes.csv", csv, "text/csv");
+      });
+      BF.previewOk=false; document.getElementById("bf_commit").disabled=true;
+      toast("Backfill committed. Launch day is going to be fine.");
+    });
+  });
+}
+/* ================= 8. AUDIT ================= */
+async function secAudit(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Audit","every hand that touched the books")+skel(3);
+  await drawAudit({});
+}
+async function drawAudit(f){
+  const m=document.getElementById("main");
+  const qs=[];
+  if(f.actor) qs.push("actor="+encodeURIComponent(f.actor));
+  if(f.action) qs.push("action="+encodeURIComponent(f.action));
+  if(f.account_id) qs.push("account_id="+encodeURIComponent(f.account_id));
+  let j;
+  try{ j=await api("/api/admin/audit"+(qs.length?"?"+qs.join("&"):"")); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Audit","every hand that touched the books")+napPanel("Audit trail", e.message)
+      +'<button class="inv" onclick="secAudit()">Try again</button>';
+    return;
+  }
+  const rows=j.audit||[];
+  let h=head("Audit","every hand that touched the books");
+  h+='<div class="filterbar">'
+    +'<input type="text" id="au_actor" placeholder="actor" value="'+esc(f.actor||"")+'" style="width:150px">'
+    +'<input type="text" id="au_action" placeholder="action" value="'+esc(f.action||"")+'" style="width:150px">'
+    +'<input type="text" id="au_acct" placeholder="account id" value="'+esc(f.account_id||"")+'" style="width:120px">'
+    +'<button class="inv" id="au_go">Filter</button></div>';
+  h+='<div style="overflow-x:auto"><table><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody>';
+  if(!rows.length) h+='<tr><td colspan="5"><div class="nap">Nothing logged for that filter. Clean hands or wrong net.</div></td></tr>';
+  rows.forEach(function(r){
+    let det=r.detail;
+    if(det && typeof det==="string"){ try{ det=JSON.stringify(JSON.parse(det), null, 1); }catch(e){} }
+    else if(det && typeof det==="object"){ det=JSON.stringify(det, null, 1); }
+    h+='<tr><td class="when">'+esc(ago(r.created_at||r.when))+"</td>"
+      +'<td class="tl">'+esc(r.actor||r.actor_ign||"")+"</td>"
+      +"<td><code>"+esc(r.action||"")+"</code></td>"
+      +'<td class="tl">'+esc(r.target||r.target_ign||(r.account_id!=null?("account "+r.account_id):""))+"</td>"
+      +'<td class="tl">'+(det?'<pre class="jsonp">'+esc(det)+"</pre>":"")+"</td></tr>";
+  });
+  h+="</tbody></table></div>"+footLine();
+  m.innerHTML=h;
+  document.getElementById("au_go").addEventListener("click", function(){
+    drawAudit({ actor:document.getElementById("au_actor").value.trim(),
+      action:document.getElementById("au_action").value.trim(),
+      account_id:document.getElementById("au_acct").value.trim() });
+  });
+}
+/* ================= 9. SETTINGS ================= */
+async function secSettings(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Settings","the levers")+skel(2);
+  let j;
+  try{ j=await api("/api/admin/settings"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Settings","the levers")+napPanel("Settings", e.message)
+      +'<button class="inv" onclick="secSettings()">Try again</button>';
+    return;
+  }
+  const s=j.settings||j;
+  const rate=Number(s.contract_rate);
+  const pct=isFinite(rate)?Math.round(rate*1000)/10:88;
+  let h=head("Settings","the levers");
+  h+='<div class="panel"><div class="ptitle">Contract buyback rate</div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">The solo contract buyback rate. Fleet ops set their own rate per op in the ledger.</div>'
+    +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">'
+    +'<input id="st_rate" type="number" min="50" max="100" step="0.1" value="'+pct+'" style="max-width:110px"'+(ISADMIN?"":" disabled")+'>'
+    +'<span class="qmeta">% of Jita sell</span>'
+    +(ISADMIN?'<button class="effp" data-preset="88">88%</button><button class="effp" data-preset="90">90%</button>'
+      +'<button class="inv" id="st_save">Save the rate</button>':'<span class="rowmeta">read only at your clearance</span>')
+    +"</div></div>";
+  h+=footLine();
+  m.innerHTML=h;
+  if(ISADMIN){
+    m.querySelectorAll("[data-preset]").forEach(function(b){
+      b.addEventListener("click", function(){ document.getElementById("st_rate").value=this.getAttribute("data-preset"); });
+    });
+    document.getElementById("st_save").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        const v=Number(document.getElementById("st_rate").value);
+        if(!isFinite(v) || v<50 || v>100){ toast("Rate lives between 50 and 100 percent. Be reasonable.", true); return; }
+        await api("/api/admin/settings",{contract_rate:Math.round(v*10)/1000});
+        toast("Rate saved. Every payday now speaks this number.");
+        secSettings();
+      });
+    });
+  }
+}
+/* ================= registry + boot ================= */
+const SECTIONS={ "":secOverview, members:secMembers, contracts:secContracts,
+  recruiting:secRecruiting, decorations:secDecorations, reconcile:secReconcile,
+  backfill:secBackfill, audit:secAudit, settings:secSettings };
+boot();
+</script>
+<script src="/nav.js?v=4"></script>
+</body></html>

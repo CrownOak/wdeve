@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BONK - Apply</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.6; max-width:760px; margin:2px 0 20px; }
+  .applybox{ background:var(--steel); border:1px solid var(--line-soft); padding:26px 28px 30px;
+             position:relative; max-width:680px; }
+  .applybox::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+  .field{ margin:0 0 20px; }
+  .field > label, .field > .glabel{ display:block; font-family:var(--mono); font-size:11px;
+      letter-spacing:.08em; text-transform:uppercase; color:var(--ore); margin:0 0 4px; }
+  .hint{ color:var(--muted); font-size:12.5px; margin:0 0 8px; }
+  .req{ color:var(--amber); }
+  textarea.short{ min-height:74px; }
+  fieldset{ border:0; padding:0; margin:0; }
+  fieldset legend{ font-family:var(--mono); font-size:11px; letter-spacing:.08em;
+      text-transform:uppercase; color:var(--ore); padding:0; margin:0 0 4px; }
+  .opts{ display:flex; flex-wrap:wrap; gap:8px 18px; }
+  .opts label{ display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--silver);
+      cursor:pointer; white-space:nowrap; }
+  .opts input{ width:auto; accent-color:var(--ore); margin:0; cursor:pointer; }
+  select{ width:100%; padding:11px 13px; background:var(--black); border:1px solid var(--line);
+      color:var(--silver); font-family:var(--mono); font-size:14px; }
+  select:focus{ outline:none; border-color:var(--ore); }
+  .fielderr{ color:var(--red); font-family:var(--mono); font-size:12px; margin-top:6px; min-height:0; }
+  input[aria-invalid="true"]{ border-color:var(--red); }
+  .sendrow{ margin-top:6px; }
+  .sendrow .gobtn{ width:100%; padding:14px; font-size:15px; }
+  .sendrow .gobtn[disabled]{ opacity:.55; cursor:wait; }
+  #formErr{ margin-top:14px; }
+  .confirm{ background:var(--steel); border:1px solid var(--line); padding:40px 32px;
+            position:relative; max-width:680px; text-align:center; }
+  .confirm::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+  .confirm .big{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+      letter-spacing:.05em; font-size:18px; color:var(--ore); line-height:1.5; }
+  .confirm .later{ color:#a9b2a8; font-size:13.5px; margin-top:14px; line-height:1.6; }
+  .signoff{ color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:.03em;
+            margin:26px 0 6px; max-width:680px; border-top:1px solid var(--line); padding-top:18px; }
+  .signoff b{ color:var(--silver); }
+  @media(max-width:480px){ .applybox{ padding:20px 16px 24px; } .opts{ gap:8px 14px; } }
+</style></head>
+<body>
+  <header>
+    <h1>&#129704; JOIN THE GOBLINS &#129704;</h1>
+    <div class="sub">the official BONK application. no interview panel, no essay, just tell us who you are.</div>
+  </header>
+  <div class="wrap">
+    <p class="intro">BONK is a mining corp of emotionally stable goblins who actually log in: full fleets,
+    boosts on grid, a fair buyback, and 0% tax vibes. Fill this out and a recruiter will find you, because
+    the table always has room for one more.</p>
+
+    <div id="formPanel" class="applybox">
+      <form id="applyForm" novalidate>
+
+        <div class="field">
+          <label for="ign">In game name <span class="req">(required)</span></label>
+          <p class="hint" id="ignHint">What do we call you in the belt?</p>
+          <input id="ign" name="ign" type="text" maxlength="64" autocomplete="off"
+                 aria-describedby="ignHint" aria-required="true" placeholder="Your pilot name">
+          <div class="fielderr" id="ignErr" role="alert"></div>
+        </div>
+
+        <div class="field">
+          <label for="timezone">Timezone</label>
+          <p class="hint" id="tzHint">When do you actually log in?</p>
+          <select id="timezone" name="timezone" aria-describedby="tzHint">
+            <option value="">Pick one, or do not</option>
+            <option value="US East">US East</option>
+            <option value="US West">US West</option>
+            <option value="EU">EU</option>
+            <option value="AU">AU</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <fieldset>
+            <legend>Experience</legend>
+            <p class="hint">Every goblin starts somewhere. No wrong answer.</p>
+            <div class="opts">
+              <label><input type="radio" name="experience" value="new"> New to EVE</label>
+              <label><input type="radio" name="experience" value="returning"> Returning after a break</label>
+              <label><input type="radio" name="experience" value="veteran"> Veteran</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <fieldset>
+            <legend>What you like doing</legend>
+            <p class="hint">Check everything that sounds like a good evening.</p>
+            <div class="opts">
+              <label><input type="checkbox" name="activities" value="mining"> Mining</label>
+              <label><input type="checkbox" name="activities" value="industry"> Industry</label>
+              <label><input type="checkbox" name="activities" value="pvp"> A little PvP</label>
+              <label><input type="checkbox" name="activities" value="explore"> Exploration</label>
+              <label><input type="checkbox" name="activities" value="unsure"> Not sure yet</label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="field">
+          <label for="ships">What you fly right now</label>
+          <textarea id="ships" name="ships" class="short" maxlength="500"
+                    placeholder="Venture and vibes"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="looking_for">What you are looking for</label>
+          <textarea id="looking_for" name="looking_for" class="short" maxlength="1000"
+                    placeholder="A long term home? Big ops? People who log in?"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="found_us">How you found us</label>
+          <textarea id="found_us" name="found_us" class="short" maxlength="500"
+                    placeholder="belt convo, a friend, reddit, a vision"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="contact">Best way to reach you <span class="req">(optional)</span></label>
+          <p class="hint" id="contactHint">Discord or in game name. So the recruiter is not shouting into the void.</p>
+          <input id="contact" name="contact" type="text" maxlength="120" autocomplete="off"
+                 aria-describedby="contactHint" placeholder="goblin#1234 or your pilot name">
+        </div>
+
+        <div class="field">
+          <label for="notes">Anything else <span class="req">(optional)</span></label>
+          <textarea id="notes" name="notes" class="short" maxlength="2000"
+                    placeholder="The floor is yours."></textarea>
+        </div>
+
+        <div class="sendrow">
+          <button type="submit" class="gobtn" id="sendBtn">Send it to the recruiters</button>
+        </div>
+        <div class="err" id="formErr" role="alert"></div>
+
+      </form>
+    </div>
+
+    <div class="signoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
+  </div>
+  <footer>Applications go straight to the recruiting goblins. Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
+
+<script>
+(function(){
+  var form = document.getElementById("applyForm");
+  var panel = document.getElementById("formPanel");
+  var btn = document.getElementById("sendBtn");
+  var ign = document.getElementById("ign");
+  var ignErr = document.getElementById("ignErr");
+  var formErr = document.getElementById("formErr");
+  var busy = false;
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function setIgnError(msg){
+    ignErr.textContent = msg || "";
+    if (msg) {
+      ign.setAttribute("aria-invalid", "true");
+      ign.setAttribute("aria-describedby", "ignHint ignErr");
+    } else {
+      ign.removeAttribute("aria-invalid");
+      ign.setAttribute("aria-describedby", "ignHint");
+    }
+  }
+
+  ign.addEventListener("input", function(){ if (ign.value.trim()) setIgnError(""); });
+
+  function showConfirm(){
+    var box = document.createElement("div");
+    box.className = "confirm";
+    box.setAttribute("role", "status");
+    var big = document.createElement("div");
+    big.className = "big";
+    big.textContent = "Application in. A recruiter will reach out. The table is nearly set. 🪨";
+    var later = document.createElement("div");
+    later.className = "later";
+    later.appendChild(document.createTextNode("Once you are in, your goblin career lives at "));
+    var a = document.createElement("a");
+    a.href = "/portal/";
+    a.textContent = "the member portal";
+    later.appendChild(a);
+    later.appendChild(document.createTextNode(". Medals, hauls, the whole ledger of your rise. See you in the belt."));
+    box.appendChild(big);
+    box.appendChild(later);
+    panel.replaceWith(box);
+    box.focus && box.setAttribute("tabindex", "-1");
+    box.focus();
+  }
+
+  form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    if (busy) return;
+    formErr.textContent = "";
+
+    var name = ign.value.trim();
+    if (!name) {
+      setIgnError("A goblin needs a name. Tell us what to call you.");
+      ign.focus();
+      return;
+    }
+    setIgnError("");
+
+    var payload = { ign: name };
+    var tz = document.getElementById("timezone").value;
+    if (tz) payload.timezone = tz;
+    var exp = form.querySelector('input[name="experience"]:checked');
+    if (exp) payload.experience = exp.value;
+    var acts = [];
+    var checks = form.querySelectorAll('input[name="activities"]:checked');
+    for (var i = 0; i < checks.length; i++) acts.push(checks[i].value);
+    if (acts.length) payload.activities = acts;
+    var ships = document.getElementById("ships").value.trim();
+    if (ships) payload.ships = ships;
+    var looking = document.getElementById("looking_for").value.trim();
+    if (looking) payload.looking_for = looking;
+    var found = document.getElementById("found_us").value.trim();
+    if (found) payload.found_us = found;
+    var contact = document.getElementById("contact").value.trim();
+    if (contact) payload.contact = contact;
+    var notes = document.getElementById("notes").value.trim();
+    if (notes) payload.notes = notes;
+
+    busy = true;
+    btn.disabled = true;
+    btn.textContent = "Sending it down the tunnel…";
+
+    fetch("/api/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      return res.json().then(function(data){ return { res: res, data: data }; })
+        .catch(function(){ return { res: res, data: null }; });
+    }).then(function(out){
+      if (out.data && out.data.ok) { showConfirm(); return; }
+      var msg = (out.data && out.data.error)
+        ? out.data.error
+        : "The wire to the recruiters is quiet. Give it a moment and try again.";
+      formErr.textContent = msg;
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = "Send it to the recruiters";
+    }).catch(function(){
+      formErr.textContent = "The wire to the recruiters is quiet. Give it a moment and try again.";
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = "Send it to the recruiters";
+    });
+  });
+})();
+</script>
+<script src="/nav.js?v=4"></script>
+</body></html>

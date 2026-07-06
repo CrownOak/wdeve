@@ -72,6 +72,15 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
   letter-spacing:.05em; font-size:16px; color:var(--silver); }
 .ovhdr .k{ font-family:var(--mono); font-size:12px; color:var(--muted); }
 .ovhdr .link{ margin-left:auto; }
+.rateset{ display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:12px; color:var(--muted); }
+.ratep{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:3px 8px;
+        cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.04em;
+        transition:border-color .15s,color .15s,background .15s; }
+.ratep:hover{ border-color:var(--ore); color:var(--ore); }
+.ratep.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+.ratecustom{ width:46px; padding:3px 6px; background:var(--black); border:1px solid var(--line);
+             color:var(--silver); font-family:var(--mono); font-size:12px; text-align:center; }
+.ratecustom:focus{ outline:none; border-color:var(--ore); }
 .ovbtns{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
 .ovbtns .gobtn{ padding:10px 18px; font-size:13px; }
 .ovbtns button:disabled{ opacity:.45; cursor:not-allowed; }
@@ -175,7 +184,8 @@ tr.haulrow{ cursor:pointer; }
   <footer>The Fleet Drop Ledger is the corp's shared mining-op tab: every pilot pastes what they jettison,
   the ledger values it and keeps the running score, and fleet command settles up at the end. Prices come
   straight from the <b>refinery's live table</b> (Jita sell, refined at 70% efficiency); the payout is the
-  corp buyback at <b>88% of the refined Jita value</b>. Finalized ops land in the Haul Log forever.</footer>
+  corp buyback at <b>the fleet's set rate</b> (88% by default, the lead can set it per op). Finalized ops
+  land in the Haul Log forever.</footer>
 
 <script>
 /* FLEET DROP LEDGER page logic (spec v3.1, AMEND-2/4/5/6 govern).
@@ -638,9 +648,16 @@ tr.haulrow{ cursor:pointer; }
       totPay+= pd&&pd.paid ? Math.round(pd.amount||0) : x.payout;
       if(!(pd&&pd.paid)) allPaid=false; });
     var h="<div class='ovhdr'><h2>Payout</h2>"
-      +"<span class='k'>rate "+Math.round(r*100)+"% (fixed server-side)</span>"
+      +(isLead
+        ? "<span class='k'>buyback rate</span>"
+          +"<span class='rateset'>"
+          +"<button class='ratep"+(Math.round(r*100)===88?" on":"")+"' data-rate='0.88'>88%</button>"
+          +"<button class='ratep"+(Math.round(r*100)===90?" on":"")+"' data-rate='0.90'>90%</button>"
+          +"<input id='ratecustom' class='ratecustom' value='"+Math.round(r*100)+"' title='custom buyback percent'>%"
+          +"</span>"
+        : "<span class='k'>buyback "+Math.round(r*100)+"%</span>")
       +"<span class='k'>lead "+esc(P.lead||"nobody")+"</span>"
-      +(isLead?"":"<span class='k'>read-only &mdash; the lead runs the payout</span>")
+      +(isLead?"":"<span class='k'>read only &middot; the lead runs the payout</span>")
       +"<button id='payx' class='link'>close</button></div>";
     if(!list.length) h+="<div class='empty'>No valued ore dropped yet. Nothing to pay.</div>";
     else{
@@ -666,6 +683,24 @@ tr.haulrow{ cursor:pointer; }
       +"</div>";
     el("payin").innerHTML=h;
     el("payx").onclick=closePayout;
+    // buyback rate control (lead only): the server holds the rate for the round;
+    // tabs, payouts and the close snapshot all read it, so one write moves
+    // everything. 88 to 90 is the corp band; anything 50 to 100 is accepted.
+    function pushRate(frac){
+      if(!(frac>=0.5 && frac<=1)){ toast("rate must be 50 to 100 percent"); renderPayout(); return; }
+      api("POST","/set-rate",{rate:frac}).then(function(d){
+        if(d&&d.ok){ toast("Buyback set to "+Math.round(d.rate*100)+"%. The tabs just moved."); tick(); }
+        else if(d&&d.error){ toast(String(d.error)); renderPayout(); } })
+        .catch(function(){ toast("rate change failed, still offline?"); renderPayout(); });
+    }
+    if(isLead){
+      Array.prototype.forEach.call(el("payin").querySelectorAll(".ratep"), function(b){
+        b.onclick=function(){ pushRate(parseFloat(b.getAttribute("data-rate"))); }; });
+      var rc=el("ratecustom");
+      if(rc) rc.onkeydown=function(e){ if(e.key==="Enter"){
+        var pct=parseFloat(String(rc.value).replace(/[^0-9.]/g,""));
+        if(isFinite(pct)) pushRate(Math.round(pct)/100); } };
+    }
     // click a payout figure -> copy the exact amount from its amount field (any op; paste into the EVE transfer box)
     Array.prototype.forEach.call(el("payin").querySelectorAll(".copyisk"), function(td){
       td.onclick=function(){ var i=parseInt(td.getAttribute("data-ci"),10);
@@ -790,5 +825,5 @@ tr.haulrow{ cursor:pointer; }
     if(t) unlock(t); else showGate(true); })();
 })();
 </script>
-<script src="/nav.js?v=3"></script>
+<script src="/nav.js?v=4"></script>
 </body></html>
