@@ -33,7 +33,8 @@
   var bar = document.createElement("div");
   bar.className = "topnav";
   var html = '<a class="brand" href="' + ORIGIN + BASE + '">'
-           + '<span class="tick">BONK</span><span class="brandtext">WEALTHY DROPOUTS</span></a><nav>';
+           + '<span class="tick">BONK</span><span class="brandtext">WEALTHY DROPOUTS</span></a>'
+           + '<span class="navwho" id="navwho"></span><nav>';
   for (var i = 0; i < ITEMS.length; i++) {
     html += '<a href="' + ORIGIN + ITEMS[i][1] + '"'
           + (current(ITEMS[i][1]) ? ' class="cur"' : '') + '>' + ITEMS[i][0] + '</a>';
@@ -41,4 +42,42 @@
   html += '</nav>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
+
+  // Login indicator next to the brand: ask the portal who is logged in (the
+  // session is a same-origin httpOnly cookie, so /api/whoami just reads it). Show
+  // "logged in as X" so a goblin knows their activity is tracked to their account,
+  // or a "log in" link into the portal when not. Best effort; silent if offline.
+  var st = document.createElement("style");
+  st.textContent =
+    ".navwho{font-family:var(--mono,ui-monospace,monospace);font-size:11px;letter-spacing:.04em;" +
+    "display:inline-flex;align-items:center;gap:6px;color:var(--muted,#6f776f);cursor:pointer;" +
+    "border:1px solid var(--line,rgba(150,168,158,.16));padding:5px 10px;white-space:nowrap;margin-left:2px;" +
+    "clip-path:polygon(0 0,100% 0,92% 100%,0 100%);transition:border-color .15s,color .15s;}" +
+    ".navwho .dotln{width:7px;height:7px;border-radius:50%;background:var(--muted,#6f776f);flex:none;}" +
+    ".navwho:hover{border-color:var(--ore,#46ff5e);color:var(--ore,#46ff5e);}" +
+    ".navwho.in{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
+    ".navwho.in .dotln{background:var(--ore,#46ff5e);box-shadow:0 0 6px rgba(70,255,94,.55);}" +
+    "@media(max-width:620px){.navwho .lbl{display:none;}}";
+  (document.head || document.documentElement).appendChild(st);
+
+  var w = document.getElementById("navwho");
+  function goPortal() { location.href = ORIGIN + BASE + "portal/"; }
+  if (w) {
+    w.onclick = goPortal;
+    fetch(ORIGIN + BASE + "api/whoami", { credentials: "same-origin" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.loggedIn) {
+          w.className = "navwho in";
+          w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';
+          w.querySelector(".nm").textContent = d.ign || "goblin";
+          w.title = "Logged in as " + (d.ign || "goblin") + ". Your activity is tracked to your account. Open your portal.";
+        } else {
+          w.className = "navwho";
+          w.innerHTML = '<span class="dotln"></span><span>log in</span>';
+          w.title = "Not logged in. Log in to the member portal so your career is tracked.";
+        }
+      })
+      .catch(function () { if (w) w.style.display = "none"; });
+  }
 })();
