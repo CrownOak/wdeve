@@ -124,7 +124,11 @@
   .med.honor::before{ background:var(--amber); }
   .med.honor .mname{ color:var(--amber); }
   .med.honor .earn b{ color:var(--amber); }
-  .med.lock{ opacity:.45; filter:grayscale(1); }
+  /* NOTE: filter must NOT go on .med.lock itself — a CSS filter on a grid item
+     makes the browser size it to max-content, so its text stops wrapping and
+     runs off the card. Dim the card with opacity, desaturate only the emoji. */
+  .med.lock{ opacity:.55; }
+  .med.lock .ico{ filter:grayscale(1); }
   .med.lock .earn b{ color:var(--silver-dim); }
   .medprog{ margin-top:9px; }
   .medprog .pl{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-bottom:4px; }

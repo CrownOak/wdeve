@@ -4,9 +4,9 @@
 <title>BONK - Apply</title>
 <link rel="stylesheet" href="/common.css?v=3">
 <style>
-  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.6; max-width:760px; margin:2px 0 20px; }
+  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.6; max-width:760px; margin:2px auto 20px; }
   .applybox{ background:var(--steel); border:1px solid var(--line-soft); padding:26px 28px 30px;
-             position:relative; max-width:680px; }
+             position:relative; max-width:680px; margin:0 auto; }
   .applybox::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
   .field{ margin:0 0 20px; }
   .field > label, .field > .glabel{ display:block; font-family:var(--mono); font-size:11px;
@@ -31,13 +31,13 @@
   .sendrow .gobtn[disabled]{ opacity:.55; cursor:wait; }
   #formErr{ margin-top:14px; }
   .confirm{ background:var(--steel); border:1px solid var(--line); padding:40px 32px;
-            position:relative; max-width:680px; text-align:center; }
+            position:relative; max-width:680px; text-align:center; margin:0 auto; }
   .confirm::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
   .confirm .big{ font-family:var(--display); font-weight:700; text-transform:uppercase;
       letter-spacing:.05em; font-size:18px; color:var(--ore); line-height:1.5; }
   .confirm .later{ color:#a9b2a8; font-size:13.5px; margin-top:14px; line-height:1.6; }
   .signoff{ color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:.03em;
-            margin:26px 0 6px; max-width:680px; border-top:1px solid var(--line); padding-top:18px; }
+            margin:26px auto 6px; max-width:680px; border-top:1px solid var(--line); padding-top:18px; }
   .signoff b{ color:var(--silver); }
   @media(max-width:480px){ .applybox{ padding:20px 16px 24px; } .opts{ gap:8px 14px; } }
 </style></head>
