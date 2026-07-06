@@ -319,6 +319,45 @@
   .gate .links a:hover{ color:var(--laser); }
   .formerr{ color:var(--red); font-family:var(--mono); font-size:12px; min-height:16px; margin-top:10px; line-height:1.5; }
 
+  /* ---------- event + live op banners ---------- */
+  .bnr{ display:block; background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+        padding:12px 16px; margin:0 0 12px; text-decoration:none; }
+  .bnr:hover{ border-color:var(--ore); }
+  .bnr.op{ border-left-color:var(--amber); }
+  .bnr.op:hover{ border-color:var(--amber); }
+  .bnr .bhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+               font-size:14px; color:var(--ore); }
+  .bnr.op .bhead{ color:var(--amber); }
+  .bnr .bline{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:5px; line-height:1.5; }
+  .bnr .bbasis{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
+
+  /* ---------- my hauls ---------- */
+  .hwho{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); }
+  .hrph{ font-family:var(--mono); font-size:10.5px; color:var(--muted); white-space:nowrap; }
+
+  /* ---------- industry (the Architect wall) ---------- */
+  .indform{ margin-top:14px; }
+  .indform textarea{ min-height:110px; }
+  .indform input{ margin-top:10px; }
+  .crow.flat{ cursor:default; }
+  .crow.flat:hover .cwhen{ color:var(--silver-dim); }
+  .iname{ font-size:13px; color:var(--silver); min-width:0; overflow-wrap:break-word; }
+  .isrc{ font-family:var(--mono); font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+
+  /* ---------- corp goal + treasury ---------- */
+  .cgoal{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 16px 16px; margin:0 0 12px; }
+  .cgoal .ptitle{ margin:0 0 8px; }
+  .cgoal .medprog{ margin-top:4px; }
+  .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
+          margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .tline b{ color:var(--ore); font-weight:400; }
+
+  /* ---------- stats title link + password section ---------- */
+  .plink{ float:right; font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+          color:var(--silver-dim); text-decoration:none; }
+  .plink:hover{ color:var(--ore); }
+  .pwsec{ border-top:1px solid var(--line-soft); margin-top:20px; padding-top:6px; }
+
   @media(max-width:480px){
     .panel{ padding:14px 13px 16px; }
     .idacts{ margin-left:0; width:100%; }
@@ -363,11 +402,14 @@
   <header><h1>&#9935; MEMBER PORTAL</h1>
     <div class="sub">your goblin career, in numbers. watch it climb.</div></header>
   <div class="wrap">
+    <div id="banners"></div>
     <div class="panel" id="panelIdentity"></div>
     <div class="panel" id="panelInbox" style="display:none"></div>
     <div class="panel" id="profileDrawer"></div>
     <div class="panel" id="panelStats"></div>
+    <div class="panel" id="panelHauls"></div>
     <div class="panel" id="panelContracts"></div>
+    <div class="panel" id="panelIndustry"></div>
     <div class="panel" id="panelChars"></div>
     <div class="panel" id="panelESI"></div>
     <div class="panel" id="panelAcademy"></div>
@@ -398,7 +440,16 @@ var S = {
   drawerOpen: false,
   openModule: null,
   avatarTarget: null,
-  openContracts: {}
+  openContracts: {},
+  events: null,
+  fleetLive: null,
+  hauls: null,
+  haulsLedger: null,
+  haulsLoading: false,
+  haulsAll: false,
+  openHauls: {},
+  industry: null,
+  industryLoading: false
 };
 
 /* ============ helpers ============ */
@@ -524,9 +575,12 @@ function safeRender(fn, el){
   }
 }
 function renderAll(){
+  safeRender(renderBanners,  $("banners"));
   safeRender(renderIdentity, $("panelIdentity"));
   safeRender(renderStats,    $("panelStats"));
+  safeRender(renderHauls,    $("panelHauls"));
   safeRender(renderContractsPanel, $("panelContracts"));
+  safeRender(renderIndustry, $("panelIndustry"));
   safeRender(renderChars,    $("panelChars"));
   safeRender(renderESI,      $("panelESI"));
   safeRender(renderAcademy,  $("panelAcademy"));
@@ -639,7 +693,7 @@ function renderStats(){
   var ledger = S.me.ledger || {};
   var ledgerDown = ledger.ok === false;
 
-  var html = '<div class="ptitle">The haul ledger</div>';
+  var html = '<div class="ptitle">The haul ledger<a class="plink" href="/portal/leaderboard/">Leaderboards</a></div>';
 
   if (ledgerDown){
     html += '<div class="emptyline">The ledger is napping. Numbers back soon.</div>';
@@ -663,6 +717,17 @@ function renderStats(){
     } else {
       html += '<div class="tile"><div class="tv">' + esc(String(Number(fleet.opDrops)||0)) + '</div>' +
               '<div class="tk">Op drops</div></div>';
+    }
+    /* ISK per hour on the belt: only honest when there is real belt time.
+       A single drop career has no rate; the payout alone tells the story. */
+    var beltMs = Number(fleet.beltMs) || 0;
+    if (beltMs > 0){
+      html += '<div class="tile"><div class="tv">' + fmtIsk((Number(fleet.isk)||0) / (beltMs/3600000)) + '/hr</div>' +
+              '<div class="tk">ISK/hr on belt</div></div>';
+      if ((Number(st.opsAttended)||0) > 0){
+        html += '<div class="tile"><div class="tv">' + Math.round(beltMs / Number(st.opsAttended) / 60000) + 'm</div>' +
+                '<div class="tk">Avg op</div></div>';
+      }
     }
     html += '<div class="tile"><div class="tv">' + esc(String(Number(con.accepted)||0)) + '</div>' +
             '<div class="tk">Solo contracts accepted</div>' +
@@ -723,9 +788,84 @@ function renderStats(){
 function renderCorpStrip(){
   var el = $("corpStripWrap");
   var corp = S.me.corp;
-  if (!corp){ el.innerHTML = ""; return; }
-  el.innerHTML = '<div class="corpstrip">Corp lifetime: <b>' + fmtIsk(corp.totalPayout) + ' ISK</b> &middot; <b>' +
-    fmtM3(corp.totalM3) + '</b> &middot; <b>' + esc(String(Number(corp.fleetCount)||0)) + ' ops</b></div>';
+  var goal = S.me.goal;
+  var treasury = S.me.treasury;
+  var html = "";
+  if (goal){
+    var goalLabels = { fleet_isk: "ISK through buyback this month",
+                       fleet_m3:  "m³ hauled this month",
+                       esi_units: "units mined this month (in game ledger)" };
+    var glabel = goal.note || goalLabels[goal.metric] || "this month";
+    var gp = Math.max(0, Math.round(Number(goal.pct) || 0));
+    var gw = Math.min(100, gp);
+    var gf = goal.metric === "fleet_isk" ? function(n){ return fmtIsk(n) + " ISK"; }
+           : goal.metric === "fleet_m3"  ? fmtM3
+           : function(n){ return esiUnits(n) + " units"; };
+    html += '<div class="cgoal"><div class="ptitle">Corp goal &middot; ' + esc(glabel) + '</div>' +
+      '<div class="medprog"><div class="pl">' + gf(Number(goal.current)||0) + ' / ' + gf(Number(goal.target)||0) +
+      ' &middot; ' + gp + '%</div>' +
+      '<div class="pbar"><i style="width:' + gw + '%"></i></div></div></div>';
+  }
+  if (corp){
+    html += '<div class="corpstrip">Corp lifetime: <b>' + fmtIsk(corp.totalPayout) + ' ISK</b> &middot; <b>' +
+      fmtM3(corp.totalM3) + '</b> &middot; <b>' + esc(String(Number(corp.fleetCount)||0)) + ' ops</b></div>';
+  }
+  if (treasury != null){
+    html += '<div class="tline">The corp has paid <b>' + fmtIsk(treasury) + ' ISK</b> to goblins, all time.</div>';
+  }
+  el.innerHTML = html;
+}
+
+/* ============ event + live op banners ============ */
+function bannerEnds(endsAt){
+  var d = toDate(endsAt); if (!d) return "";
+  var s = Math.floor((d.getTime() - Date.now())/1000);
+  if (s <= 60) return "ends any moment";
+  if (s < 3600) return "ends in " + Math.floor(s/60) + "m";
+  if (s < 86400) return "ends in " + Math.floor(s/3600) + "h";
+  return "ends in " + Math.floor(s/86400) + "d";
+}
+function eventValueFmt(metric, v){
+  metric = String(metric || "");
+  if (metric === "isk") return fmtIsk(v) + " ISK";
+  if (metric === "m3") return fmtM3(v);
+  if (metric === "ops") return String(Math.round(Number(v)||0)) + " ops";
+  return esiUnits(v) + " units";
+}
+function renderBanners(){
+  var el = $("banners"); if (!el) return;
+  var html = "";
+  var fl = S.fleetLive;
+  if (fl && fl.live){
+    html += '<a class="bnr op" href="/fleet/">' +
+      '<div class="bhead">AN OP IS FORMING RIGHT NOW</div>' +
+      '<div class="bline">' + esc(String(Number(fl.online)||0)) + ' goblins on &middot; ' +
+        fmtIsk(fl.fleetDisplay) + ' ISK on the table. Get in here.</div></a>';
+  }
+  var evs = S.events || [];
+  for (var i=0;i<evs.length;i++){
+    var ev = evs[i];
+    var viewer = ev.me
+      ? 'you are #' + esc(String(ev.me.rank)) + ' with ' + eventValueFmt(ev.metric, ev.me.value)
+      : (String(ev.source) === "esi" ? "attach ESI to compete" : "no score yet &middot; get on the belt");
+    html += '<a class="bnr" href="/portal/leaderboard/?event=' + esc(encodeURIComponent(String(ev.id))) + '">' +
+      '<div class="bhead">EVENT LIVE &middot; ' + esc(ev.name) + '</div>' +
+      '<div class="bline">' +
+        (ev.prize_note ? esc(ev.prize_note) + ' &middot; ' : '') +
+        viewer + ' &middot; ' + esc(bannerEnds(ev.ends_at)) +
+      '</div>' +
+      (ev.basis ? '<div class="bbasis">' + esc(ev.basis) + '</div>' : '') +
+    '</a>';
+  }
+  el.innerHTML = html;
+}
+/* each fetch is best effort on its own; no banner beats a broken banner */
+async function loadBanners(){
+  try { var j = await api("events/active"); S.events = j.events || []; }
+  catch(e){ if (isOut(e)) return; }
+  try { var j2 = await api("fleet/live"); S.fleetLive = j2; }
+  catch(e2){ if (isOut(e2)) return; }
+  safeRender(renderBanners, $("banners"));
 }
 
 /* ============ my contracts list ============ */
@@ -803,6 +943,92 @@ async function loadContracts(){
   safeRender(renderContractsPanel, $("panelContracts"));
 }
 
+/* ============ my hauls (per op payout receipts, the trust surface) ============ */
+var HAULS_VISIBLE = 15;
+function renderHauls(){
+  var el = $("panelHauls");
+  if (S.hauls === null && !S.haulsLoading){ S.haulsLoading = true; loadHauls(); }
+  var html = '<div class="ptitle">My hauls &middot; every op, every payout</div>';
+  if (S.hauls === null){
+    html += '<div class="emptyline">Pulling your receipts from the archive...</div>';
+  } else if (S.hauls === "error"){
+    html += '<div class="pnote">The archive did not pick up. Reload the page to knock again.</div>';
+  } else if (!S.hauls.length){
+    html += '<div class="emptyline">No hauls logged yet. Get in a fleet and watch this number climb.</div>';
+  } else {
+    var list = S.haulsAll ? S.hauls : S.hauls.slice(0, HAULS_VISIBLE);
+    for (var i=0;i<list.length;i++){
+      var h = list[i];
+      var beltMs = Number(h.beltMs) || 0;
+      var open = S.openHauls[String(h.haul_id)] ? " open" : "";
+      html += '<div class="crow' + open + '" data-hid="' + esc(String(h.haul_id)) + '">' +
+        '<div class="cmain">' +
+          '<span class="cwhen">' + (ymd(h.finished_at) ? esc(ymd(h.finished_at)) : "&middot;") + '</span>' +
+          '<span class="hwho">' + esc(h.commander || "?") + '</span>' +
+          '<span class="cvol">at ' + esc(pct(h.rate)) + '</span>' +
+          '<span class="cval">' + fmtIsk(h.payout) + ' ISK</span>' +
+          '<span class="cvol">' + fmtM3(h.m3) + '</span>' +
+          (h.paid ? '<span class="pill acc">paid</span>' : '<span class="pill pend">unpaid</span>') +
+          (beltMs > 0 ? '<span class="hrph">' + fmtIsk((Number(h.payout)||0) / (beltMs/3600000)) + '/hr</span>' : '') +
+        '</div>' +
+        '<div class="cdetail">' + haulDetailHtml(h) + '</div>' +
+      '</div>';
+    }
+    if (!S.haulsAll && S.hauls.length > HAULS_VISIBLE){
+      html += '<div class="statbtns"><button class="mini" id="haulsAllBtn">Show all ' +
+              esc(String(S.hauls.length)) + '</button></div>';
+    }
+  }
+  if (S.haulsLedger && S.haulsLedger.warm === false){
+    html += '<div class="pnote">The archive is still warming up, older ops may be missing.</div>';
+  }
+  el.innerHTML = html;
+  var rows = el.querySelectorAll(".crow[data-hid]");
+  for (var r=0;r<rows.length;r++){
+    rows[r].addEventListener("click", function(){
+      var id = this.getAttribute("data-hid");
+      S.openHauls[id] = !S.openHauls[id];
+      this.classList.toggle("open", !!S.openHauls[id]);
+    });
+  }
+  var more = $("haulsAllBtn");
+  if (more) more.addEventListener("click", function(ev){
+    ev.stopPropagation();
+    S.haulsAll = true;
+    safeRender(renderHauls, $("panelHauls"));
+  });
+}
+function haulDetailHtml(h){
+  var html = '';
+  var ores = h.topOre || [];
+  if (ores.length){
+    html += '<div class="minerows" style="border-top:0;padding-top:2px">';
+    for (var i=0;i<ores.length;i++){
+      var o = ores[i] || {};
+      html += '<div class="mrow"><span class="mrn">' + (ICE_BASES[o.base] ? "\u{1F9CA} " : "") + esc(o.base) +
+              '</span><span class="mn">' + esiUnits(o.units) + '</span></div>';
+    }
+    html += '</div>';
+  }
+  if (h.characters && h.characters.length){
+    html += '<div class="pnote">Dropped by ' + esc(h.characters.join(" · ")) + '</div>';
+  }
+  /* THE COHERENCE RULE: these units are fleet drops, never the in game ledger */
+  html += '<div class="pnote">Units are fleet drops, compressed counted ×100.</div>';
+  return html;
+}
+async function loadHauls(){
+  try {
+    var j = await api("my-hauls");
+    S.hauls = j.hauls || [];
+    S.haulsLedger = j.ledger || {};
+  } catch(e){
+    if (isOut(e)) return;
+    S.hauls = "error";
+  }
+  safeRender(renderHauls, $("panelHauls"));
+}
+
 /* ============ add contract modal ============ */
 function openContractModal(){
   var cs = (S.me.characters || []).filter(function(c){ return c.active !== 0 && c.active !== false; });
@@ -872,6 +1098,90 @@ function renderContractReceipt(j){
           '<div class="mbtns"><button class="gobtn" id="conDone">Back to the belt</button></div>';
   $("contractCard").innerHTML = html;
   $("conDone").addEventListener("click", closeContractModal);
+}
+
+/* ============ industry (the Architect wall) ============ */
+function renderIndustry(){
+  var el = $("panelIndustry");
+  if (S.industry === null && !S.industryLoading){ S.industryLoading = true; loadIndustry(); }
+  var html = '<div class="ptitle">Industry &middot; the Architect wall</div>';
+  if (S.industry === null){
+    html += '<div class="emptyline">Checking the factory floor...</div>';
+    el.innerHTML = html; return;
+  }
+  if (S.industry === "error"){
+    html += '<div class="pnote">The factory floor did not answer. Reload the page to knock again.</div>';
+    el.innerHTML = html; return;
+  }
+  var counted = Number(S.industry.counted_isk) || 0;
+  var p = Math.min(100, Math.floor(counted / 1e9 * 100));
+  html += '<div class="medprog"><div class="pl">' + fmtIsk(counted) + ' / 1B ISK &middot; ' + p + '%</div>' +
+          '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
+  html += '<div class="indform">' +
+    '<textarea id="indRaw" placeholder="Paste finished goods from the EVE client, name then quantity per line"></textarea>' +
+    '<input id="indNote" type="text" maxlength="200" placeholder="note for leadership (optional)">' +
+    '<div class="formerr" id="indErr"></div>' +
+    '<div class="mbtns"><button class="gobtn" id="indSubmit" style="padding:11px 22px">Log the goods</button></div>' +
+  '</div>' +
+  '<div class="pnote">ESI attached goblins accrue delivered manufacturing jobs automatically. Pasted goods stay pending until leadership checks the real delivery.</div>';
+  var list = S.industry.contributions || [];
+  if (!list.length){
+    html += '<div class="emptyline">Nothing logged. Build something. Feed the machine.</div>';
+  } else {
+    html += '<div class="minehdr">Contributions</div>';
+    for (var i=0;i<list.length;i++){
+      var c = list[i];
+      var status = String(c.status || "pending");
+      var chip = status === "counted" ? '<span class="pill acc">counted</span>'
+               : status === "rejected" ? '<span class="pill rej">rejected</span>'
+               : '<span class="pill pend">pending</span>';
+      html += '<div class="crow flat"><div class="cmain">' +
+        '<span class="cwhen">' + (ymd(c.submitted_at) ? esc(ymd(c.submitted_at)) : "&middot;") + '</span>' +
+        '<span class="iname">' + esc(c.item_name) + ' &times; ' + esc(String(Number(c.quantity)||0)) + '</span>' +
+        '<span class="cvol">' + fmtIsk(c.isk_value) + ' ISK</span>' +
+        '<span class="isrc">' + (String(c.source) === "esi" ? 'auto &middot; ESI' : 'submitted') + '</span>' +
+        chip +
+      '</div>' +
+      (c.note ? '<div class="pnote">note: ' + esc(c.note) + '</div>' : '') +
+      '</div>';
+    }
+  }
+  el.innerHTML = html;
+  var btn = $("indSubmit");
+  if (btn) btn.addEventListener("click", submitIndustry);
+}
+async function submitIndustry(){
+  var err = $("indErr"); err.textContent = "";
+  var raw = $("indRaw").value;
+  if (!raw.trim()){ err.textContent = "Paste the goods first, goblin. The machine is hungry."; return; }
+  var body = { raw: raw };
+  var note = $("indNote").value.trim();
+  if (note) body.note = note;
+  $("indSubmit").disabled = true;
+  try {
+    var j = await api("industry/add", body);
+    var msg = j.message || "Logged. Pending until leadership checks the delivery.";
+    var un = Number(j.unmatched) || 0;
+    if (un > 0) msg += " " + un + " lines did not match a known item.";
+    toast(msg);
+    S.industryLoading = true;
+    loadIndustry();
+  } catch(e){
+    if (!isOut(e)){
+      err.textContent = e.message;
+      var b = $("indSubmit"); if (b) b.disabled = false;
+    }
+  }
+}
+async function loadIndustry(){
+  try {
+    var j = await api("industry");
+    S.industry = { counted_isk: j.counted_isk, contributions: j.contributions || [] };
+  } catch(e){
+    if (isOut(e)) return;
+    S.industry = "error";
+  }
+  safeRender(renderIndustry, $("panelIndustry"));
 }
 
 /* ============ my characters ============ */
@@ -1543,13 +1853,36 @@ function toggleDrawer(){
     '<input id="pfDiscord" type="text" maxlength="64" value="' + esc(a.discord_handle || "") + '" placeholder="grumbo">' +
     '<div class="formerr" id="pfErr"></div>' +
     '<div class="mbtns"><button class="gobtn" id="pfSave" style="padding:11px 22px">Save profile</button>' +
-    '<button class="mini" id="pfCancel">Close</button></div>';
+    '<button class="mini" id="pfCancel">Close</button></div>' +
+    '<div class="pwsec"><div class="ptitle">Change password</div>' +
+    '<label>Current password</label>' +
+    '<input id="pwCur" type="password" autocomplete="current-password">' +
+    '<label>New password (8 characters or more)</label>' +
+    '<input id="pwNew" type="password" autocomplete="new-password">' +
+    '<div class="formerr" id="pwErr"></div>' +
+    '<div class="mbtns"><button class="mini" id="pwGo">Change password</button></div></div>';
   el.classList.add("show");
   var bio = $("pfBio"), cnt = $("bioCount");
   var upd = function(){ cnt.textContent = bio.value.length + " / 500"; };
   bio.addEventListener("input", upd); upd();
   $("pfCancel").addEventListener("click", function(){ S.drawerOpen = false; el.classList.remove("show"); });
   $("pfSave").addEventListener("click", saveProfile);
+  $("pwGo").addEventListener("click", changePassword);
+}
+async function changePassword(){
+  var err = $("pwErr"); err.textContent = "";
+  var cur = $("pwCur").value, next = $("pwNew").value;
+  if (!cur || !next){ err.textContent = "Both boxes, goblin. The current one, then the new one."; return; }
+  $("pwGo").disabled = true;
+  try {
+    var j = await api("password", { current: cur, next: next });
+    toast(j.message || "Password changed.");
+    var c = $("pwCur"), n = $("pwNew");
+    if (c) c.value = ""; if (n) n.value = "";
+  } catch(e){
+    if (!isOut(e)) err.textContent = e.message;
+  }
+  var b = $("pwGo"); if (b) b.disabled = false;
 }
 async function saveProfile(){
   var err = $("pfErr"); err.textContent = "";
@@ -1572,6 +1905,7 @@ function renderFoot(){
   var role = String((S.me.account && S.me.account.role) || "member");
   var html =
     '<a href="/portal/roster/">the wall of goblin faces</a>' +
+    '<a href="/portal/leaderboard/">Leaderboards</a>' +
     (role === "officer" || role === "admin" ? '<a href="/portal/admin/">Command Center</a>' : '') +
     '<button class="mini" id="logoutBtn">Log out</button>' +
     '<button class="mini warn" id="logoutAllBtn">Log out everywhere</button>';
@@ -1606,6 +1940,7 @@ function renderFoot(){
     showApp();
     renderAll();
     loadContracts();
+    loadBanners();
   } catch(e){
     if (isOut(e)) return; /* gate already shown */
     /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
@@ -1617,5 +1952,5 @@ function renderFoot(){
   }
 })();
 </script>
-<script src="/nav.js?v=6"></script>
+<script src="/nav.js?v=7"></script>
 </body></html>

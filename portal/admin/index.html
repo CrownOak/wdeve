@@ -128,6 +128,12 @@ button[disabled]{ opacity:.45; cursor:not-allowed; }
 details summary{ cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
                  text-transform:uppercase; color:var(--silver-dim); margin-top:6px; }
 details summary:hover{ color:var(--ore); }
+/* ---- event status chips ---- */
+.evchip{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+         padding:2px 8px; border:1px solid var(--line); color:var(--muted); flex:0 0 auto; }
+.evchip.active{ background:var(--ore); border-color:var(--ore); color:#04140a; font-weight:700; }
+.evchip.ended{ background:var(--amber); border-color:var(--amber); color:#141004; font-weight:700; }
+.evchip.awarded{ background:#ffd76a; border-color:#ffd76a; color:#141004; font-weight:700; }
 /* ---- roster table extras ---- */
 th.sortable{ cursor:pointer; user-select:none; }
 th.sortable:hover{ color:var(--laser); }
@@ -309,7 +315,8 @@ async function boot(){
 /* ================= router + rail ================= */
 const NAVS=[
   ["","Command Center"],["members","Members"],["contracts","Contracts"],
-  ["recruiting","Recruiting"],["decorations","Decorations"],["reconcile","Reconcile"],
+  ["industry","Industry"],["recruiting","Recruiting"],["events","Events"],
+  ["decorations","Decorations"],["reconcile","Reconcile"],
   ["backfill","Backfill"],["audit","Audit"],["settings","Settings"]
 ];
 function renderRail(){
@@ -435,11 +442,31 @@ async function secOverview(){
     h+=tile("Corp rock moved", corpM3!=null?(fmtM3(corpM3)||"…"):"…");
     h+=tile("Corp ops", corpOps!=null?fmtN(corpOps):"…");
   }
+  h+=tile("Treasury paid out", p.treasury!=null?fmtIsk(p.treasury):"napping", p.treasury!=null?"":"dim");
   h+=tile("Applications waiting", fmtN(p.pendingApplications), Number(p.pendingApplications)>0?"warn":"");
   h+=tile("Codes outstanding", fmtN(p.outstandingCodes), Number(p.outstandingCodes)>0?"warn":"");
   h+=tile("Contracts pending", fmtN(p.pendingContracts), Number(p.pendingContracts)>0?"warn":"");
+  h+=tile("Industry pending", fmtN(p.pendingIndustry), Number(p.pendingIndustry)>0?"warn":"");
   h+="</div>";
   if(ledgerDown) h+='<div class="nap">The ledger is napping. Numbers back soon.</div>';
+  /* corp goal */
+  if(p.goal){
+    const g=p.goal;
+    let gcur="", gtgt="", glab="";
+    if(g.metric==="fleet_isk"){ gcur=fmtIsk(g.current); gtgt=fmtIsk(g.target)+" ISK"; glab="ISK through buyback this month"; }
+    else if(g.metric==="fleet_m3"){ gcur=fmtM3(g.current)||"0 m³"; gtgt=fmtM3(g.target)||"?"; glab="m³ hauled this month"; }
+    else{ gcur=fmtN(g.current); gtgt=fmtN(g.target)+" units (in game ledger, raw)"; glab="units mined this month"; }
+    let gp=Number(g.pct); if(!isFinite(gp)) gp=0; // contract: integer 0..100
+    gp=Math.round(gp);
+    const gw=Math.max(0, Math.min(100, gp));
+    h+='<div class="panel"><div class="ptitle">Corp goal <span class="pn">'+esc(g.note||glab)+"</span></div>"
+      +'<div style="display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;font-family:var(--mono)">'
+      +'<span style="font-size:20px;color:var(--ore);font-variant-numeric:tabular-nums">'+gcur+"</span>"
+      +'<span class="qmeta">of '+gtgt+"</span>"
+      +'<span class="qmeta" style="margin-left:auto">'+gp+"%</span></div>"
+      +'<div class="prog" style="margin-top:8px"><i style="width:'+gw+'%"></i></div>'
+      +"</div>";
+  }
   /* needs you */
   h+='<div class="panel"><div class="ptitle">Needs you <span class="pn">clear this and the corp hums</span></div><div id="nyq"></div></div>';
   /* cohort funnel */
@@ -501,6 +528,19 @@ function renderNeedsYou(ny){
     h+='<div class="qrow"><span class="qwho">'+avat(a,22)+esc(a.ign||"applicant")+"</span>"
       +'<span class="qmeta">applied '+esc(ago(a.created_at))+"</span>"
       +'<span class="qact"><a class="link" href="#recruiting">Review application</a></span></div>';
+  });
+  (ny.industry||[]).forEach(function(c){
+    any=true;
+    h+='<div class="qrow">'+whoSpan(c)
+      +'<span class="qval">'+fmtIsk(c.isk_value!=null?c.isk_value:c.isk)+"</span>"
+      +'<span class="qmeta">'+esc(c.item_name||"industry contribution")+" &middot; "+esc(ago(c.submitted_at||c.created_at))+"</span>"
+      +'<span class="qact"><a class="link" href="#industry">Review contribution</a></span></div>';
+  });
+  (ny.eventsToAward||[]).forEach(function(ev){
+    any=true;
+    h+='<div class="qrow"><span class="qwho" style="cursor:default">🏆 '+esc(ev.name||"event")+"</span>"
+      +'<span class="qmeta">ended &middot; award the medal</span>'
+      +'<span class="qact"><a class="link" href="#events">To the events desk</a></span></div>';
   });
   (ny.agingCodes||[]).forEach(function(c){
     any=true;
@@ -1226,6 +1266,13 @@ async function secContracts(){
 }
 /* ================= 4. RECRUITING ================= */
 const RSTATE={tab:"pending"};
+let MEMLIST=null;
+async function getMemberList(){
+  if(MEMLIST) return MEMLIST;
+  try{ const j=await api("/api/admin/members"); MEMLIST=j.members||j.roster||[]; }
+  catch(e){ return []; }
+  return MEMLIST;
+}
 async function secRecruiting(){
   const m=document.getElementById("main");
   m.innerHTML=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table")+skel(4);
@@ -1268,7 +1315,9 @@ async function secRecruiting(){
     if(a.review_note||a.note) h+='<div class="rowmeta">note: '+esc(a.review_note||a.note)+"</div>";
     h+='<div id="r_out_'+esc(String(id))+'"></div>';
     if(a.status==="pending"){
-      h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+      h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">'
+        +'<span class="flabel" style="margin:0">Recruited by</span>'
+        +'<select class="rref" data-for="'+esc(String(id))+'" style="width:auto;min-width:170px"><option value="">nobody / unknown</option></select>'
         +'<button class="inv" data-appr="'+esc(String(id))+'">Approve, mint the code</button>'
         +'<button class="dngr" data-rrej="'+esc(String(id))+'">Reject</button>'
         +'<button class="cmail" data-rnote="'+esc(String(id))+'">Add note</button></div>';
@@ -1282,11 +1331,27 @@ async function secRecruiting(){
   m.querySelectorAll("[data-rtab]").forEach(function(b){
     b.addEventListener("click", function(){ RSTATE.tab=this.getAttribute("data-rtab"); secRecruiting(); });
   });
+  if(m.querySelector(".rref")){
+    getMemberList().then(function(rows){
+      m.querySelectorAll(".rref").forEach(function(sel){
+        const keep=sel.value;
+        let o='<option value="">nobody / unknown</option>';
+        (rows||[]).forEach(function(r){
+          const mid=accId(r); if(mid==null) return;
+          o+='<option value="'+esc(String(mid))+'">'+esc(accName(r))+"</option>";
+        });
+        sel.innerHTML=o; if(keep) sel.value=keep;
+      });
+    });
+  }
   m.querySelectorAll("[data-appr]").forEach(function(b){
     b.addEventListener("click", function(){
       const btn=this, id=btn.getAttribute("data-appr");
       busy(btn, async function(){
-        const r=await api("/api/admin/applications/"+encodeURIComponent(id)+"/review",{action:"approve"});
+        const body={action:"approve"};
+        const sel=document.querySelector('.rref[data-for="'+id+'"]');
+        if(sel && sel.value!=="") body.referred_by=Number(sel.value);
+        const r=await api("/api/admin/applications/"+encodeURIComponent(id)+"/review", body);
         const code=r.code||"", hand=r.handoff||("Your BONK portal code: "+code);
         let out='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
           +'<div class="hand">'+esc(hand)+"</div>"+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
@@ -1673,6 +1738,21 @@ async function secSettings(){
     +(ISADMIN?'<button class="effp" data-preset="88">88%</button><button class="effp" data-preset="90">90%</button>'
       +'<button class="inv" id="st_save">Save the rate</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div></div>";
+  const gm=s.goal_metric||"off";
+  h+='<div class="panel"><div class="ptitle">Corp goal <span class="pn">one number the whole corp pushes this month</span></div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">Shows on every member dashboard. One source per goal, fleet numbers and in game ledger numbers never mix.</div>'
+    +'<div class="frm">'
+    +'<div><label>Metric</label><select id="st_gm"'+(ISADMIN?"":" disabled")+'>'
+      +'<option value="off"'+(gm==="off"?" selected":"")+'>off</option>'
+      +'<option value="fleet_isk"'+(gm==="fleet_isk"?" selected":"")+'>ISK through buyback this month</option>'
+      +'<option value="fleet_m3"'+(gm==="fleet_m3"?" selected":"")+'>m³ hauled this month</option>'
+      +'<option value="esi_units"'+(gm==="esi_units"?" selected":"")+'>units mined this month, in game ledger</option>'
+    +"</select></div>"
+    +'<div><label>Target</label><input id="st_gt" type="number" min="0" value="'+esc(s.goal_target!=null?s.goal_target:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div class="wide"><label>Note, members see this</label><input id="st_gn" value="'+esc(s.goal_note||"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +"</div>"
+    +(ISADMIN?'<button class="inv" id="st_gsave">Save the goal</button>':'<span class="rowmeta">read only at your clearance</span>')
+    +"</div>";
   h+=footLine();
   m.innerHTML=h;
   if(ISADMIN){
@@ -1689,13 +1769,288 @@ async function secSettings(){
         secSettings();
       });
     });
+    document.getElementById("st_gsave").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        const body={ goal_metric:document.getElementById("st_gm").value,
+          goal_note:document.getElementById("st_gn").value.trim() };
+        const gt=document.getElementById("st_gt").value;
+        if(gt!=="") body.goal_target=Number(gt);
+        if(body.goal_metric!=="off" && !(Number(body.goal_target)>0)){
+          toast("A goal needs a target above zero. Aim at something.", true); return;
+        }
+        await api("/api/admin/settings", body);
+        toast("Goal saved. Now point the horde at it.");
+        secSettings();
+      });
+    });
   }
+}
+/* ================= 10. EVENTS ================= */
+function evPad(n){ return (n<10?"0":"")+n; }
+function evLocal(d){
+  return d.getUTCFullYear()+"-"+evPad(d.getUTCMonth()+1)+"-"+evPad(d.getUTCDate())
+    +"T"+evPad(d.getUTCHours())+":"+evPad(d.getUTCMinutes());
+}
+function evIso(v){ return (v.length===16 ? v+":00" : v)+"Z"; }
+function evWindow(preset){
+  const now=new Date();
+  const mon=new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()-((now.getUTCDay()+6)%7)));
+  if(preset==="this_week") return [mon, new Date(mon.getTime()+7*86400000)];
+  if(preset==="next_week"){ const nm=new Date(mon.getTime()+7*86400000); return [nm, new Date(nm.getTime()+7*86400000)]; }
+  if(preset==="this_month") return [new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth()+1, 1))];
+  return null;
+}
+function evMetricLabel(ev){
+  if(ev.metric==="ore") return "One ore &middot; "+esc(ev.ore_base||"?");
+  return {all_ore:"All ore", ice:"Ice", isk:"ISK", m3:"m³", ops:"Ops"}[ev.metric]||esc(ev.metric||"?");
+}
+function evValue(ev, v){
+  if(ev.metric==="isk") return fmtIsk(v);
+  if(ev.metric==="m3") return fmtM3(v)||"0 m³";
+  if(ev.metric==="ops") return fmtN(v);
+  return fmtN(v)+" units";
+}
+function evDecoName(key){
+  let d=null;
+  (CATALOG||[]).forEach(function(x){ if(x.key===key) d=x; });
+  return d?esc((d.emoji||"")+" "+d.name):esc(key);
+}
+async function secEvents(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Events","mining contests &middot; point the horde at a number and watch it climb")+skel(4);
+  let j;
+  try{ j=await api("/api/admin/events"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Events","mining contests")+napPanel("Events", e.message)
+      +'<button class="inv" onclick="secEvents()">Try again</button>';
+    return;
+  }
+  await getCatalog();
+  const list=j.events||[];
+  let h=head("Events","mining contests &middot; point the horde at a number and watch it climb");
+  if(ISADMIN){
+    let decs='<option value="">no medal</option>';
+    (CATALOG||[]).forEach(function(d){
+      decs+='<option value="'+esc(d.key)+'">'+esc((d.emoji||"")+" "+d.name)+"</option>";
+    });
+    h+='<div class="panel"><div class="ptitle">New event <span class="pn">draft it, then set it LIVE when the horde is ready</span></div>'
+      +'<div class="frm">'
+      +'<div class="wide"><label>Name</label><input id="ev_name" placeholder="Veldspar Week"></div>'
+      +'<div><label>Metric</label><select id="ev_metric">'
+        +'<option value="all_ore">All ore</option><option value="ice">Ice</option>'
+        +'<option value="ore">One ore</option><option value="isk">ISK</option>'
+        +'<option value="m3">m³</option><option value="ops">Ops</option></select></div>'
+      +'<div id="ev_orewrap" style="display:none"><label>Which ore</label><input id="ev_ore" placeholder="Veldspar"></div>'
+      +'<div><label>Source</label><select id="ev_source">'
+        +'<option value="fleet">Fleet drops</option><option value="esi">In game ledger</option></select>'
+        +'<div class="rowmeta" id="ev_basis" style="margin-top:5px"></div></div>'
+      +'<div><label>Window preset</label><select id="ev_preset">'
+        +'<option value="this_week">This week</option><option value="next_week">Next week</option>'
+        +'<option value="this_month">This month</option><option value="custom">Custom</option></select></div>'
+      +'<div><label>Starts &middot; EVE time = UTC</label><input id="ev_start" type="datetime-local"></div>'
+      +'<div><label>Ends &middot; EVE time = UTC</label><input id="ev_end" type="datetime-local"></div>'
+      +'<div><label>Prize note</label><input id="ev_prize" placeholder="1B ISK and eternal glory"></div>'
+      +'<div><label>Award medal</label><select id="ev_deco">'+decs+"</select></div>"
+      +'<div><label>Recurring</label><select id="ev_rec"><option value="">one time</option>'
+        +'<option value="weekly">weekly</option><option value="monthly">monthly</option></select></div>'
+      +"</div>"
+      +'<button class="inv" id="ev_draft" type="button">Save as draft</button> '
+      +'<button class="gobtn" id="ev_live" type="button">Create LIVE</button></div>';
+  }
+  h+='<div id="ev_annc"></div>';
+  if(!list.length) h+='<div class="empty">No events yet. The horde mines faster with a scoreboard.</div>';
+  list.forEach(function(ev){
+    const st=ev.status||"draft";
+    h+='<div class="ccard"><div class="chead">'
+      +'<span class="evchip '+esc(st)+'">'+esc(st)+"</span>"
+      +'<b style="font-size:15px">'+esc(ev.name)+"</b>"
+      +(ev.recurring?'<span class="qmeta">recurs '+esc(ev.recurring)+"</span>":"")
+      +(ev.entrants!=null?'<span class="qmeta" style="margin-left:auto">'+fmtN(ev.entrants)+" entrants</span>":"")
+      +"</div>";
+    h+='<div class="rowmeta" style="margin:7px 0 2px">'+evMetricLabel(ev)
+      +" &middot; "+(ev.source==="esi"?"in game ledger":"fleet drops")
+      +(ev.basis?" &middot; "+esc(ev.basis):"")+"</div>";
+    h+='<div class="rowmeta">'+esc(fmtDate(ev.starts_at))+" → "+esc(fmtDate(ev.ends_at))+" &middot; EVE time</div>";
+    if(ev.prize_note) h+='<div class="rowmeta">prize: '+esc(ev.prize_note)+"</div>";
+    if(ev.award_deco) h+='<div class="rowmeta">medal: '+evDecoName(ev.award_deco)+"</div>";
+    const rows=(ev.standings||[]).slice(0,5);
+    if(rows.length){
+      h+='<div style="margin-top:9px"><span class="flabel">'
+        +(st==="awarded"?"Winners":(ev.frozen||st==="ended"?"Final standings":"Top 5"))+"</span>";
+      rows.forEach(function(r){
+        h+='<div class="qrow"><span class="rank">'+esc(String(r.rank!=null?r.rank:"?"))+"</span>"
+          +(r.account_id!=null?whoSpan(r):'<span class="qwho" style="cursor:default">'+avat(r,22)+esc(r.main_ign||"unmatched name")+"</span>")
+          +'<span class="qact"><span class="qval">'+evValue(ev, r.value)+"</span></span></div>";
+      });
+      h+="</div>";
+    }
+    if(ISADMIN){
+      let act="";
+      if(st==="draft"){
+        act+='<button class="inv" data-evact="activate" data-evid="'+esc(String(ev.id))+'">Activate</button>'
+          +'<button class="dngr" data-evact="delete" data-evid="'+esc(String(ev.id))+'">Delete draft</button>';
+      }else if(st==="active"){
+        act+='<button class="dngr" data-evact="end" data-evid="'+esc(String(ev.id))+'">End the event</button>';
+      }else if(st==="ended" && ev.award_deco){
+        act+='<button class="inv" data-evact="award" data-evid="'+esc(String(ev.id))+'">Award the medal</button>';
+      }else if(st==="ended"){
+        act+='<span class="rowmeta">ended, no medal attached &middot; the standings stand as the record</span>';
+      }
+      if(act) h+='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">'+act+"</div>";
+    }
+    h+="</div>";
+  });
+  h+=footLine();
+  m.innerHTML=h;
+  m.querySelectorAll("[data-evact]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-evid"), act=btn.getAttribute("data-evact");
+      busy(btn, async function(){
+        if(act==="delete" && !confirm("Delete this draft? It never happened.")) return;
+        if(act==="end" && !confirm("End and freeze the standings?")) return;
+        const r=await api("/api/admin/events/"+encodeURIComponent(id),{action:act});
+        if(act==="activate") toast("Event is LIVE. Tell the horde.");
+        else if(act==="delete") toast("Draft deleted. It never happened.");
+        else if(act==="end") toast("Ended. The standings are stone now.");
+        else if(act==="award") toast("Medal granted. The wall grows.");
+        await secEvents();
+        if(act==="award" && r.announce) announceBar(r.announce, document.getElementById("ev_annc"));
+      });
+    });
+  });
+  if(!ISADMIN) return;
+  const ms=document.getElementById("ev_metric"), ss=document.getElementById("ev_source");
+  function evSync(){
+    const esi=ss.value==="esi";
+    [].slice.call(ms.options).forEach(function(o){
+      if(o.value==="isk"||o.value==="m3"||o.value==="ops") o.disabled=esi;
+    });
+    if(esi && (ms.value==="isk"||ms.value==="m3"||ms.value==="ops")) ms.value="all_ore";
+    document.getElementById("ev_orewrap").style.display = ms.value==="ore"?"":"none";
+    document.getElementById("ev_basis").textContent = esi
+      ?"counts the in game mining ledger, raw units · ESI attached goblins only"
+      :"counts fleet drops, compressed units ×100";
+  }
+  ms.addEventListener("change", evSync);
+  ss.addEventListener("change", evSync);
+  const ps=document.getElementById("ev_preset");
+  function evFill(){
+    const w=evWindow(ps.value);
+    if(!w) return;
+    document.getElementById("ev_start").value=evLocal(w[0]);
+    document.getElementById("ev_end").value=evLocal(w[1]);
+  }
+  ps.addEventListener("change", evFill);
+  evSync(); evFill();
+  function evSubmit(status, btn){
+    busy(btn, async function(){
+      const name=document.getElementById("ev_name").value.trim();
+      if(!name){ toast("An event needs a name, chief.", true); return; }
+      const body={ name:name, metric:ms.value, source:ss.value, status:status };
+      if(ms.value==="ore"){
+        const ob=document.getElementById("ev_ore").value.trim();
+        if(!ob){ toast("One ore means one ore. Name it.", true); return; }
+        body.ore_base=ob;
+      }
+      const sv=document.getElementById("ev_start").value, en=document.getElementById("ev_end").value;
+      if(!sv || !en){ toast("The window needs a start and an end.", true); return; }
+      body.starts_at=evIso(sv); body.ends_at=evIso(en);
+      if(body.ends_at<=body.starts_at){ toast("The end must come after the start. Time insists.", true); return; }
+      const pz=document.getElementById("ev_prize").value.trim(); if(pz) body.prize_note=pz;
+      const dk=document.getElementById("ev_deco").value; if(dk) body.award_deco=dk;
+      const rc=document.getElementById("ev_rec").value; if(rc) body.recurring=rc;
+      await api("/api/admin/events", body);
+      toast(status==="active"?"Event is LIVE. Tell the horde.":"Draft saved. Set it LIVE when ready.");
+      secEvents();
+    });
+  }
+  document.getElementById("ev_draft").addEventListener("click", function(){ evSubmit("draft", this); });
+  document.getElementById("ev_live").addEventListener("click", function(){ evSubmit("active", this); });
+}
+/* ================= 11. INDUSTRY ================= */
+const ISTATE={tab:"pending"};
+async function secIndustry(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Industry","the foundry queue &middot; finished goods count when leadership counts them")+skel(4);
+  let j;
+  try{ j=await api("/api/admin/industry?status="+encodeURIComponent(ISTATE.tab)); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Industry","the foundry queue")+napPanel("Industry queue", e.message)
+      +'<button class="inv" onclick="secIndustry()">Try again</button>';
+    return;
+  }
+  const list=j.contributions||[];
+  let h=head("Industry","the foundry queue &middot; finished goods count when leadership counts them");
+  h+='<div class="tabs">';
+  ["pending","counted","rejected","all"].forEach(function(t){
+    h+='<button class="tab'+(ISTATE.tab===t?" on":"")+'" data-itab="'+t+'">'+t+"</button>";
+  });
+  h+="</div>";
+  if(!list.length){
+    h+='<div class="empty">'+(ISTATE.tab==="pending"
+      ?"Queue is empty. Every widget is counted. The foundry hums."
+      :"Nothing in this pile.")+"</div>";
+  }
+  list.forEach(function(c){
+    h+='<div class="ccard'+(c.status==="rejected"?" rej":(c.status==="counted"?" acc":""))+'">'
+      +'<div class="chead">'
+      +whoSpan(c)
+      +'<span class="qmeta">'+(c.source==="esi"?"auto &middot; ESI":"submitted")
+      +" &middot; "+esc(ago(c.submitted_at))+" &middot; status "+esc(c.status||"?")+"</span>"
+      +"</div>";
+    h+='<div class="cnums">'
+      +'<span><span class="k">Made</span><span class="v" style="font-size:14px;color:var(--silver)">'+esc(c.item_name||"?")+" × "+fmtN(c.quantity)+"</span></span>"
+      +'<span><span class="k">ISK value</span><span class="v">'+fmtIsk(c.isk_value)+"</span></span>"
+      +"</div>";
+    if(c.note) h+='<div class="rowmeta">note: '+esc(c.note)+"</div>";
+    if(c.status==="pending"){
+      h+='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">'
+        +'<input type="number" class="i_ovk" data-for="'+esc(String(c.id))+'" placeholder="override ISK value" style="max-width:170px">'
+        +'<button class="inv" data-iacc="'+esc(String(c.id))+'">Accept</button>'
+        +'<button class="dngr" data-irej="'+esc(String(c.id))+'">Reject</button></div>';
+    }
+    h+="</div>";
+  });
+  h+=footLine();
+  m.innerHTML=h;
+  m.querySelectorAll("[data-itab]").forEach(function(b){
+    b.addEventListener("click", function(){ ISTATE.tab=this.getAttribute("data-itab"); secIndustry(); });
+  });
+  m.querySelectorAll("[data-iacc]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-iacc");
+      busy(btn, async function(){
+        const body={action:"accept"};
+        const ov=document.querySelector('.i_ovk[data-for="'+id+'"]');
+        if(ov && ov.value!=="") body.override={isk:Number(ov.value)};
+        await api("/api/admin/industry/"+encodeURIComponent(id)+"/review", body);
+        toast("Counted. The foundry number climbs tonight.");
+        secIndustry();
+      });
+    });
+  });
+  m.querySelectorAll("[data-irej]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-irej");
+      busy(btn, async function(){
+        const why=prompt("Reason for the reject (the member sees this):"); if(why==null) return;
+        await api("/api/admin/industry/"+encodeURIComponent(id)+"/review",{action:"reject", note:why});
+        toast("Rejected. The books stay honest.");
+        secIndustry();
+      });
+    });
+  });
 }
 /* ================= registry + boot ================= */
 const SECTIONS={ "":secOverview, members:secMembers, contracts:secContracts,
-  recruiting:secRecruiting, decorations:secDecorations, reconcile:secReconcile,
+  industry:secIndustry, recruiting:secRecruiting, events:secEvents,
+  decorations:secDecorations, reconcile:secReconcile,
   backfill:secBackfill, audit:secAudit, settings:secSettings };
 boot();
 </script>
-<script src="/nav.js?v=6"></script>
+<script src="/nav.js?v=7"></script>
 </body></html>

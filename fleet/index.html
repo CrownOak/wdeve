@@ -108,6 +108,12 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
   padding:2px 8px; border:1px solid currentColor; }
 .copyisk{ cursor:pointer; } .copyisk:hover{ text-decoration:underline dotted; }
 .paidok.yes{ color:var(--ore); } .paidok.no{ color:var(--muted); }
+.perhr{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-left:8px; white-space:nowrap; }
+tr.acct td{ background:var(--black); }
+tr.acct .who b{ color:var(--silver); }
+td.subwho{ padding-left:24px; color:var(--silver-dim); }
+.paynote{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; color:var(--amber);
+  border:1px solid rgba(233,196,106,.4); padding:1px 6px; margin-left:8px; white-space:nowrap; }
 #toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:300; display:none;
   background:var(--ore); color:#04140a; font-family:var(--mono); font-size:12px; font-weight:700;
   padding:9px 16px; clip-path:polygon(0 0,100% 0,97% 100%,0 100%); }
@@ -144,6 +150,7 @@ tr.haulrow{ cursor:pointer; }
 
     <div id="app" style="display:none">
       <div id="offbar" class="thin warn" style="display:none">offline, showing the last copy</div>
+      <div id="portalnudge" class="thin" style="display:none"><a href="/portal/">Log into the portal</a> so your hauls credit your career page. <button id="nudgex" class="link" style="margin-left:10px">dismiss</button></div>
 
       <!-- inline name prompt: shown once when there is no cached name -->
       <div id="namebox" class="howto" style="display:none"><b>Who are you?</b> Your in-game name, so the tab
@@ -252,6 +259,8 @@ tr.haulrow{ cursor:pointer; }
   function ago(ms){ var s=Math.floor((Date.now()-ms)/1000); if(s<0) s=0;
     if(s<90) return s+"s"; var m=Math.floor(s/60); if(m<90) return m+"m";
     var h=Math.floor(m/60); if(h<48) return h+"h"; return Math.floor(h/24)+"d"; }
+  function durFmt(ms){ var m=Math.round(ms/60000); if(m<60) return m+"m";
+    var h=Math.floor(m/60), r=m%60; return h+"h"+(r?r+"m":""); }
   function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
@@ -302,6 +311,8 @@ tr.haulrow{ cursor:pointer; }
   var openDetail=null;        // {id, entry} for the expanded feed row
   var detailCache={};
   var tab="fleet", hauls=null, haulsAt=0;
+  var PORTAL_ROSTER=null;     // /api/roster fold: character ign (lowercase) -> {main, payout, characters[]};
+                              // null until the fetch lands, and the payout screen stays per-IGN while null
 
   function api(method,path,body){
     return fetch(WORKER+path,{ method:method,
@@ -410,6 +421,19 @@ tr.haulrow{ cursor:pointer; }
     var list=getPilots(); if(list.indexOf(n)<0){ list.push(n); setPilots(list); }
     setActivePilot(n); }
   function removeAlt(name){ var list=getPilots().filter(function(x){ return x!==name; }); setPilots(list); renderPilots(); }
+  // portal login nudge (spec 8.3): one slim dismissible line at the top of the page.
+  // Only reachable via seedPilotsFromPortal, so only once the fleet password is in.
+  // Dismiss sticks for the session; a fresh session asks again, gently.
+  var SS_NUDGE="bonk_fleet_nudge_off";
+  function showPortalNudge(){
+    var b=el("portalnudge"); if(!b) return;
+    var off=null; try{ off=sessionStorage.getItem(SS_NUDGE); }catch(e){}
+    if(off) return;
+    b.style.display="";
+    var x=el("nudgex"); if(x) x.onclick=function(){
+      try{ sessionStorage.setItem(SS_NUDGE,"1"); }catch(e){}
+      b.style.display="none"; };
+  }
   // Whatever you are logged into the portal as (your MAIN) is the identity that
   // holds the credits and shows in the fleet. On unlock we ask the portal who you
   // are (/api/whoami, same-origin cookie) and DEFAULT your drop name to your main,
@@ -420,12 +444,24 @@ tr.haulrow{ cursor:pointer; }
     if(pilotsSeeded || !token) return; pilotsSeeded=true;
     fetch("/api/whoami",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(wd){
       var mainIgn = (wd && wd.loggedIn && wd.ign) ? wd.ign : null;
+      if(!mainIgn) showPortalNudge(); // spec 8.3: not logged into the portal, one slim line
       fetch("/api/roster",{ headers:{ "X-Token":token } }).then(function(r){ return r.ok?r.json():null; }).then(function(d){
         var chars=[];
         if(d && d.ok && d.roster){
-          var key = (mainIgn || who || "").toLowerCase();
-          d.roster.forEach(function(a){ (a.characters||[]).forEach(function(c){
-            if(String(c.ign).toLowerCase()===key) chars=(a.characters||[]).map(function(x){ return x.ign; }); }); });
+          // fold the whole roster once: every character ign -> its account. The
+          // payout screen (spec 5.1) groups by this; while it is null the payout
+          // renders the plain per-IGN view, byte for byte the old behavior.
+          var map={};
+          d.roster.forEach(function(a){
+            var pay=a.main_ign;
+            (a.characters||[]).forEach(function(c){ if(c.is_payout && c.ign) pay=c.ign; });
+            (a.characters||[]).forEach(function(c){
+              map[String(c.ign).toLowerCase()]={ main:a.main_ign, payout:pay,
+                characters:(a.characters||[]).map(function(x){ return x.ign; }) }; });
+          });
+          PORTAL_ROSTER=map;
+          var hit=map[(mainIgn || who || "").toLowerCase()];
+          if(hit) chars=hit.characters.slice();
         }
         if(mainIgn){
           // default to the portal main unless already dropping as one of your own characters
@@ -785,16 +821,51 @@ tr.haulrow{ cursor:pointer; }
       +"<button id='payx' class='link'>close</button></div>";
     if(!list.length) h+="<div class='empty'>No valued ore dropped yet. Nothing to pay.</div>";
     else{
-      h+="<table><thead><tr><th>WHO</th><th>ORE VALUE (JITA)</th><th>PAYOUT</th>"
-        +"<th>PAID</th><th>AMOUNT</th><th>LOGGED</th></tr></thead><tbody>";
-      list.forEach(function(x,i){ var pd=pays[x.who];
+      // one payout row per drop name, exactly as before: rowHtml carries the flat
+      // list index, so the checkbox/amount/copy wiring and the per-name /payout
+      // POST are untouched. Grouping below is presentation only (spec 5.1).
+      var rowHtml=function(i, sub, note){ var x=list[i], pd=pays[x.who];
         var amt = pd && pd.amount!=null ? Math.round(pd.amount) : x.payout;
-        h+="<tr><td class='who'>"+esc(x.who)+"</td>"
+        return "<tr><td class='who"+(sub?" subwho":"")+"'>"+esc(x.who)+(note||"")+"</td>"
           +"<td class='num'>"+isk(x.jita)+"</td>"
           +"<td class='num strong good copyisk' data-ci='"+i+"' title='click to copy the exact amount for the in-game transfer'>"+isk(x.payout)+"</td>"
           +"<td><input type='checkbox' class='paychk' data-pi='"+i+"'"+(pd&&pd.paid?" checked":"")+(isLead?"":" disabled")+"></td>"
           +"<td class='num'><input class='payamt' id='amt_"+i+"' value='"+amt+"'"+(isLead?"":" disabled")+"></td>"
-          +"<td class='num'>"+(pd&&pd.at?hhmm(pd.at):"")+"</td></tr>"; });
+          +"<td class='num'>"+(pd&&pd.at?hhmm(pd.at):"")+"</td></tr>"; };
+      h+="<table><thead><tr><th>WHO</th><th>ORE VALUE (JITA)</th><th>PAYOUT</th>"
+        +"<th>PAID</th><th>AMOUNT</th><th>LOGGED</th></tr></thead><tbody>";
+      if(PORTAL_ROSTER){
+        // spec 5.1: fold drop names onto their portal account so one human with
+        // three alts reads as one payout. Names the roster does not know stay
+        // flat, exactly as today. A lone name that IS its own main stays a flat
+        // row too (a header over one identical sub-row would just be noise), but
+        // it still carries the pay-to note when the payout character differs.
+        var groups={}, order=[];
+        list.forEach(function(x,i){
+          var acct=PORTAL_ROSTER[String(x.who).toLowerCase()];
+          if(!acct){ order.push({ix:[i]}); return; }
+          var gk=String(acct.main).toLowerCase();
+          if(!groups[gk]){ groups[gk]={main:acct.main, payout:acct.payout, ix:[]}; order.push(groups[gk]); }
+          groups[gk].ix.push(i);
+        });
+        order.forEach(function(g){
+          if(!g.main){ h+=rowHtml(g.ix[0], false, ""); return; }
+          var dropNames={}, sumJ=0, sumP=0;
+          g.ix.forEach(function(i){ dropNames[String(list[i].who).toLowerCase()]=1;
+            sumJ+=list[i].jita; sumP+=list[i].payout; });
+          var note = dropNames[String(g.payout||"").toLowerCase()]
+            ? "" : " <span class='paynote'>pay to "+esc(g.payout)+"</span>";
+          if(g.ix.length===1 && String(list[g.ix[0]].who).toLowerCase()===String(g.main).toLowerCase()){
+            h+=rowHtml(g.ix[0], false, note); return; }
+          h+="<tr class='acct'><td class='who'><b>"+esc(g.main)+"</b>"+note+"</td>"
+            +"<td class='num'>"+isk(sumJ)+"</td>"
+            +"<td class='num strong good'><b>"+isk(sumP)+"</b></td>"
+            +"<td></td><td></td><td></td></tr>";
+          g.ix.forEach(function(i){ h+=rowHtml(i, true, ""); });
+        });
+      } else {
+        list.forEach(function(x,i){ h+=rowHtml(i, false, ""); });
+      }
       h+="</tbody></table>";
       h+="<div class='totline' style='margin-top:14px'>"
         +"<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue||0)+"</div></div>"
@@ -899,18 +970,23 @@ tr.haulrow{ cursor:pointer; }
     api("GET","/haul?id="+encodeURIComponent(id)).then(function(d){
       if(!(d&&d.ok&&d.haul)) return;
       var hl=d.haul, isOp=hl.trueValue!==undefined;
+      // per-op ISK/hr: only when the op tracked a start time and ran 10+ minutes.
+      // A single-drop blip has no honest rate; the payout alone tells that story.
+      var durMs = hl.startedAt ? (hl.finishedAt - hl.startedAt) : 0;
       var h="<div class='ovhdr'><h2>"+ymdhm(hl.finishedAt)+"</h2>"
         +"<span class='k'>commander "+esc(hl.commander||"")+"</span>"
         +"<span class='k'>rate "+Math.round((hl.rate||0.88)*100)+"%</span>"
         +"<span class='k'>hauled "+isk(hl.payout||0)+(hl.m3?" &middot; "+m3fmt(hl.m3)+" m&sup3;":"")+"</span>"
+        +(durMs>=600000?"<span class='k'>"+isk((hl.payout||0)/(durMs/3600000))+" ISK/hr &middot; "+durFmt(durMs)+" on belt</span>":"")
         +(isOp?"<span class='k warn'>true "+isk(hl.trueValue||0)+" &middot; margin "+isk(hl.margin||0)+"</span>":"")
         +"<button id='haulx' class='link'>close</button></div>";
       h+="<div class='hsec'>Roster</div>"
         +"<table><thead><tr><th>WHO</th><th>HAUL</th>"
         +(isOp?"<th>JITA</th>":"")+"<th>PAID</th></tr></thead><tbody>";
       (hl.members||[]).forEach(function(m){
+        var hr=(m.beltMs>0)?"<span class='perhr'>"+isk((m.payout||0)/(m.beltMs/3600000))+"/hr</span>":"";
         h+="<tr><td class='who'>"+esc(m.who)+"</td>"
-          +"<td class='num strong good'>"+isk(m.payout||0)+"</td>"
+          +"<td class='num strong good'>"+isk(m.payout||0)+hr+"</td>"
           +(isOp?"<td class='num'>"+isk(m.jita||0)+"</td>":"")
           +"<td><span class='paidok "+(m.paid?"yes'>PAID":"no'>unpaid")+"</span></td></tr>"; });
       h+="</tbody></table>";
@@ -949,5 +1025,5 @@ tr.haulrow{ cursor:pointer; }
     if(t) unlock(t); else showGate(true); })();
 })();
 </script>
-<script src="/nav.js?v=6"></script>
+<script src="/nav.js?v=7"></script>
 </body></html>

@@ -57,6 +57,7 @@
     ".navwho:hover{border-color:var(--ore,#46ff5e);color:var(--ore,#46ff5e);}" +
     ".navwho.in{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
     ".navwho.in .dotln{background:var(--ore,#46ff5e);box-shadow:0 0 6px rgba(70,255,94,.55);}" +
+    ".navwho .unrd{color:var(--ore,#46ff5e);font-weight:700;flex:none;white-space:nowrap;}" +
     "@media(max-width:620px){.navwho .lbl{display:none;}}";
   (document.head || document.documentElement).appendChild(st);
 
@@ -71,6 +72,15 @@
           w.className = "navwho in";
           w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';
           w.querySelector(".nm").textContent = d.ign || "goblin";
+          // inbox badge: portal unread count in ore green; the whole chip already
+          // opens /portal/, so the badge rides the same click.
+          if (d.unread > 0) {
+            var u = document.createElement("span");
+            u.className = "unrd";
+            u.title = "unread in your inbox";
+            u.textContent = "\u00B7 " + d.unread;
+            w.appendChild(u);
+          }
           w.title = "Logged in as " + (d.ign || "goblin") + ". Your activity is tracked to your account. Open your portal.";
         } else {
           w.className = "navwho";
