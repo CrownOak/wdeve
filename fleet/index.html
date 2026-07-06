@@ -233,7 +233,7 @@ tr.haulrow{ cursor:pointer; }
   // ---------- valuation (AMEND-6): refine calcFwd order, exactly, as a pure function ----------
   /*VALUE-FN-START*/
   var EFF=0.70; // AMEND-3: refine's shipped default efficiency; fixed, not UI-exposed
-  function valueLines(lines, DATA){
+  function valueLines(lines, DATA, VOL){
     // FRACTIONAL valuation (v3.2). Refine floors to 100-unit reprocessing batches —
     // physically right for refining YOUR OWN paste, but a ledger credits pro-rata:
     // the fleet pools everyone's ore and the pooled total refines fully, so a
@@ -241,11 +241,13 @@ tr.haulrow{ cursor:pointer; }
     // of small amounts valued to 0 because every line floored to 0 batches.)
     // Each detail line also gets its own solo value so the worker can build
     // per-ore haul summaries; unmatched lines carry 0.
-    var got={}, n=0, units=0, unmatched=0, detail=[];
+    var got={}, n=0, units=0, unmatched=0, m3=0, detail=[];
+    VOL=VOL||{};
     lines.forEach(function(it){
       var y=DATA.yields[it.name.toLowerCase()];
       if(!y){ unmatched++; detail.push([it.name, it.qty, 0]); return; }
       n++; units+=it.qty;
+      m3+=it.qty*(VOL[it.name.toLowerCase()]||0);   // SDE volume per unit, baked below
       var batches=it.qty / y.p, solo=0, mid;
       for(mid in y.m){ got[mid]=(got[mid]||0)+batches*y.m[mid]; }
       for(mid in y.m){ solo+=batches*y.m[mid]*EFF*(DATA.prices[mid] ? DATA.prices[mid].j||0 : 0); }
@@ -254,9 +256,13 @@ tr.haulrow{ cursor:pointer; }
     // Pass 2: per mineral, at efficiency, priced at Jita sell. No flooring anywhere.
     var jita=0;
     for(var mid2 in got){ jita+=got[mid2]*EFF*(DATA.prices[mid2] ? DATA.prices[mid2].j||0 : 0); }
-    return { jita:Math.round(jita), units:units, n:n, unmatched:unmatched, detail:detail };
+    return { jita:Math.round(jita), units:units, n:n, unmatched:unmatched,
+      m3:Math.round(m3*100)/100, detail:detail };
   }
   /*VALUE-FN-END*/
+  // m3 per unit for every ore name in the price table, baked from the EVE SDE
+  // (Fuzzwork invTypes dump 3405148_20260623; volumes change ~never). 439 entries.
+  var ORE_VOL={"amethystic crystallite":3,"arkonor":16,"arkonor ii-grade":16,"arkonor iii-grade":16,"arkonor iv-grade":16,"batch compressed arkonor":8.8,"batch compressed arkonor ii-grade":8.8,"batch compressed arkonor iii-grade":8.8,"batch compressed arkonor iv-grade":8.8,"batch compressed bistot":4.4,"batch compressed bistot ii-grade":4.4,"batch compressed bistot iii-grade":4.4,"batch compressed bistot iv-grade":4.4,"batch compressed crokite":7.81,"batch compressed crokite iii-grade":7.81,"batch compressed crokite iv-grade":7.81,"batch compressed dark ochre":4.2,"batch compressed dark ochre ii-grade":4.2,"batch compressed dark ochre iii-grade":4.2,"batch compressed dark ochre iv-grade":4.2,"batch compressed gneiss":1.8,"batch compressed gneiss ii-grade":1.8,"batch compressed gneiss iii-grade":1.8,"batch compressed gneiss iv-grade":1.8,"batch compressed hedbergite":0.47,"batch compressed hedbergite ii-grade":0.47,"batch compressed hedbergite iii-grade":0.47,"batch compressed hedbergite iv-grade":0.47,"batch compressed hemorphite":0.86,"batch compressed hemorphite ii-grade":0.86,"batch compressed hemorphite iii-grade":0.86,"batch compressed hemorphite iv-grade":0.86,"batch compressed jaspet":0.15,"batch compressed jaspet ii-grade":0.15,"batch compressed jaspet iii-grade":0.15,"batch compressed jaspet iv-grade":0.15,"batch compressed kernite":0.19,"batch compressed kernite ii-grade":0.19,"batch compressed kernite iii-grade":0.19,"batch compressed kernite iv-grade":0.19,"batch compressed mercoxit":0.1,"batch compressed mercoxit ii-grade":0.1,"batch compressed mercoxit iii-grade":0.1,"batch compressed omber":0.3,"batch compressed omber ii-grade":0.3,"batch compressed omber iii-grade":0.3,"batch compressed omber iv-grade":0.3,"batch compressed plagioclase":0.15,"batch compressed plagioclase ii-grade":0.15,"batch compressed plagioclase iii-grade":0.15,"batch compressed plagioclase iv-grade":0.15,"batch compressed pyroxeres":0.16,"batch compressed pyroxeres ii-grade":0.16,"batch compressed pyroxeres iii-grade":0.16,"batch compressed pyroxeres iv-grade":0.16,"batch compressed scordite":0.19,"batch compressed scordite ii-grade":0.19,"batch compressed scordite iii-grade":0.19,"batch compressed scordite iv-grade":0.19,"batch compressed spodumain":28,"batch compressed spodumain ii-grade":28,"batch compressed spodumain iii-grade":28,"batch compressed spodumain iv-grade":28,"batch compressed veldspar":0.15,"batch compressed veldspar ii-grade":0.15,"batch compressed veldspar iii-grade":0.15,"batch compressed veldspar iv-grade":0.15,"bezdnacine":16,"bezdnacine ii-grade":16,"bezdnacine iii-grade":16,"bistot":16,"bistot ii-grade":16,"bistot iii-grade":16,"bistot iv-grade":16,"bitumens":10,"blue ice":1000,"blue ice iv-grade":1000,"bountiful loparite":10,"bountiful monazite":10,"bountiful xenotime":10,"bountiful ytterbite":10,"brimful bitumens":10,"brimful coesite":10,"brimful sylvite":10,"brimful zeolites":10,"carnotite":10,"chromite":10,"cinnabar":10,"clear icicle":1000,"clear icicle iv-grade":1000,"cobaltite":10,"coesite":10,"compressed arkonor":0.16,"compressed arkonor ii-grade":0.16,"compressed arkonor iii-grade":0.16,"compressed arkonor iv-grade":0.16,"compressed bezdnacine":0.16,"compressed bezdnacine ii-grade":0.16,"compressed bezdnacine iii-grade":0.16,"compressed bistot":0.16,"compressed bistot ii-grade":0.16,"compressed bistot iii-grade":0.16,"compressed bistot iv-grade":0.16,"compressed bitumens":0.1,"compressed blue ice":100,"compressed blue ice iv-grade":100,"compressed bountiful loparite":0.1,"compressed bountiful monazite":0.1,"compressed bountiful xenotime":0.1,"compressed bountiful ytterbite":0.1,"compressed brimful bitumens":0.1,"compressed brimful coesite":0.1,"compressed brimful sylvite":0.1,"compressed brimful zeolites":0.1,"compressed carnotite":0.1,"compressed chromite":0.1,"compressed cinnabar":0.1,"compressed clear icicle":100,"compressed clear icicle iv-grade":100,"compressed cobaltite":0.1,"compressed coesite":0.1,"compressed copious cobaltite":0.1,"compressed copious euxenite":0.1,"compressed copious scheelite":0.1,"compressed copious titanite":0.1,"compressed crokite":0.16,"compressed crokite ii-grade":0.16,"compressed crokite iii-grade":0.16,"compressed crokite iv-grade":0.16,"compressed dark glitter":100,"compressed dark ochre":0.08,"compressed dark ochre ii-grade":0.08,"compressed dark ochre iii-grade":0.08,"compressed dark ochre iv-grade":0.08,"compressed ducinium":0.16,"compressed ducinium ii-grade":0.16,"compressed ducinium iii-grade":0.16,"compressed ducinium iv-grade":0.16,"compressed eifyrium":0.16,"compressed eifyrium ii-grade":0.16,"compressed eifyrium iii-grade":0.16,"compressed eifyrium iv-grade":0.16,"compressed euxenite":0.1,"compressed gelidus":100,"compressed glacial mass":100,"compressed glacial mass iv-grade":100,"compressed glare crust":100,"compressed glistening bitumens":0.1,"compressed glistening coesite":0.1,"compressed glistening sylvite":0.1,"compressed glistening zeolites":0.1,"compressed glowing carnotite":0.1,"compressed glowing cinnabar":0.1,"compressed glowing pollucite":0.1,"compressed glowing zircon":0.1,"compressed gneiss":0.05,"compressed gneiss ii-grade":0.05,"compressed gneiss iii-grade":0.05,"compressed gneiss iv-grade":0.05,"compressed griemeer":0.008,"compressed griemeer ii-grade":0.008,"compressed griemeer iii-grade":0.008,"compressed griemeer iv-grade":0.008,"compressed hedbergite":0.03,"compressed hedbergite ii-grade":0.03,"compressed hedbergite iii-grade":0.03,"compressed hedbergite iv-grade":0.03,"compressed hemorphite":0.03,"compressed hemorphite ii-grade":0.03,"compressed hemorphite iii-grade":0.03,"compressed hemorphite iv-grade":0.03,"compressed hezorime":0.05,"compressed hezorime ii-grade":0.05,"compressed hezorime iii-grade":0.05,"compressed hezorime iv-grade":0.05,"compressed jaspet":0.02,"compressed jaspet ii-grade":0.02,"compressed jaspet iii-grade":0.02,"compressed jaspet iv-grade":0.02,"compressed kangite x-grade":0.01,"compressed kernite":0.012,"compressed kernite ii-grade":0.012,"compressed kernite iii-grade":0.012,"compressed kernite iv-grade":0.012,"compressed krystallos":100,"compressed kylixium":0.012,"compressed kylixium ii-grade":0.012,"compressed kylixium iii-grade":0.012,"compressed kylixium iv-grade":0.012,"compressed lavish chromite":0.1,"compressed lavish otavite":0.1,"compressed lavish sperrylite":0.1,"compressed lavish vanadinite":0.1,"compressed loparite":0.1,"compressed mercoxit":0.4,"compressed mercoxit ii-grade":0.4,"compressed mercoxit iii-grade":0.4,"compressed moissanite x-grade":0.01,"compressed monazite":0.1,"compressed mordunium":0.001,"compressed mordunium ii-grade":0.001,"compressed mordunium iii-grade":0.001,"compressed mordunium iv-grade":0.001,"compressed nocxite":0.04,"compressed nocxite ii-grade":0.04,"compressed nocxite iii-grade":0.04,"compressed nocxite iv-grade":0.04,"compressed omber":0.006,"compressed omber ii-grade":0.006,"compressed omber iii-grade":0.006,"compressed omber iv-grade":0.006,"compressed otavite":0.1,"compressed plagioclase":0.0035,"compressed plagioclase ii-grade":0.0035,"compressed plagioclase iii-grade":0.0035,"compressed plagioclase iv-grade":0.0035,"compressed pollucite":0.1,"compressed polycrase x-grade":0.01,"compressed pyroxeres":0.003,"compressed pyroxeres ii-grade":0.003,"compressed pyroxeres iii-grade":0.003,"compressed pyroxeres iv-grade":0.003,"compressed rakovene":0.16,"compressed rakovene ii-grade":0.16,"compressed rakovene iii-grade":0.16,"compressed raspite x-grade":0.01,"compressed replete carnotite":0.1,"compressed replete cinnabar":0.1,"compressed replete pollucite":0.1,"compressed replete zircon":0.1,"compressed scheelite":0.1,"compressed scordite":0.0015,"compressed scordite 0-grade":0.0015,"compressed scordite ii-grade":0.0015,"compressed scordite iii-grade":0.0015,"compressed scordite iv-grade":0.0015,"compressed shimmering chromite":0.1,"compressed shimmering otavite":0.1,"compressed shimmering sperrylite":0.1,"compressed shimmering vanadinite":0.1,"compressed shining loparite":0.1,"compressed shining monazite":0.1,"compressed shining xenotime":0.1,"compressed shining ytterbite":0.1,"compressed sperrylite":0.1,"compressed spodumain":0.16,"compressed spodumain ii-grade":0.16,"compressed spodumain iii-grade":0.16,"compressed spodumain iv-grade":0.16,"compressed sylvite":0.1,"compressed talassonite":0.16,"compressed talassonite ii-grade":0.16,"compressed talassonite iii-grade":0.16,"compressed titanite":0.1,"compressed twinkling cobaltite":0.1,"compressed twinkling euxenite":0.1,"compressed twinkling scheelite":0.1,"compressed twinkling titanite":0.1,"compressed ueganite":0.05,"compressed ueganite ii-grade":0.05,"compressed ueganite iii-grade":0.05,"compressed ueganite iv-grade":0.05,"compressed vanadinite":0.1,"compressed veldspar":0.001,"compressed veldspar 0-grade":0.001,"compressed veldspar ii-grade":0.001,"compressed veldspar iii-grade":0.001,"compressed veldspar iv-grade":0.001,"compressed white glaze":100,"compressed white glaze iv-grade":100,"compressed xenotime":0.1,"compressed ytirium":0.006,"compressed ytirium ii-grade":0.006,"compressed ytirium iii-grade":0.006,"compressed ytirium iv-grade":0.006,"compressed ytterbite":0.1,"compressed zeolites":0.1,"compressed zircon":0.1,"copious cobaltite":10,"copious euxenite":10,"copious scheelite":10,"copious titanite":10,"crokite":16,"crokite ii-grade":16,"crokite iii-grade":16,"crokite iv-grade":16,"dark glitter":1000,"dark ochre":8,"dark ochre ii-grade":8,"dark ochre iii-grade":8,"dark ochre iv-grade":8,"ducinium":16,"ducinium ii-grade":16,"ducinium iii-grade":16,"ducinium iv-grade":16,"eifyrium":16,"eifyrium ii-grade":16,"eifyrium iii-grade":16,"eifyrium iv-grade":16,"euxenite":10,"gelidus":1000,"glacial mass":1000,"glacial mass iv-grade":1000,"glare crust":1000,"glistening bitumens":10,"glistening coesite":10,"glistening sylvite":10,"glistening zeolites":10,"glowing carnotite":10,"glowing cinnabar":10,"glowing pollucite":10,"glowing zircon":10,"gneiss":5,"gneiss ii-grade":5,"gneiss iii-grade":5,"gneiss iv-grade":5,"griemeer":0.8,"griemeer ii-grade":0.8,"griemeer iii-grade":0.8,"griemeer iv-grade":0.8,"hedbergite":3,"hedbergite ii-grade":3,"hedbergite iii-grade":3,"hedbergite iv-grade":3,"hemorphite":3,"hemorphite ii-grade":3,"hemorphite iii-grade":3,"hemorphite iv-grade":3,"hezorime":5,"hezorime ii-grade":5,"hezorime iii-grade":5,"hezorime iv-grade":5,"hiemal tricarboxyl condensate":6,"jaspet":2,"jaspet ii-grade":2,"jaspet iii-grade":2,"jaspet iv-grade":2,"kangite x-grade":1,"kernite":1.2,"kernite ii-grade":1.2,"kernite iii-grade":1.2,"kernite iv-grade":1.2,"krystallos":1000,"kylixium":1.2,"kylixium ii-grade":1.2,"kylixium iii-grade":1.2,"kylixium iv-grade":1.2,"lavish chromite":10,"lavish otavite":10,"lavish sperrylite":10,"lavish vanadinite":10,"loparite":10,"mercoxit":40,"mercoxit ii-grade":40,"mercoxit iii-grade":40,"moissanite x-grade":1,"monazite":10,"mordunium":0.1,"mordunium ii-grade":0.1,"mordunium iii-grade":0.1,"mordunium iv-grade":0.1,"nesosilicate rakovene":0.5,"nocxite":4,"nocxite ii-grade":4,"nocxite iii-grade":4,"nocxite iv-grade":4,"omber":0.6,"omber ii-grade":0.6,"omber iii-grade":0.6,"omber iv-grade":0.6,"otavite":10,"plagioclase":0.35,"plagioclase ii-grade":0.35,"plagioclase iii-grade":0.35,"plagioclase iv-grade":0.35,"pollucite":10,"polycrase x-grade":1,"pyroxeres":0.3,"pyroxeres  0-grade":0.3,"pyroxeres ii-grade":0.3,"pyroxeres iii-grade":0.3,"pyroxeres iv-grade":0.3,"rakovene":16,"rakovene ii-grade":16,"rakovene iii-grade":16,"raspite x-grade":1,"replete carnotite":10,"replete cinnabar":10,"replete pollucite":10,"replete zircon":10,"scheelite":10,"scordite":0.15,"scordite 0-grade":0.15,"scordite ii-grade":0.15,"scordite iii-grade":0.15,"scordite iv-grade":0.15,"shimmering chromite":10,"shimmering otavite":10,"shimmering sperrylite":10,"shimmering vanadinite":10,"shining loparite":10,"shining monazite":10,"shining xenotime":10,"shining ytterbite":10,"sperrylite":10,"spodumain":16,"spodumain ii-grade":16,"spodumain iii-grade":16,"spodumain iv-grade":16,"sylvite":10,"talassonite":16,"talassonite ii-grade":16,"talassonite iii-grade":16,"titanite":10,"twinkling cobaltite":10,"twinkling euxenite":10,"twinkling scheelite":10,"twinkling titanite":10,"tyranite":0.6,"ueganite":5,"ueganite ii-grade":5,"ueganite iii-grade":5,"ueganite iv-grade":5,"vanadinite":10,"veldspar":0.1,"veldspar 0-grade":0.1,"veldspar ii-grade":0.1,"veldspar iii-grade":0.1,"veldspar iv-grade":0.1,"white glaze":1000,"white glaze iv-grade":1000,"xenotime":10,"ytirium":0.6,"ytirium ii-grade":0.6,"ytirium iii-grade":0.6,"ytirium iv-grade":0.6,"ytterbite":10,"zeolites":10,"zircon":10};
 
   // ---------- state ----------
   var token="", who=lsGet(LS_WHO)||"", role="", unlocked=false;
@@ -408,8 +414,8 @@ tr.haulrow{ cursor:pointer; }
     if(lines.length>500){ dmsg("Too many lines ("+lines.length+") — a drop caps at 500. Split the paste."); return; }
     lines.forEach(function(l){ if(l.name.length>80) l.name=l.name.slice(0,80); });
     lines.forEach(function(l){ if(!DATA.yields[l.name.toLowerCase()]) unmNames[l.name]=1; });
-    var v=valueLines(lines, DATA);
-    var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched,
+    var v=valueLines(lines, DATA, ORE_VOL);
+    var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched, m3:v.m3,
       note:(el("notein").value||"").trim().slice(0,200), detail:v.detail };
     if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return; }
     var o={p:payload, state:"sending"};
@@ -434,7 +440,8 @@ tr.haulrow{ cursor:pointer; }
     var my=0;
     (P.entries||[]).forEach(function(e){ if(e.who===who) my+=e.jita88||0; });
     var h="<div><div class='k'>Your tab</div><div class='v good'>"+isk(my)+"</div></div>"
-        +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>";
+        +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>"
+        +"<div><div class='k'>Fleet m&sup3;</div><div class='v'>"+m3fmt(P.fleetM3||0)+"</div></div>";
     if(opKeys()){
       var mpct=Math.round((1-rate())*100);
       h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue)+"</div></div>"
@@ -478,7 +485,7 @@ tr.haulrow{ cursor:pointer; }
     // local pending/unsent first (newest concern on top), then server entries newest-first
     outbox.slice().reverse().forEach(function(o){
       rows.push({pend:true, qi:outbox.indexOf(o), state:o.state, who:o.p.who, at:Date.now(), n:o.p.n,
-        unmatched:o.p.unmatched, units:o.p.units, jita88:Math.round(rate()*o.p.jita)});
+        unmatched:o.p.unmatched, units:o.p.units, m3:o.p.m3, jita88:Math.round(rate()*o.p.jita)});
     });
     (P.entries||[]).slice().reverse().forEach(function(e){ rows.push(e); });
     var anyUnm=false; rows.forEach(function(r){ if((r.unmatched||0)>0) anyUnm=true; });
@@ -488,13 +495,14 @@ tr.haulrow{ cursor:pointer; }
       ? "Not in the price table (count 0 ISK): "+un.slice(0,8).join(", ")+(un.length>8?" …":"")
       : "Some pasted lines are not in the price table and count 0 ISK.";
     if(!rows.length){ box.innerHTML="<div class='empty'>No drops yet.</div>"; return; }
-    var h="<table><thead><tr><th>TIME</th><th>WHO</th><th>LINES</th><th>UNITS</th><th>VALUE</th><th></th></tr></thead><tbody>";
+    var h="<table><thead><tr><th>TIME</th><th>WHO</th><th>LINES</th><th>UNITS</th><th>M&sup3;</th><th>VALUE</th><th></th></tr></thead><tbody>";
     rows.forEach(function(r){
       var badge=(r.unmatched||0)>0 ? "<span class='ub'>"+r.unmatched+" not priced</span>" : "";
       if(r.pend){
         var qdel=r.state==="unsent" ? " <button class='xdel' data-qdel='"+r.qi+"' title='discard this unsent drop'>&times;</button>" : "";
         h+="<tr class='pend'><td class='num'>"+hhmm(r.at)+"</td><td class='who'>"+esc(r.who)+"</td>"
           +"<td>"+(r.n||0)+badge+"</td><td class='num'>"+(r.units||0).toLocaleString()+"</td>"
+          +"<td class='num'>"+m3fmt(r.m3||0)+"</td>"
           +"<td class='num'>"+isk(r.jita88)+"</td><td><span class='pstate'>"
           +(r.state==="sending"?"sending":"unsent — retry")+"</span>"+qdel+"</td></tr>";
         return;
@@ -506,6 +514,7 @@ tr.haulrow{ cursor:pointer; }
         +"<td class='who'>"+esc(r.who)+"</td>"
         +"<td>"+(r.n||0)+badge+"</td>"
         +"<td class='num'>"+(r.units||0).toLocaleString()+"</td>"
+        +"<td class='num'>"+m3fmt(r.m3||0)+"</td>"
         +"<td class='num strong good'>"+isk(r.jita88||0)+"</td>"
         +"<td>"+del+"</td></tr>";
       if(openDetail && openDetail.id===r.id){
@@ -515,7 +524,7 @@ tr.haulrow{ cursor:pointer; }
             +(ln.length>2?" &middot; "+isk(ln[2]||0):"")+"</span></div>"; });
         if(d.note) dl+="<div class='dl'><span>note</span><span>"+esc(d.note)+"</span></div>";
         if(!dl) dl="(no line detail)";
-        h+="<tr class='drow'><td colspan='6'>"+dl+"</td></tr>";
+        h+="<tr class='drow'><td colspan='7'>"+dl+"</td></tr>";
       }
     });
     h+="</tbody></table>";
@@ -692,6 +701,7 @@ tr.haulrow{ cursor:pointer; }
     var t=hauls.totals||{}, bm=hauls.byMember||{}, mine=(bm[who]||{}).payout||0;
     var isOp = t.totalTrueValue!==undefined;
     var h="<div><div class='k'>Total haul</div><div class='v good'>"+isk(t.totalPayout||0)+"</div></div>"
+      +"<div><div class='k'>m&sup3; hauled</div><div class='v'>"+m3fmt(t.totalM3||0)+"</div></div>"
       +"<div><div class='k'>Fleets</div><div class='v'>"+(t.fleetCount||0)+"</div></div>"
       +"<div><div class='k'>Your all-time</div><div class='v'>"+isk(mine)+"</div></div>";
     if(isOp) h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(t.totalTrueValue||0)+"</div></div>"
@@ -700,13 +710,14 @@ tr.haulrow{ cursor:pointer; }
     var rows=hauls.hauls||[];
     if(!rows.length){ el("hwall").innerHTML="<div class='empty'>No fleets finalized yet.</div>"; return; }
     // the wall: newest first (server order); op rows carry true value + margin + the eraser
-    var w="<table><thead><tr><th>DATE</th><th>COMMANDER</th><th>PILOTS</th><th>HAULED</th>"
+    var w="<table><thead><tr><th>DATE</th><th>COMMANDER</th><th>PILOTS</th><th>M&sup3;</th><th>HAULED</th>"
       +(isOp?"<th>TRUE</th><th>MARGIN</th><th></th>":"")+"</tr></thead><tbody>";
     rows.forEach(function(r){
       w+="<tr class='haulrow' data-hid='"+esc(r.id)+"'>"
         +"<td class='num'>"+ymdhm(r.finishedAt)+"</td>"
         +"<td class='who'>"+esc(r.commander||"")+"</td>"
         +"<td class='num'>"+(r.memberCount||0)+"</td>"
+        +"<td class='num'>"+m3fmt(r.m3||0)+"</td>"
         +"<td class='num strong good'>"+isk(r.payout||0)+"</td>";
       if(isOp){
         w+="<td class='num warn'>"+isk(r.trueValue||0)+"</td>"
@@ -732,7 +743,7 @@ tr.haulrow{ cursor:pointer; }
       var h="<div class='ovhdr'><h2>"+ymdhm(hl.finishedAt)+"</h2>"
         +"<span class='k'>commander "+esc(hl.commander||"")+"</span>"
         +"<span class='k'>rate "+Math.round((hl.rate||0.88)*100)+"%</span>"
-        +"<span class='k'>hauled "+isk(hl.payout||0)+"</span>"
+        +"<span class='k'>hauled "+isk(hl.payout||0)+(hl.m3?" &middot; "+m3fmt(hl.m3)+" m&sup3;":"")+"</span>"
         +(isOp?"<span class='k warn'>true "+isk(hl.trueValue||0)+" &middot; margin "+isk(hl.margin||0)+"</span>":"")
         +"<button id='haulx' class='link'>close</button></div>";
       h+="<div class='hsec'>Roster</div>"
