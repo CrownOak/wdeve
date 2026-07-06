@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BONK - FLEET DROP LEDGER</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+/* page-specific chrome; everything structural comes from common.css */
+.howto{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+  padding:11px 15px; margin-bottom:16px; font-size:13.5px; line-height:1.55; color:var(--silver-dim); }
+.howto b{ color:var(--silver); }
+.howto kbd{ font-family:var(--mono); font-size:12px; background:var(--black);
+  border:1px solid var(--line); padding:1px 6px; color:var(--ore); }
+.pgrow{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+.pgrow input{ width:220px; padding:9px 11px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:13px; }
+.pgrow .gobtn{ padding:9px 16px; }
+.fgrid{ display:grid; grid-template-columns:1fr 260px; gap:18px; align-items:start; }
+@media(max-width:820px){ .fgrid{ grid-template-columns:1fr; } }
+.totline{ flex-wrap:wrap; gap:22px; }
+.totline .v{ font-size:18px; }
+.thin{ padding:7px 12px; margin:0 0 12px; font-family:var(--mono); font-size:12px;
+  border:1px solid var(--line-soft); background:var(--steel); color:var(--silver-dim); }
+.thin.warn{ color:var(--amber); border-left:3px solid var(--amber); }
+.thin.bad{ color:var(--red); border-left:3px solid var(--red); }
+.cmd{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; margin:0 0 16px;
+  background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
+  font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+.cmd b{ color:var(--silver); }
+.cmd .gobtn{ padding:7px 14px; font-size:12px; }
+.cmd button:disabled{ opacity:.45; cursor:not-allowed; }
+#oretxt{ min-height:120px; }
+.droprow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 0; }
+.droprow input{ flex:1; min-width:180px; width:auto; padding:9px 11px; background:var(--black);
+  border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:13px; }
+.droprow .gobtn{ padding:10px 20px; }
+.dropbox{ margin-bottom:16px; }
+.dmsg{ font-family:var(--mono); font-size:12px; color:var(--red); min-height:16px; margin-top:6px; }
+.ub{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--amber); border:1px solid rgba(233,196,106,.4); padding:1px 5px; margin-left:6px; white-space:nowrap; }
+tr.pend td{ color:var(--muted); font-style:italic; }
+tr.pend .pstate{ color:var(--amber); font-style:normal; font-family:var(--mono); font-size:11px; }
+tr.feedrow{ cursor:pointer; }
+tr.drow td{ background:var(--black); text-align:left; font-family:var(--mono); font-size:12px;
+  color:var(--silver-dim); padding:12px 16px; cursor:default; }
+tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:460px; padding:2px 0; }
+.xdel{ background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+  font-family:var(--mono); font-size:11px; padding:2px 8px; }
+.xdel:hover{ border-color:var(--red); color:var(--red); }
+.rhead{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ore); margin:0 0 8px; }
+.rrow{ display:flex; align-items:center; gap:8px; padding:7px 10px; margin-bottom:5px; font-size:13px;
+  background:var(--steel); border:1px solid var(--line-soft); }
+.rrow.me{ border-left:3px solid var(--ore); }
+.dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); flex:none; }
+.dot.on{ background:var(--ore); box-shadow:0 0 6px rgba(70,255,94,.5); }
+.rname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--silver); }
+.rtab{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+.glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
+.takelead{ margin-top:8px; width:100%; }
+.ctxmenu{ position:fixed; z-index:200; background:var(--black); border:1px solid var(--ore); min-width:180px; display:none; }
+.ctxmenu .ci{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--silver);
+  font-family:var(--mono); font-size:12px; padding:9px 13px; cursor:pointer; }
+.ctxmenu .ci:hover{ background:var(--steel-2); color:var(--ore); }
+.ctxmenu .ci:disabled{ color:var(--muted); cursor:not-allowed; }
+.ctxmenu .ci:disabled:hover{ background:none; color:var(--muted); }
+.overlay{ position:fixed; inset:0; z-index:120; background:rgba(7,8,9,.93); overflow:auto; display:none; }
+.ovin{ max-width:880px; margin:44px auto; background:var(--steel); border:1px solid var(--line);
+  padding:26px 28px 30px; position:relative; }
+.ovin::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+.ovhdr{ display:flex; flex-wrap:wrap; align-items:baseline; gap:14px; margin-bottom:16px; }
+.ovhdr h2{ margin:0; font-family:var(--display); font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; font-size:16px; color:var(--silver); }
+.ovhdr .k{ font-family:var(--mono); font-size:12px; color:var(--muted); }
+.ovhdr .link{ margin-left:auto; }
+.ovbtns{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+.ovbtns .gobtn{ padding:10px 18px; font-size:13px; }
+.ovbtns button:disabled{ opacity:.45; cursor:not-allowed; }
+.payamt{ width:110px; padding:5px 8px; text-align:right; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12.5px; }
+.paidok{ font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em;
+  padding:2px 8px; border:1px solid currentColor; }
+.paidok.yes{ color:var(--ore); } .paidok.no{ color:var(--muted); }
+#toast{ position:fixed; left:50%; bottom:28px; transform:translateX(-50%); z-index:300; display:none;
+  background:var(--ore); color:#04140a; font-family:var(--mono); font-size:12px; font-weight:700;
+  padding:9px 16px; clip-path:polygon(0 0,100% 0,97% 100%,0 100%); }
+.hsec{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ore); margin:20px 0 8px; }
+tr.haulrow{ cursor:pointer; }
+#dropbtn:disabled{ opacity:.4; cursor:not-allowed; }
+@media(max-width:620px){
+  .ovin{ margin:16px 10px; padding:18px 14px 22px; }
+  .totline{ gap:16px; }
+  .totline .v{ font-size:16px; }
+  td,th{ padding:7px 6px; font-size:12.5px; }
+  .payamt{ width:84px; }
+}
+</style></head>
+<body>
+  <header>
+    <h1>BIG ROCK ENERGY [BONK] &middot; FLEET DROP LEDGER</h1>
+    <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
+  </header>
+  <div class="wrap">
+    <div class="howto"><b>How it works:</b> enter the fleet password and say who you are. During the op,
+    select what you jettison in your inventory (<kbd>Ctrl</kbd>+<kbd>A</kbd> or <kbd>Ctrl</kbd>+click),
+    copy with <kbd>Ctrl</kbd>+<kbd>C</kbd>, and paste it here. The ledger values it at Jita and tracks
+    your tab live, next to everyone else's. When the op wraps, fleet command runs the payout at the
+    buyback rate. The ledger saw you drop it, so no arguing at the end.</div>
+
+    <!-- gate: refine Project Tracker idiom. Password goes out as X-Token; it never lives in this file. -->
+    <div id="gate" class="howto" style="display:none"><b>Fleet Drop Ledger.</b> The round ledger, roster and
+    haul history live on the fleet worker, gated by the fleet password so they are never exposed publicly.
+    Enter the password to join the op.
+      <div class="pgrow"><input id="fpw" type="password" placeholder="fleet password" autocomplete="current-password">
+      <button id="funlock" class="gobtn">Unlock</button><span id="gerr" class="err"></span></div></div>
+
+    <div id="app" style="display:none">
+      <div id="offbar" class="thin warn" style="display:none">offline, showing the last copy</div>
+
+      <!-- inline name prompt: shown once when there is no cached name -->
+      <div id="namebox" class="howto" style="display:none"><b>Who are you?</b> Your in-game name, so the tab
+      lands on the right pilot.
+        <div class="pgrow"><input id="whoin" list="whonames" maxlength="40" placeholder="pilot name">
+        <datalist id="whonames"></datalist>
+        <button id="whosave" class="gobtn">That's me</button><span id="werr" class="err"></span></div></div>
+
+      <div class="toggle">
+        <button id="tFleet" class="on">Fleet</button>
+        <button id="tHauls">Haul Log</button>
+        <button id="flock" class="link" style="margin-left:auto">lock</button>
+      </div>
+
+      <div id="fleetTab">
+        <div class="fgrid">
+          <div>
+            <div id="tiles" class="totline"></div>
+            <div id="cmdstrip" class="cmd" style="display:none"></div>
+            <div id="pxbar" class="thin bad" style="display:none"></div>
+            <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing &mdash; drops are frozen.</div>
+            <div id="dropbox" class="dropbox">
+              <textarea id="oretxt" placeholder="Paste what you dropped, one per line:&#10;Compressed Veldspar	3,000&#10;..."></textarea>
+              <div class="droprow">
+                <input id="notein" maxlength="200" placeholder="note (optional)">
+                <button id="dropbtn" class="gobtn">Drop</button>
+              </div>
+              <div id="dmsg" class="dmsg"></div>
+            </div>
+            <div id="unmbar" class="thin warn" style="display:none">Some pasted lines are not in the price table and count 0 ISK.</div>
+            <div id="feed"></div>
+          </div>
+          <div>
+            <div class="rhead">Fleet</div>
+            <div id="roster"></div>
+            <div id="takeleadwrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="haulTab" style="display:none">
+        <div class="howto"><b>The Haul Log.</b> Every finalized op, stamped forever: when, who ran it,
+        who flew, what it paid. Click a row for the full roster and the ore breakdown. The all-time
+        numbers up top are the corp's mining ledger of record.</div>
+        <div id="htiles" class="totline"></div>
+        <div id="hwall"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ctxmenu" class="ctxmenu"></div>
+  <div id="payover" class="overlay"><div class="ovin" id="payin"></div></div>
+  <div id="haulover" class="overlay"><div class="ovin" id="haulin"></div></div>
+  <div id="toast"></div>
+
+  <footer>The Fleet Drop Ledger is the corp's shared mining-op tab: every pilot pastes what they jettison,
+  the ledger values it and keeps the running score, and fleet command settles up at the end. Prices come
+  straight from the <b>refinery's live table</b> (Jita sell, refined at 70% efficiency); the payout is the
+  corp buyback at <b>88% of the refined Jita value</b>. Finalized ops land in the Haul Log forever.</footer>
+
+<script>
+/* FLEET DROP LEDGER page logic (spec v3.1, AMEND-2/4/5/6 govern).
+   Shape of the thing:
+   - One Cloudflare worker (bonk-fleet) fronts a single Durable Object holding the live round,
+     the roster presence, payouts and the archived haul history. This page is a dumb terminal:
+     it POSTs /sync {who} every 5s while visible, and re-renders everything from that payload.
+     Render functions are idempotent; there is no client-held truth beyond the unsent-drop queue.
+   - Roles come ONLY from the server: the X-Token password maps to role "member" or "op" and the
+     op-only figures (trueValue, margin, payouts, entriesTrue) simply do not exist in member
+     payloads. We render op chrome only when those keys are present; we never compute them here.
+   - Prices (AMEND-2): fetched live by scraping refine's own baked "var DATA = {...}" script
+     blob, cached in localStorage. If both the fetch and the cache fail, dropping is disabled
+     with a visible error while the log and roster keep working.
+   - Valuation (AMEND-6): valueLines() between the VALUE-FN-START/END markers reproduces refine's
+     calcFwd math exactly (batch floor, whole-paste mineral accumulation, floor at 0.70 eff,
+     Jita sell). Pure function, no DOM, testable.
+   - Offline: last good /sync payload is cached (bonk_fleet_cache) and rendered with a banner;
+     failed drops queue in bonk_fleet_queue marked "unsent" and retry on every sync tick.
+   - No password value appears anywhere in this file. Ever. */
+(function(){
+  var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
+  var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
+      LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue";
+
+  // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+  function isk(v){ v=v||0; var a=Math.abs(v);
+    if(a>=1e9) return (v/1e9).toFixed(2)+"B"; if(a>=1e6) return (v/1e6).toFixed(1)+"M";
+    if(a>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
+  function m3fmt(v){ v=v||0; if(v>=1e6) return (v/1e6).toFixed(2)+"M"; if(v>=1e3) return (v/1e3).toFixed(1)+"k"; return String(Math.round(v)); }
+  function parse(t){ var out=[];
+    t.split(/\n/).forEach(function(ln){ ln=ln.replace(/\s+$/,"");
+      if(!ln.trim()) return;
+      var m=ln.match(/^(.*?)[\t ]+([\d.,\s]+)$/);
+      if(!m) return;
+      var q=parseInt(m[2].replace(/[,\s]/g,""),10);
+      if(q>0) out.push({name:m[1].trim(), qty:q}); });
+    return out; }
+  function pad2(n){ return ("0"+n).slice(-2); }
+  function hhmm(ms){ var d=new Date(ms); return pad2(d.getHours())+":"+pad2(d.getMinutes()); }
+  function ymdhm(ms){ var d=new Date(ms);
+    return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())+" "+hhmm(ms); }
+  function ago(ms){ var s=Math.floor((Date.now()-ms)/1000); if(s<0) s=0;
+    if(s<90) return s+"s"; var m=Math.floor(s/60); if(m<90) return m+"m";
+    var h=Math.floor(m/60); if(h<48) return h+"h"; return Math.floor(h/24)+"d"; }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function el(id){ return document.getElementById(id); }
+  function toast(m){ var t=el("toast"); t.textContent=m; t.style.display="block";
+    setTimeout(function(){ t.style.display="none"; },3500); }
+
+  // ---------- valuation (AMEND-6): refine calcFwd order, exactly, as a pure function ----------
+  /*VALUE-FN-START*/
+  var EFF=0.70; // AMEND-3: refine's shipped default efficiency; fixed, not UI-exposed
+  function valueLines(lines, DATA){
+    // Pass 1: per line, batches = floor(qty/y.p); accumulate minerals across the WHOLE paste.
+    // Each detail line also gets its own solo value (same math run on that line alone) so the
+    // worker can build per-ore haul summaries; unmatched lines carry 0.
+    var got={}, n=0, units=0, unmatched=0, detail=[];
+    lines.forEach(function(it){
+      var y=DATA.yields[it.name.toLowerCase()];
+      if(!y){ unmatched++; detail.push([it.name, it.qty, 0]); return; }
+      n++; units+=it.qty;
+      var batches=Math.floor(it.qty / y.p), solo=0, mid;
+      for(mid in y.m){ got[mid]=(got[mid]||0)+batches*y.m[mid]; }
+      for(mid in y.m){ var samt=Math.floor(batches*y.m[mid]*EFF);
+        solo+=samt*(DATA.prices[mid] ? DATA.prices[mid].j||0 : 0); }
+      detail.push([it.name, it.qty, Math.round(solo)]);
+    });
+    // Pass 2: per mineral, floor at efficiency, price at Jita sell.
+    var jita=0;
+    for(var mid2 in got){ var amt=Math.floor(got[mid2]*EFF);
+      jita+=amt*(DATA.prices[mid2] ? DATA.prices[mid2].j||0 : 0); }
+    return { jita:Math.round(jita), units:units, n:n, unmatched:unmatched, detail:detail };
+  }
+  /*VALUE-FN-END*/
+
+  // ---------- state ----------
+  var token="", who=lsGet(LS_WHO)||"", role="", unlocked=false;
+  var P=null;                 // last /sync payload (server truth)
+  var DATA=null, pricesAt=0, pxTry=0;  // refine price blob + when we got it + last fetch attempt
+  var unmNames={};            // ore names we pasted that the price table doesn't know (round banner)
+  var outbox=[];              // [{p:dropPayload, state:"sending"|"unsent"}]
+  var openDetail=null;        // {id, entry} for the expanded feed row
+  var detailCache={};
+  var tab="fleet", hauls=null, haulsAt=0;
+
+  function api(method,path,body){
+    return fetch(WORKER+path,{ method:method,
+      headers:{ "X-Token":token, "Content-Type":"application/json" },
+      body: body?JSON.stringify(body):undefined })
+      .then(function(r){ if(r.status===401) throw "unauthorized"; return r.json(); });
+  }
+
+  // ---------- prices (AMEND-2): scrape refine's live DATA blob, cache, degrade loudly ----------
+  function pxNote(msg,bad){ var b=el("pxbar");
+    if(!msg){ b.style.display="none"; return; }
+    b.className="thin "+(bad?"bad":"warn"); b.textContent=msg; b.style.display=""; }
+  function pricesOk(){ el("dropbtn").disabled=false; }
+  function pricesDead(){ el("dropbtn").disabled=true;
+    pxNote("Cannot reach price data — drops are disabled until the refinery answers. Log and roster still work.",true); }
+  function loadPrices(){
+    pxTry=Date.now();
+    fetch("/refine/").then(function(r){ if(!r.ok) throw "http"; return r.text(); }).then(function(t){
+      // built with new RegExp so no raw script-tag sequence exists in this file's source
+      // (the HTML parser would end our own script element at the first one it saw)
+      var m=t.match(new RegExp("<scr"+"ipt>var DATA = (\\{[\\s\\S]*?\\});</scr"+"ipt>"));
+      if(!m) throw "no DATA";
+      DATA=JSON.parse(m[1]); pricesAt=Date.now();
+      lsSet(LS_PRICES, JSON.stringify({at:pricesAt, data:DATA}));
+      pxNote(""); pricesOk();
+    }).catch(function(){
+      var c=null; try{ c=JSON.parse(lsGet(LS_PRICES)||"null"); }catch(e){}
+      if(c && c.data){ DATA=c.data; pricesAt=c.at||0;
+        pxNote("prices from "+ago(pricesAt)+" ago (refinery unreachable, using the cached table)",false); pricesOk(); }
+      else { DATA=null; pricesDead(); }
+    });
+  }
+
+  // ---------- gate ----------
+  function showGate(s){ el("gate").style.display=s?"":"none"; el("app").style.display=s?"none":""; }
+  function gerr(m){ el("gerr").textContent=m||""; }
+  function unlock(pw){ token=pw; gerr("");
+    api("POST","/sync",{who:who}).then(function(d){
+      if(!(d&&d.ok)) throw "bad";
+      unlocked=true; role=d.role||""; lsSet(LS_TOK,pw);
+      P=d; lsSet(LS_CACHE, JSON.stringify(d));
+      showGate(false); offline(false); renderAll();
+      if(!who) showNamebox(true);
+      bump(); schedule();
+    }).catch(function(err){
+      if(err==="unauthorized"){ token=""; lsDel(LS_TOK); gerr("Wrong password."); showGate(true); }
+      else{
+        var c=null; try{ c=JSON.parse(lsGet(LS_CACHE)||"null"); }catch(e){}
+        if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderAll(); bump(); schedule(); }
+        else gerr("Cannot reach the fleet store, try again.");
+      }
+    });
+  }
+  function lock(){ unlocked=false; token=""; role=""; P=null; lsDel(LS_TOK);
+    var p=el("fpw"); if(p) p.value=""; gerr(""); showGate(true); }
+  el("funlock").onclick=function(){ var pw=(el("fpw").value||"").trim(); if(pw) unlock(pw); };
+  el("fpw").addEventListener("keydown",function(e){ if(e.key==="Enter") el("funlock").click(); });
+  el("flock").onclick=lock;
+
+  // ---------- name prompt ----------
+  function showNamebox(s){ el("namebox").style.display=s?"":"none";
+    if(s && P && P.members){ el("whonames").innerHTML=P.members.map(function(m){
+      return "<option value=\""+esc(m.who)+"\">"; }).join(""); } }
+  el("whosave").onclick=function(){ var w=(el("whoin").value||"").trim().slice(0,40);
+    if(!w){ el("werr").textContent="A name, any name."; return; }
+    // same-name collision (spec edge case): accepted, but say so — tabs merge onto one row
+    var clash=false; if(P&&P.members) P.members.forEach(function(m){ if(m.who===w && w!==who) clash=true; });
+    who=w; lsSet(LS_WHO,w); el("werr").textContent=""; showNamebox(false);
+    if(clash) toast("That name is already in the round — your drops merge onto the same tab.");
+    bump(); tick(); };
+  el("whoin").addEventListener("keydown",function(e){ if(e.key==="Enter") el("whosave").click(); });
+
+  // ---------- offline banner ----------
+  function offline(s){ el("offbar").style.display=s?"":"none"; }
+
+  // ---------- sync loop (AMEND-4: 5s while visible; presence piggybacks on the poll).
+  // Idle backoff: an EVE second-monitor tab left open all day would otherwise pin the
+  // worker's Durable Object at full tilt for nothing. After 10min with no round change
+  // and no local action, the poll stretches to 30s; any activity snaps it back to 5s.
+  // While the tab is hidden the chain stops entirely and resumes on visibilitychange.
+  var lastActive=Date.now(), pollTimer=null, lastSig="";
+  function bump(){ lastActive=Date.now(); }
+  function sigOf(d){ var es=d.entries||[];
+    return es.length+":"+(es.length?es[es.length-1].id:"")+":"+(d.finished?1:0)+":"+(d.lead||"")+":"+((d.members||[]).length); }
+  function schedule(){ if(!unlocked) return; clearTimeout(pollTimer);
+    pollTimer=setTimeout(tick, Date.now()-lastActive>600000 ? 30000 : 5000); }
+  function tick(){
+    if(!unlocked || document.visibilityState!=="visible") return; // chain resumes on visibilitychange
+    flushOutbox();
+    // prices: recover if we never got them, and track refine's hourly rebake on long ops
+    if((!DATA || Date.now()-pricesAt>3600000) && Date.now()-pxTry>60000) loadPrices();
+    api("POST","/sync",{who:who}).then(function(d){
+      if(d&&d.ok){ P=d; role=d.role||role; lsSet(LS_CACHE, JSON.stringify(d));
+        var sg=sigOf(d); if(sg!==lastSig){ lastSig=sg; bump(); }
+        offline(false); renderAll();
+        if(tab==="hauls" && Date.now()-haulsAt>30000) loadHauls(); }
+      schedule();
+    }).catch(function(err){
+      if(err==="unauthorized"){ lock(); } else { offline(true); schedule(); }
+    });
+  }
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible"){ bump(); tick(); } });
+
+  // ---------- unsent drop queue ----------
+  function loadOutbox(){ try{ (JSON.parse(lsGet(LS_QUEUE)||"[]")||[]).forEach(function(p){
+    outbox.push({p:p, state:"unsent"}); }); }catch(e){} }
+  function saveOutbox(){ lsSet(LS_QUEUE, JSON.stringify(
+    outbox.filter(function(o){ return o.state==="unsent"; }).map(function(o){ return o.p; }))); }
+  function flushOutbox(){ for(var i=0;i<outbox.length;i++){
+    if(outbox[i].state==="unsent") sendDrop(outbox[i]); } }
+  function dmsg(m){ el("dmsg").textContent=m||""; }
+  // Only these rejections are worth retrying: frozen lifts on /reopen, full lifts on
+  // /reset. Any other 4xx is permanent — retrying it forever would wedge the queue
+  // behind a poison drop, so it gets discarded loudly instead.
+  var RETRY_ERRS={ "frozen":1, "round full":1 };
+  function sendDrop(o){
+    o.state="sending"; renderFeed();
+    api("POST","/drop",o.p).then(function(d){
+      if(d&&d.ok){ var ix=outbox.indexOf(o); if(ix>=0) outbox.splice(ix,1); saveOutbox(); tick(); }
+      else if(d&&d.error&&!RETRY_ERRS[d.error]){
+        var ix2=outbox.indexOf(o); if(ix2>=0) outbox.splice(ix2,1); saveOutbox();
+        dmsg("Drop rejected: "+String(d.error)); toast("Drop rejected: "+String(d.error));
+        renderFeed(); }
+      else{ o.state="unsent"; saveOutbox();
+        if(d&&d.error==="frozen") dmsg("Fleet is finishing — drops are frozen.");
+        else if(d&&d.error==="round full") dmsg("Round full — fleet command has to reset for the next op.");
+        renderFeed(); }
+    }).catch(function(){ o.state="unsent"; saveOutbox(); renderFeed(); });
+  }
+  el("dropbtn").onclick=function(){
+    dmsg(""); bump();
+    if(!DATA){ dmsg("No price data — cannot value the drop."); return; }
+    if(P && P.finished){ dmsg("Fleet is finishing — drops are frozen."); return; }
+    if(!who){ showNamebox(true); el("whoin").focus(); return; }
+    var lines=parse(el("oretxt").value);
+    if(!lines.length){ dmsg("Nothing parsed — paste ore from your inventory, one per line."); return; }
+    // pre-flight the worker's own caps so a bad paste fails HERE, not in the queue
+    if(lines.length>500){ dmsg("Too many lines ("+lines.length+") — a drop caps at 500. Split the paste."); return; }
+    lines.forEach(function(l){ if(l.name.length>80) l.name=l.name.slice(0,80); });
+    lines.forEach(function(l){ if(!DATA.yields[l.name.toLowerCase()]) unmNames[l.name]=1; });
+    var v=valueLines(lines, DATA);
+    var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched,
+      note:(el("notein").value||"").trim().slice(0,200), detail:v.detail };
+    if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return; }
+    var o={p:payload, state:"sending"};
+    outbox.push(o);
+    el("oretxt").value=""; el("notein").value="";
+    sendDrop(o);
+  };
+  el("oretxt").addEventListener("keydown",function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key==="Enter") el("dropbtn").click(); });
+
+  // ---------- render: everything below reads only from P (idempotent) ----------
+  function rate(){ return (P && P.rate) || 0.88; }
+  function opKeys(){ return !!(P && P.trueValue!==undefined); }
+  function renderAll(){ if(!P) return;
+    renderTiles(); renderCmd(); renderFrozen(); renderFeed(); renderRoster();
+    if(payoverOpen) maybeRenderPayout(); }
+
+  function renderTiles(){
+    // "Your tab" is the sum of your entries' jita88 (already rate-scaled server-side).
+    // The two op tiles render ONLY when the server sent the op-only keys; members never
+    // get them and we never back-compute them here (DR-FLEET-4).
+    var my=0;
+    (P.entries||[]).forEach(function(e){ if(e.who===who) my+=e.jita88||0; });
+    var h="<div><div class='k'>Your tab</div><div class='v good'>"+isk(my)+"</div></div>"
+        +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>";
+    if(opKeys()){
+      var mpct=Math.round((1-rate())*100);
+      h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue)+"</div></div>"
+        +"<div><div class='k'>Margin ("+mpct+"%)</div><div class='v warn'>"+isk(P.margin||0)+"</div></div>";
+    }
+    el("tiles").innerHTML=h;
+  }
+
+  function renderCmd(){
+    var box=el("cmdstrip");
+    if(!opKeys()){ box.style.display="none"; return; }
+    box.style.display="";
+    var isLead = P.lead && P.lead===who;
+    var h="Lead: <b>"+(P.lead?esc(P.lead):"nobody")+"</b>"
+        +" &middot; buyback "+Math.round(rate()*100)+"%"
+        +" &middot; entries "+((P.entries||[]).length)+"/500"
+        +" <button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead can finish'")+">Finish Fleet</button>";
+    if(P.finished) h+=" <button id='cPayout' class='gobtn'>Payout screen</button>";
+    h+=" <button id='cReset' class='gobtn'>Reset</button>";
+    box.innerHTML=h;
+    var f=el("cFinish"); if(f && isLead) f.onclick=function(){
+      if(!confirm("Finish the fleet? Drops freeze and the payout screen opens.")) return;
+      api("POST","/finish",{by:who}).then(function(d){ if(d&&d.ok){ tick(); openPayout(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("finish failed, still offline?"); }); };
+    var pb=el("cPayout"); if(pb) pb.onclick=openPayout;
+    el("cReset").onclick=function(){
+      if(!confirm("Discard this round with NO haul log entry?")) return;
+      api("POST","/reset",{by:who}).then(function(d){ if(d&&d.ok){ toast("Round reset. Fresh ledger."); tick(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("reset failed, still offline?"); }); };
+  }
+
+  function renderFrozen(){
+    var frozen=!!P.finished;
+    el("frozenbar").style.display=frozen?"":"none";
+    el("dropbox").style.display=frozen?"none":"";
+  }
+
+  function renderFeed(){
+    if(!P) return;              // pre-unlock safety: nothing to render against yet
+    var box=el("feed"), rows=[];
+    // local pending/unsent first (newest concern on top), then server entries newest-first
+    outbox.slice().reverse().forEach(function(o){
+      rows.push({pend:true, qi:outbox.indexOf(o), state:o.state, who:o.p.who, at:Date.now(), n:o.p.n,
+        unmatched:o.p.unmatched, units:o.p.units, jita88:Math.round(rate()*o.p.jita)});
+    });
+    (P.entries||[]).slice().reverse().forEach(function(e){ rows.push(e); });
+    var anyUnm=false; rows.forEach(function(r){ if((r.unmatched||0)>0) anyUnm=true; });
+    var ub=el("unmbar"), un=Object.keys(unmNames);
+    ub.style.display=anyUnm?"":"none";
+    if(anyUnm) ub.textContent = un.length
+      ? "Not in the price table (count 0 ISK): "+un.slice(0,8).join(", ")+(un.length>8?" …":"")
+      : "Some pasted lines are not in the price table and count 0 ISK.";
+    if(!rows.length){ box.innerHTML="<div class='empty'>No drops yet.</div>"; return; }
+    var h="<table><thead><tr><th>TIME</th><th>WHO</th><th>LINES</th><th>UNITS</th><th>VALUE</th><th></th></tr></thead><tbody>";
+    rows.forEach(function(r){
+      var badge=(r.unmatched||0)>0 ? "<span class='ub'>"+r.unmatched+" not priced</span>" : "";
+      if(r.pend){
+        var qdel=r.state==="unsent" ? " <button class='xdel' data-qdel='"+r.qi+"' title='discard this unsent drop'>&times;</button>" : "";
+        h+="<tr class='pend'><td class='num'>"+hhmm(r.at)+"</td><td class='who'>"+esc(r.who)+"</td>"
+          +"<td>"+(r.n||0)+badge+"</td><td class='num'>"+(r.units||0).toLocaleString()+"</td>"
+          +"<td class='num'>"+isk(r.jita88)+"</td><td><span class='pstate'>"
+          +(r.state==="sending"?"sending":"unsent — retry")+"</span>"+qdel+"</td></tr>";
+        return;
+      }
+      // own rows get the delete x (UI-side only; the worker trusts any valid id, corp trust)
+      var del=(r.who===who) ? "<button class='xdel' data-del='"+esc(r.id)+"'>&times;</button>" : "";
+      h+="<tr class='feedrow' data-id='"+esc(r.id)+"'>"
+        +"<td class='num'>"+hhmm(r.at)+"</td>"
+        +"<td class='who'>"+esc(r.who)+"</td>"
+        +"<td>"+(r.n||0)+badge+"</td>"
+        +"<td class='num'>"+(r.units||0).toLocaleString()+"</td>"
+        +"<td class='num strong good'>"+isk(r.jita88||0)+"</td>"
+        +"<td>"+del+"</td></tr>";
+      if(openDetail && openDetail.id===r.id){
+        var d=openDetail.entry, dl="";
+        (d.detail||[]).forEach(function(ln){
+          dl+="<div class='dl'><span>"+esc(ln[0])+"</span><span>"+Number(ln[1]||0).toLocaleString()
+            +(ln.length>2?" &middot; "+isk(ln[2]||0):"")+"</span></div>"; });
+        if(d.note) dl+="<div class='dl'><span>note</span><span>"+esc(d.note)+"</span></div>";
+        if(!dl) dl="(no line detail)";
+        h+="<tr class='drow'><td colspan='6'>"+dl+"</td></tr>";
+      }
+    });
+    h+="</tbody></table>";
+    box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-del]"), function(b){
+      b.onclick=function(ev){ ev.stopPropagation();
+        if(!confirm("Delete this drop from the ledger?")) return;
+        api("POST","/delete",{id:b.getAttribute("data-del")}).then(function(){ tick(); })
+          .catch(function(){ toast("delete failed, still offline?"); }); }; });
+    Array.prototype.forEach.call(box.querySelectorAll("[data-qdel]"), function(b){
+      b.onclick=function(ev){ ev.stopPropagation();
+        var qi=parseInt(b.getAttribute("data-qdel"),10);
+        if(qi>=0 && qi<outbox.length && outbox[qi].state==="unsent"){
+          outbox.splice(qi,1); saveOutbox(); renderFeed(); } }; });
+    Array.prototype.forEach.call(box.querySelectorAll("tr.feedrow"), function(tr){
+      tr.onclick=function(){ var id=tr.getAttribute("data-id");
+        if(openDetail && openDetail.id===id){ openDetail=null; renderFeed(); return; }
+        if(detailCache[id]){ openDetail={id:id, entry:detailCache[id]}; renderFeed(); return; }
+        api("GET","/detail?id="+encodeURIComponent(id)).then(function(d){
+          if(d&&d.ok&&d.entry){ detailCache[id]=d.entry; openDetail={id:id, entry:d.entry}; renderFeed(); }
+        }).catch(function(){}); }; });
+  }
+
+  function renderRoster(){
+    var box=el("roster"), ms=(P.members||[]).slice();
+    ms.sort(function(a,b){
+      var la=a.lead?1:0, lb=b.lead?1:0; if(la!==lb) return lb-la;
+      var oa=a.role==="op"?1:0, ob=b.role==="op"?1:0; if(oa!==ob) return ob-oa;
+      return (b.tab||0)-(a.tab||0); });
+    if(!ms.length){ box.innerHTML="<div class='empty' style='padding:18px'>Nobody here yet.</div>"; }
+    else{
+      var h="";
+      ms.forEach(function(m,i){
+        var g = m.lead ? "<span class='glyph crown' title='fleet lead'>♛</span>"
+              : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
+        h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
+          +"<span class='dot"+(m.online?" on":"")+"'></span>"+g
+          +"<span class='rname'>"+esc(m.who)+"</span>"
+          +"<span class='rtab'>"+isk(m.tab||0)+"</span></div>";
+      });
+      box.innerHTML=h;
+      if(role==="op"){
+        Array.prototype.forEach.call(box.querySelectorAll(".rrow"), function(row){
+          row.oncontextmenu=function(ev){ ev.preventDefault();
+            showCtx(ev.clientX, ev.clientY, ms[parseInt(row.getAttribute("data-ri"),10)]); }; });
+      }
+    }
+    // Take-lead: op with no lead, or the lead's own roster row shows offline
+    var tl="", leadRow=null;
+    ms.forEach(function(m){ if(m.lead || (P.lead && m.who===P.lead)) leadRow=m; });
+    if(role==="op" && (!P.lead || !leadRow || !leadRow.online)){
+      tl="<button id='takelead' class='gobtn takelead'>Take lead</button>";
+    }
+    el("takeleadwrap").innerHTML=tl;
+    var tb=el("takelead"); if(tb) tb.onclick=function(){
+      if(!who){ showNamebox(true); return; }
+      api("POST","/set-lead",{target:who}).then(function(d){
+        if(d&&d.ok){ toast("You hold the lead now."); tick(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
+  }
+
+  // ---------- roster context menu (op only) ----------
+  function showCtx(x,y,m){
+    var c=el("ctxmenu");
+    var ok = !!(m && m.online && m.role==="op");
+    c.innerHTML="<button class='ci'"+(ok?"":" disabled title='must be signed in as fleet command (operator password) to hold lead'")
+      +">Make fleet lead</button>";
+    c.style.display="block"; c.style.left=Math.min(x, window.innerWidth-200)+"px"; c.style.top=y+"px";
+    var b=c.querySelector(".ci");
+    if(ok) b.onclick=function(){ hideCtx();
+      api("POST","/set-lead",{target:m.who}).then(function(d){
+        if(d&&d.ok){ toast(m.who+" holds the lead now."); tick(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
+  }
+  function hideCtx(){ el("ctxmenu").style.display="none"; }
+  document.addEventListener("click", hideCtx);
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){ hideCtx(); closePayout(); closeHaulOver(); } });
+  // clicking the dark backdrop (not the card) closes an overlay, same as Escape
+  el("payover").addEventListener("click",function(e){ if(e.target===el("payover")) closePayout(); });
+  el("haulover").addEventListener("click",function(e){ if(e.target===el("haulover")) closeHaulOver(); });
+
+  // ---------- payout overlay (op only; server data, fixed 88% rate, no what-ifs) ----------
+  var payoverOpen=false;
+  function openPayout(){ payoverOpen=true; renderPayout(); el("payover").style.display="block"; }
+  function closePayout(){ payoverOpen=false; el("payover").style.display="none"; }
+  function maybeRenderPayout(){
+    // don't nuke an amount field somebody is typing in mid-sync
+    var a=document.activeElement;
+    if(a && el("payover").contains(a) && a.tagName==="INPUT") return;
+    renderPayout();
+  }
+  function renderPayout(){
+    if(!P || !opKeys()){ closePayout(); return; }
+    // Non-lead operators see the numbers but the controls are lead-only,
+    // same idiom as the Finish button (worker trusts any op; the UI keeps
+    // one pair of hands on the payout so two ops don't double-log).
+    var isLead=!!(P.lead && P.lead===who);
+    var r=rate(), pays=P.payouts||{}, whoJita={};
+    (P.entries||[]).forEach(function(e){
+      whoJita[e.who]=(whoJita[e.who]||0)+((P.entriesTrue||{})[e.id]||0); });
+    var names={};
+    (P.members||[]).forEach(function(m){ if((m.tab||0)>0) names[m.who]=1; });
+    Object.keys(pays).forEach(function(w){ names[w]=1; });
+    Object.keys(whoJita).forEach(function(w){ if(whoJita[w]>0) names[w]=1; });
+    var list=Object.keys(names).map(function(w){
+      var j=whoJita[w]||0; return {who:w, jita:j, payout:Math.round(r*j)}; });
+    list.sort(function(a,b){ return b.payout-a.payout; });
+    var totPay=0, allPaid=list.length>0;
+    list.forEach(function(x){ var pd=pays[x.who];
+      totPay+= pd&&pd.paid ? Math.round(pd.amount||0) : x.payout;
+      if(!(pd&&pd.paid)) allPaid=false; });
+    var h="<div class='ovhdr'><h2>Payout</h2>"
+      +"<span class='k'>rate "+Math.round(r*100)+"% (fixed server-side)</span>"
+      +"<span class='k'>lead "+esc(P.lead||"nobody")+"</span>"
+      +(isLead?"":"<span class='k'>read-only &mdash; the lead runs the payout</span>")
+      +"<button id='payx' class='link'>close</button></div>";
+    if(!list.length) h+="<div class='empty'>No valued ore dropped yet. Nothing to pay.</div>";
+    else{
+      h+="<table><thead><tr><th>WHO</th><th>ORE VALUE (JITA)</th><th>PAYOUT</th>"
+        +"<th>PAID</th><th>AMOUNT</th><th>LOGGED</th></tr></thead><tbody>";
+      list.forEach(function(x,i){ var pd=pays[x.who];
+        var amt = pd && pd.amount!=null ? Math.round(pd.amount) : x.payout;
+        h+="<tr><td class='who'>"+esc(x.who)+"</td>"
+          +"<td class='num'>"+isk(x.jita)+"</td>"
+          +"<td class='num strong good'>"+isk(x.payout)+"</td>"
+          +"<td><input type='checkbox' class='paychk' data-pi='"+i+"'"+(pd&&pd.paid?" checked":"")+(isLead?"":" disabled")+"></td>"
+          +"<td class='num'><input class='payamt' id='amt_"+i+"' value='"+amt+"'"+(isLead?"":" disabled")+"></td>"
+          +"<td class='num'>"+(pd&&pd.at?hhmm(pd.at):"")+"</td></tr>"; });
+      h+="</tbody></table>";
+      h+="<div class='totline' style='margin-top:14px'>"
+        +"<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue||0)+"</div></div>"
+        +"<div><div class='k'>Total payout</div><div class='v good'>"+isk(totPay)+"</div></div>"
+        +"<div><div class='k'>Margin</div><div class='v warn'>"+isk(P.margin||0)+"</div></div></div>";
+    }
+    h+="<div class='ovbtns'>"
+      +"<button id='payReopen' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead runs the payout'")+">Reopen fleet</button>"
+      +"<button id='payClose' class='gobtn'"+((allPaid&&isLead)?"":" disabled title='"+(isLead?"every contributor has to be marked paid first":"only the fleet lead runs the payout")+"'")+">Close &amp; archive op</button>"
+      +"</div>";
+    el("payin").innerHTML=h;
+    el("payx").onclick=closePayout;
+    if(isLead) Array.prototype.forEach.call(el("payin").querySelectorAll(".paychk"), function(cb){
+      cb.onchange=function(){ var i=parseInt(cb.getAttribute("data-pi"),10), x=list[i];
+        var amt=Math.round(parseFloat(String(el("amt_"+i).value).replace(/[ ,]/g,""))||0);
+        api("POST","/payout",{who:x.who, paid:cb.checked, amount:amt, by:who})
+          .then(function(d){ if(d&&d.ok) tick(); else if(d&&d.error){ toast(String(d.error)); renderPayout(); } })
+          .catch(function(){ toast("payout log failed, still offline?"); renderPayout(); }); }; });
+    var ro=el("payReopen"); if(ro && isLead) ro.onclick=function(){
+      api("POST","/reopen",{by:who}).then(function(d){
+        if(d&&d.ok){ closePayout(); toast("Fleet reopened, drops unfrozen."); tick(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("reopen failed"); }); };
+    var pc=el("payClose"); if(pc && allPaid && isLead) pc.onclick=function(){
+      if(!confirm("Close the op and stamp it into the Haul Log?")) return;
+      api("POST","/close",{by:who}).then(function(d){
+        if(d&&d.ok){ closePayout(); toast("Op closed — logged to the Haul Log."); setTab("hauls"); tick(); }
+        else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("close failed, still offline?"); }); };
+  }
+
+  // ---------- haul log tab ----------
+  function loadHauls(){
+    haulsAt=Date.now();
+    api("GET","/hauls").then(function(d){
+      if(d&&d.ok){ hauls=d; renderHauls(); } }).catch(function(){ /* keep last copy */ });
+  }
+  function renderHauls(){
+    if(!hauls) return;
+    var t=hauls.totals||{}, bm=hauls.byMember||{}, mine=(bm[who]||{}).payout||0;
+    var isOp = t.totalTrueValue!==undefined;
+    var h="<div><div class='k'>Total haul</div><div class='v good'>"+isk(t.totalPayout||0)+"</div></div>"
+      +"<div><div class='k'>Fleets</div><div class='v'>"+(t.fleetCount||0)+"</div></div>"
+      +"<div><div class='k'>Your all-time</div><div class='v'>"+isk(mine)+"</div></div>";
+    if(isOp) h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(t.totalTrueValue||0)+"</div></div>"
+      +"<div><div class='k'>Margin</div><div class='v warn'>"+isk(t.totalMargin||0)+"</div></div>";
+    el("htiles").innerHTML=h;
+    var rows=hauls.hauls||[];
+    if(!rows.length){ el("hwall").innerHTML="<div class='empty'>No fleets finalized yet.</div>"; return; }
+    // the wall: newest first (server order); op rows carry true value + margin + the eraser
+    var w="<table><thead><tr><th>DATE</th><th>COMMANDER</th><th>PILOTS</th><th>HAULED</th>"
+      +(isOp?"<th>TRUE</th><th>MARGIN</th><th></th>":"")+"</tr></thead><tbody>";
+    rows.forEach(function(r){
+      w+="<tr class='haulrow' data-hid='"+esc(r.id)+"'>"
+        +"<td class='num'>"+ymdhm(r.finishedAt)+"</td>"
+        +"<td class='who'>"+esc(r.commander||"")+"</td>"
+        +"<td class='num'>"+(r.memberCount||0)+"</td>"
+        +"<td class='num strong good'>"+isk(r.payout||0)+"</td>";
+      if(isOp){
+        w+="<td class='num warn'>"+isk(r.trueValue||0)+"</td>"
+          +"<td class='num warn'>"+isk(r.margin||0)+"</td>"
+          +"<td><button class='xdel' data-hdel='"+esc(r.id)+"'>&times;</button></td>";
+      }
+      w+="</tr>"; });
+    w+="</tbody></table>";
+    el("hwall").innerHTML=w;
+    Array.prototype.forEach.call(el("hwall").querySelectorAll("[data-hdel]"), function(b){
+      b.onclick=function(ev){ ev.stopPropagation();
+        if(!confirm("Delete this archived op and remove it from the all-time totals?")) return;
+        api("POST","/haul-delete",{id:b.getAttribute("data-hdel")}).then(function(d){
+          if(d&&d.ok) loadHauls(); else if(d&&d.error) toast(String(d.error)); })
+          .catch(function(){ toast("delete failed, still offline?"); }); }; });
+    Array.prototype.forEach.call(el("hwall").querySelectorAll("tr.haulrow"), function(tr){
+      tr.onclick=function(){ openHaul(tr.getAttribute("data-hid")); }; });
+  }
+  function openHaul(id){
+    api("GET","/haul?id="+encodeURIComponent(id)).then(function(d){
+      if(!(d&&d.ok&&d.haul)) return;
+      var hl=d.haul, isOp=hl.trueValue!==undefined;
+      var h="<div class='ovhdr'><h2>"+ymdhm(hl.finishedAt)+"</h2>"
+        +"<span class='k'>commander "+esc(hl.commander||"")+"</span>"
+        +"<span class='k'>rate "+Math.round((hl.rate||0.88)*100)+"%</span>"
+        +"<span class='k'>hauled "+isk(hl.payout||0)+"</span>"
+        +(isOp?"<span class='k warn'>true "+isk(hl.trueValue||0)+" &middot; margin "+isk(hl.margin||0)+"</span>":"")
+        +"<button id='haulx' class='link'>close</button></div>";
+      h+="<div class='hsec'>Roster</div>"
+        +"<table><thead><tr><th>WHO</th><th>HAUL</th>"
+        +(isOp?"<th>JITA</th>":"")+"<th>PAID</th></tr></thead><tbody>";
+      (hl.members||[]).forEach(function(m){
+        h+="<tr><td class='who'>"+esc(m.who)+"</td>"
+          +"<td class='num strong good'>"+isk(m.payout||0)+"</td>"
+          +(isOp?"<td class='num'>"+isk(m.jita||0)+"</td>":"")
+          +"<td><span class='paidok "+(m.paid?"yes'>PAID":"no'>unpaid")+"</span></td></tr>"; });
+      h+="</tbody></table>";
+      var os=hl.oreSummary||[];
+      if(os.length){
+        // value column renders only when the server sent one (member basis vs op raw jita)
+        h+="<div class='hsec'>Ore hauled</div>"
+          +"<table><thead><tr><th>ORE</th><th>UNITS</th><th>VALUE</th></tr></thead><tbody>";
+        os.forEach(function(o){
+          h+="<tr><td class='who'>"+esc(o.ore)+"</td>"
+            +"<td class='num'>"+Number(o.units||0).toLocaleString()+"</td>"
+            +"<td class='num'>"+(o.value!=null?isk(o.value):"")+"</td></tr>"; });
+        h+="</tbody></table>";
+      }
+      el("haulin").innerHTML=h;
+      el("haulover").style.display="block";
+      el("haulx").onclick=closeHaulOver;
+    }).catch(function(){ toast("cannot load that op right now"); });
+  }
+  function closeHaulOver(){ el("haulover").style.display="none"; }
+
+  // ---------- tabs ----------
+  function setTab(t){ tab=t; bump();
+    el("tFleet").classList.toggle("on", t==="fleet");
+    el("tHauls").classList.toggle("on", t==="hauls");
+    el("fleetTab").style.display = t==="fleet" ? "" : "none";
+    el("haulTab").style.display  = t==="hauls" ? "" : "none";
+    if(t==="hauls") loadHauls(); }
+  el("tFleet").onclick=function(){ setTab("fleet"); };
+  el("tHauls").onclick=function(){ setTab("hauls"); };
+
+  // ---------- boot: prices always; auto-unlock if the password is remembered ----------
+  loadOutbox();
+  loadPrices();
+  (function(){ var t=lsGet(LS_TOK);
+    if(t) unlock(t); else showGate(true); })();
+})();
+</script>
+<script src="/nav.js?v=2"></script>
+</body></html>

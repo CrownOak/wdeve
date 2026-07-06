@@ -17,6 +17,7 @@
     ["Kills", BASE + "kills/"],
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],
+    ["Fleet", BASE + "fleet/"],
     ["Reprocess", BASE + "reprocess/"],
     ["Arbitrage", BASE + "arbitrage/"],
     ["Decorations", BASE + "decorations/"],
