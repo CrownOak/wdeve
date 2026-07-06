@@ -36,6 +36,11 @@
   .confirm .big{ font-family:var(--display); font-weight:700; text-transform:uppercase;
       letter-spacing:.05em; font-size:18px; color:var(--ore); line-height:1.5; }
   .confirm .later{ color:#a9b2a8; font-size:13.5px; margin-top:14px; line-height:1.6; }
+  .discordcta{ display:inline-block; margin-top:10px; font-family:var(--mono); font-size:11.5px;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.5);
+    padding:8px 15px; text-decoration:none; transition:background .15s, color .15s;
+    clip-path:polygon(0 0,100% 0,96% 100%,0 100%); }
+  .discordcta:hover{ background:var(--ore); color:#04140a; }
   .signoff{ color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:.03em;
             margin:26px auto 6px; max-width:680px; border-top:1px solid var(--line); padding-top:18px; }
   .signoff b{ color:var(--silver); }
@@ -120,10 +125,12 @@
         </div>
 
         <div class="field">
-          <label for="contact">Best way to reach you <span class="req">(optional)</span></label>
-          <p class="hint" id="contactHint">Discord or in game name. So the recruiter is not shouting into the void.</p>
+          <label for="contact">Discord handle <span class="req">(optional but do it)</span></label>
+          <p class="hint" id="contactHint">Your actual Discord <b>handle</b> (the @username), not your server
+          nickname. This is how the recruiter finds you. Join the server below so we can reach you.</p>
           <input id="contact" name="contact" type="text" maxlength="120" autocomplete="off"
-                 aria-describedby="contactHint" placeholder="goblin#1234 or your pilot name">
+                 aria-describedby="contactHint" placeholder="yourhandle">
+          <a class="discordcta" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Join the BONK Discord &#9654;</a>
         </div>
 
         <div class="field">
@@ -188,8 +195,15 @@
     a.textContent = "the member portal";
     later.appendChild(a);
     later.appendChild(document.createTextNode(". Medals, hauls, the whole ledger of your rise. See you in the belt."));
+    var dc = document.createElement("a");
+    dc.className = "discordcta";
+    dc.href = "https://discord.gg/eavumbvRnp";
+    dc.target = "_blank"; dc.rel = "noopener";
+    dc.style.marginTop = "18px";
+    dc.textContent = "Jump into the Discord ▶";
     box.appendChild(big);
     box.appendChild(later);
+    box.appendChild(dc);
     panel.replaceWith(box);
     box.focus && box.setAttribute("tabindex", "-1");
     box.focus();
