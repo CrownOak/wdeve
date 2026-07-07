@@ -339,6 +339,17 @@
   .indform{ margin-top:14px; }
   .indform textarea{ min-height:110px; }
   .indform input{ margin-top:10px; }
+
+  /* say it for the front page (testimonials) */
+  .sayform{ margin-top:12px; }
+  .sayform textarea{ min-height:74px; }
+  .saycount{ font-family:var(--mono); font-size:11px; color:var(--muted); text-align:right; margin-top:4px; }
+  .saydone{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 14px; margin-top:12px;
+    background:rgba(70,255,94,.06); border:1px solid rgba(70,255,94,.25); }
+  .saydone .sd{ color:var(--ore); font-family:var(--mono); font-size:12.5px; line-height:1.5; }
+  .sayquote{ margin-top:12px; padding:12px 14px; border-left:3px solid var(--ore); background:var(--black);
+    color:var(--silver); font-size:14px; line-height:1.55; font-style:italic; }
+  .sayslim{ display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px; color:var(--muted); }
   .crow.flat{ cursor:default; }
   .crow.flat:hover .cwhen{ color:var(--silver-dim); }
   .iname{ font-size:13px; color:var(--silver); min-width:0; overflow-wrap:break-word; }
@@ -414,6 +425,7 @@
     <div class="panel" id="panelESI"></div>
     <div class="panel" id="panelAcademy"></div>
     <div class="panel" id="panelTrophies"></div>
+    <div class="panel" id="panelSay"></div>
     <div id="corpStripWrap"></div>
     <div class="footacts" id="footActs"></div>
     <div class="signoff">The ore must flow. The goblins must eat. &#129704;&#129482;</div>
@@ -449,7 +461,11 @@ var S = {
   haulsAll: false,
   openHauls: {},
   industry: null,
-  industryLoading: false
+  industryLoading: false,
+  say: null,          // my testimonial: undefined-fetch pending, null-none, {body,hidden}
+  sayLoading: false,
+  sayEditing: false,
+  sayJustSent: false
 };
 
 /* ============ helpers ============ */
@@ -585,6 +601,7 @@ function renderAll(){
   safeRender(renderESI,      $("panelESI"));
   safeRender(renderAcademy,  $("panelAcademy"));
   safeRender(renderTrophies, $("panelTrophies"));
+  safeRender(renderSay,      $("panelSay"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
   safeRender(renderFoot,     $("footActs"));
 }
@@ -783,6 +800,109 @@ function renderStats(){
           '<span class="pnote" style="margin-top:0;align-self:center">Mined solo? Paste the ore, leadership confirms, the number climbs.</span></div>';
   el.innerHTML = html;
   $("addContractBtn").addEventListener("click", openContractModal);
+}
+
+/* ============ say it for the front page (testimonials) ============ */
+var SAY_DISMISS = "bonk_say_dismissed";
+function sayDismissed(){ try { return !!localStorage.getItem(SAY_DISMISS); } catch(e){ return false; } }
+function renderSay(){
+  var el = $("panelSay");
+  if (S.say === null && !S.sayLoading){ S.sayLoading = true; loadSay(); }
+  var html = '<div class="ptitle">Say it for the front page</div>';
+  if (S.say === null){
+    html += '<div class="emptyline">Checking the wall...</div>';
+    el.innerHTML = html; return;
+  }
+  if (S.say === "error"){
+    html += '<div class="pnote">The wall did not answer. Reload to knock again.</div>';
+    el.innerHTML = html; return;
+  }
+  var mine = S.say.mine;
+
+  if (S.sayJustSent){
+    html += '<div class="saydone"><span class="sd">&#10003; It went through. Your words are on the front page, goblin.</span>' +
+      '<button class="mini" id="sayDismiss">dismiss</button>' +
+      '<button class="mini" id="sayEdit">edit</button></div>';
+    el.innerHTML = html;
+    $("sayDismiss").addEventListener("click", function(){
+      try { localStorage.setItem(SAY_DISMISS, "1"); } catch(e){}
+      S.sayJustSent = false;
+      safeRender(renderSay, $("panelSay"));
+    });
+    $("sayEdit").addEventListener("click", function(){
+      S.sayJustSent = false; S.sayEditing = true;
+      safeRender(renderSay, $("panelSay"));
+    });
+    return;
+  }
+
+  if (mine && !S.sayEditing){
+    if (sayDismissed()){
+      html += '<div class="sayslim">Your words are on the front page.' +
+        (mine.hidden ? ' <span style="color:var(--amber)">Leadership unlisted this one.</span>' : '') +
+        ' <button class="mini" id="sayEdit">edit</button></div>';
+    } else {
+      html += '<div class="sayquote">' + esc(mine.body) + '</div>' +
+        (mine.hidden ? '<div class="pnote" style="color:var(--amber)">Leadership unlisted this one from the public page. Edit it or poke an officer.</div>' : '') +
+        '<div class="mbtns" style="margin-top:10px">' +
+          '<button class="mini" id="sayEdit">edit</button>' +
+          '<button class="mini" id="sayDismiss">dismiss</button></div>';
+    }
+    el.innerHTML = html;
+    var se = $("sayEdit");
+    if (se) se.addEventListener("click", function(){ S.sayEditing = true; safeRender(renderSay, $("panelSay")); });
+    var sd = $("sayDismiss");
+    if (sd) sd.addEventListener("click", function(){
+      try { localStorage.setItem(SAY_DISMISS, "1"); } catch(e){}
+      safeRender(renderSay, $("panelSay"));
+    });
+    return;
+  }
+
+  // no comment yet, or editing: the form
+  html += '<div class="pnote" style="margin-top:2px">One or two lines about the goblin life. It lands on the ' +
+    '<a href="/" target="_blank" rel="noopener">front page</a> with your name and your years on it. Unpaid, unscripted, unhinged.</div>' +
+    '<div class="sayform">' +
+    '<textarea id="sayRaw" maxlength="280" placeholder="Best decision of my capsuleer life. The rocks fear us."></textarea>' +
+    '<div class="saycount"><span id="sayN">0</span> / 280</div>' +
+    '<div class="formerr" id="sayErr"></div>' +
+    '<div class="mbtns"><button class="gobtn" id="saySubmit" style="padding:11px 22px">Put it on the front page</button>' +
+    (S.sayEditing ? '<button class="mini" id="sayCancel" style="margin-left:10px">never mind</button>' : '') +
+    '</div></div>';
+  el.innerHTML = html;
+  var ta = $("sayRaw");
+  if (S.sayEditing && mine) ta.value = mine.body;
+  $("sayN").textContent = String(ta.value.length);
+  ta.addEventListener("input", function(){ $("sayN").textContent = String(ta.value.length); });
+  $("saySubmit").addEventListener("click", submitSay);
+  var sc = $("sayCancel");
+  if (sc) sc.addEventListener("click", function(){ S.sayEditing = false; safeRender(renderSay, $("panelSay")); });
+}
+async function submitSay(){
+  var errEl = $("sayErr"); errEl.textContent = "";
+  var raw = $("sayRaw").value;
+  if (!raw.trim()){ errEl.textContent = "Say something, goblin. The front page awaits."; return; }
+  $("saySubmit").disabled = true;
+  try {
+    await api("testimonial", { body: raw });
+    S.sayEditing = false; S.sayJustSent = true; S.sayLoading = true;
+    loadSay();
+  } catch(e){
+    if (!isOut(e)){
+      errEl.textContent = e.message;
+      var b = $("saySubmit"); if (b) b.disabled = false;
+    }
+  }
+}
+async function loadSay(){
+  try {
+    var jj = await api("testimonial");
+    S.say = { mine: jj.mine || null };
+  } catch(e){
+    if (isOut(e)) return;
+    S.say = "error";
+  }
+  safeRender(renderSay, $("panelSay"));
 }
 
 function renderCorpStrip(){

@@ -1718,7 +1718,7 @@ async function drawAudit(f){
 async function secSettings(){
   const m=document.getElementById("main");
   m.innerHTML=head("Settings","the levers")+skel(2);
-  let j;
+  let j, tj=null;
   try{ j=await api("/api/admin/settings"); }
   catch(e){
     if(e.message===SILENT) return;
@@ -1726,6 +1726,7 @@ async function secSettings(){
       +'<button class="inv" onclick="secSettings()">Try again</button>';
     return;
   }
+  try{ tj=await api("/api/admin/testimonials"); }catch(e){ if(e.message===SILENT) return; }
   const s=j.settings||j;
   const rate=Number(s.contract_rate);
   const pct=isFinite(rate)?Math.round(rate*1000)/10:88;
@@ -1753,8 +1754,32 @@ async function secSettings(){
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_gsave">Save the goal</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div>";
+  /* front page testimonials: live member quotes on bonkeve.com; hide = pulled from public */
+  h+='<div class="panel"><div class="ptitle">Front page testimonials <span class="pn">what the goblins say, on the public page</span></div>';
+  if(!tj || !tj.ok){ h+='<div class="nap">The wall did not answer. Reload to knock again.</div>'; }
+  else if(!(tj.testimonials||[]).length){ h+='<div class="nap">No quotes yet. Nudge the goblins on Discord.</div>'; }
+  else{
+    (tj.testimonials||[]).forEach(function(t){
+      h+='<div class="qrow"><div class="qwho">'+esc(t.main_ign||"?")
+        +(Number(t.hidden)?' <span class="badge" style="color:var(--amber);border-color:var(--amber)">HIDDEN</span>':'')
+        +'<div class="qmeta">'+esc(ago(t.updated_at))+' &middot; &ldquo;'+esc(String(t.body||"").slice(0,140))+(String(t.body||"").length>140?"&hellip;":"")+'&rdquo;</div></div>'
+        +'<div class="qact"><button class="cmail" data-tmod="'+esc(String(t.id))+'" data-tact="'+(Number(t.hidden)?'unhide':'hide')+'">'
+        +(Number(t.hidden)?'unhide':'hide')+'</button></div></div>';
+    });
+  }
+  h+="</div>";
   h+=footLine();
   m.innerHTML=h;
+  m.querySelectorAll("[data-tmod]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=Number(btn.getAttribute("data-tmod")), act=btn.getAttribute("data-tact");
+      busy(btn, async function(){
+        await api("/api/admin/testimonials",{id:id, action:act});
+        toast(act==="hide"?"Pulled from the public page.":"Back on the wall.");
+        secSettings();
+      });
+    });
+  });
   if(ISADMIN){
     m.querySelectorAll("[data-preset]").forEach(function(b){
       b.addEventListener("click", function(){ document.getElementById("st_rate").value=this.getAttribute("data-preset"); });
