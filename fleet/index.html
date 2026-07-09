@@ -964,9 +964,13 @@ tr.haulrow{ cursor:pointer; }
   function openPayout(){ payoverOpen=true; renderPayout(); el("payover").style.display="block"; }
   function closePayout(){ payoverOpen=false; el("payover").style.display="none"; }
   function maybeRenderPayout(){
-    // don't nuke an amount field somebody is typing in mid-sync
+    // Don't nuke a TEXT field somebody is typing in mid-sync (the amount fields,
+    // the custom rate). But a checkbox holds no typed state and MUST be allowed
+    // to re-render: ticking the last "paid" box has to recompute allPaid so the
+    // "Close & archive op" button enables, instead of staying dead until the lead
+    // clicks away to blur the checkbox (the finish-fleet glitch).
     var a=document.activeElement;
-    if(a && el("payover").contains(a) && a.tagName==="INPUT") return;
+    if(a && el("payover").contains(a) && a.tagName==="INPUT" && a.type!=="checkbox") return;
     renderPayout();
   }
   function renderPayout(){
