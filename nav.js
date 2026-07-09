@@ -26,6 +26,9 @@
     ["CLASSIFIED", BASE + "bonk-prospects/"],
     ["REDACTED", BASE + "alliance/"]
   ];
+  // Members see the recruiting tools by name; the public sees the redacted labels.
+  // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
+  var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance" };
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";
   function current(p) { return p === BASE ? (path === BASE) : (path.indexOf(p) === 0); }
@@ -36,7 +39,8 @@
            + '<span class="tick">BONK</span><span class="brandtext">WEALTHY DROPOUTS</span></a>'
            + '<span class="navwho" id="navwho"></span><nav>';
   for (var i = 0; i < ITEMS.length; i++) {
-    html += '<a href="' + ORIGIN + ITEMS[i][1] + '"'
+    var hrefRel = ITEMS[i][1].slice(BASE.length); // e.g. "bonk-prospects/"
+    html += '<a href="' + ORIGIN + ITEMS[i][1] + '" data-rel="' + hrefRel + '"'
           + (current(ITEMS[i][1]) ? ' class="cur"' : '') + '>' + ITEMS[i][0] + '</a>';
   }
   html += '</nav>';
@@ -72,6 +76,11 @@
           w.className = "navwho in";
           w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';
           w.querySelector(".nm").textContent = d.ign || "goblin";
+          // members get the real recruiting-tool names in the nav
+          for (var rel in MEMBER_LABELS) {
+            var lnk = bar.querySelector('nav a[data-rel="' + rel + '"]');
+            if (lnk) lnk.textContent = MEMBER_LABELS[rel];
+          }
           // inbox badge: portal unread count in ore green; the whole chip already
           // opens /portal/, so the badge rides the same click.
           if (d.unread > 0) {

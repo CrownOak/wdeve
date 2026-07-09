@@ -1245,11 +1245,21 @@ tr.haulrow{ cursor:pointer; }
   el("tFleet").onclick=function(){ setTab("fleet"); };
   el("tHauls").onclick=function(){ setTab("hauls"); };
 
-  // ---------- boot: prices always; auto-unlock if the password is remembered ----------
+  // ---------- boot: prices always; auto-unlock if remembered, else for members ----------
   loadOutbox();
   loadPrices();
   (function(){ var t=lsGet(LS_TOK);
-    if(t) unlock(t); else showGate(true); })();
+    if(t){ unlock(t); return; }
+    // logged-in portal members skip the password gate: the portal hands back the
+    // shared fleet (member) token for their session. Command still needs BONKADMIN
+    // via the switcher. Falls back to the manual gate if not logged in or offline.
+    fetch("/api/whoami",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(wd){
+      if(!(wd&&wd.loggedIn)){ showGate(true); return; }
+      fetch("/api/unlock?k=bonkfleet",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(u){
+        if(u&&u.ok&&u.key) unlock(u.key); else showGate(true);
+      }).catch(function(){ showGate(true); });
+    }).catch(function(){ showGate(true); });
+  })();
 })();
 </script>
 <script src="/nav.js?v=7"></script>
