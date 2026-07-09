@@ -95,6 +95,8 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .rname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--silver); }
 .rtab{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
+.glyph.orca{ font-size:12.5px; }
+#orcabtn.on2{ color:var(--ore); }
 .takelead{ margin-top:8px; width:100%; }
 .ctxmenu{ position:fixed; z-index:200; background:var(--black); border:1px solid var(--ore); min-width:180px; display:none; }
 .ctxmenu .ci{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--silver);
@@ -220,7 +222,7 @@ tr.haulrow{ cursor:pointer; }
             <div id="feed"></div>
           </div>
           <div>
-            <div class="rhead">Fleet</div>
+            <div class="rhead">Fleet <button id="orcabtn" class="link" style="display:none;margin-left:8px"></button></div>
             <div id="roster"></div>
             <div id="takeleadwrap"></div>
           </div>
@@ -868,9 +870,10 @@ tr.haulrow{ cursor:pointer; }
       ms.forEach(function(m,i){
         var g = m.lead ? "<span class='glyph crown' title='fleet lead'>♛</span>"
               : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
+        var orcaG = m.orca ? "<span class='glyph orca' title='flying the Orca (boosts, stays on the roster without drops)'>&#128011;</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
-          +"<span class='dot"+(m.online?" on":"")+"'></span>"+g
+          +"<span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
           +"<span class='rname'>"+esc(m.who)+"</span>"
           +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+kick+"</div>";
       });
@@ -895,6 +898,28 @@ tr.haulrow{ cursor:pointer; }
       api("POST","/set-lead",{target:who}).then(function(d){
         if(d&&d.ok){ toast("You hold the lead now."); tick(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
+    // self-serve Orca toggle: flag yourself as boosting so you never age off the
+    // roster on inactivity (boosters do not paste ore). Reflects your live state.
+    var ob=el("orcabtn");
+    if(ob){
+      if(!who){ ob.style.display="none"; }
+      else{
+        var meOrca=false; ms.forEach(function(m){ if(m.who===who && m.orca) meOrca=true; });
+        ob.style.display="";
+        ob.innerHTML = meOrca ? "&#128011; boosting" : "&#128011; I'm boosting";
+        ob.classList.toggle("on2", meOrca);
+        ob.title = meOrca ? "You are flagged as flying the Orca. Click to clear it." : "Flying the Orca? Flag it so you stay on the roster without dropping ore.";
+        ob.onclick=function(){ toggleOrca(who, !meOrca); };
+      }
+    }
+  }
+  // Toggle the Orca (boosting) flag for a pilot. Available to any unlocked user
+  // for self-serve; command can also assign it from the roster context menu.
+  function toggleOrca(name, on){
+    if(!name) return;
+    api("POST","/orca",{who:name, on:on}).then(function(d){
+      if(d&&d.ok){ toast(d.orca ? name+" is boosting the fleet. Stays on the roster now." : name+" no longer flagged as boosting."); tick(); }
+      else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("could not update, still offline?"); });
   }
 
   // ---------- kick a member from the current op (op-only on the worker) ----------
@@ -913,6 +938,7 @@ tr.haulrow{ cursor:pointer; }
     var canKick = !!(m && m.who!==who);
     c.innerHTML="<button class='ci'"+(ok?"":" disabled title='must be signed in as fleet command (operator password) to hold lead'")
       +">Make fleet lead</button>"
+      +"<button class='ci corca'>"+(m && m.orca ? "Clear Orca flag" : "Flag as Orca")+"</button>"
       +(canKick ? "<button class='ci ck'>Kick from op</button>" : "");
     c.style.display="block"; c.style.left=Math.min(x, window.innerWidth-200)+"px"; c.style.top=y+"px";
     var b=c.querySelector(".ci");
@@ -920,6 +946,8 @@ tr.haulrow{ cursor:pointer; }
       api("POST","/set-lead",{target:m.who}).then(function(d){
         if(d&&d.ok){ toast(m.who+" holds the lead now."); tick(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("set-lead failed"); }); };
+    var co=c.querySelector(".corca");
+    if(co) co.onclick=function(){ hideCtx(); toggleOrca(m.who, !(m && m.orca)); };
     var ck=c.querySelector(".ck");
     if(ck) ck.onclick=function(){ hideCtx(); kickMember(m.who); };
   }
