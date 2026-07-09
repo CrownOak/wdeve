@@ -27,6 +27,9 @@
   border:1px solid var(--line-soft); background:var(--steel); color:var(--silver-dim); }
 .thin.warn{ color:var(--amber); border-left:3px solid var(--amber); }
 .thin.bad{ color:var(--red); border-left:3px solid var(--red); }
+.thin.mkt{ color:var(--silver); border-left:3px solid var(--ore); }
+.thin.mkt b{ color:var(--ore); }
+.rowmeta{ color:var(--muted); font-size:11px; }
 .cmd{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; margin:0 0 16px;
   background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
   font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
@@ -203,6 +206,7 @@ tr.haulrow{ cursor:pointer; }
           <div>
             <div id="tiles" class="totline"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
+            <div id="marketline" class="thin" style="display:none"></div>
             <div id="pxbar" class="thin bad" style="display:none"></div>
             <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing. Drops are frozen.</div>
             <div id="dropbox" class="dropbox">
@@ -309,7 +313,16 @@ tr.haulrow{ cursor:pointer; }
   // ---------- valuation (AMEND-6): refine calcFwd order, exactly, as a pure function ----------
   /*VALUE-FN-START*/
   var EFF=0.70; // AMEND-3: refine's shipped default efficiency; fixed, not UI-exposed
-  function valueLines(lines, DATA, VOL){
+  // price of one mineral at the op's chosen market. Rens is the corp delivery
+  // hub (default); where a mineral has no Rens order (r=0, a few exotic moon
+  // minerals) it falls back to Jita so real ore never values to zero.
+  function priceOf(DATA, mid, basis){
+    var p=DATA.prices[mid]; if(!p) return 0;
+    if(basis==="jita") return p.j||0;
+    return p.r || p.j || 0; // rens, falling back to jita on a thin market
+  }
+  function valueLines(lines, DATA, VOL, basis){
+    basis = basis==="jita" ? "jita" : "rens";
     // FRACTIONAL valuation (v3.2). Refine floors to 100-unit reprocessing batches —
     // physically right for refining YOUR OWN paste, but a ledger credits pro-rata:
     // the fleet pools everyone's ore and the pooled total refines fully, so a
@@ -326,12 +339,12 @@ tr.haulrow{ cursor:pointer; }
       m3+=it.qty*(VOL[it.name.toLowerCase()]||0);   // SDE volume per unit, baked below
       var batches=it.qty / y.p, solo=0, mid;
       for(mid in y.m){ got[mid]=(got[mid]||0)+batches*y.m[mid]; }
-      for(mid in y.m){ solo+=batches*y.m[mid]*EFF*(DATA.prices[mid] ? DATA.prices[mid].j||0 : 0); }
+      for(mid in y.m){ solo+=batches*y.m[mid]*EFF*priceOf(DATA, mid, basis); }
       detail.push([it.name, it.qty, Math.round(solo)]);
     });
-    // Pass 2: per mineral, at efficiency, priced at Jita sell. No flooring anywhere.
+    // Pass 2: per mineral, at efficiency, priced at the op's market (rens|jita). No flooring anywhere.
     var jita=0;
-    for(var mid2 in got){ jita+=got[mid2]*EFF*(DATA.prices[mid2] ? DATA.prices[mid2].j||0 : 0); }
+    for(var mid2 in got){ jita+=got[mid2]*EFF*priceOf(DATA, mid2, basis); }
     return { jita:Math.round(jita), units:units, n:n, unmatched:unmatched,
       m3:Math.round(m3*100)/100, detail:detail };
   }
@@ -624,7 +637,7 @@ tr.haulrow{ cursor:pointer; }
     if(lines.length>500){ dmsg("Too many lines ("+lines.length+") — a drop caps at 500. Split the paste."); return false; }
     lines.forEach(function(l){ if(l.name.length>80) l.name=l.name.slice(0,80); });
     lines.forEach(function(l){ if(!DATA.yields[l.name.toLowerCase()]) unmNames[l.name]=1; });
-    var v=valueLines(lines, DATA, ORE_VOL);
+    var v=valueLines(lines, DATA, ORE_VOL, basisNow());
     var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched, m3:v.m3,
       note:(note||"").trim().slice(0,200), detail:v.detail };
     if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return false; }
@@ -667,7 +680,7 @@ tr.haulrow{ cursor:pointer; }
   function chipValueHtml(name, qty){
     qty=parseInt(qty,10)||0;
     if(!DATA || qty<=0) return "<span class='qdv'></span>";
-    var v=valueLines([{name:name, qty:qty}], DATA, ORE_VOL);
+    var v=valueLines([{name:name, qty:qty}], DATA, ORE_VOL, basisNow());
     if(v.unmatched) return "<span class='qdv zero'>not priced</span>";
     return "<span class='qdv'>"+isk(Math.round(rate()*v.jita))+"</span>"; // buyback basis (what lands on your tab)
   }
@@ -726,11 +739,23 @@ tr.haulrow{ cursor:pointer; }
 
   // ---------- render: everything below reads only from P (idempotent) ----------
   function rate(){ return (P && P.rate) || 0.88; }
+  // the op's market for valuing ore. Rounds made before this feature report
+  // 'jita'; fresh rounds default 'rens'. Falls back to jita only pre-load.
+  function basisNow(){ return (P && P.priceBasis==="jita") ? "jita" : (P && P.priceBasis) ? "rens" : "jita"; }
+  function basisLabel(b){ return (b||basisNow())==="jita" ? "Jita" : "Rens"; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
-    renderTiles(); renderCmd(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
+    renderTiles(); renderCmd(); renderMarket(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
     seedPilotsFromPortal(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
+
+  // member-visible market indicator (op sees + sets it in the command strip)
+  function renderMarket(){
+    var ml=el("marketline"); if(!ml) return;
+    if(opKeys()){ ml.style.display="none"; return; }
+    ml.style.display=""; ml.className="thin mkt";
+    ml.innerHTML="Ore valued at <b>"+basisLabel()+" sell</b>"+(basisNow()==="rens"?" &middot; the corp delivery hub" : "");
+  }
 
   function renderTiles(){
     // "Your tab" is the sum of your entries' jita88 (already rate-scaled server-side).
@@ -749,18 +774,33 @@ tr.haulrow{ cursor:pointer; }
     el("tiles").innerHTML=h;
   }
 
+  // set the op market (rens|jita). Locked server-side once ore drops.
+  function pushBasis(b){
+    api("POST","/set-basis",{basis:b}).then(function(d){
+      if(d&&d.ok){ toast("Market set to "+basisLabel(d.priceBasis)+". Ore now values at "+basisLabel(d.priceBasis)+" sell."); tick(); }
+      else if(d&&d.error){ toast(String(d.error)); tick(); } })
+      .catch(function(){ toast("market change failed, still offline?"); });
+  }
   function renderCmd(){
     var box=el("cmdstrip");
     if(!opKeys()){ box.style.display="none"; return; }
     box.style.display="";
     var isLead = P.lead && P.lead===who;
+    var basis=basisNow(), mktLocked=((P.entries||[]).length>0);
+    var mkt = mktLocked
+      ? " &middot; market <b>"+basisLabel(basis)+"</b> <span class='rowmeta'>(locked, reset to change)</span>"
+      : " &middot; market <button class='ratep"+(basis==='rens'?' on':'')+"' data-basis='rens'>Rens</button>"
+        +"<button class='ratep"+(basis==='jita'?' on':'')+"' data-basis='jita'>Jita</button>";
     var h="Lead: <b>"+(P.lead?esc(P.lead):"nobody")+"</b>"
         +" &middot; buyback "+Math.round(rate()*100)+"%"
+        + mkt
         +" &middot; entries "+((P.entries||[]).length)+"/500"
         +" <button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead can finish'")+">Finish Fleet</button>";
     if(P.finished) h+=" <button id='cPayout' class='gobtn'>Payout screen</button>";
     h+=" <button id='cReset' class='gobtn'>Reset</button>";
     box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-basis]"), function(b){
+      b.onclick=function(){ pushBasis(b.getAttribute("data-basis")); }; });
     var f=el("cFinish"); if(f && isLead) f.onclick=function(){
       if(!confirm("Finish the fleet? Drops freeze and the payout screen opens.")) return;
       api("POST","/finish",{by:who}).then(function(d){ if(d&&d.ok){ tick(); openPayout(); }
@@ -1002,6 +1042,7 @@ tr.haulrow{ cursor:pointer; }
           +"<input id='ratecustom' class='ratecustom' value='"+Math.round(r*100)+"' title='custom buyback percent'>%"
           +"</span>"
         : "<span class='k'>buyback "+Math.round(r*100)+"%</span>")
+      +"<span class='k'>market "+basisLabel()+"</span>"
       +"<span class='k'>lead "+esc(P.lead||"nobody")+"</span>"
       +(isLead?"":"<span class='k'>read only &middot; the lead runs the payout</span>")
       +"<button id='payx' class='link'>close</button></div>";
