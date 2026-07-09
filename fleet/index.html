@@ -11,6 +11,11 @@
 .howto kbd{ font-family:var(--mono); font-size:12px; background:var(--black);
   border:1px solid var(--line); padding:1px 6px; color:var(--ore); }
 .pgrow{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+.rolechip{ font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+.rolechip .dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--muted); margin-right:5px; vertical-align:middle; }
+.rolechip.op{ color:var(--ore); }
+.rolechip.op .dot{ background:var(--ore); box-shadow:0 0 6px rgba(70,255,94,.5); }
+#rsw .pgrow{ margin-top:8px; }
 .pgrow input{ width:220px; padding:9px 11px; background:var(--black); border:1px solid var(--line);
   color:var(--silver); font-family:var(--mono); font-size:13px; }
 .pgrow .gobtn{ padding:9px 16px; }
@@ -162,7 +167,17 @@ tr.haulrow{ cursor:pointer; }
       <div class="toggle">
         <button id="tFleet" class="on">Fleet</button>
         <button id="tHauls">Haul Log</button>
-        <button id="flock" class="link" style="margin-left:auto">lock</button>
+        <span id="rolechip" class="rolechip" style="margin-left:auto"></span>
+        <button id="rswbtn" class="link">switch</button>
+        <button id="flock" class="link">lock</button>
+      </div>
+
+      <!-- role switcher: swap between the member (fleet) and command (op) passwords live, no relock -->
+      <div id="rsw" class="thin" style="display:none">
+        <b>Switch password.</b> Fleet password runs your tab and the roster. Command password unlocks payouts, true value, and the crown.
+        <div class="pgrow"><input id="rswpw" type="password" placeholder="fleet or command password" autocomplete="off">
+        <button id="rswgo" class="gobtn">Switch</button>
+        <button id="rswx" class="link">cancel</button><span id="rswerr" class="err"></span></div>
       </div>
 
       <div id="fleetTab">
@@ -354,23 +369,52 @@ tr.haulrow{ cursor:pointer; }
       if(!(d&&d.ok)) throw "bad";
       unlocked=true; role=d.role||""; lsSet(LS_TOK,pw);
       P=d; lsSet(LS_CACHE, JSON.stringify(d));
-      showGate(false); offline(false); renderAll();
+      showGate(false); offline(false); renderRoleChip(); renderAll();
       if(!who) showNamebox(true);
       bump(); schedule();
     }).catch(function(err){
       if(err==="unauthorized"){ token=""; lsDel(LS_TOK); gerr("Wrong password."); showGate(true); }
       else{
         var c=null; try{ c=JSON.parse(lsGet(LS_CACHE)||"null"); }catch(e){}
-        if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderAll(); bump(); schedule(); }
+        if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderRoleChip(); renderAll(); bump(); schedule(); }
         else gerr("Cannot reach the fleet store, try again.");
       }
     });
   }
   function lock(){ unlocked=false; token=""; role=""; P=null; lsDel(LS_TOK);
-    var p=el("fpw"); if(p) p.value=""; gerr(""); showGate(true); }
+    var p=el("fpw"); if(p) p.value=""; gerr(""); rswShow(false); showGate(true); }
   el("funlock").onclick=function(){ var pw=(el("fpw").value||"").trim(); if(pw) unlock(pw); };
   el("fpw").addEventListener("keydown",function(e){ if(e.key==="Enter") el("funlock").click(); });
   el("flock").onclick=lock;
+
+  // ---------- role chip + live password switch ----------
+  function roleLabel(r){ return r==="op" ? "fleet command" : "member"; }
+  function renderRoleChip(){ var c=el("rolechip"); if(!c) return;
+    c.className="rolechip"+(role==="op"?" op":"");
+    c.innerHTML="<span class='dot'></span>"+esc(roleLabel(role)); }
+  function rswErr(m){ el("rswerr").textContent=m||""; }
+  function rswShow(s){ el("rsw").style.display=s?"":"none"; rswErr("");
+    if(s){ var i=el("rswpw"); if(i){ i.value=""; i.focus(); } } }
+  el("rswbtn").onclick=function(){ rswShow(el("rsw").style.display==="none"); };
+  el("rswx").onclick=function(){ rswShow(false); };
+  // Swap the active X-Token to a different password WITHOUT locking. On a bad
+  // password the current session is untouched (we restore the working token),
+  // so a fat-fingered switch never boots you off a live op.
+  function switchRole(pw){ if(!pw) return;
+    var prev=token, prevRole=role; token=pw; rswErr("");
+    api("POST","/sync",{who:who}).then(function(d){
+      if(!(d&&d.ok)) throw "bad";
+      role=d.role||""; lsSet(LS_TOK,pw); P=d; lsSet(LS_CACHE, JSON.stringify(d));
+      rswShow(false); renderRoleChip(); renderAll(); bump();
+      toast(role===prevRole ? "Same role, password refreshed." : "Switched to "+roleLabel(role)+".");
+    }).catch(function(err){
+      token=prev; role=prevRole; // keep the working session intact
+      if(err==="unauthorized") rswErr("Wrong password.");
+      else rswErr("Cannot reach the fleet store, try again.");
+    });
+  }
+  el("rswgo").onclick=function(){ var pw=(el("rswpw").value||"").trim(); if(pw) switchRole(pw); };
+  el("rswpw").addEventListener("keydown",function(e){ if(e.key==="Enter") el("rswgo").click(); });
 
   // ---------- name prompt ----------
   function showNamebox(s){ el("namebox").style.display=s?"":"none";
