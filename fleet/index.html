@@ -40,6 +40,22 @@
 .droprow .gobtn{ padding:10px 20px; }
 .dropbox{ margin-bottom:16px; }
 .dmsg{ font-family:var(--mono); font-size:12px; color:var(--red); min-height:16px; margin-top:6px; }
+/* quick drops: repeat the same ore without re-pasting. seeded from what you drop. */
+.qdwrap{ margin:0 0 10px; }
+.qdlabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+.qdlist{ display:flex; flex-wrap:wrap; gap:8px; }
+.qd{ display:flex; align-items:center; gap:8px; background:var(--steel); border:1px solid var(--line);
+  border-left:3px solid var(--ore); padding:6px 8px 6px 10px; }
+.qd .qdn{ font-family:var(--mono); font-size:12px; color:var(--silver); white-space:nowrap; }
+.qd .qdq{ width:88px; padding:6px 8px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:13px; }
+.qd .qdv{ font-family:var(--mono); font-size:11px; color:var(--muted); min-width:56px; }
+.qd .qdv.zero{ color:var(--amber); }
+.qd .qddrop{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  font-size:12px; padding:6px 12px; background:var(--ore); color:#04140a; border:none; cursor:pointer; }
+.qd .qddrop:hover{ filter:brightness(1.08); }
+.qd .qdx{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; line-height:1; padding:0 2px; }
+.qd .qdx:hover{ color:var(--red); }
 /* pilot switcher: cycle which of your characters a drop is logged under */
 .pilots{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 10px; }
 .pilots .plabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
@@ -189,6 +205,10 @@ tr.haulrow{ cursor:pointer; }
             <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing. Drops are frozen.</div>
             <div id="dropbox" class="dropbox">
               <div id="pilots" class="pilots"></div>
+              <div id="quickdrops" class="qdwrap" style="display:none">
+                <div class="qdlabel">Quick drops &middot; adjust the number, hit drop</div>
+                <div id="qdlist" class="qdlist"></div>
+              </div>
               <textarea id="oretxt" placeholder="Paste what you dropped, one per line:&#10;Compressed Veldspar	3,000&#10;..."></textarea>
               <div class="droprow">
                 <input id="notein" maxlength="200" placeholder="note (optional)">
@@ -250,7 +270,8 @@ tr.haulrow{ cursor:pointer; }
 (function(){
   var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
   var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
-      LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots";
+      LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots",
+      LS_CHIPS="bonk_fleet_chips";
 
   // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
@@ -352,11 +373,11 @@ tr.haulrow{ cursor:pointer; }
       if(!m) throw "no DATA";
       DATA=JSON.parse(m[1]); pricesAt=Date.now();
       lsSet(LS_PRICES, JSON.stringify({at:pricesAt, data:DATA}));
-      pxNote(""); pricesOk();
+      pxNote(""); pricesOk(); refreshChipValues(); // value-only refresh keeps any typed qty
     }).catch(function(){
       var c=null; try{ c=JSON.parse(lsGet(LS_PRICES)||"null"); }catch(e){}
       if(c && c.data){ DATA=c.data; pricesAt=c.at||0;
-        pxNote("prices from "+ago(pricesAt)+" ago (refinery unreachable, using the cached table)",false); pricesOk(); }
+        pxNote("prices from "+ago(pricesAt)+" ago (refinery unreachable, using the cached table)",false); pricesOk(); refreshChipValues(); }
       else { DATA=null; pricesDead(); }
     });
   }
@@ -589,35 +610,124 @@ tr.haulrow{ cursor:pointer; }
         renderFeed(); }
     }).catch(function(){ o.state="unsent"; saveOutbox(); renderFeed(); });
   }
-  el("dropbtn").onclick=function(){
+  // Shared drop path: both the paste box and the quick-drop chips feed this. Runs the
+  // worker's own caps client-side so a bad drop fails HERE, not in the outbox queue.
+  // Returns true if the drop was queued/sent, false if it bounced pre-flight.
+  function commitDrop(lines, note){
     dmsg(""); bump();
-    if(!DATA){ dmsg("No price data — cannot value the drop."); return; }
-    if(P && P.finished){ dmsg("Fleet is finishing. Drops are frozen."); return; }
-    if(!who){ showNamebox(true); el("whoin").focus(); return; }
-    var lines=parse(el("oretxt").value);
-    if(!lines.length){ dmsg("Nothing parsed — paste ore from your inventory, one per line."); return; }
-    // pre-flight the worker's own caps so a bad paste fails HERE, not in the queue
-    if(lines.length>500){ dmsg("Too many lines ("+lines.length+") — a drop caps at 500. Split the paste."); return; }
+    if(!DATA){ dmsg("No price data — cannot value the drop."); return false; }
+    if(P && P.finished){ dmsg("Fleet is finishing. Drops are frozen."); return false; }
+    if(!who){ showNamebox(true); el("whoin").focus(); return false; }
+    if(!lines.length){ dmsg("Nothing to drop."); return false; }
+    if(lines.length>500){ dmsg("Too many lines ("+lines.length+") — a drop caps at 500. Split the paste."); return false; }
     lines.forEach(function(l){ if(l.name.length>80) l.name=l.name.slice(0,80); });
     lines.forEach(function(l){ if(!DATA.yields[l.name.toLowerCase()]) unmNames[l.name]=1; });
     var v=valueLines(lines, DATA, ORE_VOL);
     var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched, m3:v.m3,
-      note:(el("notein").value||"").trim().slice(0,200), detail:v.detail };
-    if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return; }
+      note:(note||"").trim().slice(0,200), detail:v.detail };
+    if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return false; }
     var o={p:payload, state:"sending"};
     outbox.push(o);
-    el("oretxt").value=""; el("notein").value="";
     sendDrop(o);
+    return true;
+  }
+  el("dropbtn").onclick=function(){
+    var lines=parse(el("oretxt").value);
+    if(!lines.length){ dmsg("Nothing parsed — paste ore from your inventory, one per line."); return; }
+    if(commitDrop(lines, el("notein").value)){
+      addChips(lines);              // seed/update the quick-drop chips from this paste
+      el("oretxt").value=""; el("notein").value="";
+    }
   };
   el("oretxt").addEventListener("keydown",function(e){
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter") el("dropbtn").click(); });
+
+  // ---------- quick drops: repeat the same ore without re-pasting ----------
+  // Each ore you drop becomes a chip {name, qty} above the paste box. Adjust the
+  // number, hit drop. Seeded from real drops so a chip is always a real ore name.
+  var QD_MAX=12;
+  var chips=[];
+  try{ chips=JSON.parse(lsGet(LS_CHIPS)||"[]")||[]; }catch(e){ chips=[]; }
+  if(!Array.isArray(chips)) chips=[];
+  function saveChips(){ lsSet(LS_CHIPS, JSON.stringify(chips)); }
+  function chipIndex(name){ var f=String(name).toLowerCase();
+    for(var i=0;i<chips.length;i++) if(String(chips[i].name).toLowerCase()===f) return i; return -1; }
+  function addChips(lines){
+    lines.forEach(function(l){
+      var q=parseInt(l.qty,10)||0; if(q<=0) return;
+      var ix=chipIndex(l.name);
+      if(ix>=0){ chips[ix].qty=q; }               // remember the latest quantity
+      else{ chips.unshift({name:l.name, qty:q}); } // newest first
+    });
+    if(chips.length>QD_MAX) chips=chips.slice(0,QD_MAX);
+    saveChips(); renderChips();
+  }
+  function chipValueHtml(name, qty){
+    qty=parseInt(qty,10)||0;
+    if(!DATA || qty<=0) return "<span class='qdv'></span>";
+    var v=valueLines([{name:name, qty:qty}], DATA, ORE_VOL);
+    if(v.unmatched) return "<span class='qdv zero'>not priced</span>";
+    return "<span class='qdv'>"+isk(Math.round(rate()*v.jita))+"</span>"; // buyback basis (what lands on your tab)
+  }
+  function renderChips(){
+    var wrap=el("quickdrops"), list=el("qdlist");
+    if(!wrap||!list) return;
+    if(!chips.length){ wrap.style.display="none"; list.innerHTML=""; return; }
+    wrap.style.display="";
+    list.innerHTML=chips.map(function(c){
+      return "<div class='qd' data-name=\""+esc(c.name)+"\">"
+        +"<span class='qdn'>"+esc(c.name)+"</span>"
+        +"<input class='qdq' type='number' min='1' step='1' value='"+(parseInt(c.qty,10)||0)+"'>"
+        +chipValueHtml(c.name, c.qty)
+        +"<button class='qddrop'>drop</button>"
+        +"<button class='qdx' title='forget this ore'>&times;</button></div>";
+    }).join("");
+    // wire each chip
+    var rows=list.querySelectorAll(".qd");
+    for(var i=0;i<rows.length;i++){ (function(row){
+      var name=row.getAttribute("data-name");
+      var input=row.querySelector(".qdq"), vspan=row.querySelector(".qdv");
+      input.addEventListener("input", function(){
+        var tmp=chipValueHtml(name, input.value);
+        // swap only the value span text/class without re-rendering the whole list
+        var m=tmp.match(/class='qdv( zero)?'>(.*)<\/span>/);
+        if(vspan && m){ vspan.className="qdv"+(m[1]?" zero":""); vspan.textContent=m[2]; }
+      });
+      input.addEventListener("keydown", function(e){ if(e.key==="Enter") row.querySelector(".qddrop").click(); });
+      row.querySelector(".qddrop").addEventListener("click", function(){
+        var q=parseInt(input.value,10);
+        if(!(q>0)){ dmsg("Set a quantity above zero."); input.focus(); return; }
+        if(commitDrop([{name:name, qty:q}], "")){
+          var ix=chipIndex(name); if(ix>=0){ chips[ix].qty=q; saveChips(); } // remember it
+          toast("Dropped "+q.toLocaleString()+" "+name+".");
+        }
+      });
+      row.querySelector(".qdx").addEventListener("click", function(){
+        var ix=chipIndex(name); if(ix>=0){ chips.splice(ix,1); saveChips(); renderChips(); }
+      });
+    })(rows[i]); }
+  }
+  // Value-only refresh: updates the ISK estimate spans without rebuilding inputs,
+  // so an hourly price reload never wipes a quantity the goblin is mid-typing.
+  function refreshChipValues(){
+    var list=el("qdlist"); if(!list) return;
+    var rows=list.querySelectorAll(".qd");
+    for(var i=0;i<rows.length;i++){
+      var name=rows[i].getAttribute("data-name");
+      var input=rows[i].querySelector(".qdq"), vspan=rows[i].querySelector(".qdv");
+      if(!input||!vspan) continue;
+      var m=chipValueHtml(name, input.value).match(/class='qdv( zero)?'>([\s\S]*)<\/span>/);
+      vspan.className="qdv"+(m&&m[1]?" zero":""); vspan.textContent=(m?m[2]:"");
+    }
+  }
+  renderChips(); // show any chips carried over from a previous session
 
   // ---------- render: everything below reads only from P (idempotent) ----------
   function rate(){ return (P && P.rate) || 0.88; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
     renderTiles(); renderCmd(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
-    seedPilotsFromPortal();
+    seedPilotsFromPortal(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
   function renderTiles(){
