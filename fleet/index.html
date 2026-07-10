@@ -112,6 +112,16 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .tipcustom{ width:44px; padding:3px 6px; background:var(--black); border:1px solid var(--line);
   color:var(--silver); font-family:var(--mono); font-size:12px; text-align:right; }
 .tipnote{ font-family:var(--mono); font-size:11px; color:var(--amber); }
+.announce{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:9px 12px; margin:0 0 16px;
+  background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); }
+.anlbl{ font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+.aninput{ flex:1 1 220px; min-width:150px; padding:5px 8px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12px; }
+.aninput.other{ flex:0 1 180px; }
+.ansel{ padding:5px 8px; background:var(--black); border:1px solid var(--line); color:var(--silver);
+  font-family:var(--mono); font-size:12px; }
+.annote{ flex-basis:100%; font-family:var(--mono); font-size:11px; color:var(--ore); }
+.annote.warn{ color:var(--amber); }
 .takelead{ margin-top:8px; width:100%; }
 .ctxmenu{ position:fixed; z-index:200; background:var(--black); border:1px solid var(--ore); min-width:180px; display:none; }
 .ctxmenu .ci{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--silver);
@@ -219,6 +229,7 @@ tr.haulrow{ cursor:pointer; }
             <div id="tiles" class="totline"></div>
             <div id="tipctl" class="tipctl" style="display:none"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
+            <div id="opannounce" class="announce" style="display:none"></div>
             <div id="marketline" class="thin" style="display:none"></div>
             <div id="pxbar" class="thin bad" style="display:none"></div>
             <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing. Drops are frozen.</div>
@@ -368,6 +379,7 @@ tr.haulrow{ cursor:pointer; }
 
   // ---------- state ----------
   var token="", who=lsGet(LS_WHO)||"", role="", unlocked=false;
+  var anSending=false;        // an op announcement POST is in flight (block re-render/re-enable)
   var P=null;                 // last /sync payload (server truth)
   var DATA=null, pricesAt=0, pxTry=0;  // refine price blob + when we got it + last fetch attempt
   var unmNames={};            // ore names we pasted that the price table doesn't know (round banner)
@@ -758,7 +770,7 @@ tr.haulrow{ cursor:pointer; }
   function basisLabel(b){ return (b||basisNow())==="jita" ? "Jita" : "Rens"; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
-    renderTiles(); renderCmd(); renderMarket(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
+    renderTiles(); renderCmd(); renderAnnounce(); renderMarket(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
     seedPilotsFromPortal(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
@@ -862,6 +874,74 @@ tr.haulrow{ cursor:pointer; }
       if(!confirm("Discard this round with NO haul log entry?")) return;
       api("POST","/reset",{by:who}).then(function(d){ if(d&&d.ok){ toast("Round reset. Fresh ledger."); tick(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("reset failed, still offline?"); }); };
+  }
+
+  // Curated "what we're mining" dropdown for the op announcement. Common belt
+  // ores (highsec -> null), the ice family, and catch-alls; "Other…" reveals a
+  // free-text box so anything exotic still works.
+  var MINING_TARGETS=[
+    ["Ore",["Veldspar","Scordite","Pyroxeres","Plagioclase","Omber","Kernite","Jaspet",
+      "Hemorphite","Hedbergite","Gneiss","Dark Ochre","Crokite","Spodumain","Bistot",
+      "Arkonor","Mercoxit"]],
+    ["Ice",["Ice (any)","Blue Ice","Clear Icicle","Glacial Mass","White Glaze","Glare Crust",
+      "Dark Glitter","Gelidus","Krystallos"]],
+    ["Other",["Moon ore","Gas","Mixed / whatever's in the belt"]]
+  ];
+
+  // FC-only "op is forming" composer -> one-time Discord shout. Only shows for
+  // the operator (op token). Guards against wiping a mid-typed field on a poll
+  // re-render, and reflects the last announcement sent this round.
+  function renderAnnounce(){
+    var box=el("opannounce");
+    if(!opKeys()){ box.style.display="none"; return; }
+    box.style.display="";
+    if(anSending) return; // a send is in flight: never rebuild (would re-enable the button -> double post)
+    var a=document.activeElement;
+    if(a && (a.id==="anLoc"||a.id==="anTgt"||a.id==="anOther")) return; // don't clobber typing
+    var an=(P&&P.announce)||null;
+    var known=an&&an.target&&MINING_TARGETS.some(function(g){ return g[1].indexOf(an.target)>=0; });
+    var otherSel=!!(an&&an.target&&!known);
+    var opts="";
+    MINING_TARGETS.forEach(function(g){
+      opts+="<optgroup label='"+esc(g[0])+"'>";
+      g[1].forEach(function(t){ opts+="<option value='"+esc(t)+"'"+((an&&an.target===t)?" selected":"")+">"+esc(t)+"</option>"; });
+      opts+="</optgroup>";
+    });
+    opts+="<option value='__other'"+(otherSel?" selected":"")+">Other…</option>";
+    var h="<span class='anlbl'>Announce op</span>"
+      +"<input id='anLoc' class='aninput' maxlength='300' placeholder='where we&#39;re forming: paste a dock, system, or fleet link' value='"+esc(an?an.location:"")+"'>"
+      +"<select id='anTgt' class='ansel'>"+opts+"</select>"
+      +"<input id='anOther' class='aninput other' maxlength='80' placeholder='what we&#39;re mining' value='"+(otherSel?esc(an.target):"")+"'"+(otherSel?"":" style='display:none'")+">"
+      +"<button id='anSend' class='gobtn'>Send to Discord</button>";
+    var noteCls="annote", noteTxt="";
+    if(an){
+      if(an.webhook==="sent") noteTxt="Announced "+esc(an.target)+" @ "+esc(an.location)+" &middot; posted "+hhmm(an.at);
+      else if(an.webhook==="sending") noteTxt="Posting to Discord…";
+      else if(an.webhook==="skipped"){ noteCls+=" warn"; noteTxt="Saved, but no Discord webhook is set, so nothing was posted."; }
+      else if(an.webhook==="duplicate-suppressed") noteTxt="Already sent that a moment ago.";
+      else { noteCls+=" warn"; noteTxt="Last send failed. Discord did not accept it. Try again."; }
+    } else noteTxt="Paste the form-up spot, pick the target, and shout it to the corp. Sent once, when you click.";
+    h+="<span class='"+noteCls+"'>"+noteTxt+"</span>";
+    box.innerHTML=h;
+    var sel=el("anTgt"), oth=el("anOther");
+    sel.onchange=function(){ oth.style.display=(sel.value==="__other")?"":"none"; if(sel.value==="__other") oth.focus(); };
+    el("anSend").onclick=function(){
+      var loc=(el("anLoc").value||"").trim();
+      var tgt=(sel.value==="__other")?(oth.value||"").trim():sel.value;
+      if(!loc){ toast("Paste where the op is forming first."); el("anLoc").focus(); return; }
+      if(!tgt){ toast("Pick or type what we're mining."); (sel.value==="__other"?oth:sel).focus(); return; }
+      var btn=this; btn.disabled=true; anSending=true; // block the poll re-render from re-enabling mid-flight
+      api("POST","/announce",{location:loc,target:tgt,by:who}).then(function(d){
+        anSending=false; btn.disabled=false;
+        if(d&&d.ok){
+          if(d.webhook==="sent") toast("Op announced to Discord.");
+          else if(d.webhook==="skipped") toast("Saved. No Discord webhook is configured.");
+          else if(d.webhook==="duplicate-suppressed") toast("Already sent that just now.");
+          else toast("Discord did not accept the post. Try again.");
+          tick();
+        } else toast(String((d&&d.error)||"announce failed"));
+      }).catch(function(){ anSending=false; btn.disabled=false; toast("announce failed, still offline?"); });
+    };
   }
 
   function renderFrozen(){
