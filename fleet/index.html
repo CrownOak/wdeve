@@ -97,9 +97,21 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .dot.on{ background:var(--ore); box-shadow:0 0 6px rgba(70,255,94,.5); }
 .rname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--silver); }
 .rtab{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+.rtip{ font-family:var(--mono); font-size:11px; color:var(--amber); flex:none; white-space:nowrap; }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
 .glyph.orca{ font-size:12.5px; }
 #orcabtn.on2{ color:var(--ore); }
+/* member tip control (tip the fleet boss a fraction of your payout) */
+.tipctl{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:9px 12px; margin:0 0 14px;
+  background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber); }
+.tiplbl{ font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+.tipp{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:3px 9px;
+  font-family:var(--mono); font-size:12px; cursor:pointer; }
+.tipp:hover{ border-color:var(--amber); color:var(--amber); }
+.tipp.on{ background:var(--amber); color:#1a1200; border-color:var(--amber); font-weight:700; }
+.tipcustom{ width:44px; padding:3px 6px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12px; text-align:right; }
+.tipnote{ font-family:var(--mono); font-size:11px; color:var(--amber); }
 .takelead{ margin-top:8px; width:100%; }
 .ctxmenu{ position:fixed; z-index:200; background:var(--black); border:1px solid var(--ore); min-width:180px; display:none; }
 .ctxmenu .ci{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--silver);
@@ -205,6 +217,7 @@ tr.haulrow{ cursor:pointer; }
         <div class="fgrid">
           <div>
             <div id="tiles" class="totline"></div>
+            <div id="tipctl" class="tipctl" style="display:none"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
             <div id="marketline" class="thin" style="display:none"></div>
             <div id="pxbar" class="thin bad" style="display:none"></div>
@@ -763,15 +776,52 @@ tr.haulrow{ cursor:pointer; }
     // get them and we never back-compute them here (DR-FLEET-4).
     var my=0;
     (P.entries||[]).forEach(function(e){ if(e.who===who) my+=e.jita88||0; });
+    var meM=null; (P.members||[]).forEach(function(m){ if(m.who===who) meM=m; });
+    var myTip = meM ? (meM.tip||0) : 0;
     var h="<div><div class='k'>Your tab</div><div class='v good'>"+isk(my)+"</div></div>"
+        +(myTip>0 ? "<div><div class='k'>Your tip</div><div class='v warn'>"+isk(myTip)+"</div></div>" : "")
         +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>"
         +"<div><div class='k'>Fleet m&sup3;</div><div class='v'>"+m3fmt(P.fleetM3||0)+"</div></div>";
     if(opKeys()){
       var mpct=Math.round((1-rate())*100);
       h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue)+"</div></div>"
-        +"<div><div class='k'>Margin ("+mpct+"%)</div><div class='v warn'>"+isk(P.margin||0)+"</div></div>";
+        +"<div><div class='k'>Margin ("+mpct+"%)</div><div class='v warn'>"+isk(P.margin||0)+"</div></div>"
+        +"<div><div class='k'>Tips in</div><div class='v good'>"+isk(P.totalTips||0)+"</div></div>";
     }
     el("tiles").innerHTML=h;
+    renderTipCtl(meM);
+  }
+
+  // member tip control: tip the fleet boss (the lead) a fraction of your payout.
+  function pushTip(frac){
+    if(!who){ showNamebox(true); return; }
+    if(!(frac>=0 && frac<=0.5)){ toast("tip is 0 to 50 percent"); return; }
+    api("POST","/set-tip",{who:who, pct:frac}).then(function(d){
+      if(d&&d.ok){ toast(d.pct>0 ? ("Tipping "+Math.round(d.pct*100)+"% to the fleet boss.") : "Tip cleared."); tick(); }
+      else if(d&&d.error){ toast(String(d.error)); tick(); } })
+      .catch(function(){ toast("tip change failed, still offline?"); });
+  }
+  function renderTipCtl(meM){
+    var box=el("tipctl"); if(!box) return;
+    if(!who){ box.style.display="none"; return; }
+    var a=document.activeElement; if(a && a.id==="tipcustom") return; // don't wipe a mid-typed custom tip
+    box.style.display="";
+    if(P.lead && P.lead===who){
+      box.innerHTML="<span class='tiplbl'>You run this op</span><span class='tipnote'>you collect the tips &middot; "+isk(P.totalTips||0)+" so far</span>";
+      return;
+    }
+    var pct = meM ? Math.round((meM.tipPct||0)*100) : 0;
+    var myTip = meM ? (meM.tip||0) : 0;
+    var h="<span class='tiplbl'>Tip the fleet boss</span>";
+    [0,5,10,15].forEach(function(p){
+      h+="<button class='tipp"+(pct===p?" on":"")+"' data-tip='"+p+"'>"+(p===0?"none":p+"%")+"</button>"; });
+    h+="<input id='tipcustom' class='tipcustom' value='"+pct+"' title='custom tip percent, 0 to 50'>%";
+    if(myTip>0) h+="<span class='tipnote'>you tip "+isk(myTip)+" to "+esc(P.lead||"the boss")+"</span>";
+    box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-tip]"), function(b){
+      b.onclick=function(){ pushTip(parseInt(b.getAttribute("data-tip"),10)/100); }; });
+    var tc=el("tipcustom");
+    if(tc) tc.onkeydown=function(e){ if(e.key==="Enter"){ var v=parseFloat(String(tc.value).replace(/[^0-9.]/g,"")); if(isFinite(v)) pushTip(Math.max(0,Math.min(50,v))/100); } };
   }
 
   // set the op market (rens|jita). Locked server-side once ore drops.
@@ -912,10 +962,11 @@ tr.haulrow{ cursor:pointer; }
               : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
         var orcaG = m.orca ? "<span class='glyph orca' title='flying the Orca (boosts, stays on the roster without drops)'>&#128011;</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
+        var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
           +"<span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
           +"<span class='rname'>"+esc(m.who)+"</span>"
-          +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+kick+"</div>";
+          +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+kick+"</div>";
       });
       box.innerHTML=h;
       if(role==="op"){
@@ -1022,16 +1073,18 @@ tr.haulrow{ cursor:pointer; }
     var r=rate(), pays=P.payouts||{}, whoJita={};
     (P.entries||[]).forEach(function(e){
       whoJita[e.who]=(whoJita[e.who]||0)+((P.entriesTrue||{})[e.id]||0); });
-    var names={};
-    (P.members||[]).forEach(function(m){ if((m.tab||0)>0) names[m.who]=1; });
+    var names={}, tipByWho={};
+    (P.members||[]).forEach(function(m){ if((m.tab||0)>0) names[m.who]=1; if(m.tipPct>0) tipByWho[m.who]=m.tipPct; });
     Object.keys(pays).forEach(function(w){ names[w]=1; });
     Object.keys(whoJita).forEach(function(w){ if(whoJita[w]>0) names[w]=1; });
+    // each member is paid NET of their tip; the tips (P.totalTips) go to the lead.
     var list=Object.keys(names).map(function(w){
-      var j=whoJita[w]||0; return {who:w, jita:j, payout:Math.round(r*j)}; });
-    list.sort(function(a,b){ return b.payout-a.payout; });
+      var j=whoJita[w]||0, payout=Math.round(r*j), tip=Math.round(payout*(tipByWho[w]||0));
+      return {who:w, jita:j, payout:payout, tip:tip, net:payout-tip}; });
+    list.sort(function(a,b){ return b.net-a.net; });
     var totPay=0, allPaid=list.length>0;
     list.forEach(function(x){ var pd=pays[x.who];
-      totPay+= pd&&pd.paid ? Math.round(pd.amount||0) : x.payout;
+      totPay+= pd&&pd.paid ? Math.round(pd.amount||0) : x.net;
       if(!(pd&&pd.paid)) allPaid=false; });
     var h="<div class='ovhdr'><h2>Payout</h2>"
       +(isLead
@@ -1052,10 +1105,11 @@ tr.haulrow{ cursor:pointer; }
       // list index, so the checkbox/amount/copy wiring and the per-name /payout
       // POST are untouched. Grouping below is presentation only (spec 5.1).
       var rowHtml=function(i, sub, note){ var x=list[i], pd=pays[x.who];
-        var amt = pd && pd.amount!=null ? Math.round(pd.amount) : x.payout;
+        var amt = pd && pd.amount!=null ? Math.round(pd.amount) : x.net;
+        var tipnote = x.tip>0 ? " <span class='tipnote'>after "+isk(x.tip)+" tip</span>" : "";
         return "<tr><td class='who"+(sub?" subwho":"")+"'>"+esc(x.who)+(note||"")+"</td>"
           +"<td class='num'>"+isk(x.jita)+"</td>"
-          +"<td class='num strong good copyisk' data-ci='"+i+"' title='click to copy the exact amount for the in-game transfer'>"+isk(x.payout)+"</td>"
+          +"<td class='num strong good copyisk' data-ci='"+i+"' title='click to copy the exact amount for the in-game transfer'>"+isk(x.net)+tipnote+"</td>"
           +"<td><input type='checkbox' class='paychk' data-pi='"+i+"'"+(pd&&pd.paid?" checked":"")+(isLead?"":" disabled")+"></td>"
           +"<td class='num'><input class='payamt' id='amt_"+i+"' value='"+amt+"'"+(isLead?"":" disabled")+"></td>"
           +"<td class='num'>"+(pd&&pd.at?hhmm(pd.at):"")+"</td></tr>"; };
@@ -1079,7 +1133,7 @@ tr.haulrow{ cursor:pointer; }
           if(!g.main){ h+=rowHtml(g.ix[0], false, ""); return; }
           var dropNames={}, sumJ=0, sumP=0;
           g.ix.forEach(function(i){ dropNames[String(list[i].who).toLowerCase()]=1;
-            sumJ+=list[i].jita; sumP+=list[i].payout; });
+            sumJ+=list[i].jita; sumP+=list[i].net; });
           var note = dropNames[String(g.payout||"").toLowerCase()]
             ? "" : " <span class='paynote'>pay to "+esc(g.payout)+"</span>";
           if(g.ix.length===1 && String(list[g.ix[0]].who).toLowerCase()===String(g.main).toLowerCase()){
@@ -1096,7 +1150,8 @@ tr.haulrow{ cursor:pointer; }
       h+="</tbody></table>";
       h+="<div class='totline' style='margin-top:14px'>"
         +"<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue||0)+"</div></div>"
-        +"<div><div class='k'>Total payout</div><div class='v good'>"+isk(totPay)+"</div></div>"
+        +"<div><div class='k'>Paid to members</div><div class='v good'>"+isk(totPay)+"</div></div>"
+        +((P.totalTips||0)>0 ? "<div><div class='k'>Tips to lead</div><div class='v good'>"+isk(P.totalTips)+"</div></div>" : "")
         +"<div><div class='k'>Margin</div><div class='v warn'>"+isk(P.margin||0)+"</div></div></div>";
     }
     h+="<div class='ovbtns'>"
