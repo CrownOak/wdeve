@@ -746,6 +746,20 @@ function renderStats(){
                 '<div class="tk">Avg op</div></div>';
       }
     }
+    /* Tips are baked into the archive at close (fleet v3.11): what you tipped
+       your bosses, and what you collected while running ops. The month's top
+       tipper takes the Deepest Pockets medal. */
+    var tipGiven = Number(fleet.tipGiven) || 0;
+    var tipReceived = Number(fleet.tipReceived) || 0;
+    if (tipGiven > 0 || (Number(fleet.opDrops)||0) > 0){
+      html += '<div class="tile"><div class="tv">' + fmtIsk(tipGiven) + '</div>' +
+              '<div class="tk">Tipped to bosses</div>' +
+              '<div class="ts">10% default &middot; Deepest Pockets medal</div></div>';
+    }
+    if (tipReceived > 0){
+      html += '<div class="tile"><div class="tv">' + fmtIsk(tipReceived) + '</div>' +
+              '<div class="tk">Tips collected as boss</div></div>';
+    }
     html += '<div class="tile"><div class="tv">' + esc(String(Number(con.accepted)||0)) + '</div>' +
             '<div class="tk">Solo contracts accepted</div>' +
             '<div class="ts">' + fmtIsk(con.isk) + ' ISK</div></div>';

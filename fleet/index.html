@@ -810,13 +810,15 @@ tr.haulrow{ cursor:pointer; }
       box.innerHTML="<span class='tiplbl'>You run this op</span><span class='tipnote'>you collect the tips &middot; "+isk(P.totalTips||0)+" so far</span>";
       return;
     }
-    var pct = meM ? Math.round((meM.tipPct||0)*100) : 0;
+    var pct = meM ? Math.round((meM.tipPct||0)*100) : 10;  // default 10% (corp norm) until you set your own
     var myTip = meM ? (meM.tip||0) : 0;
     var h="<span class='tiplbl'>Tip the fleet boss</span>";
     [0,5,10,15].forEach(function(p){
       h+="<button class='tipp"+(pct===p?" on":"")+"' data-tip='"+p+"'>"+(p===0?"none":p+"%")+"</button>"; });
     h+="<input id='tipcustom' class='tipcustom' value='"+pct+"' title='custom tip percent, 0 to 50'>%";
     if(myTip>0) h+="<span class='tipnote'>you tip "+isk(myTip)+" to "+esc(P.lead||"the boss")+"</span>";
+    else if(pct===0) h+="<span class='tipnote'>you opted out</span>";
+    else h+="<span class='tipnote'>10% is the corp default &middot; tap none to opt out</span>";
     box.innerHTML=h;
     Array.prototype.forEach.call(box.querySelectorAll("[data-tip]"), function(b){
       b.onclick=function(){ pushTip(parseInt(b.getAttribute("data-tip"),10)/100); }; });

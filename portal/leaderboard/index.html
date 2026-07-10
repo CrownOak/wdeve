@@ -133,6 +133,7 @@
           <button type="button" data-metric="isk">ISK</button>
           <button type="button" data-metric="m3">m&#179;</button>
           <button type="button" data-metric="ops">Ops</button>
+          <button type="button" data-metric="tips">Tips</button>
           <button type="button" data-metric="ore">One ore</button>
           <input id="oreIn" type="text" placeholder="veldspar" autocomplete="off" spellcheck="false" hidden>
         </div>
@@ -159,8 +160,8 @@
 <script>
 (function(){
   "use strict";
-  var VALID_METRIC = { all_ore:1, ice:1, isk:1, m3:1, ops:1, ore:1 };
-  var FLEET_ONLY   = { isk:1, m3:1, ops:1 };
+  var VALID_METRIC = { all_ore:1, ice:1, isk:1, m3:1, ops:1, tips:1, ore:1 };
+  var FLEET_ONLY   = { isk:1, m3:1, ops:1, tips:1 };
   var Q = { metric:"all_ore", source:"fleet", window:"month", ore_base:"" };
   var EVENT = null;
   var DATA = null;
@@ -238,7 +239,7 @@
   };
 
   function valFmt(metric, v){
-    if (metric === "isk") return fmtIsk(v) + " ISK";
+    if (metric === "isk" || metric === "tips") return fmtIsk(v) + " ISK";
     if (metric === "m3")  return fmtSig(v) + " m&#179;";
     if (metric === "ops") return String(Math.round(Number(v) || 0));
     return fmtSig(v) + " units";
@@ -249,6 +250,7 @@
     if (m === "isk")     return "ISK";
     if (m === "m3")      return "m&#179;";
     if (m === "ops")     return "ops";
+    if (m === "tips")    return "tips to bosses";
     if (m === "ore")     return "one ore" + (ob ? " &middot; " + esc(ob) : "");
     return esc(String(m || ""));
   }
