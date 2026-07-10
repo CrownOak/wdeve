@@ -122,6 +122,8 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
   font-family:var(--mono); font-size:12px; }
 .annote{ flex-basis:100%; font-family:var(--mono); font-size:11px; color:var(--ore); }
 .annote.warn{ color:var(--amber); }
+.anbtn{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+.anbtn:hover{ filter:brightness(1.08); }
 .takelead{ margin-top:8px; width:100%; }
 .ctxmenu{ position:fixed; z-index:200; background:var(--black); border:1px solid var(--ore); min-width:180px; display:none; }
 .ctxmenu .ci{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--silver);
@@ -912,7 +914,7 @@ tr.haulrow{ cursor:pointer; }
       +"<input id='anLoc' class='aninput' maxlength='300' placeholder='where we&#39;re forming: paste a dock, system, or fleet link' value='"+esc(an?an.location:"")+"'>"
       +"<select id='anTgt' class='ansel'>"+opts+"</select>"
       +"<input id='anOther' class='aninput other' maxlength='80' placeholder='what we&#39;re mining' value='"+(otherSel?esc(an.target):"")+"'"+(otherSel?"":" style='display:none'")+">"
-      +"<button id='anSend' class='gobtn'>Send to Discord</button>";
+      +"<button id='anSend' class='gobtn anbtn'>📢 Announce op</button>";
     var noteCls="annote", noteTxt="";
     if(an){
       if(an.webhook==="sent") noteTxt="Announced "+esc(an.target)+" @ "+esc(an.location)+" &middot; posted "+hhmm(an.at);
@@ -920,7 +922,7 @@ tr.haulrow{ cursor:pointer; }
       else if(an.webhook==="skipped"){ noteCls+=" warn"; noteTxt="Saved, but no Discord webhook is set, so nothing was posted."; }
       else if(an.webhook==="duplicate-suppressed") noteTxt="Already sent that a moment ago.";
       else { noteCls+=" warn"; noteTxt="Last send failed. Discord did not accept it. Try again."; }
-    } else noteTxt="Paste the form-up spot, pick the target, and shout it to the corp. Sent once, when you click.";
+    } else noteTxt="Paste the form-up spot, pick the target, and hit Announce. This pings @everyone in Discord, so fire it when the fleet is actually forming.";
     h+="<span class='"+noteCls+"'>"+noteTxt+"</span>";
     box.innerHTML=h;
     var sel=el("anTgt"), oth=el("anOther");
