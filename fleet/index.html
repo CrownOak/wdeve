@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BONK - FLEET DROP LEDGER</title>
-<link rel="stylesheet" href="/common.css?v=3">
+<link rel="stylesheet" href="/common.css?v=4">
 <style>
 /* page-specific chrome; everything structural comes from common.css */
 .howto{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
@@ -1402,4 +1402,20 @@ tr.haulrow{ cursor:pointer; }
 })();
 </script>
 <script src="/nav.js?v=8"></script>
+<script>
+window.BONK_TOUR = {
+  id: "fleet", accountKey: null, readyWhen: "#dropbox",
+  steps: [
+    { sel: null, title: "The drop ledger", body: "Log the ore you mine, get paid your exact share at buyback. Here is the whole loop, takes ten seconds.", place: "center" },
+    { sel: "#pilots", title: "Who are you mining as", body: "Pick your pilot here. Multiboxing? Add each alt once and switch between them, so every drop lands under the right name.", place: "auto" },
+    { sel: "#dropbox", title: "Drop your ore here", body: "In the EVE client, right-click your jetcan or ore hold and Copy. Paste it in this box and hit Drop. That is the whole job. Do it every time your hold is full.", place: "auto" },
+    { sel: "#quickdrops", title: "The lazy way", body: "After you drop an ore once, it becomes a chip up here. Next cycle just dial the number and tap. No more pasting.", place: "auto" },
+    { sel: "#feed", title: "Proof you dropped it", body: "Every drop shows here with its value. If it is on the feed, you get paid for it. Forget to log it and you just mined for free, which is a hobby, not a job.", place: "auto" },
+    { sel: "#marketline", title: "What your ore is worth", body: "We value ore at the Rens sell price by default, it pays more on ice. That is the buyback basis, no guessing.", place: "auto" },
+    { sel: "#tipctl", title: "Tip the fleet boss", body: "The boss runs the boosts and writes the checks. Corp norm is a 10% tip and it is already set. Tap none to opt out, no pressure.", place: "auto" },
+    { sel: "#cmdstrip", title: "Fleet command", body: "You are running this one. Set the market, finish the fleet, and open the payout from here. Hit the green Announce button to shout the op to Discord so the goblins form up.", place: "auto" }
+  ]
+};
+</script>
+<script src="/walkthrough.js?v=1"></script>
 </body></html>

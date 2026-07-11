@@ -197,6 +197,35 @@ th[data-tip]{ cursor:help; text-decoration:underline dotted rgba(70,255,94,.45);
   content:""; position:absolute; left:50%; top:calc(100% + 3px); transform:translateX(-50%);
   border:5px solid transparent; border-bottom-color:var(--ore); z-index:200; pointer-events:none; }
 
+/* ---- walkthrough / coach-mark tour (driven by /walkthrough.js) ---- */
+.wt-root{ position:fixed; inset:0; z-index:9998; }
+.wt-overlay{ position:fixed; inset:0; background:transparent; }
+.wt-spot{ position:fixed; border:2px solid var(--ore); border-radius:5px;
+  box-shadow:0 0 0 9999px rgba(7,8,9,.82), 0 0 22px rgba(70,255,94,.35); pointer-events:none;
+  transition:left .22s ease, top .22s ease, width .22s ease, height .22s ease; }
+.wt-card{ position:fixed; z-index:10000; width:min(340px, calc(100vw - 28px));
+  background:var(--steel); border:1px solid var(--line); border-left:3px solid var(--ore);
+  padding:16px 18px; box-shadow:0 18px 50px rgba(0,0,0,.5); font-family:var(--body); }
+.wt-title{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+  font-size:16px; color:var(--silver); margin-bottom:7px; }
+.wt-body{ font-size:13.5px; line-height:1.6; color:var(--silver-dim); }
+.wt-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:15px; gap:10px; }
+.wt-count{ font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.1em; }
+.wt-btns{ display:flex; gap:7px; }
+.wt-b{ font-family:var(--mono); font-size:12px; padding:7px 12px; border:1px solid var(--line);
+  background:transparent; color:var(--silver-dim); cursor:pointer; }
+.wt-b:hover{ border-color:var(--ore); color:var(--ore); }
+.wt-next{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+.wt-next:hover{ color:#04140a; filter:brightness(1.08); }
+.wt-card.wt-sheet{ left:0!important; right:0!important; bottom:0!important; top:auto!important;
+  transform:none!important; width:100%; border-left:0; border-top:3px solid var(--ore); }
+.wt-help{ position:fixed; right:16px; bottom:16px; z-index:9990; width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--ore); background:var(--steel); color:var(--ore); font-family:var(--display);
+  font-weight:700; font-size:20px; line-height:1; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,.4); }
+.wt-help:hover{ background:var(--ore); color:#04140a; }
+@media(prefers-reduced-motion:reduce){ .wt-spot{ transition:none; } }
+@media(max-width:560px){ .wt-help{ right:12px; bottom:12px; } }
+
 /* ---- compressed toggle (reprocess reference) ---- */
 .toggle{ display:flex; align-items:center; gap:10px; margin:2px 0 16px; font-family:var(--mono);
          font-size:12px; letter-spacing:.04em; color:var(--muted); }

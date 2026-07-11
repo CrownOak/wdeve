@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>BONK &middot; Member Portal</title>
-<link rel="stylesheet" href="/common.css?v=3">
+<link rel="stylesheet" href="/common.css?v=4">
 <style>
   /* ---------- skeletons (C8 first paint) ---------- */
   @keyframes skpulse{ 0%{opacity:.45} 50%{opacity:.9} 100%{opacity:.45} }
@@ -630,6 +630,8 @@ function safeRender(fn, el){
   }
 }
 function renderAll(){
+  // key the walkthrough "seen" state per account so a shared PC does not hide it from the next goblin
+  try { if (window.BONK_TOUR && S.me) window.BONK_TOUR.accountKey = (mainChar() && mainChar().ign) || null; } catch(e){}
   safeRender(renderBanners,  $("banners"));
   safeRender(renderIdentity, $("panelIdentity"));
   safeRender(renderStats,    $("panelStats"));
@@ -2186,4 +2188,19 @@ function renderFoot(){
 })();
 </script>
 <script src="/nav.js?v=8"></script>
+<script>
+window.BONK_TOUR = {
+  id: "portal", accountKey: null, readyWhen: "#panelIdentity",
+  steps: [
+    { sel: null, title: "Welcome to the goblin portal", body: "This is your home base: your ISK, your medals, your pilots, and everything the corp is up to. Quick tour, then you are set. Skip anytime.", place: "center" },
+    { sel: "#panelIdentity", title: "This is you", body: "Your name, your rank, how long you have been a goblin. The number that matters is lifetime ISK, and it only goes up.", place: "auto" },
+    { sel: "#panelChars", title: "Your pilots + who gets paid", body: "Got mining alts? Add them here so every drop counts as YOU. Pick your payout character so the buyback ISK lands on the right pilot.", place: "auto" },
+    { sel: "#panelAcademy", title: "Start here: the Academy", body: "Six short modules. Do them and you learn the doctrine, the workflow, and where the checks come from. Finish all six and you earn your first medal. Do this first.", place: "auto" },
+    { sel: "#corpStripWrap", title: "Project: Our Own Rock", body: "The corp is buying its own station. Watch the bar climb, and hit Contribute to help build it. Every goblin who chips in gets counted.", place: "auto" },
+    { sel: "#panelStats", title: "Your numbers", body: "Your ISK, your ops, your ore. Every drop you log lands here. No mystery math, the ledger saw you drop it so you get paid for it.", place: "auto" },
+    { sel: null, title: "That is the tour", body: "Poke around, do the Academy, get in a fleet. Lost? Hit the ? in the corner to run this again. The ore must flow.", place: "center" }
+  ]
+};
+</script>
+<script src="/walkthrough.js?v=1"></script>
 </body></html>
