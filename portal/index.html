@@ -387,6 +387,12 @@
   .station .stbtn2:hover{ filter:brightness(1.08); }
   .station .stbtn2:disabled{ opacity:.5; cursor:not-allowed; }
   .station .stcnote{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-top:8px; min-height:1px; }
+  .station .stcl{ margin:2px 15px 0; padding:11px 13px; background:var(--steel-2); border:1px solid var(--line-soft); }
+  .station .stcl-h{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .station .stcl-row{ display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-family:var(--mono); font-size:12px; }
+  .station .stcl-n{ color:var(--silver-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .station .stcl-a{ color:var(--ore); flex:0 0 auto; }
+  .station .stcl-more{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; }
   @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ width:100%; height:130px; border-right:0; border-bottom:1px solid var(--line-soft); } }
   .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
           margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
@@ -975,6 +981,16 @@ function renderCorpStrip(){
       ? '<div class="styou">You have put <b>' + fmtIsk(Number(syou.contributed)||0) + '</b> into the rock'
         + (Number(syou.pending) > 0 ? ' &middot; ' + fmtIsk(Number(syou.pending)) + ' pending approval' : '') + '</div>'
       : '';
+    var contribs = station.contributors || [];
+    var contribHtml = '';
+    if (contribs.length){
+      var crows = contribs.slice(0, 15).map(function(c, i){
+        var medal = i===0?'&#129351; ':(i===1?'&#129352; ':(i===2?'&#129353; ':''));
+        return '<div class="stcl-row"><span class="stcl-n">' + medal + esc(c.ign) + '</span><span class="stcl-a">' + fmtIsk(Number(c.total)||0) + '</span></div>';
+      }).join('');
+      var cmore = contribs.length > 15 ? '<div class="stcl-more">and ' + (contribs.length - 15) + ' more goblins on the wall</div>' : '';
+      contribHtml = '<div class="stcl"><div class="stcl-h">Goblins who built the rock</div>' + crows + cmore + '</div>';
+    }
     html += '<div class="station"><div class="sthead">' +
       '<img class="stpic" src="/portal/athanor.jpg" alt="Athanor refinery" loading="lazy">' +
       '<div class="stinfo">' +
@@ -988,9 +1004,10 @@ function renderCorpStrip(){
       '<div class="stbody"><b>What it is:</b> our own Athanor refinery in highsec near Rens, owned by a holding corp so BONK can never be war decced. ' +
       '<b>What it does:</b> a home to dock and store, our buyback ore refined in house at higher yield so 100% stays in the corp (no station tax, no Jita haul), on site compression, and passive moon mining later. ' +
       '<b>Where the ISK goes:</b> the hull, the reprocessing rig fit, months of fuel, a T2 yield upgrade, and a war chest to rebuild if anyone ever pops it.</div>' +
+      contribHtml +
       '<button class="stbtn" id="stContribBtn">Contribute &#129689;</button>' +
       '<div class="stcontrib" id="stContrib" style="display:none">' +
-        '<div class="stci">Send the ISK to <b>Wealthy Dropouts</b> in game first (open the corp, then Give Money to the corp). Then log the amount below so an officer can confirm it against the wallet and move the bar.</div>' +
+        '<div class="stci">Send the ISK in game first: open <b>Corp Info &rarr; More &rarr; Give Money &rarr; Division 2</b> (the rock fund) and send it to <b>Wealthy Dropouts</b>. Then log the amount below so an officer can confirm it and move the bar.</div>' +
         '<div class="stcrow"><input id="stcAmt" class="stcamt" inputmode="text" autocomplete="off" placeholder="how much you sent, e.g. 100m or 1.5b"><button class="stbtn2" id="stcSend">Submit for approval</button></div>' +
         '<div class="stcnote" id="stcNote"></div>' +
       '</div>' +
