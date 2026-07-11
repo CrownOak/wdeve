@@ -9,7 +9,53 @@
    First-run spotlight coach-mark tour. Page-only, no deps, no worker/DB. */
 (function () {
   "use strict";
+  // Central tool-tour registry, keyed by the first path segment. Pages that do
+  // not define window.BONK_TOUR (the read-only tools) get their tour from here
+  // automatically, so a tool page only needs to load this script. Portal + fleet
+  // define their own richer config inline and are not in here. Mostly centered
+  // explainer cards (no selector) so they are robust across generated pages.
+  var TOURS = {
+    refine: { steps: [
+      { title: "The Refinery", body: "Paste any ore or ice from your cargo and this shows what it is worth refined, at live prices. It is the exact basis the corp buyback uses." },
+      { title: "Use it", body: "Copy the ore in the EVE client, paste it in the box, read the ISK. No login, prices refresh hourly." } ] },
+    reprocess: { steps: [
+      { title: "Reprocess reference", body: "Same idea as the refinery, laid out as a table: what each ore and ice reprocesses into and what it is worth." },
+      { title: "Read it", body: "Scan for what pays. The compressed toggle flips between raw and compressed values." } ] },
+    market: { steps: [
+      { title: "Market Finder", body: "Where things sell and for how much across the trade hubs, from live EVE market data." },
+      { title: "Read it", body: "Compare the buy and sell columns. A fat spread is a trade, but thin volume kills it, so watch the volume too." } ] },
+    arbitrage: { steps: [
+      { title: "Arbitrage", body: "A buy-here, sell-there profit finder. It scans the hubs for things you can move for a margin." },
+      { title: "Read it", body: "Sort by margin, but check the daily volume, it caps how much you can actually flip. Updates hourly." } ] },
+    blueprints: { steps: [
+      { title: "Blueprints", body: "What is worth building right now: the material cost versus the sell price, from live data." },
+      { title: "Read it", body: "Green margin means profit after materials. Start with what you already have the skills and minerals for." } ] },
+    lowsec: { steps: [
+      { title: "Lowsec Scout", body: "Intel on lowsec systems before you undock: what is out there and how spicy it has been lately." },
+      { title: "Read it", body: "Check the traffic and recent-loss signals. Quiet is good. Busy and bloody, pick another belt." } ] },
+    kills: { steps: [
+      { title: "Corp Killboard", body: "Our combat record, mirrored live: every kill and loss the corp has been on." },
+      { title: "Use it", body: "Click any row to open the full report on zKillboard. Learn what killed us, then do not do that." } ] },
+    "bonk-prospects": { readyWhen: "table", steps: [
+      { title: "Recruiting list", body: "Corp-less pilots who recently lost a mining ship, worth a friendly recruiting mail. Recruiters only." },
+      { title: "Send one", body: "MAIL and MSG copy a personalized message ready to paste in game. The X marks a pilot done for every recruiter, so nobody double-sends." } ] },
+    alliance: { steps: [
+      { title: "Who we are", body: "The BIG ROCK ENERGY story, the perks, and how to join. This is the front door." },
+      { title: "Get in", body: "The tools live in the nav up top. The Discord link gets you in, prospect role and all." } ] },
+    decorations: { steps: [
+      { title: "The Wall of Goblins", body: "Every medal the corp gives out, and exactly how each one is earned." },
+      { title: "Earn one", body: "Most are automatic, the ledger and the kill log watch for them. Pick one and aim at it." } ] },
+    tools: { steps: [
+      { title: "The Goblin Toolkit", body: "Every tool the corp built, in one place: refining, market, industry, mining ops, intel." },
+      { title: "Use it", body: "Public tools need no login. A few goblin tools ask for the corp word. Tap any card to open it." } ] }
+  };
+
   var T = window.BONK_TOUR;
+  if (!T) {
+    var seg = location.pathname.replace(/^\/+|\/+$/g, "").split("/")[0].toLowerCase();
+    var reg = TOURS[seg];
+    if (reg) { T = { id: seg, accountKey: null, readyWhen: reg.readyWhen || null, steps: reg.steps }; window.BONK_TOUR = T; }
+  }
   if (!T || !T.steps || !T.steps.length) return;
 
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;

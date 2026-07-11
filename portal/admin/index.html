@@ -813,7 +813,7 @@ async function addMemberModal(){
       document.getElementById("am_out").innerHTML=
         '<div style="margin:14px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
         +'<div class="hand">'+esc(hand)+"</div>"
-        +cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+        +cpBtn("https://bonkeve.com/portal/claim?code="+code,"Copy link")+" "+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
       toast("Code minted. Hand it off and mark it when you do.");
       secMembers();
     });
@@ -1111,7 +1111,7 @@ function wireDrawer(aid, chars, main){
         const r=await api("/api/admin/reset-password",{account_id:aid});
         const code=r.code||"", hand=r.handoff||("Your BONK reset code: "+code);
         q("#dw_danger_out").innerHTML='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
-          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn("https://bonkeve.com/portal/claim?code="+code,"Copy link")+" "+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
         toast("Reset minted. Hand it to them yourself.");
       });
     });
@@ -1354,7 +1354,7 @@ async function secRecruiting(){
         const r=await api("/api/admin/applications/"+encodeURIComponent(id)+"/review", body);
         const code=r.code||"", hand=r.handoff||("Your BONK portal code: "+code);
         let out='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
-          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+          +'<div class="hand">'+esc(hand)+"</div>"+cpBtn("https://bonkeve.com/portal/claim?code="+code,"Copy link")+" "+cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
         const cid=r.code_id!=null?r.code_id:(r.codeId);
         if(cid!=null) out+=' <button class="inv" data-handoff2="'+esc(String(cid))+'">Mark handed off</button>';
         const host=document.getElementById("r_out_"+id);

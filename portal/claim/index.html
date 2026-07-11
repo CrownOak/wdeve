@@ -132,6 +132,23 @@
   });
   ign.addEventListener("input", drawGob);
 
+  // Magic-link prefill: ?code=XXXX fills the code and pulls the name + Discord
+  // this goblin gave us when they applied, so they just pick a password.
+  (function(){
+    var pc = (new URLSearchParams(location.search).get("code") || "").trim().toUpperCase();
+    if (!pc) return;
+    code.value = pc; drawGob();
+    fetch("/api/claim/prefill?code=" + encodeURIComponent(pc)).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if (!d || !d.ok) return;
+      if (d.ign && !ign.value.trim()) { ign.value = d.ign; drawGob(); }
+      if (d.discord && !disc.value.trim()) disc.value = d.discord;
+      if (d.timezone && tz) { try { tz.value = d.timezone; } catch(e){} }
+      var note = document.getElementById("prefillnote");
+      if (!note) { note = document.createElement("div"); note.id = "prefillnote"; note.className = "skipnote"; form.parentNode.insertBefore(note, form); }
+      note.textContent = "Pulled from your application. Just pick a password and you are in.";
+    }).catch(function(){});
+  })();
+
   function fail(msg){ err.textContent = msg; go.disabled = false; go.textContent = "Claim it"; }
 
   form.addEventListener("submit", function(ev){
