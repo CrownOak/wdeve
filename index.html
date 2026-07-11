@@ -377,7 +377,7 @@
     <div class="disc" id="disc">
       <div class="disc-head">
         <div class="disc-live"><span class="disc-dot"></span><b id="disc-count">&hellip;</b> goblins in the belt right now</div>
-        <a class="disc-join" id="disc-join" href="https://discord.com/invite/VQgCmJeG" target="_blank" rel="noopener">Jump in &#9656;</a>
+        <a class="disc-join" id="disc-join" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Jump in &#9656;</a>
       </div>
       <div class="disc-list" id="disc-list"><div class="disc-loading">knocking on the airlock&hellip;</div></div>
       <div class="disc-foot">// live headcount straight from Discord. lurkers welcome, but the ore does not mine itself.</div>
@@ -522,7 +522,7 @@
     fetch("https://discord.com/api/guilds/"+GUILD+"/widget.json").then(function(r){return r.ok?r.json():null;}).then(function(d){
       if(!d) throw "no";
       if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length);
-      if(joinEl && d.instant_invite) joinEl.href=d.instant_invite;
+      // keep the prospect-role invite (eavumbvRnp) — do NOT override with the widget's instant_invite
       var rank={online:0,idle:1,dnd:2};
       var members=(d.members||[]).slice().sort(function(a,b){
         return ((rank[a.status]==null?3:rank[a.status])-(rank[b.status]==null?3:rank[b.status]))
@@ -540,7 +540,7 @@
       });
       listEl.innerHTML=h;
     }).catch(function(){
-      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.com/invite/VQgCmJeG" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
+      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
     });
   })();
 </script>
