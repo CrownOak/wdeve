@@ -1754,6 +1754,20 @@ async function secSettings(){
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_gsave">Save the goal</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div>";
+  /* station fund: the Athanor bar every member sees. Raised is set by hand from the corp wallet. */
+  h+='<div class="panel"><div class="ptitle">Station fund <span class="pn">the Athanor bar on every member dashboard</span></div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">Members give ISK to the Wealthy Dropouts corp wallet. Read the wallet, then set Raised here to move the bar. Turn it on to show the section.</div>'
+    +'<div class="frm">'
+    +'<div><label>Show it</label><select id="st_son"'+(ISADMIN?"":" disabled")+'>'
+      +'<option value="0"'+(s.station_on?"":" selected")+'>off</option>'
+      +'<option value="1"'+(s.station_on?" selected":"")+'>on</option>'
+    +"</select></div>"
+    +'<div><label>Goal (ISK)</label><input id="st_stt" type="number" min="0" value="'+esc(s.station_target!=null?s.station_target:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div><label>Raised (ISK)</label><input id="st_str" type="number" min="0" value="'+esc(s.station_raised!=null?s.station_raised:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div class="wide"><label>Note, members see this</label><input id="st_stn" value="'+esc(s.station_note||"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +"</div>"
+    +(ISADMIN?'<button class="inv" id="st_stsave">Save the fund</button>':'<span class="rowmeta">read only at your clearance</span>')
+    +"</div>";
   /* front page testimonials: live member quotes on bonkeve.com; hide = pulled from public */
   h+='<div class="panel"><div class="ptitle">Front page testimonials <span class="pn">what the goblins say, on the public page</span></div>';
   if(!tj || !tj.ok){ h+='<div class="nap">The wall did not answer. Reload to knock again.</div>'; }
@@ -1806,6 +1820,19 @@ async function secSettings(){
         }
         await api("/api/admin/settings", body);
         toast("Goal saved. Now point the horde at it.");
+        secSettings();
+      });
+    });
+    document.getElementById("st_stsave").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        const body={ station_on: document.getElementById("st_son").value==="1",
+          station_note: document.getElementById("st_stn").value.trim() };
+        const stt=document.getElementById("st_stt").value, str=document.getElementById("st_str").value;
+        if(stt!=="") body.station_target=Number(stt);
+        if(str!=="") body.station_raised=Number(str);
+        await api("/api/admin/settings", body);
+        toast("Station fund saved. The bar moves.");
         secSettings();
       });
     });
