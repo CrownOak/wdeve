@@ -208,6 +208,9 @@
   .moddone{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-top:10px; }
   .acadbanner{ border:1px solid rgba(70,255,94,.4); background:var(--black); color:var(--laser);
                font-family:var(--mono); font-size:12.5px; padding:12px 15px; margin:0 0 14px; line-height:1.6; }
+  .acaddone{ font-family:var(--mono); font-size:12px; color:var(--muted); padding:6px 0 2px; }
+  .acadlink{ background:none; border:0; color:var(--ore); font-family:var(--mono); font-size:12px; cursor:pointer; text-decoration:underline; padding:0; }
+  .acadlink:hover{ filter:brightness(1.15); }
   .modbody p{ margin:0 0 10px; }
   .modbody .subtitle{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
                       color:var(--muted); margin:0 0 12px; }
@@ -375,6 +378,15 @@
   .station .stbtn:hover{ filter:brightness(1.08); }
   .station .stcontrib{ margin:0 15px 15px; padding:11px 13px; background:var(--steel-2); border:1px solid var(--line); font-family:var(--mono); font-size:12px; line-height:1.55; color:var(--silver-dim); }
   .station .stcontrib b{ color:var(--ore); }
+  .station .styou{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:7px; }
+  .station .styou b{ color:var(--ore); }
+  .station .stci{ margin-bottom:10px; }
+  .station .stcrow{ display:flex; gap:8px; flex-wrap:wrap; }
+  .station .stcamt{ flex:1 1 180px; min-width:140px; padding:7px 9px; background:#0b0d0e; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:13px; }
+  .station .stbtn2{ background:var(--ore); color:#04140a; border:1px solid var(--ore); font-weight:700; padding:7px 14px; cursor:pointer; font-family:var(--mono); font-size:12px; }
+  .station .stbtn2:hover{ filter:brightness(1.08); }
+  .station .stbtn2:disabled{ opacity:.5; cursor:not-allowed; }
+  .station .stcnote{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-top:8px; min-height:1px; }
   @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ width:100%; height:130px; border-right:0; border-bottom:1px solid var(--line-soft); } }
   .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
           margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
@@ -505,6 +517,16 @@ function fmtSig(n){
   return s + u;
 }
 function fmtIsk(n){ return fmtSig(n); }
+/* parse "100m" / "1.5b" / "250000" style ISK input into a number of ISK */
+function parseIskInput(v){
+  v = String(v == null ? "" : v).trim().toLowerCase().replace(/,/g, "").replace(/isk/g, "").trim();
+  var mult = 1;
+  if (/b$/.test(v)) { mult = 1e9; v = v.slice(0, -1); }
+  else if (/m$/.test(v)) { mult = 1e6; v = v.slice(0, -1); }
+  else if (/k$/.test(v)) { mult = 1e3; v = v.slice(0, -1); }
+  var n = parseFloat(v.trim());
+  return isFinite(n) ? Math.floor(n * mult) : NaN;
+}
 function fmtM3(n){ return fmtSig(n) + " m³"; }
 function toDate(x){
   if (x == null) return null;
@@ -946,6 +968,11 @@ function renderCorpStrip(){
   if (station){
     var sp = Math.max(0, Math.min(100, Number(station.pct) || 0));
     var sraised = Number(station.raised) || 0, starget = Number(station.target) || 0;
+    var syou = station.you || { contributed:0, pending:0 };
+    var youLine = (Number(syou.contributed) > 0 || Number(syou.pending) > 0)
+      ? '<div class="styou">You have put <b>' + fmtIsk(Number(syou.contributed)||0) + '</b> into the rock'
+        + (Number(syou.pending) > 0 ? ' &middot; ' + fmtIsk(Number(syou.pending)) + ' pending approval' : '') + '</div>'
+      : '';
     html += '<div class="station"><div class="sthead">' +
       '<img class="stpic" src="/portal/athanor.jpg" alt="Athanor refinery" loading="lazy">' +
       '<div class="stinfo">' +
@@ -954,12 +981,17 @@ function renderCorpStrip(){
         '<div class="pl">' + fmtIsk(sraised) + ' / ' + fmtIsk(starget) + ' ISK &middot; ' + sp + '%</div>' +
         '<div class="pbar stbar"><i style="width:' + sp + '%"></i></div>' +
         '<div class="stmile">1.6B refinery lit &middot; 2.5B moon drill &middot; 3.3B T2 rigs &middot; 4.25B done</div>' +
+        youLine +
       '</div></div>' +
       '<div class="stbody"><b>What it is:</b> our own Athanor refinery in highsec near Rens, owned by a holding corp so BONK can never be war decced. ' +
       '<b>What it does:</b> a home to dock and store, our buyback ore refined in house at higher yield so 100% stays in the corp (no station tax, no Jita haul), on site compression, and passive moon mining later. ' +
       '<b>Where the ISK goes:</b> the hull, the reprocessing rig fit, months of fuel, a T2 yield upgrade, and a war chest to rebuild if anyone ever pops it.</div>' +
       '<button class="stbtn" id="stContribBtn">Contribute &#129689;</button>' +
-      '<div class="stcontrib" id="stContrib" style="display:none">Send any ISK to <b>Wealthy Dropouts</b> in game. Open the corp and Give Money, or right click a director and send it to the corp. Every ISK goes straight to the rock and moves this bar. Ping an officer after so we bump the total.</div>' +
+      '<div class="stcontrib" id="stContrib" style="display:none">' +
+        '<div class="stci">Send the ISK to <b>Wealthy Dropouts</b> in game first (open the corp, then Give Money to the corp). Then log the amount below so an officer can confirm it against the wallet and move the bar.</div>' +
+        '<div class="stcrow"><input id="stcAmt" class="stcamt" inputmode="text" autocomplete="off" placeholder="how much you sent, e.g. 100m or 1.5b"><button class="stbtn2" id="stcSend">Submit for approval</button></div>' +
+        '<div class="stcnote" id="stcNote"></div>' +
+      '</div>' +
       '</div>';
   }
   if (goal){
@@ -986,7 +1018,20 @@ function renderCorpStrip(){
   }
   el.innerHTML = html;
   var scb = $("stContribBtn");
-  if (scb) scb.onclick = function(){ var c = $("stContrib"); if (c) c.style.display = c.style.display === "none" ? "" : "none"; };
+  if (scb) scb.onclick = function(){ var c = $("stContrib"); if (c) c.style.display = c.style.display === "none" ? "" : "none"; var a=$("stcAmt"); if(a && c && c.style.display!=="none") a.focus(); };
+  var scs = $("stcSend");
+  if (scs) scs.onclick = async function(){
+    var note = $("stcNote"), ai = $("stcAmt");
+    var amt = parseIskInput(ai ? ai.value : "");
+    if (!isFinite(amt) || amt <= 0){ if (note) note.textContent = "Enter how much ISK you sent, like 100m or 1.5b."; return; }
+    var btn = this; btn.disabled = true;
+    try {
+      await api("station/contribute", { amount: amt });
+      if (note) note.textContent = "Logged " + fmtIsk(amt) + " for approval. An officer will confirm it against the wallet and the bar will move.";
+      if (ai) ai.value = "";
+    } catch(e){ if (note) note.textContent = (e && e.message) || "could not submit, try again"; }
+    finally { btn.disabled = false; }
+  };
 }
 
 /* ============ event + live op banners ============ */
@@ -1887,9 +1932,22 @@ function renderAcademy(){
   var total = modules.length;
   var p = total ? Math.floor(n/total*100) : 0;
 
+  // Once you have finished, you can dismiss the whole section (per account, this
+  // browser). A one-line stub with a "show it again" link brings it back.
+  var acctKey = (mainChar() && mainChar().ign) || "x";
+  var ACAD_DKEY = "bonk_acad_dismissed_" + acctKey;
+  var acadDismissed = false; try { acadDismissed = localStorage.getItem(ACAD_DKEY) === "1"; } catch(e){}
+  if (ob.complete && acadDismissed){
+    el.innerHTML = '<div class="ptitle">The Academy</div>' +
+      '<div class="acaddone">Onboarding complete &#10003; <button class="acadlink" id="acadShow">show it again</button></div>';
+    var asb = $("acadShow");
+    if (asb) asb.onclick = function(){ try { localStorage.removeItem(ACAD_DKEY); } catch(e){} safeRender(renderAcademy, el); };
+    return;
+  }
+
   var html = '<div class="ptitle">The Academy</div>';
   if (ob.complete){
-    html += '<div class="acadbanner">You are officially onboarded, and Fresh Off The Rock is on your shelf. The belt is yours. Now go make the number climb.</div>';
+    html += '<div class="acadbanner">You are officially onboarded, and Fresh Off The Rock is on your shelf. The belt is yours. Now go make the number climb. <button class="acadlink" id="acadDismiss">dismiss this</button></div>';
   }
   html += '<div class="acadprog"><span>' + n + ' of ' + total + '</span>' +
           '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
@@ -1913,6 +1971,8 @@ function renderAcademy(){
   }
   el.innerHTML = html;
 
+  var adb = $("acadDismiss");
+  if (adb) adb.onclick = function(){ try { localStorage.setItem(ACAD_DKEY, "1"); } catch(e){} safeRender(renderAcademy, el); };
   var heads = el.querySelectorAll(".modhead");
   for (var hh=0; hh<heads.length; hh++) heads[hh].addEventListener("click", function(){
     var k = this.getAttribute("data-modkey");

@@ -1727,6 +1727,8 @@ async function secSettings(){
     return;
   }
   try{ tj=await api("/api/admin/testimonials"); }catch(e){ if(e.message===SILENT) return; }
+  let cj=null;
+  try{ cj=await api("/api/admin/station/contributions"); }catch(e){ if(e.message===SILENT) return; }
   const s=j.settings||j;
   const rate=Number(s.contract_rate);
   const pct=isFinite(rate)?Math.round(rate*1000)/10:88;
@@ -1768,6 +1770,28 @@ async function secSettings(){
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_stsave">Save the fund</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div>";
+  /* station fund approval queue: members declare ISK sent to the corp wallet; approve adds it to the bar */
+  const contribs=(cj&&cj.contributions)||[];
+  const pendC=contribs.filter(function(c){ return c.status==="pending"; });
+  h+='<div class="panel"><div class="ptitle">Station contributions <span class="pn">members who say they paid the corp wallet</span></div>';
+  if(!cj||!cj.ok){ h+='<div class="nap">The queue did not answer. Reload to knock again.</div>'; }
+  else if(!contribs.length){ h+='<div class="nap">No contributions logged yet. When a goblin submits one it lands here.</div>'; }
+  else{
+    if(pendC.length) h+='<div class="rowmeta" style="margin-bottom:10px">'+pendC.length+' waiting. Check the Wealthy Dropouts wallet, then approve (adds to the bar) or reject.</div>';
+    contribs.slice(0,40).forEach(function(c){
+      var badge=c.status==="pending"?'':' <span class="badge" style="color:var(--muted);border-color:var(--muted)">'+esc(c.status)+'</span>';
+      h+='<div class="qrow"><div class="qwho">'+esc(c.main_ign||"?")+badge
+        +'<div class="qmeta">'+fmtIsk(c.amount)+' ISK &middot; '+esc(ago(c.created_at))
+        +(c.note?' &middot; &ldquo;'+esc(String(c.note).slice(0,80))+'&rdquo;':'')
+        +(c.reviewed_by?' &middot; by '+esc(c.reviewed_by):'')+'</div></div>';
+      h+=(c.status==="pending"&&ISADMIN)
+        ? '<div class="qact"><button class="cmail" data-stc="'+esc(String(c.id))+'" data-stcact="approve">approve</button>'
+          +'<button class="cmail" data-stc="'+esc(String(c.id))+'" data-stcact="reject">reject</button></div>'
+        : '<div class="qact"></div>';
+      h+='</div>';
+    });
+  }
+  h+="</div>";
   /* front page testimonials: live member quotes on bonkeve.com; hide = pulled from public */
   h+='<div class="panel"><div class="ptitle">Front page testimonials <span class="pn">what the goblins say, on the public page</span></div>';
   if(!tj || !tj.ok){ h+='<div class="nap">The wall did not answer. Reload to knock again.</div>'; }
@@ -1790,6 +1814,16 @@ async function secSettings(){
       busy(btn, async function(){
         await api("/api/admin/testimonials",{id:id, action:act});
         toast(act==="hide"?"Pulled from the public page.":"Back on the wall.");
+        secSettings();
+      });
+    });
+  });
+  m.querySelectorAll("[data-stc]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=Number(btn.getAttribute("data-stc")), act=btn.getAttribute("data-stcact");
+      busy(btn, async function(){
+        await api("/api/admin/station/contributions",{id:id, action:act});
+        toast(act==="approve"?"Approved. It is on the bar now.":"Rejected.");
         secSettings();
       });
     });
