@@ -99,4 +99,33 @@
       })
       .catch(function () { if (w) w.style.display = "none"; });
   }
+
+  // ---- walkthrough loader: the cloud-generated tool pages do not include
+  // /walkthrough.js themselves, so bring the coach-mark engine + styles to any
+  // page that loads this nav. Runs at DOMContentLoaded so the guard can see a
+  // page's own direct include (portal/fleet/market/decorations/tools) and skip.
+  // Tours for tool pages come from the registry inside walkthrough.js. ----
+  function loadWalkthrough() {
+    if (window.BONKTour || document.querySelector('script[src*="walkthrough.js"]')) return;
+    var wcss = document.createElement("style");
+    wcss.textContent =
+      ".wt-root{position:fixed;inset:0;z-index:9998}.wt-overlay{position:fixed;inset:0;background:transparent}" +
+      ".wt-spot{position:fixed;border:2px solid var(--ore,#46ff5e);border-radius:5px;box-shadow:0 0 0 9999px rgba(7,8,9,.82),0 0 22px rgba(70,255,94,.35);pointer-events:none;transition:left .22s ease,top .22s ease,width .22s ease,height .22s ease}" +
+      ".wt-card{position:fixed;z-index:10000;width:min(340px,calc(100vw - 28px));background:var(--steel,#14171a);border:1px solid var(--line,rgba(150,168,158,.16));border-left:3px solid var(--ore,#46ff5e);padding:16px 18px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:var(--body,system-ui,sans-serif)}" +
+      ".wt-title{font-family:var(--display,sans-serif);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:16px;color:var(--silver,#d9ddd7);margin-bottom:7px}" +
+      ".wt-body{font-size:13.5px;line-height:1.6;color:var(--silver-dim,#9aa39c)}" +
+      ".wt-foot{display:flex;align-items:center;justify-content:space-between;margin-top:15px;gap:10px}" +
+      ".wt-count{font-family:var(--mono,monospace);font-size:11px;color:var(--muted,#6f776f);letter-spacing:.1em}" +
+      ".wt-btns{display:flex;gap:7px}.wt-b{font-family:var(--mono,monospace);font-size:12px;padding:7px 12px;border:1px solid var(--line,rgba(150,168,158,.2));background:transparent;color:var(--silver-dim,#9aa39c);cursor:pointer}" +
+      ".wt-b:hover{border-color:var(--ore,#46ff5e);color:var(--ore,#46ff5e)}.wt-next{background:var(--ore,#46ff5e);color:#04140a;border-color:var(--ore,#46ff5e);font-weight:700}" +
+      ".wt-card.wt-sheet{left:0!important;right:0!important;bottom:0!important;top:auto!important;transform:none!important;width:100%;border-left:0;border-top:3px solid var(--ore,#46ff5e)}" +
+      ".wt-help{position:fixed;right:16px;bottom:16px;z-index:9990;width:42px;height:42px;border-radius:50%;border:1px solid var(--ore,#46ff5e);background:var(--steel,#14171a);color:var(--ore,#46ff5e);font-family:var(--display,sans-serif);font-weight:700;font-size:20px;line-height:1;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4)}" +
+      ".wt-help:hover{background:var(--ore,#46ff5e);color:#04140a}@media(prefers-reduced-motion:reduce){.wt-spot{transition:none}}";
+    (document.head || document.documentElement).appendChild(wcss);
+    var wjs = document.createElement("script");
+    wjs.src = ORIGIN + BASE + "walkthrough.js?v=2";
+    (document.body || document.documentElement).appendChild(wjs);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadWalkthrough);
+  else loadWalkthrough();
 })();
