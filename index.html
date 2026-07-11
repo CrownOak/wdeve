@@ -163,6 +163,25 @@
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease, transform .6s ease}
   .reveal.in{opacity:1;transform:none}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none;transition:none}h1.hero-title{background-position:0 center}}
+  /* ---- live Discord widget (goblin-themed, fed by widget.json) ---- */
+  .disc{background:var(--steel);border:1px solid var(--line);border-left:3px solid var(--ore);overflow:hidden}
+  .disc-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--line-soft)}
+  .disc-live{font-family:var(--mono);font-size:14px;color:var(--silver);letter-spacing:.03em}
+  .disc-live b{color:var(--ore);font-size:19px}
+  .disc-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ore);margin-right:9px;vertical-align:middle;animation:discpulse 2s infinite}
+  @keyframes discpulse{0%{box-shadow:0 0 0 0 rgba(70,255,94,.5)}70%{box-shadow:0 0 0 8px rgba(70,255,94,0)}100%{box-shadow:0 0 0 0 rgba(70,255,94,0)}}
+  .disc-join{font-family:var(--mono);font-weight:700;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;color:#04140a;background:var(--ore);padding:9px 16px;clip-path:polygon(0 0,100% 0,94% 100%,0 100%);transition:transform .15s,box-shadow .2s}
+  .disc-join:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(70,255,94,.3)}
+  .disc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 20px;padding:14px 20px;max-height:320px;overflow-y:auto}
+  .disc-m{display:flex;align-items:center;gap:10px;padding:6px 0;min-width:0}
+  .disc-av{width:30px;height:30px;border-radius:50%;flex:0 0 auto;background:var(--steel-3);object-fit:cover}
+  .disc-st{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .disc-st.online{background:var(--ore)}.disc-st.idle{background:#e9c46a}.disc-st.dnd{background:#f0817a}
+  .disc-nm{font-family:var(--mono);font-size:13px;color:var(--silver-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .disc-loading,.disc-foot{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .disc-loading{padding:22px 20px}
+  .disc-foot{padding:11px 20px 15px;border-top:1px solid var(--line-soft)}
+  .disc-list::-webkit-scrollbar{width:8px}.disc-list::-webkit-scrollbar-thumb{background:var(--steel-3)}
 </style>
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="apple-touch-icon" href="favicon-180.png"></head>
 <body>
@@ -352,6 +371,20 @@
   </div>
 </section>
 
+<section id="comms">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="idx">06</span><h2>The goblins are online</h2><span class="tail">// live from the Discord, right now</span></div>
+    <div class="disc" id="disc">
+      <div class="disc-head">
+        <div class="disc-live"><span class="disc-dot"></span><b id="disc-count">&hellip;</b> goblins in the belt right now</div>
+        <a class="disc-join" id="disc-join" href="https://discord.com/invite/VQgCmJeG" target="_blank" rel="noopener">Jump in &#9656;</a>
+      </div>
+      <div class="disc-list" id="disc-list"><div class="disc-loading">knocking on the airlock&hellip;</div></div>
+      <div class="disc-foot">// live headcount straight from Discord. lurkers welcome, but the ore does not mine itself.</div>
+    </div>
+  </div>
+</section>
+
 <section class="finale">
   <div class="wrap reveal">
     <p class="creed">The ore must flow.<br>The <span class="o">goblins</span> must eat.</p>
@@ -473,6 +506,42 @@
       g.innerHTML=h;
       document.getElementById('goblins-say').style.display='';
     }).catch(function(){});
+  })();
+</script>
+<script>
+  // Live Discord widget, goblin-themed. Pulls the public widget.json (CORS-open),
+  // sorts online -> idle -> dnd, and renders our own member list so it matches the
+  // page instead of Discord's dark iframe. Falls back to a plain join link.
+  (function(){
+    var GUILD="1512938976686641333";
+    var listEl=document.getElementById("disc-list"),
+        countEl=document.getElementById("disc-count"),
+        joinEl=document.getElementById("disc-join");
+    if(!listEl) return;
+    function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+    fetch("https://discord.com/api/guilds/"+GUILD+"/widget.json").then(function(r){return r.ok?r.json():null;}).then(function(d){
+      if(!d) throw "no";
+      if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length);
+      if(joinEl && d.instant_invite) joinEl.href=d.instant_invite;
+      var rank={online:0,idle:1,dnd:2};
+      var members=(d.members||[]).slice().sort(function(a,b){
+        return ((rank[a.status]==null?3:rank[a.status])-(rank[b.status]==null?3:rank[b.status]))
+          || String(a.username||"").localeCompare(String(b.username||""));
+      });
+      if(!members.length){ listEl.innerHTML='<div class="disc-loading">quiet in here right now. be the first to undock.</div>'; return; }
+      var h="";
+      members.forEach(function(m){
+        var g=(m.game&&m.game.name)?" · "+m.game.name:"";
+        h+='<div class="disc-m">'
+          +(m.avatar_url?'<img class="disc-av" src="'+esc(m.avatar_url)+'" alt="" loading="lazy">':'<span class="disc-av"></span>')
+          +'<span class="disc-st '+esc(m.status)+'"></span>'
+          +'<span class="disc-nm" title="'+esc(m.username)+esc(g)+'">'+esc(m.username)+'</span>'
+          +'</div>';
+      });
+      listEl.innerHTML=h;
+    }).catch(function(){
+      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.com/invite/VQgCmJeG" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
+    });
   })();
 </script>
 </body>
