@@ -393,6 +393,12 @@
   .station .stcl-n{ color:var(--silver-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .station .stcl-a{ color:var(--ore); flex:0 0 auto; }
   .station .stcl-more{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; }
+  .station .stanchor{ margin:0 15px; padding:9px 12px; background:var(--black); border:1px solid var(--line-soft);
+    border-left:3px solid var(--amber); font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+  .station .stanchor b{ color:var(--amber); }
+  .station .stanchor .stanchor-sub{ color:var(--muted); font-size:10.5px; }
+  .station .stanchor.open{ border-left-color:var(--ore); }
+  .station .stanchor.open b{ color:var(--ore); }
   @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ width:100%; height:130px; border-right:0; border-bottom:1px solid var(--line-soft); } }
   .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
           margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
@@ -1001,6 +1007,7 @@ function renderCorpStrip(){
         '<div class="stmile">2.4B refinery lit &middot; 2.9B moon drill &middot; 3.6B T2 rigs &middot; 4.25B done</div>' +
         youLine +
       '</div></div>' +
+      '<div class="stanchor" id="stAnchor"></div>' +
       '<div class="stbody"><b>What it is:</b> our own Athanor refinery in highsec near Rens, owned by a holding corp so BONK can never be war decced. ' +
       '<b>What it does:</b> a home to dock and store, our buyback ore refined in house at higher yield so 100% stays in the corp (no station tax, no Jita haul), on site compression, and passive moon mining later. ' +
       '<b>Where the ISK goes:</b> the hull, the reprocessing rig fit, months of fuel, a T2 yield upgrade, and a war chest to rebuild if anyone ever pops it.</div>' +
@@ -1051,6 +1058,25 @@ function renderCorpStrip(){
     } catch(e){ if (note) note.textContent = (e && e.message) || "could not submit, try again"; }
     finally { btn.disabled = false; }
   };
+  updateAnchorTimer();
+  if (!window._bonkAnchorIv) window._bonkAnchorIv = setInterval(updateAnchorTimer, 60000);
+}
+
+/* Holding-corp 7-day anchor gate: Goblin Offshore Trust founded 2026-07-12
+   02:04 UTC, so the Athanor can be anchored on/after 2026-07-19 02:04 UTC. */
+var BONK_ANCHOR_TS = Date.UTC(2026, 6, 19, 2, 4, 0);
+function updateAnchorTimer(){
+  var e = $("stAnchor"); if (!e) return;
+  var ms = BONK_ANCHOR_TS - Date.now();
+  if (ms <= 0){
+    e.className = "stanchor open";
+    e.innerHTML = "&#9875; Anchor window <b>OPEN</b> &middot; Goblin Offshore Trust can deploy the Athanor at Abudban.";
+    return;
+  }
+  var d = Math.floor(ms/86400000), h = Math.floor((ms%86400000)/3600000), m = Math.floor((ms%3600000)/60000);
+  e.className = "stanchor";
+  e.innerHTML = "&#9203; Anchor window opens in <b>" + d + "d " + h + "h " + m + "m</b> "
+    + "<span class='stanchor-sub'>holding-corp 7-day minimum &middot; Jul 19</span>";
 }
 
 /* ============ event + live op banners ============ */
