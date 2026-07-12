@@ -372,8 +372,13 @@
   .station .pl{ font-family:var(--mono); font-size:11px; color:var(--ore); margin-bottom:4px; }
   .station .stbar{ height:8px; margin-top:2px; }
   .station .stmile{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; }
-  .station .stbody{ padding:2px 15px 0; font-size:12.5px; line-height:1.6; color:var(--silver-dim); }
-  .station .stbody b{ color:var(--silver); }
+  .station .stbody{ padding:4px 15px 0; }
+  .station .stbrow{ display:flex; gap:12px; padding:9px 0; border-top:1px solid var(--line-soft); }
+  .station .stbrow:first-child{ border-top:0; }
+  .station .stblabel{ flex:0 0 96px; font-family:var(--mono); font-size:10px; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--ore); padding-top:2px; }
+  .station .stbtext{ flex:1 1 auto; min-width:0; font-size:12.5px; line-height:1.55; color:var(--silver-dim); }
+  @media(max-width:440px){ .station .stbrow{ flex-direction:column; gap:2px; } .station .stblabel{ flex:none; } }
   .station .stbtn{ margin:12px 15px 15px; background:var(--ore); color:#04140a; border:1px solid var(--ore); font-weight:700; padding:9px 18px; cursor:pointer; font-family:var(--mono); font-size:13px; }
   .station .stbtn:hover{ filter:brightness(1.08); }
   .station .stcontrib{ margin:0 15px 15px; padding:11px 13px; background:var(--steel-2); border:1px solid var(--line); font-family:var(--mono); font-size:12px; line-height:1.55; color:var(--silver-dim); }
@@ -1008,9 +1013,11 @@ function renderCorpStrip(){
         youLine +
       '</div></div>' +
       '<div class="stanchor" id="stAnchor"></div>' +
-      '<div class="stbody"><b>What it is:</b> our own Athanor refinery in highsec near Rens, owned by a holding corp so BONK can never be war decced. ' +
-      '<b>What it does:</b> a home to dock and store, our buyback ore refined in house at higher yield so 100% stays in the corp (no station tax, no Jita haul), on site compression, and passive moon mining later. ' +
-      '<b>Where the ISK goes:</b> the hull, the reprocessing rig fit, months of fuel, a T2 yield upgrade, and a war chest to rebuild if anyone ever pops it.</div>' +
+      '<div class="stbody">' +
+        '<div class="stbrow"><span class="stblabel">What it is</span><span class="stbtext">Our own Athanor refinery in highsec near Rens, owned by a holding corp so BONK can never be war decced.</span></div>' +
+        '<div class="stbrow"><span class="stblabel">What it does</span><span class="stbtext">A home to dock and store, and our buyback ore refined in house at higher yield so 100% stays in the corp (no station tax, no Jita haul), plus on site compression.</span></div>' +
+        '<div class="stbrow"><span class="stblabel">Where the ISK goes</span><span class="stbtext">The hull, the Quantum Core, the reprocessing rig fit, months of fuel, a T2 yield upgrade, and a war chest to rebuild if anyone ever pops it. The stretch funds a second rock for moon mining.</span></div>' +
+      '</div>' +
       contribHtml +
       '<button class="stbtn" id="stContribBtn">Contribute &#129689;</button>' +
       '<div class="stcontrib" id="stContrib" style="display:none">' +
