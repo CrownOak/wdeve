@@ -23,7 +23,7 @@
     ["Portal",      BASE + "portal/",         "MEMBER", true ],
     ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
     ["Decorations", BASE + "decorations/",    "MEMBER", false],
-    ["Radar",       BASE + "lowsec/",         "INTEL",  true ],
+    ["Radar",       BASE + "lowsec/",         "INTEL",  false],
     ["Kills",       BASE + "kills/",          "INTEL",  false],
     ["CLASSIFIED",  BASE + "bonk-prospects/", "INTEL",  false],
     ["REDACTED",    BASE + "alliance/",       "INTEL",  false],
@@ -96,6 +96,36 @@
     });
   }
 
+  // Fleet live indicator: a live op with ore actually in it (round value > 0)
+  // lights a pulsing dot on the Fleet links and sets the burger lines pulsing
+  // (the bar link is hidden on mobile, so the burger carries the signal there).
+  // Rides /api/public-stats (60s server memo, no figures exposed); checked on
+  // load, then every 2 minutes while the tab is visible.
+  function setFleetHot(on) {
+    var links = bar.querySelectorAll('a[data-rel="fleet/"]');
+    for (var k2 = 0; k2 < links.length; k2++) {
+      var dot = links[k2].querySelector(".bn-live");
+      if (on && !dot) {
+        dot = document.createElement("span");
+        dot.className = "bn-live";
+        dot.title = "A fleet op is live right now. Ore is dropping.";
+        links[k2].appendChild(dot);
+      } else if (!on && dot) dot.parentNode.removeChild(dot);
+    }
+    if (burger) {
+      burger.classList[on ? "add" : "remove"]("bn-hot");
+      burger.title = on ? "A fleet op is live right now. Ore is dropping." : "";
+    }
+  }
+  function checkFleet() {
+    fetch(ORIGIN + BASE + "api/public-stats")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d) setFleetHot(!!d.op_hot); })
+      .catch(function () {});
+  }
+  checkFleet();
+  setInterval(function () { if (document.visibilityState === "visible") checkFleet(); }, 120000);
+
   // Login indicator next to the brand: ask the portal who is logged in (the
   // session is a same-origin httpOnly cookie, so /api/whoami just reads it). Show
   // "logged in as X" so a goblin knows their activity is tracked to their account,
@@ -138,6 +168,17 @@
     "transition:color .15s,background .15s;}" +
     ".bn-item:hover{color:var(--ore,#46ff5e);background:rgba(70,255,94,.06);}" +
     ".bn-item.cur{background:var(--ore,#46ff5e);color:#04140a;font-weight:700;}" +
+    ".bn-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ore,#46ff5e);" +
+    "margin-left:7px;vertical-align:middle;box-shadow:0 0 6px rgba(70,255,94,.8);" +
+    "animation:bnPulse 1.6s ease-in-out infinite;}" +
+    ".cur .bn-live{background:#04140a;box-shadow:none;}" +
+    ".bn-burger.bn-hot{border-color:rgba(70,255,94,.4);}" +
+    ".bn-burger.bn-hot .bn-lines span{background:var(--ore,#46ff5e);box-shadow:0 0 5px rgba(70,255,94,.6);" +
+    "animation:bnPulse 1.4s ease-in-out infinite;}" +
+    ".bn-burger.bn-hot .bn-lines span:nth-child(2){animation-delay:.2s;}" +
+    ".bn-burger.bn-hot .bn-lines span:nth-child(3){animation-delay:.4s;}" +
+    "@keyframes bnPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.55;}}" +
+    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span{animation:none;}}" +
     "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
     ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
     "max-height:calc(100vh - 54px);}}" +
