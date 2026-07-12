@@ -16,7 +16,8 @@
   // explainer cards (no selector) so they are robust across generated pages.
   var TOURS = {
     refine: { steps: [
-      { title: "The Refinery", body: "Paste any ore or ice from your cargo and this shows what it is worth refined, at live prices. It is the exact basis the corp buyback uses." },
+      { title: "The Ore Calculator", body: "Paste any ore or ice from your cargo and this shows what it is worth refined, at live prices. It is the exact basis the corp buyback uses." },
+      { title: "Ore Prices mode", body: "The same paste also prices your load RAW at all five trade hubs, tells you which hub actually buys it, and the Rock Index board lists every ore in the game." },
       { title: "Use it", body: "Copy the ore in the EVE client, paste it in the box, read the ISK. No login, prices refresh hourly." } ] },
     reprocess: { steps: [
       { title: "Reprocess reference", body: "Same idea as the refinery, laid out as a table: what each ore and ice reprocesses into and what it is worth." },

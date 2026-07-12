@@ -30,7 +30,7 @@
     ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
     ["Market",      BASE + "market/",         "MARKET", false],
     ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
-    ["Refine",      BASE + "refine/",         "MARKET", false],
+    ["Ore Calc",    BASE + "refine/",         "MARKET", false],
     ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
     ["Workbench",   BASE + "tools/",          "MARKET", false]
   ];
@@ -243,7 +243,7 @@
       ".wt-help:hover{background:var(--ore,#46ff5e);color:#04140a}@media(prefers-reduced-motion:reduce){.wt-spot{transition:none}}";
     (document.head || document.documentElement).appendChild(wcss);
     var wjs = document.createElement("script");
-    wjs.src = ORIGIN + BASE + "walkthrough.js?v=2";
+    wjs.src = ORIGIN + BASE + "walkthrough.js?v=3";
     (document.body || document.documentElement).appendChild(wjs);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadWalkthrough);
