@@ -240,7 +240,7 @@
       </div>
       <div class="readouts">
         <div class="r"><div class="n">12</div><div class="k">Years strong</div></div>
-        <div class="r"><div class="n">~30</div><div class="k">Active goblins</div></div>
+        <div class="r"><div class="n" id="goblinCount">53</div><div class="k">Active goblins</div></div>
         <div class="r"><div class="n green">90%</div><div class="k">Ore buyback</div></div>
         <div class="r"><div class="n green">≈83%</div><div class="k">More ore / hr boosted</div></div>
       </div>
@@ -542,6 +542,18 @@
     }).catch(function(){
       listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
     });
+  })();
+</script>
+<script>
+  /* Live corp headcount: pull Wealthy Dropouts member_count from ESI (CORS-open)
+     so the front-page "Active goblins" stat is always current, not a stale ~30. */
+  (function(){
+    var el = document.getElementById("goblinCount");
+    if (!el) return;
+    fetch("https://esi.evetech.net/latest/corporations/98342394/?datasource=tranquility")
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if (d && typeof d.member_count === "number") el.textContent = d.member_count; })
+      .catch(function(){});
   })();
 </script>
 </body>
