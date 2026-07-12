@@ -4,270 +4,617 @@
 <title>BONK - Apply</title>
 <link rel="stylesheet" href="/common.css?v=3">
 <style>
-  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.6; max-width:760px; margin:2px auto 20px; }
-  .applybox{ background:var(--steel); border:1px solid var(--line-soft); padding:26px 28px 30px;
-             position:relative; max-width:680px; margin:0 auto; }
-  .applybox::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
-  .field{ margin:0 0 20px; }
-  .field > label, .field > .glabel{ display:block; font-family:var(--mono); font-size:11px;
-      letter-spacing:.08em; text-transform:uppercase; color:var(--ore); margin:0 0 4px; }
-  .hint{ color:var(--muted); font-size:12.5px; margin:0 0 8px; }
-  .req{ color:var(--amber); }
-  textarea.short{ min-height:74px; }
-  fieldset{ border:0; padding:0; margin:0; }
-  fieldset legend{ font-family:var(--mono); font-size:11px; letter-spacing:.08em;
-      text-transform:uppercase; color:var(--ore); padding:0; margin:0 0 4px; }
-  .opts{ display:flex; flex-wrap:wrap; gap:8px 18px; }
-  .opts label{ display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--silver);
-      cursor:pointer; white-space:nowrap; }
-  .opts input{ width:auto; accent-color:var(--ore); margin:0; cursor:pointer; }
-  select{ width:100%; padding:11px 13px; background:var(--black); border:1px solid var(--line);
-      color:var(--silver); font-family:var(--mono); font-size:14px; }
-  select:focus{ outline:none; border-color:var(--ore); }
-  .fielderr{ color:var(--red); font-family:var(--mono); font-size:12px; margin-top:6px; min-height:0; }
-  input[aria-invalid="true"]{ border-color:var(--red); }
-  .sendrow{ margin-top:6px; }
-  .sendrow .gobtn{ width:100%; padding:14px; font-size:15px; }
-  .sendrow .gobtn[disabled]{ opacity:.55; cursor:wait; }
-  #formErr{ margin-top:14px; }
-  .confirm{ background:var(--steel); border:1px solid var(--line); padding:40px 32px;
-            position:relative; max-width:680px; text-align:center; margin:0 auto; }
-  .confirm::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
-  .confirm .big{ font-family:var(--display); font-weight:700; text-transform:uppercase;
-      letter-spacing:.05em; font-size:18px; color:var(--ore); line-height:1.5; }
-  .confirm .later{ color:#a9b2a8; font-size:13.5px; margin-top:14px; line-height:1.6; }
-  .discordcta{ display:inline-block; margin-top:10px; font-family:var(--mono); font-size:11.5px;
+  .stage{ background:var(--steel); border:1px solid var(--line-soft); position:relative;
+          max-width:680px; margin:0 auto; padding:22px 26px 26px; }
+  .stage::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+
+  /* progress + back */
+  .topRow{ display:flex; align-items:center; gap:14px; margin:0 0 18px; min-height:24px; }
+  .prog{ flex:1; display:flex; align-items:center; gap:12px; }
+  .segs{ flex:1; display:flex; gap:4px; }
+  .seg{ flex:1; height:6px; background:var(--steel-3); transition:background .2s, box-shadow .2s; }
+  .seg.fill{ background:var(--ore); box-shadow:0 0 8px rgba(70,255,94,.35); }
+  .seg.cur{ background:var(--ore-deep); }
+  .qcount{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+           color:var(--muted); white-space:nowrap; min-width:64px; text-align:right; }
+  .backBtn{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+            font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+            padding:5px 11px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .backBtn:hover{ border-color:var(--ore); color:var(--ore); }
+  .backBtn[hidden]{ display:none; }
+
+  /* goblin + bubble */
+  .panel{ display:flex; gap:20px; align-items:flex-start; margin:0 0 20px; }
+  .gob{ width:140px; height:140px; flex:0 0 140px; position:relative;
+        filter:drop-shadow(0 0 16px rgba(70,255,94,.14)); }
+  .gob img{ position:absolute; inset:0; width:100%; height:100%; opacity:0; transition:opacity .3s ease; }
+  .gob img.on{ opacity:1; }
+  .bubble{ flex:1; background:var(--steel-2); border:1px solid var(--line); padding:16px 18px;
+           position:relative; min-height:76px; display:flex; align-items:center; }
+  .bubble::before{ content:""; position:absolute; left:-9px; top:34px; width:0; height:0;
+      border-top:8px solid transparent; border-bottom:8px solid transparent;
+      border-right:9px solid var(--line); }
+  .bubble::after{ content:""; position:absolute; left:-7.5px; top:35px; width:0; height:0;
+      border-top:7px solid transparent; border-bottom:7px solid transparent;
+      border-right:8px solid var(--steel-2); }
+  #bubbleText{ font-size:16.5px; line-height:1.55; color:var(--silver); }
+  #bubbleText .subline{ display:block; margin-top:9px; font-size:13px; color:var(--silver-dim); }
+
+  /* answer area */
+  .answer{ min-height:190px; }
+  .answer input[type=text], .answer textarea{ width:100%; padding:12px 14px; background:var(--black);
+      border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:16px; }
+  .answer input[type=text]:focus, .answer textarea:focus{ outline:none; border-color:var(--ore); }
+  .answer textarea{ min-height:96px; resize:vertical; font-family:var(--body); line-height:1.5; }
+  .chips{ display:flex; flex-wrap:wrap; gap:10px; }
+  .chip{ background:transparent; color:var(--silver); border:1px solid var(--line);
+         padding:11px 17px; cursor:pointer; font-family:var(--body); font-size:14.5px;
+         transition:border-color .15s, background .15s, color .15s; }
+  .chip:hover{ border-color:var(--ore); color:var(--ore); }
+  .chip.onpick{ background:var(--ore); border-color:var(--ore); color:#04140a; font-weight:600; }
+  .cards{ display:flex; flex-direction:column; gap:10px; }
+  .card{ background:transparent; border:1px solid var(--line); padding:14px 16px; cursor:pointer;
+         text-align:left; transition:border-color .15s, background .15s; }
+  .card:hover{ border-color:var(--ore); }
+  .card.onpick{ background:var(--ore); border-color:var(--ore); }
+  .card .ct{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+             letter-spacing:.05em; font-size:14px; color:var(--silver); }
+  .card .cs{ font-size:12.5px; color:var(--silver-dim); margin-top:3px; }
+  .card.onpick .ct{ color:#04140a; } .card.onpick .cs{ color:#0a3317; }
+  .otherRow{ margin-top:12px; } .otherRow[hidden]{ display:none; }
+  .gobtn{ display:block; width:100%; padding:14px; margin-top:16px; background:var(--ore); color:#04140a;
+      border:0; cursor:pointer; font-family:var(--display); font-weight:700; text-transform:uppercase;
+      letter-spacing:.06em; font-size:15px; transition:background .15s;
+      clip-path:polygon(0 0,100% 0,98% 100%,0 100%); }
+  .gobtn:hover{ background:var(--laser); }
+  .gobtn[disabled]{ opacity:.55; cursor:wait; }
+  .coverSub{ color:#a9b2a8; font-size:14px; line-height:1.6; }
+  .discordcta{ display:inline-block; margin-top:14px; font-family:var(--mono); font-size:11.5px;
     letter-spacing:.06em; text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.5);
     padding:8px 15px; text-decoration:none; transition:background .15s, color .15s;
     clip-path:polygon(0 0,100% 0,96% 100%,0 100%); }
   .discordcta:hover{ background:var(--ore); color:#04140a; }
+
+  /* review */
+  .rev{ display:flex; flex-direction:column; gap:0; border:1px solid var(--line-soft); }
+  .revRow{ display:flex; gap:12px; align-items:baseline; padding:9px 12px; border-top:1px solid var(--line-soft); }
+  .revRow:first-child{ border-top:0; }
+  .revRow .rl{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+               color:var(--ore); flex:0 0 108px; }
+  .revRow .rv{ flex:1; font-size:13.5px; color:var(--silver); overflow-wrap:anywhere; }
+  .revRow .rv.skip{ color:var(--muted); font-style:italic; }
+  .revRow .re{ background:none; border:0; color:var(--silver-dim); font-family:var(--mono); font-size:10.5px;
+               letter-spacing:.06em; text-transform:uppercase; cursor:pointer; padding:0; }
+  .revRow .re:hover{ color:var(--ore); }
+
+  .hintRow{ margin-top:14px; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+            color:var(--muted); min-height:16px; display:flex; gap:18px; }
+  .hintRow .skiplink{ background:none; border:0; padding:0; color:var(--silver-dim); cursor:pointer;
+      font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase;
+      text-decoration:underline; }
+  .hintRow .skiplink:hover{ color:var(--ore); }
+  .err{ margin-top:12px; color:var(--red); font-family:var(--mono); font-size:12.5px; min-height:0; }
+
+  .confirmBody{ color:#a9b2a8; font-size:14px; line-height:1.65; }
+  .confirmBody a{ color:var(--ore); }
   .signoff{ color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:.03em;
             margin:26px auto 6px; max-width:680px; border-top:1px solid var(--line); padding-top:18px; }
   .signoff b{ color:var(--silver); }
-  @media(max-width:480px){ .applybox{ padding:20px 16px 24px; } .opts{ gap:8px 14px; } }
+
+  /* slide transitions */
+  .fx{ transition:opacity .24s ease, transform .24s ease; }
+  .fx.out{ opacity:0; transform:translateY(-8px); }
+  .fx.pre{ opacity:0; transform:translateY(10px); transition:none; }
+  @media(prefers-reduced-motion: reduce){
+    .fx, .gob img, .seg{ transition:none !important; }
+  }
+  @media(max-width:640px){
+    .stage{ padding:16px 14px 20px; }
+    .gob{ width:84px; height:84px; flex-basis:84px; }
+    .panel{ gap:12px; }
+    .bubble::before{ top:22px; } .bubble::after{ top:23px; }
+    #bubbleText{ font-size:15px; }
+    .answer{ min-height:150px; }
+    .revRow .rl{ flex-basis:84px; }
+  }
 </style></head>
 <body>
   <header>
     <h1>&#129704; JOIN THE GOBLINS &#129704;</h1>
-    <div class="sub">the official BONK application. no interview panel, no essay, just tell us who you are.</div>
+    <div class="sub">the official BONK application. no panel, no essay. one nosy goblin.</div>
   </header>
   <div class="wrap">
-    <p class="intro">BONK is a mining corp of emotionally stable goblins who actually log in: full fleets,
-    boosts on grid, a fair buyback, and 0% tax vibes. Fill this out and a recruiter will find you, because
-    the table always has room for one more.</p>
-
-    <div id="formPanel" class="applybox">
-      <form id="applyForm" novalidate>
-
-        <div class="field">
-          <label for="ign">In game name <span class="req">(required)</span></label>
-          <p class="hint" id="ignHint">What do we call you in the belt?</p>
-          <input id="ign" name="ign" type="text" maxlength="64" autocomplete="off"
-                 aria-describedby="ignHint" aria-required="true" placeholder="Your pilot name">
-          <div class="fielderr" id="ignErr" role="alert"></div>
+    <div class="stage" id="stage">
+      <div class="topRow">
+        <div class="prog" id="prog" role="progressbar" aria-label="Application progress"
+             aria-valuemin="0" aria-valuemax="9" aria-valuenow="0">
+          <div class="segs" id="segs"></div>
+          <div class="qcount" id="qcount"></div>
         </div>
-
-        <div class="field">
-          <label for="timezone">Timezone</label>
-          <p class="hint" id="tzHint">When do you actually log in?</p>
-          <select id="timezone" name="timezone" aria-describedby="tzHint">
-            <option value="">Pick one, or do not</option>
-            <option value="US East">US East</option>
-            <option value="US West">US West</option>
-            <option value="EU">EU</option>
-            <option value="AU">AU</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <fieldset>
-            <legend>Experience</legend>
-            <p class="hint">Every goblin starts somewhere. No wrong answer.</p>
-            <div class="opts">
-              <label><input type="radio" name="experience" value="new"> New to EVE</label>
-              <label><input type="radio" name="experience" value="returning"> Returning after a break</label>
-              <label><input type="radio" name="experience" value="veteran"> Veteran</label>
-            </div>
-          </fieldset>
-        </div>
-
-        <div class="field">
-          <fieldset>
-            <legend>What you like doing</legend>
-            <p class="hint">Check everything that sounds like a good evening.</p>
-            <div class="opts">
-              <label><input type="checkbox" name="activities" value="mining"> Mining</label>
-              <label><input type="checkbox" name="activities" value="industry"> Industry</label>
-              <label><input type="checkbox" name="activities" value="pvp"> A little PvP</label>
-              <label><input type="checkbox" name="activities" value="explore"> Exploration</label>
-              <label><input type="checkbox" name="activities" value="unsure"> Not sure yet</label>
-            </div>
-          </fieldset>
-        </div>
-
-        <div class="field">
-          <label for="ships">What you fly right now</label>
-          <textarea id="ships" name="ships" class="short" maxlength="500"
-                    placeholder="Venture and vibes"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="looking_for">What you are looking for</label>
-          <textarea id="looking_for" name="looking_for" class="short" maxlength="1000"
-                    placeholder="A long term home? Big ops? People who log in?"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="found_us">How you found us</label>
-          <textarea id="found_us" name="found_us" class="short" maxlength="500"
-                    placeholder="belt convo, a friend, reddit, a vision"></textarea>
-        </div>
-
-        <div class="field">
-          <label for="contact">Discord handle <span class="req">(optional but do it)</span></label>
-          <p class="hint" id="contactHint">Your actual Discord <b>handle</b> (the @username), not your server
-          nickname. This is how the recruiter finds you. Join the server below so we can reach you.</p>
-          <input id="contact" name="contact" type="text" maxlength="120" autocomplete="off"
-                 aria-describedby="contactHint" placeholder="yourhandle">
-          <a class="discordcta" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Join the BONK Discord &#9654;</a>
-        </div>
-
-        <div class="field">
-          <label for="notes">Anything else <span class="req">(optional)</span></label>
-          <textarea id="notes" name="notes" class="short" maxlength="2000"
-                    placeholder="The floor is yours."></textarea>
-        </div>
-
-        <div class="sendrow">
-          <button type="submit" class="gobtn" id="sendBtn">Send it to the recruiters</button>
-        </div>
-        <div class="err" id="formErr" role="alert"></div>
-
-      </form>
+        <button class="backBtn" id="backBtn" type="button" hidden>&#8592; back</button>
+      </div>
+      <div class="panel">
+        <div class="gob"><img id="gobA" alt="" width="640" height="640"><img id="gobB" alt="" width="640" height="640"></div>
+        <div class="bubble"><div id="bubbleText" class="fx" aria-live="polite"></div></div>
+      </div>
+      <div class="answer fx" id="answer"></div>
+      <div class="hintRow" id="hintRow"></div>
+      <div class="err" id="slideErr" role="alert"></div>
     </div>
-
     <div class="signoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
   </div>
   <footer>Applications go straight to the recruiting goblins. Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
 
 <script>
 (function(){
-  var form = document.getElementById("applyForm");
-  var panel = document.getElementById("formPanel");
-  var btn = document.getElementById("sendBtn");
-  var ign = document.getElementById("ign");
-  var ignErr = document.getElementById("ignErr");
-  var formErr = document.getElementById("formErr");
-  var busy = false;
+  "use strict";
+  var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var DUR = RM ? 0 : 240;
+  var DISCORD = "https://discord.gg/eavumbvRnp";
+  var DRAFT_KEY = "bonk_apply_draft_v1";
+  var POSES = { ask:"goblin-ask.webp", ledger:"goblin-ledger.webp", work:"goblin-work.webp",
+                greed:"goblin-greed.webp", hype:"goblin-hype.webp" };
+  var LIM = { ign:40, ships:200, looking_for:500, found_us:200, contact:100, notes:1000 };
 
-  function esc(s){
-    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-    });
+  var ans = { ign:"", timezone:"", experience:"", activities:[], ships:[], shipsOther:"",
+              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"" };
+  var idx = 0, editReturn = false, sending = false;
+
+  /* ---------- slide table ---------- */
+  var SLIDES = [
+    { t:"cover", pose:"ask" },
+    { t:"text", n:1, pose:"ask", f:"ign", req:true, max:LIM.ign, ph:"Your pilot name",
+      q:function(){ return "First things first. What do they call you in the belt?"; },
+      reqErr:"A goblin needs a name. Tell us what to call you." },
+    { t:"single", n:2, pose:"ledger", f:"timezone",
+      opts:["US East","US West","EU","AU","Other"],
+      q:function(){ return ans.ign
+          ? "Good name, " + ans.ign + ". When do you actually log in? The belt never sleeps but you do."
+          : "When do you actually log in? The belt never sleeps but you do."; } },
+    { t:"cards", n:3, pose:"ledger", f:"experience",
+      opts:[ ["new","New to EVE","Fresh out of the pod. We love that."],
+             ["returning","Returning after a break","The belt called you back. It always does."],
+             ["veteran","Veteran","Bitter and rich. Perfect."] ],
+      q:function(){ return "Be honest. How much EVE is in your blood?"; } },
+    { t:"multi", n:4, pose:"work", f:"activities",
+      opts:[ ["mining","Mining"], ["industry","Industry"], ["pvp","A little PvP"],
+             ["explore","Exploration"], ["unsure","Not sure yet"] ],
+      q:function(){ return "What sounds like a good evening? Take everything that applies."; } },
+    { t:"multi", n:5, pose:"work", f:"ships", other:"shipsOther", otherPh:"name it",
+      opts:[ ["Venture","Venture"], ["Mining barge","Mining barge"], ["Exhumer","Exhumer"],
+             ["Orca or boosts","Orca or boosts"], ["Hauler","Hauler"], ["Combat ships","Combat ships"],
+             ["Still in a rookie ship","Still in a rookie ship"] ],
+      q:function(){ return "What do you fly right now? No shame in a Venture. Take all that apply."; } },
+    { t:"multi", n:6, pose:"greed", f:"looking", other:"lookingOther", otherPh:"tell me",
+      opts:[ ["A long term home","A long term home"], ["Big fleet ops","Big fleet ops"],
+             ["People who actually log in","People who actually log in"], ["Making ISK","Making ISK"],
+             ["Learning the game","Learning the game"], ["Chill and no drama","Chill and no drama"] ],
+      q:function(){ return "What are you looking for in a corp? Dream a little."; } },
+    { t:"single", n:7, pose:"ledger", f:"found", other:"foundOther", otherPh:"how?",
+      opts:["Belt convo","A friend","Reddit","In game mail","Discord","A vision"],
+      q:function(){ return "How did you find us? I ask everyone."; } },
+    { t:"text", n:8, pose:"ask", f:"contact", max:LIM.contact, ph:"yourhandle", discord:true,
+      skipHint:"Skipping this makes you very hard to find.",
+      q:function(){ return "Where does a recruiter find you? Drop your Discord handle. The @username, not the server nickname."; } },
+    { t:"textarea", n:9, pose:"greed", f:"notes", max:LIM.notes, ph:"The floor is yours.",
+      q:function(){ return "Last question. Anything else you want on the record?"; } },
+    { t:"review", pose:"ledger",
+      q:function(){ return "Let me read that back. Goblins keep clean books."; } },
+    { t:"send", pose:"hype" }
+  ];
+
+  /* ---------- dom + helpers ---------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var bubble = $("bubbleText"), answer = $("answer"), hintRow = $("hintRow"),
+      slideErr = $("slideErr"), backBtn = $("backBtn"), qcount = $("qcount"),
+      segsBox = $("segs"), prog = $("prog"), gobA = $("gobA"), gobB = $("gobB");
+  var gobOn = gobA, gobOff = gobB, curPose = "";
+
+  for (var i = 0; i < 9; i++) { var sg = document.createElement("div"); sg.className = "seg"; segsBox.appendChild(sg); }
+  var segs = segsBox.children;
+
+  function el(tag, cls, text){
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function saveDraft(){
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ ans:ans, idx:idx, at:Date.now() })); } catch(e){}
+  }
+  function clearDraft(){ try { localStorage.removeItem(DRAFT_KEY); } catch(e){} }
+  function loadDraft(){
+    try {
+      var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+      if (d && d.ans && (d.ans.ign || d.idx > 1)) return d;
+    } catch(e){}
+    return null;
+  }
+  function setPose(name){
+    if (name === curPose) return;
+    curPose = name;
+    var tmp = gobOn; gobOn = gobOff; gobOff = tmp;
+    gobOn.src = POSES[name];
+    gobOn.classList.add("on");
+    gobOff.classList.remove("on");
+  }
+  function joined(list, otherVal, cap){
+    var parts = list.slice();
+    var o = (otherVal || "").trim();
+    if (o) parts.push(o);
+    return parts.join(", ").slice(0, cap);
+  }
+  function foundValue(){
+    if (!ans.found) return "";
+    if (ans.found === "__other") return (ans.foundOther || "").trim().slice(0, LIM.found_us);
+    return ans.found.slice(0, LIM.found_us);
   }
 
-  function setIgnError(msg){
-    ignErr.textContent = msg || "";
-    if (msg) {
-      ign.setAttribute("aria-invalid", "true");
-      ign.setAttribute("aria-describedby", "ignHint ignErr");
-    } else {
-      ign.removeAttribute("aria-invalid");
-      ign.setAttribute("aria-describedby", "ignHint");
+  /* ---------- rendering ---------- */
+  function show(next, instant){
+    slideErr.textContent = "";
+    var swap = function(){
+      idx = next;
+      var s = SLIDES[idx];
+      setPose(s.pose);
+      renderSlide(s);
+      renderChrome(s);
+      bubble.classList.add("pre"); answer.classList.add("pre");
+      void bubble.offsetWidth;
+      bubble.classList.remove("pre", "out"); answer.classList.remove("pre", "out");
+      if (idx >= 1 && idx <= 10) saveDraft();
+      focusSlide(s);
+    };
+    if (instant || DUR === 0) { swap(); return; }
+    bubble.classList.add("out"); answer.classList.add("out");
+    setTimeout(swap, DUR);
+  }
+
+  function renderChrome(s){
+    var qn = s.n || 0;
+    if (s.t === "cover") { prog.style.visibility = "hidden"; }
+    else {
+      prog.style.visibility = "visible";
+      var done = (s.t === "review" || s.t === "send") ? 9 : qn - 1;
+      for (var i = 0; i < 9; i++) {
+        segs[i].className = "seg" + (i < done ? " fill" : (i === done && qn ? " cur" : ""));
+      }
+      prog.setAttribute("aria-valuenow", String(done));
+      qcount.textContent = s.t === "review" ? "review" : s.t === "send" ? "" : "Q " + qn + " / 9";
+    }
+    backBtn.hidden = (s.t === "cover" || s.t === "send");
+  }
+
+  function focusSlide(s){
+    var f = answer.querySelector("input[type=text], textarea") || answer.querySelector("button");
+    if (f) f.focus();
+  }
+
+  function hint(main, skippable){
+    hintRow.textContent = "";
+    if (main) hintRow.appendChild(el("span", null, main));
+    if (skippable) {
+      var sk = el("button", "skiplink", "skip this one");
+      sk.type = "button";
+      sk.addEventListener("click", function(){ advance(true); });
+      hintRow.appendChild(sk);
     }
   }
 
-  ign.addEventListener("input", function(){ if (ign.value.trim()) setIgnError(""); });
+  function renderSlide(s){
+    answer.textContent = "";
+    if (s.t === "cover") return renderCover();
+    if (s.t === "review") return renderReview(s);
+    if (s.t === "send") { bubble.textContent = "Sending it down the tunnel…"; return; }
+    bubble.textContent = s.q();
 
-  function showConfirm(){
-    var box = document.createElement("div");
-    box.className = "confirm";
-    box.setAttribute("role", "status");
-    var big = document.createElement("div");
-    big.className = "big";
-    big.textContent = "Application in. A recruiter will reach out. The table is nearly set. 🪨";
-    var later = document.createElement("div");
-    later.className = "later";
-    later.appendChild(document.createTextNode("Once you are in, your goblin career lives at "));
-    var a = document.createElement("a");
-    a.href = "/portal/";
-    a.textContent = "the member portal";
-    later.appendChild(a);
-    later.appendChild(document.createTextNode(". Medals, hauls, the whole ledger of your rise. See you in the belt."));
-    var dc = document.createElement("a");
-    dc.className = "discordcta";
-    dc.href = "https://discord.gg/eavumbvRnp";
-    dc.target = "_blank"; dc.rel = "noopener";
-    dc.style.marginTop = "18px";
-    dc.textContent = "Jump into the Discord ▶";
-    box.appendChild(big);
-    box.appendChild(later);
-    box.appendChild(dc);
-    panel.replaceWith(box);
-    box.focus && box.setAttribute("tabindex", "-1");
-    box.focus();
-  }
-
-  form.addEventListener("submit", function(ev){
-    ev.preventDefault();
-    if (busy) return;
-    formErr.textContent = "";
-
-    var name = ign.value.trim();
-    if (!name) {
-      setIgnError("A goblin needs a name. Tell us what to call you.");
-      ign.focus();
+    if (s.t === "text" || s.t === "textarea") {
+      var inp = document.createElement(s.t === "text" ? "input" : "textarea");
+      if (s.t === "text") inp.type = "text";
+      inp.maxLength = s.max; inp.placeholder = s.ph || ""; inp.autocomplete = "off";
+      inp.value = ans[s.f] || "";
+      inp.setAttribute("aria-labelledby", "bubbleText");
+      inp.addEventListener("input", function(){ ans[s.f] = inp.value; slideErr.textContent = ""; saveDraft(); });
+      answer.appendChild(inp);
+      if (s.discord) {
+        var dc = el("a", "discordcta", "Join the BONK Discord ▶");
+        dc.href = DISCORD; dc.target = "_blank"; dc.rel = "noopener";
+        answer.appendChild(dc);
+      }
+      var nx = el("button", "gobtn", "Next ▶"); nx.type = "button";
+      nx.addEventListener("click", function(){ advance(false); });
+      answer.appendChild(nx);
+      hint(s.t === "textarea" ? "enter ↵ to continue · shift+enter for a new line" : "enter ↵ to continue",
+           !s.req && !s.skipHint);
+      if (s.skipHint) {
+        hintRow.appendChild(el("span", null, s.skipHint));
+        var sk = el("button", "skiplink", "skip anyway"); sk.type = "button";
+        sk.addEventListener("click", function(){ advance(true); });
+        hintRow.appendChild(sk);
+      }
       return;
     }
-    setIgnError("");
 
-    var payload = { ign: name };
-    var tz = document.getElementById("timezone").value;
-    if (tz) payload.timezone = tz;
-    var exp = form.querySelector('input[name="experience"]:checked');
-    if (exp) payload.experience = exp.value;
-    var acts = [];
-    var checks = form.querySelectorAll('input[name="activities"]:checked');
-    for (var i = 0; i < checks.length; i++) acts.push(checks[i].value);
-    if (acts.length) payload.activities = acts;
-    var ships = document.getElementById("ships").value.trim();
-    if (ships) payload.ships = ships;
-    var looking = document.getElementById("looking_for").value.trim();
-    if (looking) payload.looking_for = looking;
-    var found = document.getElementById("found_us").value.trim();
-    if (found) payload.found_us = found;
-    var contact = document.getElementById("contact").value.trim();
-    if (contact) payload.contact = contact;
-    var notes = document.getElementById("notes").value.trim();
-    if (notes) payload.notes = notes;
+    if (s.t === "cards") {
+      var wrap = el("div", "cards");
+      s.opts.forEach(function(o){
+        var b = el("button", "card" + (ans[s.f] === o[0] ? " onpick" : "")); b.type = "button";
+        b.appendChild(el("div", "ct", o[1]));
+        b.appendChild(el("div", "cs", o[2]));
+        b.addEventListener("click", function(){ pickSingle(s, o[0], b, wrap); });
+        wrap.appendChild(b);
+      });
+      answer.appendChild(wrap);
+      hint("pick one", true);
+      return;
+    }
 
-    busy = true;
-    btn.disabled = true;
-    btn.textContent = "Sending it down the tunnel…";
+    if (s.t === "single") {
+      var wrap2 = el("div", "chips");
+      s.opts.forEach(function(label){
+        var b = el("button", "chip" + (ans[s.f] === label ? " onpick" : ""), label); b.type = "button";
+        b.addEventListener("click", function(){ pickSingle(s, label, b, wrap2); });
+        wrap2.appendChild(b);
+      });
+      if (s.other) {
+        var ob = el("button", "chip" + (ans[s.f] === "__other" ? " onpick" : ""), "Other"); ob.type = "button";
+        var row = el("div", "otherRow"); row.hidden = ans[s.f] !== "__other";
+        var oi = document.createElement("input"); oi.type = "text"; oi.maxLength = 200;
+        oi.placeholder = s.otherPh || ""; oi.value = ans[s.other] || "";
+        oi.addEventListener("input", function(){ ans[s.other] = oi.value; saveDraft(); });
+        var go = el("button", "gobtn", "Next ▶"); go.type = "button";
+        go.addEventListener("click", function(){ advance(false); });
+        row.appendChild(oi); row.appendChild(go);
+        ob.addEventListener("click", function(){
+          ans[s.f] = "__other"; saveDraft();
+          wrap2.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("onpick"); });
+          ob.classList.add("onpick"); row.hidden = false; oi.focus();
+        });
+        wrap2.appendChild(ob);
+        answer.appendChild(wrap2); answer.appendChild(row);
+      } else {
+        answer.appendChild(wrap2);
+      }
+      hint("tap one", true);
+      return;
+    }
 
-    fetch("/api/apply", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    }).then(function(res){
-      return res.json().then(function(data){ return { res: res, data: data }; })
-        .catch(function(){ return { res: res, data: null }; });
-    }).then(function(out){
-      if (out.data && out.data.ok) { showConfirm(); return; }
-      var msg = (out.data && out.data.error)
-        ? out.data.error
-        : "The wire to the recruiters is quiet. Give it a moment and try again.";
-      formErr.textContent = msg;
-      busy = false;
-      btn.disabled = false;
-      btn.textContent = "Send it to the recruiters";
-    }).catch(function(){
-      formErr.textContent = "The wire to the recruiters is quiet. Give it a moment and try again.";
-      busy = false;
-      btn.disabled = false;
-      btn.textContent = "Send it to the recruiters";
+    if (s.t === "multi") {
+      var wrap3 = el("div", "chips");
+      var list = ans[s.f];
+      s.opts.forEach(function(o){
+        var val = o[0], label = o[1];
+        var on = list.indexOf(val) !== -1;
+        var b = el("button", "chip" + (on ? " onpick" : ""), label); b.type = "button";
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.addEventListener("click", function(){
+          var at = list.indexOf(val);
+          if (at === -1) { list.push(val); b.classList.add("onpick"); b.setAttribute("aria-pressed","true"); }
+          else { list.splice(at, 1); b.classList.remove("onpick"); b.setAttribute("aria-pressed","false"); }
+          saveDraft();
+        });
+        wrap3.appendChild(b);
+      });
+      answer.appendChild(wrap3);
+      if (s.other) {
+        var row2 = el("div", "otherRow");
+        var oi2 = document.createElement("input"); oi2.type = "text"; oi2.maxLength = 200;
+        oi2.placeholder = "something else? type it here"; oi2.value = ans[s.other] || "";
+        oi2.addEventListener("input", function(){ ans[s.other] = oi2.value; saveDraft(); });
+        row2.appendChild(oi2);
+        answer.appendChild(row2);
+      }
+      var nx3 = el("button", "gobtn", "Next ▶"); nx3.type = "button";
+      nx3.addEventListener("click", function(){ advance(false); });
+      answer.appendChild(nx3);
+      hint("take all that apply · enter ↵ when done", true);
+      return;
+    }
+  }
+
+  function pickSingle(s, val, btn, wrap){
+    ans[s.f] = val;
+    if (s.other) ans[s.other] = ans[s.other] || "";
+    saveDraft();
+    wrap.querySelectorAll(".chip, .card").forEach(function(c){ c.classList.remove("onpick"); });
+    btn.classList.add("onpick");
+    var row = answer.querySelector(".otherRow");
+    if (row) row.hidden = true;
+    setTimeout(function(){ advance(false); }, RM ? 0 : 220);
+  }
+
+  function renderCover(){
+    var d = loadDraft();
+    if (d) {
+      bubble.textContent = "";
+      bubble.appendChild(document.createTextNode("You came back. I never doubted you."));
+      bubble.appendChild(el("span", "subline", "Your answers are still on my datapad."));
+      var r1 = el("button", "gobtn", "Pick up where I left off"); r1.type = "button";
+      r1.addEventListener("click", function(){
+        for (var k in d.ans) if (Object.prototype.hasOwnProperty.call(ans, k)) ans[k] = d.ans[k];
+        var to = Math.min(Math.max(d.idx || 1, 1), 10);
+        show(to);
+      });
+      var r2 = el("button", "gobtn", "Start over"); r2.type = "button";
+      r2.style.background = "transparent"; r2.style.color = "var(--silver-dim)";
+      r2.style.border = "1px solid var(--line)"; r2.style.clipPath = "none";
+      r2.addEventListener("click", function(){ clearDraft(); show(0, true); });
+      answer.appendChild(r1); answer.appendChild(r2);
+      hint("", false);
+      return;
+    }
+    bubble.textContent = "";
+    bubble.appendChild(document.createTextNode("Well well. A pilot at my door. Sit down, the interview already started."));
+    var sub = el("div", "coverSub",
+      "Nine quick questions, about a minute, and only your name is required. " +
+      "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
+    sub.style.marginBottom = "4px";
+    answer.appendChild(sub);
+    var go = el("button", "gobtn", "Talk to the goblin"); go.type = "button";
+    go.addEventListener("click", function(){ show(1); });
+    answer.appendChild(go);
+    hint("enter ↵ to start", false);
+  }
+
+  var REVIEW_ROWS = [
+    ["Name", 1, function(){ return ans.ign; }],
+    ["Timezone", 2, function(){ return ans.timezone; }],
+    ["Experience", 3, function(){
+      var m = { new:"New to EVE", returning:"Returning after a break", veteran:"Veteran" };
+      return m[ans.experience] || ""; }],
+    ["Good evening", 4, function(){
+      var m = { mining:"Mining", industry:"Industry", pvp:"A little PvP", explore:"Exploration", unsure:"Not sure yet" };
+      return ans.activities.map(function(a){ return m[a] || a; }).join(", "); }],
+    ["Flies", 5, function(){ return joined(ans.ships, ans.shipsOther, LIM.ships); }],
+    ["Wants", 6, function(){ return joined(ans.looking, ans.lookingOther, LIM.looking_for); }],
+    ["Found us", 7, function(){ return foundValue(); }],
+    ["Discord", 8, function(){ return ans.contact; }],
+    ["The record", 9, function(){ return ans.notes; }]
+  ];
+
+  function renderReview(s){
+    bubble.textContent = s.q();
+    var box = el("div", "rev");
+    REVIEW_ROWS.forEach(function(r){
+      var row = el("div", "revRow");
+      row.appendChild(el("div", "rl", r[0]));
+      var v = (r[2]() || "").trim();
+      row.appendChild(el("div", "rv" + (v ? "" : " skip"), v || "you skipped this"));
+      var eb = el("button", "re", "edit"); eb.type = "button";
+      eb.addEventListener("click", function(){ editReturn = true; show(r[1]); });
+      row.appendChild(eb);
+      box.appendChild(row);
     });
+    answer.appendChild(box);
+    var send = el("button", "gobtn", "Send it to the recruiters"); send.type = "button";
+    send.addEventListener("click", submit);
+    answer.appendChild(send);
+    hint("look it over · enter ↵ to send", false);
+  }
+
+  /* ---------- flow ---------- */
+  function advance(skipped){
+    if (sending) return;
+    var s = SLIDES[idx];
+    if (s.t === "send") return;
+    if (s.t === "cover") { show(1); return; }
+    if (s.t === "review") { submit(); return; }
+    if (s.req && !skipped) {
+      var v = (ans[s.f] || "").trim();
+      if (!v) { slideErr.textContent = s.reqErr; return; }
+      ans[s.f] = v;
+    }
+    if (s.req && skipped) return; /* required cannot be skipped */
+    saveDraft();
+    if (editReturn) { editReturn = false; show(10); return; }
+    show(idx + 1);
+  }
+  function goBack(){
+    if (sending) return;
+    var s = SLIDES[idx];
+    if (s.t === "cover" || s.t === "send") return;
+    if (editReturn) { editReturn = false; show(10); return; }
+    show(idx - 1);
+  }
+  backBtn.addEventListener("click", goBack);
+
+  document.addEventListener("keydown", function(e){
+    var s = SLIDES[idx];
+    if (e.key === "Enter") {
+      var tg = e.target;
+      if (tg && tg.tagName === "TEXTAREA" && e.shiftKey) return;      /* newline */
+      if (tg && (tg.tagName === "BUTTON" || tg.tagName === "A")) return; /* native click */
+      e.preventDefault();
+      if (s.t === "review") { submit(); return; }
+      advance((ans[s.f] || s.t === "cover") ? false : !s.req);
+      return;
+    }
+    if (e.key === "ArrowUp") { e.preventDefault(); goBack(); }
+    if (e.key === "ArrowDown" && s.t !== "cover" && s.t !== "send" && !s.req) { e.preventDefault(); advance(true); }
+  });
+
+  /* ---------- submit ---------- */
+  function payload(){
+    var p = { ign: ans.ign.trim().slice(0, LIM.ign) };
+    if (ans.timezone && ans.timezone !== "__other") p.timezone = ans.timezone;
+    if (ans.experience) p.experience = ans.experience;
+    if (ans.activities.length) p.activities = ans.activities.slice(0, 5);
+    var ships = joined(ans.ships, ans.shipsOther, LIM.ships);
+    if (ships) p.ships = ships;
+    var looking = joined(ans.looking, ans.lookingOther, LIM.looking_for);
+    if (looking) p.looking_for = looking;
+    var found = foundValue();
+    if (found) p.found_us = found;
+    var contact = ans.contact.trim().slice(0, LIM.contact);
+    if (contact) p.contact = contact;
+    var notes = ans.notes.trim().slice(0, LIM.notes);
+    if (notes) p.notes = notes;
+    return p;
+  }
+
+  function submit(){
+    if (sending) return;
+    if (!ans.ign.trim()) { editReturn = true; show(1); return; }
+    sending = true;
+    show(11);
+    hint("", false);
+    /* start the wire AFTER the slide swap so a fast response cannot be wiped by it */
+    setTimeout(function(){
+      fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload())
+      }).then(function(res){
+        return res.json().then(function(data){ return data; }).catch(function(){ return null; });
+      }).then(function(data){
+        sending = false;
+        if (data && data.ok) { confirmOk(); return; }
+        confirmErr((data && data.error) || "The wire to the recruiters is quiet. Give it a moment and try again.");
+      }).catch(function(){
+        sending = false;
+        confirmErr("The wire to the recruiters is quiet. Give it a moment and try again.");
+      });
+    }, DUR ? DUR + 40 : 0);
+  }
+
+  function confirmOk(){
+    clearDraft();
+    bubble.textContent = "Application in. A recruiter will reach out. The table is nearly set. \u{1FAA8}";
+    answer.textContent = "";
+    var body = el("div", "confirmBody");
+    body.appendChild(document.createTextNode("Once you are in, your goblin career lives at "));
+    var a = el("a", null, "the member portal"); a.href = "/portal/";
+    body.appendChild(a);
+    body.appendChild(document.createTextNode(". Medals, hauls, the whole ledger of your rise. See you in the belt."));
+    answer.appendChild(body);
+    var dc = el("a", "discordcta", "Jump into the Discord ▶");
+    dc.href = DISCORD; dc.target = "_blank"; dc.rel = "noopener";
+    answer.appendChild(dc);
+    qcount.textContent = "done";
+    hint("", false);
+  }
+
+  function confirmErr(msg){
+    bubble.textContent = msg;
+    answer.textContent = "";
+    var retry = el("button", "gobtn", "Try again"); retry.type = "button";
+    retry.addEventListener("click", submit);
+    answer.appendChild(retry);
+    var back = el("button", "skiplink", "back to my answers"); back.type = "button";
+    back.style.marginTop = "12px";
+    back.addEventListener("click", function(){ show(10); });
+    answer.appendChild(back);
+    hint("", false);
+  }
+
+  /* ---------- boot ---------- */
+  var startAt = 0;
+  var m = location.search.match(/[?&]slide=(\d+)/);
+  if (m) startAt = Math.min(parseInt(m[1], 10) || 0, 10);
+  gobA.classList.add("on"); gobA.src = POSES.ask; curPose = "ask"; gobOn = gobA; gobOff = gobB;
+  show(startAt, true);
+  window.addEventListener("load", function(){
+    Object.keys(POSES).forEach(function(k){ var im = new Image(); im.src = POSES[k]; });
   });
 })();
 </script>
