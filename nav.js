@@ -1,5 +1,8 @@
 /* Shared top nav for the Wealthy Dropouts tool pages + hub.
-   Injected on load; styled by common.css (.topnav). Edit once, all pages update. */
+   Injected on load; styled by common.css (.topnav) plus the style block below.
+   THE TOOLBELT (2026-07-12): four pinned daily drivers stay inline; every
+   destination lives in the three-line TOOLS menu, grouped. Edit once, all
+   pages update. */
 (function () {
   var ORIGIN = "";        // relative to the current domain (bonkeve.com); no cross-domain redirect hop
   var BASE = "/";         // the site lives at the domain root now, not under /wdeve/
@@ -11,41 +14,87 @@
     fav.rel = "icon"; fav.type = "image/png"; fav.href = ORIGIN + BASE + "favicon.png";
     (document.head || document.documentElement).appendChild(fav);
   }
+
+  // [label, href, group, pinned] — pinned items also appear in the panel so the
+  // mobile menu (which hides the inline row) always reaches all destinations.
   var ITEMS = [
-    ["Home", BASE],
-    ["Apply", BASE + "apply/"],
-    ["Portal", BASE + "portal/"],
-    ["Radar", BASE + "lowsec/"],
-    ["Kills", BASE + "kills/"],
-    ["Blueprints", BASE + "blueprints/"],
-    ["Refine", BASE + "refine/"],
-    ["Fleet", BASE + "fleet/"],
-    ["Reprocess", BASE + "reprocess/"],
-    ["Arbitrage", BASE + "arbitrage/"],
-    ["Decorations", BASE + "decorations/"],
-    ["CLASSIFIED", BASE + "bonk-prospects/"],
-    ["REDACTED", BASE + "alliance/"]
+    ["Home",        BASE,                     "HOME",   true ],
+    ["Apply",       BASE + "apply/",          "HOME",   false],
+    ["Portal",      BASE + "portal/",         "MEMBER", true ],
+    ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
+    ["Decorations", BASE + "decorations/",    "MEMBER", false],
+    ["Radar",       BASE + "lowsec/",         "INTEL",  true ],
+    ["Kills",       BASE + "kills/",          "INTEL",  false],
+    ["CLASSIFIED",  BASE + "bonk-prospects/", "INTEL",  false],
+    ["REDACTED",    BASE + "alliance/",       "INTEL",  false],
+    ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
+    ["Market",      BASE + "market/",         "MARKET", false],
+    ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
+    ["Refine",      BASE + "refine/",         "MARKET", false],
+    ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
+    ["Workbench",   BASE + "tools/",          "MARKET", false]
   ];
+  var GROUPS = ["HOME", "MEMBER", "INTEL", "MARKET"];
   // Members see the recruiting tools by name; the public sees the redacted labels.
   // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
   var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance" };
+
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";
   function current(p) { return p === BASE ? (path === BASE) : (path.indexOf(p) === 0); }
+  function linkHtml(it, cls) {
+    var rel = it[1].slice(BASE.length); // e.g. "bonk-prospects/"
+    var klass = (cls + (current(it[1]) ? " cur" : "")).replace(/^ /, "");
+    return '<a' + (klass ? ' class="' + klass + '"' : "")
+         + ' href="' + ORIGIN + it[1] + '" data-rel="' + rel + '">' + it[0] + '</a>';
+  }
 
   var bar = document.createElement("div");
   bar.className = "topnav";
   var html = '<a class="brand" href="' + ORIGIN + BASE + '">'
            + '<span class="tick">BONK</span><span class="brandtext">WEALTHY DROPOUTS</span></a>'
            + '<span class="navwho" id="navwho"></span><nav>';
-  for (var i = 0; i < ITEMS.length; i++) {
-    var hrefRel = ITEMS[i][1].slice(BASE.length); // e.g. "bonk-prospects/"
-    html += '<a href="' + ORIGIN + ITEMS[i][1] + '" data-rel="' + hrefRel + '"'
-          + (current(ITEMS[i][1]) ? ' class="cur"' : '') + '>' + ITEMS[i][0] + '</a>';
+  var i, g, curUnpinned = false;
+  for (i = 0; i < ITEMS.length; i++) {
+    if (ITEMS[i][3]) html += linkHtml(ITEMS[i], "");
+    else if (current(ITEMS[i][1])) curUnpinned = true; // light the burger for panel-only pages
   }
-  html += '</nav>';
+  html += '</nav>'
+        + '<button type="button" class="bn-burger' + (curUnpinned ? " cur" : "") + '" id="bnburger"'
+        + ' aria-expanded="false" aria-controls="bnpanel" aria-label="Open the tools menu">'
+        + '<span class="bn-lines" aria-hidden="true"><span></span><span></span><span></span></span>'
+        + '<span class="bn-blabel">Tools</span></button>'
+        + '<div class="bn-panel" id="bnpanel" hidden>';
+  for (g = 0; g < GROUPS.length; g++) {
+    html += '<div class="bn-group"><div class="bn-glabel">' + GROUPS[g] + '</div>';
+    for (i = 0; i < ITEMS.length; i++)
+      if (ITEMS[i][2] === GROUPS[g]) html += linkHtml(ITEMS[i], "bn-item");
+    html += '</div>';
+  }
+  html += '</div>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
+
+  // The toolbelt open/close: click toggles, Escape closes (focus back on the
+  // burger), any click outside closes. Links are plain <a> so middle-click and
+  // ctrl-click behave. Panel z-index sits below the walkthrough overlays (9998+).
+  var burger = document.getElementById("bnburger"), panel = document.getElementById("bnpanel");
+  function setOpen(on, refocus) {
+    if (!burger || !panel) return;
+    panel.hidden = !on;
+    burger.setAttribute("aria-expanded", on ? "true" : "false");
+    if (!on && refocus) burger.focus();
+  }
+  function isOpen() { return !!panel && !panel.hidden; }
+  if (burger && panel) {
+    burger.addEventListener("click", function () { setOpen(!isOpen()); });
+    document.addEventListener("click", function (e) {
+      if (isOpen() && !panel.contains(e.target) && !burger.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && isOpen()) setOpen(false, true);
+    });
+  }
 
   // Login indicator next to the brand: ask the portal who is logged in (the
   // session is a same-origin httpOnly cookie, so /api/whoami just reads it). Show
@@ -62,7 +111,37 @@
     ".navwho.in{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
     ".navwho.in .dotln{background:var(--ore,#46ff5e);box-shadow:0 0 6px rgba(70,255,94,.55);}" +
     ".navwho .unrd{color:var(--ore,#46ff5e);font-weight:700;flex:none;white-space:nowrap;}" +
-    "@media(max-width:620px){.navwho .lbl{display:none;}}";
+    "@media(max-width:620px){.navwho .lbl{display:none;}}" +
+    /* ---- the toolbelt ---- */
+    ".bn-burger{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono,ui-monospace,monospace);" +
+    "font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--silver-dim,#9aa39c);" +
+    "background:transparent;border:1px solid var(--line,rgba(150,168,158,.16));padding:7px 13px;cursor:pointer;" +
+    "clip-path:polygon(0 0,100% 0,90% 100%,0 100%);transition:border-color .15s,color .15s;}" +
+    ".bn-burger:hover,.bn-burger[aria-expanded=true]{border-color:var(--ore,#46ff5e);color:var(--ore,#46ff5e);}" +
+    ".bn-burger.cur{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
+    ".bn-lines{display:inline-flex;flex-direction:column;gap:3px;width:14px;flex:none;}" +
+    ".bn-lines span{display:block;height:2px;background:currentColor;}" +
+    ".bn-panel{position:absolute;top:calc(100% + 8px);right:16px;z-index:9000;" +
+    "width:min(320px,calc(100vw - 24px));background:var(--steel,#14171a);" +
+    "border:1px solid var(--line,rgba(150,168,158,.16));border-top:3px solid var(--ore,#46ff5e);" +
+    "box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px 14px 16px;" +
+    "max-height:calc(100vh - 80px);overflow:auto;animation:bnDrop .14s ease;}" +
+    ".bn-panel[hidden]{display:none!important;}" +
+    "@keyframes bnDrop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}" +
+    "@media(prefers-reduced-motion:reduce){.bn-panel{animation:none;}}" +
+    ".bn-group{margin-top:12px;}.bn-group:first-child{margin-top:0;}" +
+    ".bn-glabel{font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.22em;" +
+    "color:var(--muted,#6f776f);border-bottom:1px solid var(--line,rgba(150,168,158,.16));" +
+    "padding-bottom:5px;margin-bottom:6px;}" +
+    ".bn-item{display:block;font-family:var(--mono,ui-monospace,monospace);font-size:11.5px;letter-spacing:.1em;" +
+    "text-transform:uppercase;color:var(--silver-dim,#9aa39c);text-decoration:none;padding:7px 9px;" +
+    "transition:color .15s,background .15s;}" +
+    ".bn-item:hover{color:var(--ore,#46ff5e);background:rgba(70,255,94,.06);}" +
+    ".bn-item.cur{background:var(--ore,#46ff5e);color:#04140a;font-weight:700;}" +
+    "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
+    ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
+    "max-height:calc(100vh - 54px);}}" +
+    "@media(max-width:480px){.bn-blabel{display:none;}}";
   (document.head || document.documentElement).appendChild(st);
 
   var w = document.getElementById("navwho");
@@ -76,10 +155,10 @@
           w.className = "navwho in";
           w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';
           w.querySelector(".nm").textContent = d.ign || "goblin";
-          // members get the real recruiting-tool names in the nav
+          // members get the real recruiting-tool names, in the bar AND the panel
           for (var rel in MEMBER_LABELS) {
-            var lnk = bar.querySelector('nav a[data-rel="' + rel + '"]');
-            if (lnk) lnk.textContent = MEMBER_LABELS[rel];
+            var lnks = bar.querySelectorAll('a[data-rel="' + rel + '"]');
+            for (var k = 0; k < lnks.length; k++) lnks[k].textContent = MEMBER_LABELS[rel];
           }
           // inbox badge: portal unread count in ore green; the whole chip already
           // opens /portal/, so the badge rides the same click.
@@ -87,7 +166,7 @@
             var u = document.createElement("span");
             u.className = "unrd";
             u.title = "unread in your inbox";
-            u.textContent = "\u00B7 " + d.unread;
+            u.textContent = "· " + d.unread;
             w.appendChild(u);
           }
           w.title = "Logged in as " + (d.ign || "goblin") + ". Your activity is tracked to your account. Open your portal.";
