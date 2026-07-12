@@ -15,7 +15,7 @@
     ["Home", BASE],
     ["Apply", BASE + "apply/"],
     ["Portal", BASE + "portal/"],
-    ["Lowsec", BASE + "lowsec/"],
+    ["Radar", BASE + "lowsec/"],
     ["Kills", BASE + "kills/"],
     ["Blueprints", BASE + "blueprints/"],
     ["Refine", BASE + "refine/"],

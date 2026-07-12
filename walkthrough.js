@@ -31,8 +31,9 @@
       { title: "Blueprints", body: "What is worth building right now: the material cost versus the sell price, from live data." },
       { title: "Read it", body: "Green margin means profit after materials. Start with what you already have the skills and minerals for." } ] },
     lowsec: { steps: [
-      { title: "Lowsec Scout", body: "Intel on lowsec systems before you undock: what is out there and how spicy it has been lately." },
-      { title: "Read it", body: "Check the traffic and recent-loss signals. Quiet is good. Busy and bloody, pick another belt." } ] },
+      { title: "Radar", body: "Two instruments: the Belt Radar maps every asteroid belt in a region, and the Lowsec Scout ranks safe lowsec mining systems." },
+      { title: "Belt Radar", body: "Pick a region, get every system's belt count, true sec, moons and stations. Belts never move, so this map never lies." },
+      { title: "Read the scout", body: "Check the traffic and recent-loss signals. Quiet is good. Busy and bloody, pick another belt." } ] },
     kills: { steps: [
       { title: "Corp Killboard", body: "Our combat record, mirrored live: every kill and loss the corp has been on." },
       { title: "Use it", body: "Click any row to open the full report on zKillboard. Learn what killed us, then do not do that." } ] },
