@@ -320,6 +320,28 @@
   .gate .links{ margin-top:16px; font-family:var(--mono); font-size:11.5px; line-height:2; }
   .gate .links a{ color:var(--ore); text-decoration:none; }
   .gate .links a:hover{ color:var(--laser); }
+  /* ---------- gate pitch: the storefront around the login ---------- */
+  .gatewrap{ display:grid; grid-template-columns:340px minmax(0,1fr); gap:24px; align-items:start;
+             width:100%; max-width:880px; }
+  @media(max-width:760px){ .gatewrap{ grid-template-columns:1fr; } }
+  .gphead{ font-family:var(--display); font-weight:700; letter-spacing:.05em; font-size:16px; color:var(--silver); }
+  .gpsub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:4px 0 14px; letter-spacing:.05em; }
+  .gproof{ display:flex; flex-wrap:wrap; gap:18px; background:var(--steel); border:1px solid var(--line-soft);
+           border-left:3px solid var(--ore); padding:12px 16px; margin-bottom:14px; }
+  .gproof .k{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .gproof .v{ font-family:var(--display); font-weight:700; font-size:17px; color:var(--ore); margin-top:2px; }
+  .gptiles{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  @media(max-width:520px){ .gptiles{ grid-template-columns:1fr; } }
+  .gptile{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+           padding:10px 13px; font-size:12.5px; line-height:1.5; color:var(--silver-dim); }
+  .gptile b{ display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+             color:var(--silver); margin-bottom:3px; }
+  .gpcta{ display:flex; flex-wrap:wrap; gap:9px; margin-top:14px; }
+  .gpbtn{ font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+          text-decoration:none; padding:10px 16px; border:1px solid var(--line); color:var(--silver-dim); }
+  .gpbtn:hover{ border-color:var(--ore); color:var(--ore); }
+  .gpbtn.main{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+  .gpbtn.main:hover{ background:var(--laser); color:#04140a; }
   .formerr{ color:var(--red); font-family:var(--mono); font-size:12px; min-height:16px; margin-top:10px; line-height:1.5; }
 
   /* ---------- event + live op banners ---------- */
@@ -438,6 +460,7 @@
 
 <!-- ================= LOGGED OUT ================= -->
 <div id="gate" class="gate" style="display:none">
+  <div class="gatewrap">
   <div class="card">
     <h1>&#9935; MEMBER PORTAL</h1>
     <p>the career page is inside. main character IGN and password, goblin.</p>
@@ -448,9 +471,27 @@
     </form>
     <div class="err" id="loginErr"></div>
     <div class="links">
-      <a href="/portal/claim/">Have a claim code?</a><br>
-      <a href="/apply/">Want in? Apply.</a>
+      <a href="/portal/claim/">Have a claim code?</a>
     </div>
+  </div>
+  <div class="gpitch">
+    <div class="gphead">WHY GOBLINS JOIN</div>
+    <div class="gpsub">a 12 year corp that runs like a tech company</div>
+    <div class="gproof" id="gateProof" style="display:none"></div>
+    <div class="gptiles">
+      <div class="gptile"><b>CAREER PAGE</b>your hauls, lifetime ISK and m&sup3;, climbing in real numbers</div>
+      <div class="gptile"><b>PAYDAY RECEIPTS</b>every op: what you dropped, what you were paid, at what rate</div>
+      <div class="gptile"><b>FLEET LEDGER</b>drop ore, watch your tab live, get paid when the op closes</div>
+      <div class="gptile"><b>THE WALL</b>eleven medals that sit on your character sheet forever</div>
+      <div class="gptile"><b>LEADERBOARDS</b>monthly events, real standings, bragging rights with receipts</div>
+      <div class="gptile"><b>THE KEYS</b>one login opens the gated tools, no shared passwords to type</div>
+    </div>
+    <div class="gpcta">
+      <a class="gpbtn main" href="/apply/">Apply: the Goblin Interview</a>
+      <a class="gpbtn" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">The Discord</a>
+      <a class="gpbtn" href="/tools/">Free toolkit</a>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -620,10 +661,24 @@ async function api(path, body){
 function isOut(e){ return e && e.message === LOGGED_OUT; }
 
 /* ============ top level states ============ */
+var gateProofDone = false;
+function renderGateProof(){
+  /* live numbers or nothing: never block the login on this fetch, never brag a zero */
+  if (gateProofDone) return; gateProofDone = true;
+  fetch("/api/public-stats").then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+    if (!d || !d.ok || !(d.given_back > 0)) return;
+    var bits = ['<div><div class="k">given back to goblins</div><div class="v">' + fmtIsk(d.given_back) + ' ISK</div></div>'];
+    if (d.ops > 0) bits.push('<div><div class="k">ops settled</div><div class="v">' + d.ops + '</div></div>');
+    if (d.station && d.station.pct > 0) bits.push('<div><div class="k">station fund</div><div class="v">' + d.station.pct + '%</div></div>');
+    var el = $("gateProof");
+    if (el){ el.innerHTML = bits.join(""); el.style.display = ""; }
+  }).catch(function(){});
+}
 function showGate(){
   $("skeleton").style.display = "none";
   $("app").style.display = "none";
   $("gate").style.display = "flex";
+  renderGateProof();
 }
 function showApp(){
   $("skeleton").style.display = "none";
