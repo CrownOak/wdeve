@@ -20,19 +20,21 @@
       { title: "Ore Prices mode", body: "The same paste also prices your load RAW at all five trade hubs, tells you which hub actually buys it, and the Rock Index board lists every ore in the game." },
       { title: "Use it", body: "Copy the ore in the EVE client, paste it in the box, read the ISK. No login, prices refresh hourly." } ] },
     reprocess: { steps: [
-      { title: "Reprocess reference", body: "Same idea as the refinery, laid out as a table: what each ore and ice reprocesses into and what it is worth." },
+      { title: "Reprocess reference", body: "Same idea as the Ore Calculator, laid out as a table: what each ore and ice reprocesses into and what it is worth. BUYBACK is 90% of the Jita refined value." },
       { title: "Read it", body: "Scan for what pays. The compressed toggle flips between raw and compressed values." } ] },
     market: { steps: [
-      { title: "Market Finder", body: "Where things sell and for how much across the trade hubs, from live EVE market data." },
-      { title: "Read it", body: "Compare the buy and sell columns. A fat spread is a trade, but thin volume kills it, so watch the volume too." } ] },
+      { title: "Market Finder", body: "Paste one item or a whole multibuy and see what it costs at every trade hub, cheapest highlighted. Or flip it to sell mode and see what the load fetches." },
+      { title: "Use it", body: "Copy a list in the EVE client, paste it here, read the totals per hub. Copy it back as a multibuy for the winning hub and go shopping." } ] },
     arbitrage: { steps: [
       { title: "Arbitrage", body: "A buy-here, sell-there profit finder. It scans the hubs for things you can move for a margin." },
-      { title: "Read it", body: "Sort by margin, but check the daily volume, it caps how much you can actually flip. Updates hourly." } ] },
+      { title: "Read it", body: "Sort by margin, but check the daily volume, it caps how much you can actually flip. The DANGER column names the route that gets you ganked. Updates hourly." } ] },
     blueprints: { steps: [
-      { title: "Blueprints", body: "What is worth building right now: the material cost versus the sell price, from live data." },
+      { title: "Blueprints", body: "What is worth building right now: the material cost versus the sell price, from live data. Materials and product both priced at Jita, minus a 5 percent job fee." },
+      { title: "Push it to the corp", body: "The + track button sends any build into the corp Project Tracker, which sizes the whole queue and tells the fleet what ore to mine for it. Table to mining op in one click." },
       { title: "Read it", body: "Green margin means profit after materials. Start with what you already have the skills and minerals for." } ] },
     lowsec: { steps: [
-      { title: "Radar", body: "Two instruments: the Belt Radar maps every asteroid belt in a region, and the Lowsec Scout ranks safe lowsec mining systems." },
+      { title: "Radar", body: "Three instruments on one page: System Search, the Belt Radar, and the Lowsec Scout. Each section unfolds when you click its bar." },
+      { title: "System Search", body: "Type any system in the game and get its belts, true sec, moons, stations, and the last hour of live activity. Scout a destination before you undock." },
       { title: "Belt Radar", body: "Pick a region, get every system's belt count, true sec, moons and stations. Belts never move, so this map never lies." },
       { title: "Read the scout", body: "Check the traffic and recent-loss signals. Quiet is good. Busy and bloody, pick another belt." } ] },
     kills: { steps: [
@@ -42,14 +44,14 @@
       { title: "Recruiting list", body: "Corp-less pilots who recently lost a mining ship, worth a friendly recruiting mail. Recruiters only." },
       { title: "Send one", body: "MAIL and MSG copy a personalized message ready to paste in game. The X marks a pilot done for every recruiter, so nobody double-sends." } ] },
     alliance: { steps: [
-      { title: "Who we are", body: "The BIG ROCK ENERGY story, the perks, and how to join. This is the front door." },
-      { title: "Get in", body: "The tools live in the nav up top. The Discord link gets you in, prospect role and all." } ] },
+      { title: "Alliance Builder", body: "Recruiting targets at the corp level: independent mining corps worth pitching to fly under BONK. Recruiters only." },
+      { title: "Work the list", body: "Same drill as the pilot list: the X marks a corp done for every recruiter, so nobody double-contacts. Fresh targets refill daily." } ] },
     decorations: { steps: [
       { title: "The Wall of Goblins", body: "Every medal the corp gives out, and exactly how each one is earned." },
       { title: "Earn one", body: "Most are automatic, the ledger and the kill log watch for them. Pick one and aim at it." } ] },
     tools: { steps: [
       { title: "The Goblin Toolkit", body: "Every tool the corp built, in one place: refining, market, industry, mining ops, intel." },
-      { title: "Use it", body: "Public tools need no login. A few goblin tools ask for the corp word. Tap any card to open it." } ] }
+      { title: "Use it", body: "Public tools need no login. The goblin tools open on their own when you are logged into the portal; the corp word is the backup key. Tap any card." } ] }
   };
 
   var T = window.BONK_TOUR;

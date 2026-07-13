@@ -1861,11 +1861,11 @@ var ACADEMY = [
   { key:"tools", title:"We Built Robots So You Would Not Have To Think", sub:"Module 4 · The Tools",
     body:[
       `Most mining corps hand you a spreadsheet and a prayer. We built an arsenal of custom tools because we got tired of doing math like animals. It all lives at bonkeve.com. You do not have to master it today, you just have to know it exists so you stop guessing.`,
-      `<b>The Ore Refinery Calculator.</b> Paste in a pile of rocks, it tells you exactly what they refine into and what they are worth. Or flip it: tell it what minerals you need, it tells you which rocks to go mine. It knows all 439 types of rock, which is 439 more than you need to memorize, because the robot memorized them for you.`,
+      `<b>The Ore Calculator.</b> Paste in a pile of rocks, it tells you exactly what they refine into and what they are worth. Or flip it: tell it what minerals you need, it tells you which rocks to go mine. Its Ore Prices mode also prices your load RAW at all five trade hubs and tells you which hub actually buys it, because some rocks do not sell everywhere. It knows all 440 types of rock, which is 440 more than you need to memorize, because the robot memorized them for you.`,
       `<b>The Fleet Drop Ledger.</b> This one is not optional. You learned the WHEN in the fleet ops module: during an op, every time you jetcan a full hold, you log that same drop, in one motion. Here is the WHY. You paste what you dropped, the ledger values it live, and tracks your exact share next to everyone else's. At the end you get paid precisely what YOU mined. No guessing, no getting lumped in with the guy who mined twice as much, no getting forgotten.`,
       `Why is it required? Because <b>the ledger is the witness.</b> If it is not logged, it did not happen, and command cannot pay you for rock it cannot see. This is not a bureaucratic hoop. It is the thing that guarantees you get every ISK you earned and nobody can argue about it. Log your drops. The ledger saw you drop it.`,
       `<b>The rest of the shed.</b> A market tool that finds the cheapest place to buy things, a blueprint scanner that tells you what is profitable to build, a scout that finds safe quiet systems, a killboard so you can see who got got. Poke around. If you find something missing, say so. The toolkit is yours.`,
-      `<b>The passwords.</b> Some tools are gated behind the corp word. You get the keys in the members channel. Keep them in the family. Do not paste them where a non goblin can see, because the whole point of a secret handshake is that it is secret.`
+      `<b>The keys.</b> Some tools are gated. Here is the good news: you are logged into the portal, so those tools just open for you. No password typing, the login IS the key. The corp word still exists as the backup for when you are logged out, and it lives in the members channel. Keep it in the family. Do not paste it where a non goblin can see, because the whole point of a secret handshake is that it is secret.`
     ],
     point:`The tools do your math so you do not have to. The one that is REQUIRED is the Fleet Drop Ledger: log every drop during an op or you do not get paid, because the ledger is the record and it protects your exact share. Everything else at bonkeve.com is there to make you richer and safer.`,
     quiz:[
@@ -1875,7 +1875,7 @@ var ACADEMY = [
       { q:"Why is logging your drops required to get paid?",
         opts:["It is a bureaucratic hoop with no real purpose","The ledger is the witness. If it is not logged, command cannot pay you for rock it cannot see","It makes the Orca pilot's job easier and that is all","It is optional and just for fun"],
         correct:1, why:"The ledger is the witness. No log, no proof, no check. It is the thing that protects your share." },
-      { q:"What does the Ore Refinery Calculator do?",
+      { q:"What does the Ore Calculator do?",
         opts:["Mines the ore for you automatically","Tells you what your ore refines into, or what ore to mine for the minerals you need","Sells your ore at the best price","Flies your ship to the belt"],
         correct:1, why:"It does the refine math both ways: rocks to minerals, or minerals to the rocks you should go mine." },
       { q:"What should you do with the corp tool passwords?",
@@ -2248,9 +2248,11 @@ window.BONK_TOUR = {
     { sel: "#panelAcademy", title: "Start here: the Academy", body: "Six short modules. Do them and you learn the doctrine, the workflow, and where the checks come from. Finish all six and you earn your first medal. Do this first.", place: "auto" },
     { sel: "#corpStripWrap", title: "Project: Our Own Rock", body: "The corp is buying its own station. Watch the bar climb, and hit Contribute to help build it. Every goblin who chips in gets counted.", place: "auto" },
     { sel: "#panelStats", title: "Your numbers", body: "Your ISK, your ops, your ore. Every drop you log lands here. No mystery math, the ledger saw you drop it so you get paid for it.", place: "auto" },
+    { sel: "#panelHauls", title: "Your receipts", body: "Every op you flew: what you dropped, what you were paid, at what rate, ISK per hour on the belt. Paydays with paper trails. Nobody argues with a receipt.", place: "auto" },
+    { sel: "#bnburger", title: "Everything else lives here", body: "All the corp tools sit in this menu: ore prices at every hub, the Radar, arbitrage, blueprints, the works. When a fleet op is live and hauling, the Fleet link up here glows. That glow means ISK.", place: "auto" },
     { sel: null, title: "That is the tour", body: "Poke around, do the Academy, get in a fleet. Lost? Hit the ? in the corner to run this again. The ore must flow.", place: "center" }
   ]
 };
 </script>
-<script src="/walkthrough.js?v=3"></script>
+<script src="/walkthrough.js?v=4"></script>
 </body></html>
