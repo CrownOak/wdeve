@@ -29,6 +29,9 @@
   .fign{ font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.02em;
          color:var(--silver); line-height:1.25; overflow-wrap:anywhere; }
   .badge.adm{ background:var(--amber); }
+  .badge.ally{ background:transparent; color:var(--amber); border:1px solid rgba(233,196,106,.5); }
+  .allysec{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--amber);
+            border-top:1px solid var(--line); padding-top:16px; margin-top:6px; }
   .fmeta{ font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--silver-dim); margin-top:6px; }
   .fisk{ margin-top:13px; border-top:1px solid var(--line-soft); padding-top:10px;
          display:flex; align-items:baseline; gap:12px; }
@@ -166,6 +169,7 @@
   function roleBadge(role){
     if (role === "admin")   return ' <span class="badge adm">&#9819; ADMIN</span>';
     if (role === "officer") return ' <span class="badge">OFFICER</span>';
+    if (role === "ally")    return ' <span class="badge ally">&#129309; ALLY</span>';
     return "";
   }
 
@@ -240,7 +244,13 @@
       return;
     }
     var list = sorted(), out = "";
-    for (var i = 0; i < list.length; i++) out += card(list[i]);
+    var goblins = list.filter(function(r){ return r.role !== "ally"; });
+    var allies  = list.filter(function(r){ return r.role === "ally"; });
+    for (var i = 0; i < goblins.length; i++) out += card(goblins[i]);
+    if (allies.length){
+      out += '<div class="allysec" style="grid-column:1/-1">FRIENDS OF THE ROCK</div>';
+      for (var j = 0; j < allies.length; j++) out += card(allies[j]);
+    }
     board.innerHTML = out;
   }
 
@@ -296,5 +306,5 @@
   load();
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 </body></html>

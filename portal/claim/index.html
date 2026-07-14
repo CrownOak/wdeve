@@ -32,6 +32,21 @@
   .msg{ text-align:center; color:var(--silver); font-size:14.5px; line-height:1.6; margin:12px 0 6px; }
   .skipnote{ text-align:center; font-family:var(--mono); font-size:11px; color:var(--amber);
              line-height:1.55; margin:10px 0 0; }
+  .allybox{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
+            padding:14px 16px; margin-bottom:16px; }
+  .allyhd{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; color:var(--amber); margin-bottom:6px; }
+  .allybox p{ font-size:12.5px; line-height:1.55; color:var(--silver-dim); margin:0 0 12px; }
+  a.esibtn{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-family:var(--mono);
+            font-size:12px; letter-spacing:.05em; color:var(--silver); border:1px solid var(--line);
+            padding:9px 14px; transition:border-color .15s,color .15s; }
+  a.esibtn:hover{ border-color:var(--amber); color:var(--amber); }
+  a.esibtn .ev{ font-family:var(--display); font-weight:700; font-size:10px; background:var(--amber); color:#111;
+                padding:1px 5px; letter-spacing:.5px; }
+  .allynote{ font-family:var(--mono); font-size:11px; line-height:1.5; margin-top:9px; }
+  .allynote.bad{ color:var(--red); } .allynote.ok{ color:var(--ore); }
+  .ordiv{ text-align:center; border-top:1px solid var(--line); margin:4px 0 16px; }
+  .ordiv span{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+               color:var(--muted); background:var(--black); padding:0 10px; position:relative; top:-8px; }
   a.enter{ display:block; width:100%; margin-top:18px; padding:14px; background:var(--ore); color:#04140a;
            text-align:center; text-decoration:none; font-family:var(--display); font-weight:700;
            text-transform:uppercase; letter-spacing:.06em; font-size:15px;
@@ -45,6 +60,13 @@
       <div class="gob" id="gob"></div>
       <h1>Claim your account</h1>
       <p class="lede">One code, one goblin. Paste what the recruiter gave you and pick a password. The table is set.</p>
+      <div id="allybox" class="allybox">
+        <div class="allyhd">FLYING BONK COLORS?</div>
+        <p>In an alliance corp and want a seat at the table? No code needed. Prove it with EVE Online and we mint your Friend of the Rock access on the spot. You keep your name, your ticker, your throne.</p>
+        <a class="esibtn" href="/api/esi/ally">Verify with EVE Online <span class="ev">EVE</span></a>
+        <div class="allynote" id="allynote"></div>
+      </div>
+      <div class="ordiv"><span>or use a claim code</span></div>
       <form id="f" novalidate>
         <label for="code">Claim code <b>&#42;</b></label>
         <input id="code" placeholder="GOBLIN-XXXX-XX" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20">
@@ -132,6 +154,19 @@
   });
   ign.addEventListener("input", drawGob);
 
+  // ESI ally door outcome (?ally=...): the worker redirects back here after the
+  // EVE SSO round trip with a status, or with ?code= on success.
+  (function(){
+    var al = (new URLSearchParams(location.search).get("ally") || "");
+    if (!al) return;
+    var note = document.getElementById("allynote");
+    var msg = { esi: ["bad", "EVE did not confirm your character. Try again in a minute."],
+      noalliance: ["bad", "That character is not in a BONK alliance corp. If your corp wants to partner, apply through the interview and we will talk."],
+      owned: ["bad", "That character already has an account here. Log in instead."],
+      cooldown: ["bad", "You already started a claim today. Check your DMs or try again tomorrow."] }[al];
+    if (note && msg){ note.className = "allynote " + msg[0]; note.textContent = msg[1]; }
+  })();
+
   // Magic-link prefill: ?code=XXXX fills the code and pulls the name + Discord
   // this goblin gave us when they applied, so they just pick a password.
   (function(){
@@ -210,5 +245,5 @@
   }
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 </body></html>

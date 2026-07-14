@@ -36,6 +36,9 @@
              margin-left:10px; white-space:nowrap; }
   .rolechip.officer{ color:var(--ore); border-color:rgba(70,255,94,.4); }
   .rolechip.admin{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .rolechip.ally{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .allywelcome{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
+                padding:11px 15px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver-dim); }
   .idacts{ margin-left:auto; display:flex; gap:10px; align-items:center; }
   .bell{ position:relative; background:transparent; border:1px solid var(--line); color:var(--silver-dim);
          font-size:17px; padding:8px 13px; cursor:pointer; line-height:1; transition:border-color .15s,color .15s; }
@@ -741,6 +744,11 @@ $("loginForm").addEventListener("submit", async function(ev){
 });
 
 /* ============ identity header + bell ============ */
+function isAlly(){ return !!(S.me && S.me.account && S.me.account.role === "ally"); }
+// Corp-only panels do not render for allies (Friends of the Rock): academy,
+// contracts, industry, testimonials, trophy case. Keyed on ROLE, never on which
+// blocks /api/me happens to send (a renamed block must never blank a member).
+function hidePanel(id){ var p = $(id); if (p){ p.style.display = "none"; p.innerHTML = ""; } }
 function mainChar(){
   var cs = (S.me && S.me.characters) || [];
   for (var i=0;i<cs.length;i++) if (cs[i].is_main) return cs[i];
@@ -753,7 +761,9 @@ function renderIdentity(){
     ? '<span class="rolechip admin">&#9819; admin</span>'
     : role === "officer"
       ? '<span class="rolechip officer">officer</span>'
-      : '<span class="rolechip">member</span>';
+      : role === "ally"
+        ? '<span class="rolechip ally">&#129309; ally</span>'
+        : '<span class="rolechip">member</span>';
   var unread = Number(S.me.notificationsUnread) || 0;
   el.innerHTML =
     '<div class="idrow">' +
@@ -933,6 +943,7 @@ function renderStats(){
 var SAY_DISMISS = "bonk_say_dismissed";
 function sayDismissed(){ try { return !!localStorage.getItem(SAY_DISMISS); } catch(e){ return false; } }
 function renderSay(){
+  if (isAlly()) return hidePanel("panelSay");
   var el = $("panelSay");
   if (S.say === null && !S.sayLoading){ S.sayLoading = true; loadSay(); }
   var html = '<div class="ptitle">Say it for the front page</div>';
@@ -1160,6 +1171,10 @@ function eventValueFmt(metric, v){
 function renderBanners(){
   var el = $("banners"); if (!el) return;
   var html = "";
+  if (S.me && S.me.account && S.me.account.role === "ally"){
+    html += '<div class="allywelcome">Flying your own colors at our table. Your hauls and payouts track here, ' +
+      'same as any goblin. The fleet ledger is yours to use. Partners, not tenants.</div>';
+  }
   var fl = S.fleetLive;
   if (fl && fl.live){
     html += '<a class="bnr op" href="/fleet/">' +
@@ -1195,6 +1210,7 @@ async function loadBanners(){
 
 /* ============ my contracts list ============ */
 function renderContractsPanel(){
+  if (isAlly()) return hidePanel("panelContracts");
   var el = $("panelContracts");
   var html = '<div class="ptitle">My contracts</div>';
   if (S.contracts === null){
@@ -1427,6 +1443,7 @@ function renderContractReceipt(j){
 
 /* ============ industry (the Architect wall) ============ */
 function renderIndustry(){
+  if (isAlly()) return hidePanel("panelIndustry");
   var el = $("panelIndustry");
   if (S.industry === null && !S.industryLoading){ S.industryLoading = true; loadIndustry(); }
   var html = '<div class="ptitle">Industry &middot; the Architect wall</div>';
@@ -1767,6 +1784,7 @@ function renderESI(){
 
 /* ============ trophy case ============ */
 function renderTrophies(){
+  if (isAlly()) return hidePanel("panelTrophies");
   var el = $("panelTrophies");
   var decs = (S.me.decorations || []).slice();
   var html = '<div class="ptitle">Trophy case</div>';
@@ -2028,6 +2046,7 @@ function quizHTML(mod){
   return h;
 }
 function renderAcademy(){
+  if (isAlly()) return hidePanel("panelAcademy");
   var el = $("panelAcademy");
   var ob = S.me.onboarding || {};
   var modules = (ob.modules && ob.modules.length) ? ob.modules
@@ -2292,7 +2311,7 @@ function renderFoot(){
   }
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 <script>
 window.BONK_TOUR = {
   id: "portal", accountKey: null, readyWhen: "#panelIdentity",

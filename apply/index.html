@@ -157,7 +157,9 @@
   var LIM = { ign:40, ships:200, looking_for:500, found_us:200, contact:100, notes:1000 };
 
   var ans = { ign:"", timezone:"", experience:"", activities:[], ships:[], shipsOther:"",
-              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"" };
+              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp" };
+  // Ally track can arrive by link (?track=ally) from the gate/tools ally CTAs.
+  if (/[?&]track=ally/.test(location.search)) ans.track = "ally";
   var idx = 0, editReturn = false, sending = false;
 
   /* ---------- slide table ---------- */
@@ -449,8 +451,23 @@
     var sub = el("div", "coverSub",
       "Nine quick questions, about a minute, and only your name is required. " +
       "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
-    sub.style.marginBottom = "4px";
+    sub.style.marginBottom = "10px";
     answer.appendChild(sub);
+    // What brings you to the rock: join the corp, or an alliance/community ally seat.
+    var tq = el("div", "coverSub", "What brings you to the rock?");
+    tq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
+    answer.appendChild(tq);
+    var trackWrap = el("div", "chips"); trackWrap.style.marginBottom = "14px";
+    [["corp","Join Wealthy Dropouts"],["ally","My corp wants to mine with you"]].forEach(function(o){
+      var c = el("button", "chip" + (ans.track === o[0] ? " onpick" : ""), o[1]); c.type = "button";
+      c.addEventListener("click", function(){
+        ans.track = o[0]; saveDraft();
+        Array.prototype.forEach.call(trackWrap.children, function(x){ x.classList.remove("onpick"); });
+        c.classList.add("onpick");
+      });
+      trackWrap.appendChild(c);
+    });
+    answer.appendChild(trackWrap);
     var go = el("button", "gobtn", "Talk to the goblin"); go.type = "button";
     go.addEventListener("click", function(){ show(1); });
     answer.appendChild(go);
@@ -550,6 +567,7 @@
     if (contact) p.contact = contact;
     var notes = ans.notes.trim().slice(0, LIM.notes);
     if (notes) p.notes = notes;
+    if (ans.track === "ally") p.applying_for = "ally";
     return p;
   }
 
@@ -619,5 +637,5 @@
   });
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 </body></html>

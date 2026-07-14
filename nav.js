@@ -196,10 +196,14 @@
           w.className = "navwho in";
           w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';
           w.querySelector(".nm").textContent = d.ign || "goblin";
-          // members get the real recruiting-tool names, in the bar AND the panel
-          for (var rel in MEMBER_LABELS) {
-            var lnks = bar.querySelectorAll('a[data-rel="' + rel + '"]');
-            for (var k = 0; k < lnks.length; k++) lnks[k].textContent = MEMBER_LABELS[rel];
+          // members get the real recruiting-tool names, in the bar AND the panel.
+          // Allies (Friends of the Rock) do NOT: the recruiting tools are corp-only
+          // and their unlock keys are server-refused, so the labels stay redacted.
+          if (d.role !== "ally") {
+            for (var rel in MEMBER_LABELS) {
+              var lnks = bar.querySelectorAll('a[data-rel="' + rel + '"]');
+              for (var k = 0; k < lnks.length; k++) lnks[k].textContent = MEMBER_LABELS[rel];
+            }
           }
           // inbox badge: portal unread count in ore green; the whole chip already
           // opens /portal/, so the badge rides the same click.

@@ -786,7 +786,9 @@ async function addMemberModal(){
     +'<div><label>Tenure start</label><input id="am_ten" type="date"></div>'
     +'<div><label>Timezone</label><input id="am_tz" placeholder="US East, EU, AU…"></div>'
     +'<div><label>Discord handle</label><input id="am_dc"></div>'
-    +(ISADMIN?'<div><label>Role</label><select id="am_role"><option value="member">member</option><option value="officer">officer</option><option value="admin">admin</option></select></div>':"")
+    +(ISADMIN
+      ?'<div><label>Role</label><select id="am_role"><option value="member">member</option><option value="ally">ally (Friend of the Rock)</option><option value="officer">officer</option><option value="admin">admin</option></select></div>'
+      :'<div><label>Access</label><select id="am_role"><option value="member">member</option><option value="ally">ally (Friend of the Rock)</option></select></div>')
     +'<div class="wide"><label>Decorations to seed</label>'+(decs||'<span class="rowmeta">catalog unavailable right now</span>')+"</div>"
     +"</div>"
     +'<div id="am_out"></div>'
@@ -861,7 +863,7 @@ async function openMemberDrawer(id){
     +'<div><label>Timezone</label><input id="dw_tz" value="'+esc(a.timezone||"")+'"></div>'
     +'<div><label>Discord handle</label><input id="dw_dc" value="'+esc(a.discord_handle||"")+'"></div>'
     +(ISADMIN?'<div><label>Role</label><select id="dw_role">'
-      +["member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(a.role===r?" selected":"")+">"+r+"</option>";}).join("")
+      +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(a.role===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
     +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
     +'</div><button class="inv" id="dw_save">Save identity</button> '
@@ -2138,5 +2140,5 @@ const SECTIONS={ "":secOverview, members:secMembers, contracts:secContracts,
   backfill:secBackfill, audit:secAudit, settings:secSettings };
 boot();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 </body></html>

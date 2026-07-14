@@ -99,6 +99,7 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .rtab{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .rtip{ font-family:var(--mono); font-size:11px; color:var(--amber); flex:none; white-space:nowrap; }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
+.allyg{ flex:none; font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--amber); border:1px solid rgba(233,196,106,.45); padding:1px 5px; }
 .glyph.orca{ font-size:12.5px; }
 #orcabtn.on2{ color:var(--ore); }
 /* member tip control (tip the fleet boss a fraction of your payout) */
@@ -563,7 +564,7 @@ tr.haulrow{ cursor:pointer; }
             var pay=a.main_ign;
             (a.characters||[]).forEach(function(c){ if(c.is_payout && c.ign) pay=c.ign; });
             (a.characters||[]).forEach(function(c){
-              map[String(c.ign).toLowerCase()]={ main:a.main_ign, payout:pay,
+              map[String(c.ign).toLowerCase()]={ main:a.main_ign, payout:pay, role:a.role||"member",
                 characters:(a.characters||[]).map(function(x){ return x.ign; }) }; });
           });
           PORTAL_ROSTER=map;
@@ -1046,11 +1047,13 @@ tr.haulrow{ cursor:pointer; }
         var g = m.lead ? "<span class='glyph crown' title='fleet lead'>♛</span>"
               : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
         var orcaG = m.orca ? "<span class='glyph orca' title='flying the Orca (boosts, stays on the roster without drops)'>&#128011;</span>" : "";
+        var pr = PORTAL_ROSTER && PORTAL_ROSTER[String(m.who).toLowerCase()];
+        var allyG = (pr && pr.role==="ally") ? "<span class='allyg' title='Friend of the Rock (allied corp)'>ALLY</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
           +"<span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
-          +"<span class='rname'>"+esc(m.who)+"</span>"
+          +"<span class='rname'>"+esc(m.who)+"</span>"+allyG
           +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+kick+"</div>";
       });
       box.innerHTML=h;
@@ -1402,7 +1405,7 @@ tr.haulrow{ cursor:pointer; }
   })();
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 <script>
 window.BONK_TOUR = {
   id: "fleet", accountKey: null, readyWhen: "#dropbox",

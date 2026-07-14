@@ -78,6 +78,9 @@
          color:var(--muted); border:1px solid var(--line); padding:2px 7px; margin-left:8px;
          vertical-align:middle; white-space:nowrap; }
   .ltag.you{ color:var(--ore); border-color:rgba(70,255,94,.4); }
+  .ltag.ally{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .allycaveat{ font-family:var(--mono); font-size:11px; line-height:1.5; color:var(--muted);
+               border-top:1px solid var(--line-soft); margin-top:12px; padding-top:10px; }
   .lval{ font-family:var(--mono); font-size:14px; color:var(--ore); white-space:nowrap;
          font-variant-numeric:tabular-nums; }
   .lsh{ flex:0 0 168px; display:flex; align-items:center; gap:8px; }
@@ -461,6 +464,7 @@
     var w = Math.max(0, Math.min(100, share * 100));
     var unclaimed = r.account_id == null;
     var tags = "";
+    if (r.role === "ally") tags += '<span class="ltag ally">ally</span>';
     if (unclaimed) tags += '<span class="ltag">unclaimed name</span>';
     if (isMe)      tags += '<span class="ltag you">you</span>';
     return (pinned ? '<div class="cutdots">&#8942;</div>' : "") +
@@ -505,6 +509,11 @@
     if (ledger.warm === false){
       html += '<div class="pnote">The ledger cache is still warming. Ranks may lag a touch.</div>';
     }
+    // Ally rows count and pay for real; corp medals stay corp honors. Say it out
+    // loud whenever an ally is on the board so nobody learns the rule from silence.
+    if (rows.some(function(r){ return r.role === "ally"; })){
+      html += '<div class="allycaveat">Ally hauls count and ally payouts are real. Corp medals go to corp goblins.</div>';
+    }
     el.innerHTML = html;
     var more = $("moreBtn");
     if (more) more.addEventListener("click", function(){
@@ -545,7 +554,7 @@
   loadWho();
 })();
 </script>
-<script src="/nav.js?v=11"></script>
+<script src="/nav.js?v=12"></script>
 <script>
 window.BONK_TOUR = {
   id: "leaderboard", accountKey: null, readyWhen: "#boardPanel",
