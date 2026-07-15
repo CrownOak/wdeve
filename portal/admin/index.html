@@ -616,8 +616,12 @@ function medCount(m){
 }
 function mIsk(m){ return Number(m.lifetimeIsk!=null?m.lifetimeIsk:(m.stats&&m.stats.lifetimeIsk))||0; }
 function mOps(m){
-  if(m.opsAttended!=null) return {n:Number(m.opsAttended), label:"ops"};
-  const od=m.opDrops!=null?m.opDrops:(m.stats&&m.stats.fleet&&m.stats.fleet.opDrops);
+  // The members list nests fleet numbers under m.stats (opsAttended / opDrops),
+  // NOT at the row root and NOT under stats.fleet (that shape is the roster's).
+  const s=m.stats||{};
+  const oa=m.opsAttended!=null?m.opsAttended:s.opsAttended;
+  if(oa!=null) return {n:Number(oa)||0, label:"ops"};
+  const od=m.opDrops!=null?m.opDrops:(s.opDrops!=null?s.opDrops:(s.fleet&&s.fleet.opDrops));
   return {n:Number(od)||0, label:"op drops"};
 }
 function mAlts(m){
