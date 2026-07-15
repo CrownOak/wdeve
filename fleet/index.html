@@ -278,7 +278,7 @@ tr.haulrow{ cursor:pointer; }
   <footer>The Fleet Drop Ledger is the corp's shared mining-op tab: every pilot pastes what they jettison,
   the ledger values it and keeps the running score, and fleet command settles up at the end. Prices come
   straight from the <b>refinery's live table</b> (Jita sell, refined at 70% efficiency); the payout is the
-  corp buyback at <b>the fleet's set rate</b> (88% by default, the lead can set it per op). Finalized ops
+  corp buyback at <b>the fleet's set rate</b> (90% by default, the lead can set it per op). Finalized ops
   land in the Haul Log forever.</footer>
 
 <script>
@@ -766,7 +766,7 @@ tr.haulrow{ cursor:pointer; }
   renderChips(); // show any chips carried over from a previous session
 
   // ---------- render: everything below reads only from P (idempotent) ----------
-  function rate(){ return (P && P.rate) || 0.88; }
+  function rate(){ return (P && P.rate) || 0.90; }
   // the op's market for valuing ore. Rounds made before this feature report
   // 'jita'; fresh rounds default 'jita' (2026-07-12; FC can set rens). Falls
   // back to jita only pre-load.
@@ -1345,7 +1345,7 @@ tr.haulrow{ cursor:pointer; }
       var durMs = hl.startedAt ? (hl.finishedAt - hl.startedAt) : 0;
       var h="<div class='ovhdr'><h2>"+ymdhm(hl.finishedAt)+"</h2>"
         +"<span class='k'>commander "+esc(hl.commander||"")+"</span>"
-        +"<span class='k'>rate "+Math.round((hl.rate||0.88)*100)+"%</span>"
+        +"<span class='k'>rate "+Math.round((hl.rate||0.90)*100)+"%</span>"
         +"<span class='k'>hauled "+isk(hl.payout||0)+(hl.m3?" &middot; "+m3fmt(hl.m3)+" m&sup3;":"")+"</span>"
         +(durMs>=600000?"<span class='k'>"+isk((hl.payout||0)/(durMs/3600000))+" ISK/hr &middot; "+durFmt(durMs)+" on belt</span>":"")
         +(isOp?"<span class='k warn'>true "+isk(hl.trueValue||0)+" &middot; margin "+isk(hl.margin||0)+"</span>":"")
