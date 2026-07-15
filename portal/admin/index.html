@@ -181,6 +181,14 @@ pre.jsonp{ margin:0; font-family:var(--mono); font-size:11px; color:var(--silver
 .coderow .codeacts{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
 .codeok{ color:var(--ore); } .codewarn{ color:var(--amber); }
 .inv.warn{ color:var(--red); border-color:rgba(240,129,122,.4); }
+/* recruiting analytics */
+.rtable{ width:100%; border-collapse:collapse; font-size:13px; }
+.rtable th{ text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:6px 10px; border-bottom:1px solid var(--line); }
+.rtable th.num, .rtable td.num{ text-align:right; }
+.rtable td{ padding:7px 10px; border-top:1px solid var(--line-soft); color:var(--silver); }
+.srcwrap{ display:flex; flex-wrap:wrap; gap:8px; }
+.srcchip{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); border:1px solid var(--line); padding:5px 10px; }
+.srcchip b{ color:var(--ore); }
 </style></head>
 <body>
 <div id="boot"><div class="wrap"><div class="skel sm" style="width:40%"></div><div class="skel lg"></div><div class="skel"></div></div></div>
@@ -1389,8 +1397,73 @@ async function getMemberList(){
   catch(e){ return []; }
   return MEMLIST;
 }
+function recTabs(active){
+  let h='<div class="tabs">';
+  ["analytics","pending","approved","rejected","joined"].forEach(function(t){
+    h+='<button class="tab'+(active===t?" on":"")+'" data-rtab="'+t+'">'+t+"</button>";
+  });
+  return h+"</div>";
+}
+function wireRecTabs(m){
+  m.querySelectorAll("[data-rtab]").forEach(function(b){
+    b.addEventListener("click", function(){ RSTATE.tab=this.getAttribute("data-rtab"); secRecruiting(); });
+  });
+}
+async function secRecruitingStats(){
+  const m=document.getElementById("main");
+  const hd=head("Recruiting","efficacy &middot; who we reached, who joined, who to thank");
+  m.innerHTML=hd+recTabs("analytics")+skel(3);
+  let d;
+  try{ d=await api("/api/admin/recruiting"); }
+  catch(e){ if(e.message===SILENT) return; m.innerHTML=hd+recTabs("analytics")+napPanel("Analytics", e.message); wireRecTabs(m); return; }
+  const f=d.funnel||{}, o=d.outreach||{}, codes=d.codes||{};
+  const pct=function(a,b){ return b>0?Math.round(100*a/b)+"%":"&ndash;"; };
+  const bf=codes.backfill||{minted:0,claimed:0};
+  let h=hd+recTabs("analytics");
+  h+='<div class="pulse" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin:8px 0 6px">'
+    +tile("Applications", fmtN(f.total||0))
+    +tile("Joined from apps", fmtN(f.joined||0)+" &middot; "+pct(f.joined||0, f.total||0))
+    +tile("Cold outreach", o.available?(fmtN(o.prospects.contacted)+" contacted"):"n/a")
+    +tile("Outreach joined", o.available?(fmtN(o.prospects.converted)+" &middot; "+pct(o.prospects.converted,o.prospects.contacted)):"n/a")
+    +tile("Backfill onboarded", fmtN(bf.claimed)+" / "+fmtN(bf.minted)+" &middot; "+pct(bf.claimed,bf.minted))
+    +tile("Ally friends", fmtN(f.ally_joined||0))
+    +"</div>";
+  h+='<div class="rowmeta" style="margin:0 0 16px">Cold outreach is the prospect finder, pilots we mailed first. Applications are people who came to the door. Compare the two conversion rates to see what is actually working.</div>';
+  h+='<div class="codegrp">Recruiter scoreboard &middot; cold outreach (from the recruiting tool)</div>';
+  if(!o.available){ h+='<div class="nap">The recruiter tool is not reachable right now.</div>'; }
+  else if(!(o.recruiters||[]).length){ h+='<div class="nap">Nobody has marked a prospect contacted yet.</div>'; }
+  else {
+    h+='<div style="overflow-x:auto"><table class="rtable"><thead><tr><th>Recruiter</th><th class="num">Contacted</th><th class="num">Joined</th><th class="num">Rate</th></tr></thead><tbody>';
+    o.recruiters.forEach(function(r){
+      h+='<tr><td>'+esc(r.name)+'</td><td class="num">'+fmtN(r.contacted)+'</td><td class="num">'+fmtN(r.converted)+'</td><td class="num">'+pct(r.converted,r.contacted)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    if((o.converts||[]).length)
+      h+='<div class="rowmeta" style="margin-top:8px">Converted: '+o.converts.map(function(c){ return esc(c.name)+" (by "+esc(c.by)+")"; }).join(", ")+'</div>';
+  }
+  h+='<div class="codegrp" style="margin-top:18px">Recruiter credits &middot; on applications (the "recruited by" you set at approval)</div>';
+  if(!(d.credited||[]).length){ h+='<div class="nap">No recruiter credited on any application yet. Set "Recruited by" when you approve one.</div>'; }
+  else {
+    h+='<div style="overflow-x:auto"><table class="rtable"><thead><tr><th>Recruiter</th><th class="num">Credited</th><th class="num">Joined</th></tr></thead><tbody>';
+    d.credited.forEach(function(c){
+      h+='<tr><td>'+esc(c.recruiter||"?")+'</td><td class="num">'+fmtN(c.credited)+'</td><td class="num">'+fmtN(c.joined)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  h+='<div class="codegrp" style="margin-top:18px">Where members say they found us</div>';
+  if(!(d.sources||[]).length){ h+='<div class="nap">No acquisition sources recorded yet.</div>'; }
+  else {
+    h+='<div class="srcwrap">';
+    d.sources.forEach(function(s){ h+='<span class="srcchip">'+esc(s.label)+' <b>'+fmtN(s.n)+'</b></span>'; });
+    h+='</div>';
+  }
+  h+=footLine();
+  m.innerHTML=h;
+  wireRecTabs(m);
+}
 async function secRecruiting(){
   const m=document.getElementById("main");
+  if(RSTATE.tab==="analytics") return secRecruitingStats();
   m.innerHTML=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table")+skel(4);
   let j;
   try{ j=await api("/api/admin/applications?status="+encodeURIComponent(RSTATE.tab)); }
@@ -1402,11 +1475,7 @@ async function secRecruiting(){
   }
   const list=j.applications||[];
   let h=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table");
-  h+='<div class="tabs">';
-  ["pending","approved","rejected","joined"].forEach(function(t){
-    h+='<button class="tab'+(RSTATE.tab===t?" on":"")+'" data-rtab="'+t+'">'+t+"</button>";
-  });
-  h+="</div>";
+  h+=recTabs(RSTATE.tab);
   if(!list.length){
     h+='<div class="empty">'+(RSTATE.tab==="pending"
       ?"No applications waiting. Go rattle the recruitment drum."
