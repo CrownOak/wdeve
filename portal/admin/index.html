@@ -835,17 +835,24 @@ async function openMemberDrawer(id){
       +napPanel("This goblin", e.message));
     return;
   }
-  const a=j.account||j.member||{}, chars=j.characters||a.characters||[];
-  const decs=j.decorations||[], contracts=j.contracts||[];
-  const al=j.aliases||{}; const matched=al.matched||[]; const sugg=al.suggestions||al.unmatched||[];
-  const onb=j.onboarding||{}; const stats=j.stats||{}; const notes=j.notes||[];
+  // The detail endpoint returns { member: <buildMe bundle>, admin: {...} }. The
+  // editable account fields (role/discord/tz/bio/tenure/last_login) live in
+  // member.account (canonical) with admin filling any gap; NOT on the bundle root.
+  const mem=j.member||{}, adm=j.admin||j.account||{};
+  const a=Object.assign({}, adm, mem.account||{});
+  const chars=mem.characters||j.characters||[];
+  const decs=mem.decorations||j.decorations||[], contracts=adm.contracts||j.contracts||[];
+  const al=adm.aliases||j.aliases||{}; const matched=al.matched||[]; const sugg=al.suggestions||al.unmatched||[];
+  const onb=mem.onboarding||j.onboarding||{}; const stats=mem.stats||j.stats||{}; const notes=adm.notes||j.notes||[];
   const aid=accId(a)!=null?accId(a):id;
-  const main=chars.find(function(c){return c.is_main;})||chars[0]||{ign:accName(a)};
+  const main=chars.find(function(c){return c.is_main;})||chars[0]||null;
+  const displayName=(main&&main.ign)||accName(a);
+  const curRole=a.role||"member";
   let h='<button class="dclose" onclick="closeDrawer()">Close ✕</button>';
   h+='<div style="display:flex;align-items:center;gap:12px;margin:0 0 4px">'
     +avat(main,44,"lg")
-    +'<div><div class="sechead" style="margin:0">'+esc(accName(a)||main.ign)+"</div>"
-    +'<div class="rowmeta">'+esc(a.role||"member")+" &middot; "+fmtN(a.tenure_days)+" days in corp &middot; last login "+esc(ago(a.last_login))+"</div></div></div>";
+    +'<div><div class="sechead" style="margin:0">'+esc(displayName)+"</div>"
+    +'<div class="rowmeta">'+esc(curRole)+" &middot; "+fmtN(a.tenure_days)+" days in corp &middot; last login "+esc(ago(a.last_login))+"</div></div></div>";
   h+='<div id="dw_annc"></div>';
   /* stats strip */
   const st=stats||{};
@@ -862,8 +869,8 @@ async function openMemberDrawer(id){
     +'<div><label>Tenure start</label><input id="dw_ten" type="date" value="'+esc(fmtDate(a.tenure_start)!=="unknown"?fmtDate(a.tenure_start):"")+'"></div>'
     +'<div><label>Timezone</label><input id="dw_tz" value="'+esc(a.timezone||"")+'"></div>'
     +'<div><label>Discord handle</label><input id="dw_dc" value="'+esc(a.discord_handle||"")+'"></div>'
-    +(ISADMIN?'<div><label>Role</label><select id="dw_role">'
-      +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(a.role===r?" selected":"")+">"+r+"</option>";}).join("")
+    +(ISADMIN?'<div><label>Role</label><select id="dw_role" data-orig="'+esc(curRole)+'">'
+      +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(curRole===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
     +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
     +'</div><button class="inv" id="dw_save">Save identity</button> '
@@ -980,7 +987,12 @@ function wireDrawer(aid, chars, main){
       body.timezone=q("#dw_tz").value.trim();
       body.bio=q("#dw_bio").value;
       await api("/api/admin/members/"+encodeURIComponent(aid)+"/profile", body);
-      if(ISADMIN && q("#dw_role")) await api("/api/admin/role",{account_id:aid, role:q("#dw_role").value});
+      // Only touch role when it actually changed, so a save can never silently
+      // re-role a goblin off a stale/defaulted dropdown value.
+      var rs=q("#dw_role");
+      if(ISADMIN && rs && rs.value!==rs.getAttribute("data-orig")){
+        await api("/api/admin/role",{account_id:aid, role:rs.value});
+      }
       toast("Saved. The record stands.");
       openMemberDrawer(aid);
     });
