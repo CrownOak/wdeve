@@ -162,6 +162,25 @@ pre.jsonp{ margin:0; font-family:var(--mono); font-size:11px; color:var(--silver
 .filterbar input[type=text]{ width:220px; }
 .filterbar .chk{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); display:flex; gap:6px; align-items:center; }
 .filterbar input[type=checkbox]{ width:auto; }
+/* claim codes desk (bottom of Members) */
+.codesec{ margin-top:22px; border-top:1px solid var(--line); padding-top:14px; }
+.codetoggle{ background:transparent; border:1px solid var(--line); color:var(--silver-dim); cursor:pointer;
+  font-family:var(--mono); font-size:12px; letter-spacing:.05em; padding:9px 14px; text-transform:uppercase; }
+.codetoggle:hover{ border-color:var(--ore); color:var(--ore); }
+.codetoggle .codehint{ color:var(--muted); text-transform:none; letter-spacing:0; margin-left:8px; }
+.codegrp{ font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); margin:14px 0 4px; }
+.coderow{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:9px 8px;
+  border-top:1px solid var(--line-soft); font-size:12.5px; }
+.coderow .codeign{ font-family:var(--display); font-weight:700; color:var(--silver); min-width:130px; }
+.coderow .codebadge{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); border:1px solid var(--line); padding:2px 7px; }
+.coderow .codeval{ font-family:var(--mono); font-size:12px; color:var(--ore); background:var(--black);
+  border:1px solid var(--line); padding:2px 8px; }
+.coderow .codeage{ font-family:var(--mono); font-size:11px; color:var(--muted); }
+.coderow .codeacts{ margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+.codeok{ color:var(--ore); } .codewarn{ color:var(--amber); }
+.inv.warn{ color:var(--red); border-color:rgba(240,129,122,.4); }
 </style></head>
 <body>
 <div id="boot"><div class="wrap"><div class="skel sm" style="width:40%"></div><div class="skel lg"></div><div class="skel"></div></div></div>
@@ -663,14 +682,93 @@ async function secMembers(){
     +'<button class="inv" type="button" id="maddbtn">Add member</button>'
     +"</div>"
     +'<div style="overflow-x:auto"><table id="mtable"></table></div>'
+    +'<div class="codesec">'
+      +'<button class="codetoggle" type="button" id="codetoggle" aria-expanded="false">'
+        +'<span id="codearrow">&#9656;</span> Claim codes<span class="codehint" id="codehint"></span></button>'
+      +'<div id="codebody" style="display:none;margin-top:12px"></div>'
+    +'</div>'
     +footLine();
   m.innerHTML=h;
   document.getElementById("mq").addEventListener("input", function(){ MSTATE.q=this.value; drawRoster(); });
   document.getElementById("mquiet").addEventListener("change", function(){ MSTATE.quiet=this.checked; drawRoster(); });
   document.getElementById("mcsv").addEventListener("click", exportRosterCsv);
   document.getElementById("maddbtn").addEventListener("click", addMemberModal);
+  document.getElementById("codetoggle").addEventListener("click", toggleCodes);
+  CODES_LOADED=false;
   drawRoster();
   if(PENDING_OPEN!=null){ const id=PENDING_OPEN; PENDING_OPEN=null; openMemberDrawer(id); }
+}
+/* ---- claim codes desk (bottom of Members): consolidated outstanding invites
+   + any account with no code on file. Lazy-loads on first open. ---- */
+let CODES_LOADED=false;
+async function toggleCodes(){
+  const body=document.getElementById("codebody"), arrow=document.getElementById("codearrow");
+  const btn=document.getElementById("codetoggle");
+  const open = body.style.display==="none";
+  body.style.display = open?"":"none";
+  btn.setAttribute("aria-expanded", open?"true":"false");
+  if(arrow) arrow.innerHTML = open?"&#9662;":"&#9656;";
+  if(open && !CODES_LOADED) await loadCodes();
+}
+async function loadCodes(){
+  const body=document.getElementById("codebody");
+  body.innerHTML=skel(2);
+  let j;
+  try{ j=await api("/api/admin/codes"); }
+  catch(e){ if(e.message===SILENT) return; body.innerHTML=napPanel("Codes", e.message); return; }
+  CODES_LOADED=true;
+  renderCodes(j);
+}
+function codeSrc(s){ return s==="application"?"application":s==="ally_esi"?"ally":s==="manual"?"invite":(s||"invite"); }
+function renderCodes(j){
+  const body=document.getElementById("codebody");
+  const un=j.unclaimed||[], nc=j.noCode||[];
+  const hint=document.getElementById("codehint");
+  if(hint) hint.innerHTML=" &middot; "+un.length+" outstanding"+(nc.length?(", "+nc.length+" with no code"):"");
+  let h='<div class="codegrp">Minted, not yet claimed ('+un.length+')</div>';
+  if(!un.length){
+    h+='<div class="nap">No outstanding codes. Every minted invite has been claimed.</div>';
+  } else {
+    un.forEach(function(c){
+      const who=c.main_ign?esc(c.main_ign):"<i style='color:var(--muted)'>open code</i>";
+      const link="https://bonkeve.com/portal/claim?code="+encodeURIComponent(c.code);
+      const handed=c.handed_off_at?'<span class="codeok">handed off</span>':'<span class="codewarn">not delivered</span>';
+      h+='<div class="coderow"><span class="codeign">'+who+'</span>'
+        +'<span class="codebadge">'+esc(codeSrc(c.source))+'</span>'
+        +'<code class="codeval">'+esc(c.code)+'</code>'
+        +'<span class="codeage">minted '+esc(ago(c.created_at))+' &middot; '+handed+'</span>'
+        +'<span class="codeacts">'
+          +cpBtn(link,"Copy link")+cpBtn(c.code,"Copy code")
+          +(c.handed_off_at?"":'<button class="inv" data-hand="'+esc(String(c.id))+'">Handed off</button>')
+          +(ISADMIN?'<button class="inv warn" data-inval="'+esc(String(c.id))+'">Invalidate</button>':"")
+        +'</span></div>';
+    });
+  }
+  h+='<div class="codegrp" style="margin-top:18px">Members with no code on file ('+nc.length+')</div>';
+  if(!nc.length){
+    h+='<div class="nap">Every member has a code on file. Clean books.</div>';
+  } else {
+    nc.forEach(function(a){
+      h+='<div class="coderow"><span class="codeign">'+esc(a.main_ign||"unknown goblin")+'</span>'
+        +'<span class="codebadge">'+esc(a.role||"member")+'</span>'
+        +'<span class="codeage" style="margin-left:auto">no claim code linked (seeded or genesis)</span>'
+        +'</div>';
+    });
+  }
+  body.innerHTML=h;
+  body.querySelectorAll("[data-hand]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=Number(btn.getAttribute("data-hand"));
+      busy(btn, async function(){ await api("/api/admin/codes/action",{code_id:id, action:"handoff"}); toast("Marked handed off."); CODES_LOADED=false; await loadCodes(); });
+    });
+  });
+  body.querySelectorAll("[data-inval]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=Number(btn.getAttribute("data-inval"));
+      if(!confirm("Invalidate this unclaimed code? It can never be redeemed after this.")) return;
+      busy(btn, async function(){ await api("/api/admin/codes/action",{code_id:id, action:"invalidate"}); toast("Code invalidated."); CODES_LOADED=false; await loadCodes(); });
+    });
+  });
 }
 function rosterFiltered(){
   const q=MSTATE.q.trim().toLowerCase();
