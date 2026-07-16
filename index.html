@@ -38,6 +38,10 @@
   .nav{display:flex;align-items:center;gap:26px}
   .nav a{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
   .nav a:hover{color:var(--silver)}
+  .eveclk{display:inline-flex;align-items:baseline;gap:7px;cursor:default;font-family:var(--mono);padding-right:22px;border-right:1px solid var(--line)}
+  .eveclk .eveclk-l{font-size:10px;letter-spacing:.24em;color:var(--ore);font-weight:700}
+  .eveclk b{font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--silver);font-variant-numeric:tabular-nums}
+  @media(max-width:760px){.eveclk{display:none}}
   .nav .btn-mini{color:#04140a;background:var(--ore);padding:8px 14px;font-weight:700;transition:transform .15s, box-shadow .2s}
   .nav .btn-mini:hover{color:#04140a;transform:translateY(-1px);box-shadow:0 6px 22px rgba(70,255,94,.3)}
   @media(max-width:720px){.nav a:not(.btn-mini){display:none}}
@@ -194,6 +198,7 @@
   <div class="wrap">
     <a class="brandmark" href="#top"><span class="tick">BONK</span><b>BIG ROCK ENERGY</b><span class="alli">Est. 2014</span></a>
     <nav class="nav">
+      <span class="eveclk" title="EVE time (UTC)"><span class="eveclk-l">EVE</span><b data-eve-time="hms">--:--:--</b></span>
       <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a><a href="tools/">Tools</a><a href="portal/">Portal</a>
       <a class="btn-mini" href="apply/">Apply</a>
        <a class="btn-mini" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
@@ -574,6 +579,23 @@
       if(ol){ if(d.live_op){ var oc=document.getElementById("opCount"); if(oc) oc.textContent=(d.online||0); ol.style.display=""; } else { ol.style.display="none"; } }
     }).catch(function(){});
   })();
+</script>
+<script>
+/* EVE time (UTC) — the header clock. Writes only on change; tooltip translates to local. */
+(function(){
+  function p(n){return (n<10?"0":"")+n;}
+  function tick(){
+    var d=new Date(), els=document.querySelectorAll("[data-eve-time]");
+    var hm=p(d.getUTCHours())+":"+p(d.getUTCMinutes());
+    for(var i=0;i<els.length;i++){
+      var x=els[i].getAttribute("data-eve-time")==="hm"?hm:hm+":"+p(d.getUTCSeconds());
+      if(els[i].textContent!==x)els[i].textContent=x;
+    }
+    var c=document.querySelector(".eveclk");
+    if(c){var t="EVE time is UTC. Your local time: "+p(d.getHours())+":"+p(d.getMinutes());if(c.title!==t)c.title=t;}
+  }
+  tick();setInterval(tick,1000);document.addEventListener("visibilitychange",tick);
+})();
 </script>
 </body>
 </html>

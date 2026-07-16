@@ -60,6 +60,8 @@
     else if (current(ITEMS[i][1])) curUnpinned = true; // light the burger for panel-only pages
   }
   html += '</nav>'
+        + '<span class="bn-eve" title="EVE time (UTC)"><span class="bn-eve-l">EVE</span>'
+        + '<b data-eve-time="hm">--:--</b></span>'
         + '<button type="button" class="bn-burger' + (curUnpinned ? " cur" : "") + '" id="bnburger"'
         + ' aria-expanded="false" aria-controls="bnpanel" aria-label="Open the tools menu">'
         + '<span class="bn-lines" aria-hidden="true"><span></span><span></span><span></span></span>'
@@ -182,8 +184,42 @@
     "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
     ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
     "max-height:calc(100vh - 54px);}}" +
-    "@media(max-width:480px){.bn-blabel{display:none;}}";
+    "@media(max-width:480px){.bn-blabel{display:none;}}" +
+    /* ---- EVE time (UTC): quiet instrument between the links and the toolbelt ---- */
+    ".bn-eve{display:inline-flex;align-items:baseline;gap:7px;flex:none;white-space:nowrap;cursor:default;" +
+    "font-family:var(--mono,ui-monospace,monospace);color:var(--muted,#6f776f);" +
+    "padding-left:16px;border-left:1px solid var(--line,rgba(150,168,158,.16));}" +
+    ".bn-eve .bn-eve-l{font-size:9.5px;letter-spacing:.24em;color:var(--ore,#46ff5e);font-weight:700;}" +
+    ".bn-eve b{font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--silver-dim,#9aa39c);" +
+    "font-variant-numeric:tabular-nums;}" +
+    "@media(max-width:700px){.bn-eve{margin-left:auto;border-left:0;padding-left:0;}" +
+    ".topnav .bn-burger{margin-left:12px;}}" +
+    "@media(max-width:390px){.bn-eve .bn-eve-l{display:none;}}";
   (document.head || document.documentElement).appendChild(st);
+
+  // ---- EVE time ticker: EVE runs on UTC, every op is called in it. Updates the
+  // nav clock plus any page-provided [data-eve-time] mount (e.g. the home hero).
+  // Writes only on change; tooltip carries the local-time translation.
+  function evePad(n) { return (n < 10 ? "0" : "") + n; }
+  function eveTick() {
+    var els = document.querySelectorAll("[data-eve-time]");
+    if (!els.length) return;
+    var d = new Date();
+    var hm = evePad(d.getUTCHours()) + ":" + evePad(d.getUTCMinutes());
+    for (var k3 = 0; k3 < els.length; k3++) {
+      var el = els[k3];
+      var txt = el.getAttribute("data-eve-time") === "hms" ? hm + ":" + evePad(d.getUTCSeconds()) : hm;
+      if (el.textContent !== txt) el.textContent = txt;
+    }
+    var chip = bar.querySelector(".bn-eve");
+    if (chip) {
+      var t = "EVE time is UTC. Your local time: " + evePad(d.getHours()) + ":" + evePad(d.getMinutes());
+      if (chip.title !== t) chip.title = t;
+    }
+  }
+  eveTick();
+  setInterval(eveTick, 1000);
+  document.addEventListener("visibilitychange", eveTick);
 
   var w = document.getElementById("navwho");
   function goPortal() { location.href = ORIGIN + BASE + "portal/"; }
