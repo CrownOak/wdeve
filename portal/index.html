@@ -821,7 +821,7 @@ function renderIdentity(){
       '<div class="idacts">' +
         ((role === "officer" || role === "admin")
           ? '<a class="mini cc" href="/portal/admin/" title="Leadership command center">&#9881; Command Center</a>' : '') +
-        '<button class="mini" id="editProfileBtn">Edit profile</button>' +
+        '<button class="mini" id="editProfileBtn">Profile &amp; settings</button>' +
         '<button class="bell" id="bellBtn" title="Your inbox">&#128276;' +
           (unread > 0 ? '<span class="bellbadge">' + unread + '</span>' : '') +
         '</button>' +
@@ -2268,7 +2268,7 @@ function toggleDrawer(){
   }
   if (tz && !found) opts += '<option selected>' + esc(tz) + '</option>';
   el.innerHTML =
-    '<div class="ptitle">Edit profile</div>' +
+    '<div class="ptitle">Profile &amp; settings</div>' +
     '<label>Bio (your goblin self intro, 500 max)</label>' +
     '<textarea id="pfBio" maxlength="500" placeholder="three barges, two alts, one dream">' + esc(a.bio || "") + '</textarea>' +
     '<div class="biocount" id="bioCount"></div>' +
