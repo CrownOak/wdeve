@@ -97,13 +97,15 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .xdel:hover{ border-color:var(--red); color:var(--red); }
 .rhead{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
   color:var(--ore); margin:0 0 8px; }
-.rrow{ display:flex; align-items:center; gap:8px; padding:7px 10px; margin-bottom:5px; font-size:13px;
+.rrow{ padding:6px 10px; margin-bottom:5px; font-size:13px;
   background:var(--steel); border:1px solid var(--line-soft); }
 .rrow.me{ border-left:3px solid var(--ore); }
+.rtop{ display:flex; align-items:center; gap:8px; }
 .dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); flex:none; }
 .dot.on{ background:var(--ore); box-shadow:0 0 6px rgba(70,255,94,.5); }
-.rname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--silver); }
-.rtab{ margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+.rname{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--silver); }
+.rsub{ display:flex; align-items:baseline; justify-content:flex-end; gap:10px; margin-top:2px; }
+.rtab{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .rtip{ font-family:var(--mono); font-size:11px; color:var(--amber); flex:none; white-space:nowrap; }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
 .allyg{ flex:none; font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--amber); border:1px solid rgba(233,196,106,.45); padding:1px 5px; }
@@ -1137,10 +1139,13 @@ tr.haulrow{ cursor:pointer; }
         var allyG = (pr && pr.role==="ally") ? "<span class='allyg' title='Friend of the Rock (allied corp)'>ALLY</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
+        // two decks: name line (dot, glyphs, name, badges, kick) + money line under
+        // it. The name owns the leftover width, so money and badges never crush it
+        // to a single letter; the full name also rides the title tooltip.
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
-          +"<span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
-          +"<span class='rname'>"+esc(m.who)+"</span>"+allyG
-          +"<span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+kick+"</div>";
+          +"<div class='rtop'><span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
+          +"<span class='rname' title=\""+esc(m.who)+"\">"+esc(m.who)+"</span>"+allyG+kick+"</div>"
+          +"<div class='rsub'><span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+"</div></div>";
       });
       box.innerHTML=h;
       if(role==="op"){
