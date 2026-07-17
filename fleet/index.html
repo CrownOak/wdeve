@@ -45,7 +45,9 @@
 .dmsg{ font-family:var(--mono); font-size:12px; color:var(--red); min-height:16px; margin-top:6px; }
 /* quick drops: repeat the same ore without re-pasting. seeded from what you drop. */
 .qdwrap{ margin:0 0 10px; }
-.qdlabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+.qdlabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; cursor:pointer; user-select:none; }
+.qdlabel:hover{ color:var(--silver-dim); }
+.qdlabel .qdcaret{ margin-left:8px; color:var(--ore); }
 .qdlist{ display:flex; flex-wrap:wrap; gap:8px; }
 .qd{ display:flex; align-items:center; gap:8px; background:var(--steel); border:1px solid var(--line);
   border-left:3px solid var(--ore); padding:6px 8px 6px 10px; }
@@ -59,6 +61,11 @@
 .qd .qddrop:hover{ filter:brightness(1.08); }
 .qd .qdx{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; line-height:1; padding:0 2px; }
 .qd .qdx:hover{ color:var(--red); }
+.qdpill{ font-family:var(--mono); font-size:11.5px; background:var(--steel); color:var(--silver-dim);
+  border:1px solid var(--line); padding:6px 10px; cursor:pointer; max-width:250px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qdpill:hover{ border-color:var(--ore); color:var(--ore); }
+.tipctl .crownwarn{ color:var(--amber); }
 /* pilot switcher: cycle which of your characters a drop is logged under */
 .pilots{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:0 0 10px; }
 .pilots .plabel{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
@@ -239,7 +246,7 @@ tr.haulrow{ cursor:pointer; }
             <div id="dropbox" class="dropbox">
               <div id="pilots" class="pilots"></div>
               <div id="quickdrops" class="qdwrap" style="display:none">
-                <div class="qdlabel">Quick drops &middot; adjust the number, hit drop</div>
+                <div id="qdlabel" class="qdlabel">Quick drops &middot; dial the number, hit drop</div>
                 <div id="qdlist" class="qdlist"></div>
               </div>
               <textarea id="oretxt" placeholder="Paste what you dropped, one per line:&#10;Compressed Veldspar	3,000&#10;..."></textarea>
@@ -653,6 +660,31 @@ tr.haulrow{ cursor:pointer; }
         renderFeed(); }
     }).catch(function(){ o.state="unsent"; saveOutbox(); renderFeed(); });
   }
+  // ---------- double-entry guard (QOL v2, warn never block) ----------
+  // A near-identical drop from this pilot moments ago is usually a second click,
+  // not a second haul. Signature = same pilot, same line count, units and m3 both
+  // within 2%, inside 90s. Checks this session's committed drops, the server round
+  // (P.entries, server timestamps: clock skew only narrows the window), and the
+  // outbox (so an offline queue still catches a dup). Warn-only, so a miss never
+  // blocks real ISK and a genuine repeat grind cycle is one tap through.
+  var DUP_WINDOW=90000, DUP_TOL=0.02, recentDrops=[];
+  function dupNear(a,b){ a=a||0; b=b||0; if(a===b) return true;
+    var m=Math.max(Math.abs(a),Math.abs(b)); return m>0 && Math.abs(a-b)/m<=DUP_TOL; }
+  function dupSuspect(v){
+    var now=Date.now(), i, c, cands=[];
+    recentDrops.forEach(function(r){
+      if(r.who===who && now-r.t<=DUP_WINDOW) cands.push({units:r.units, n:r.n, m3:r.m3, age:now-r.t}); });
+    ((P&&P.entries)||[]).forEach(function(e){
+      if(e.who===who && now-e.at>=0 && now-e.at<=DUP_WINDOW)
+        cands.push({units:e.units, n:e.n, m3:e.m3||0, age:now-e.at}); });
+    outbox.forEach(function(o){
+      if(o.p && o.p.who===who && now-(o.t||now)<=DUP_WINDOW)
+        cands.push({units:o.p.units, n:o.p.n, m3:o.p.m3||0, age:now-(o.t||now)}); });
+    for(i=0;i<cands.length;i++){ c=cands[i];
+      if(c.n===v.n && dupNear(c.units,v.units) && dupNear(c.m3,v.m3)) return c; }
+    return null;
+  }
+
   // Shared drop path: both the paste box and the quick-drop chips feed this. Runs the
   // worker's own caps client-side so a bad drop fails HERE, not in the outbox queue.
   // Returns true if the drop was queued/sent, false if it bounced pre-flight.
@@ -669,7 +701,13 @@ tr.haulrow{ cursor:pointer; }
     var payload={ who:who, jita:v.jita, units:v.units, n:v.n, unmatched:v.unmatched, m3:v.m3,
       note:(note||"").trim().slice(0,200), detail:v.detail };
     if(JSON.stringify(payload).length>32768){ dmsg("Paste too big for one drop — split it in two."); return false; }
-    var o={p:payload, state:"sending"};
+    var dup=dupSuspect(v);
+    if(dup && !confirm("Possible double drop: "+(v.units||0).toLocaleString()+" units, matching one you logged "
+        +Math.max(1,Math.round(dup.age/1000))+"s ago. If it logs twice, it pays twice. Drop it anyway?")){
+      dmsg("Held. Nothing was logged."); return false; }
+    recentDrops.push({who:who, units:v.units, n:v.n, m3:v.m3||0, t:Date.now()});
+    if(recentDrops.length>20) recentDrops.shift();
+    var o={p:payload, state:"sending", t:Date.now()};
     outbox.push(o);
     sendDrop(o);
     return true;
@@ -686,23 +724,44 @@ tr.haulrow{ cursor:pointer; }
     if((e.ctrlKey||e.metaKey)&&e.key==="Enter") el("dropbtn").click(); });
 
   // ---------- quick drops: repeat the same ore without re-pasting ----------
-  // Each ore you drop becomes a chip {name, qty} above the paste box. Adjust the
-  // number, hit drop. Seeded from real drops so a chip is always a real ore name.
-  var QD_MAX=12;
-  var chips=[];
-  try{ chips=JSON.parse(lsGet(LS_CHIPS)||"[]")||[]; }catch(e){ chips=[]; }
-  if(!Array.isArray(chips)) chips=[];
-  function saveChips(){ lsSet(LS_CHIPS, JSON.stringify(chips)); }
+  // Chips are EARNED by grinding, not granted by pasting: a paste with more than
+  // QD_MINT_MAX distinct ores is a hold dump (pasting is already its fastest
+  // path), so it refreshes ores that already hold a chip but mints nothing new.
+  // Chips live for ONE op (wiped when the round id changes), render as compact
+  // pills with a single expanded active chip, and the strip collapses from the
+  // label. State: {round, open, collapsed, chips:[{name, qty, n, lastAt}]}.
+  var QD_MAX=12, QD_MINT_MAX=3;
+  var qd={ round:"", open:"", collapsed:false, chips:[] };
+  try{ var _q=JSON.parse(lsGet(LS_CHIPS)||"null");
+    if(_q && Array.isArray(_q.chips)) qd={ round:String(_q.round||""), open:String(_q.open||""),
+      collapsed:!!_q.collapsed, chips:_q.chips };
+    else if(Array.isArray(_q)) qd.chips=_q.map(function(c){ // legacy flat array (pre per-op chips)
+      return { name:String((c&&c.name)||""), qty:parseInt(c&&c.qty,10)||0, n:1, lastAt:0 }; });
+    qd.chips=qd.chips.filter(function(c){ return c && c.name && (parseInt(c.qty,10)||0)>0; });
+  }catch(e){ qd={ round:"", open:"", collapsed:false, chips:[] }; }
+  function saveChips(){ lsSet(LS_CHIPS, JSON.stringify(qd)); }
+  // per-op reset (Kyle 2026-07-17): chips belong to the round they were minted
+  // in. A blank stored round ADOPTS the live one (fresh browser, or legacy chips
+  // carried into this deploy: never a mid-op wipe); a DIFFERENT round means a
+  // new op, clean slate.
+  function qdSyncRound(){
+    if(!(P && P.round) || qd.round===P.round) return;
+    if(!qd.round){ qd.round=P.round; saveChips(); return; }
+    qd.round=P.round; qd.chips=[]; qd.open=""; saveChips(); renderChips();
+  }
   function chipIndex(name){ var f=String(name).toLowerCase();
-    for(var i=0;i<chips.length;i++) if(String(chips[i].name).toLowerCase()===f) return i; return -1; }
+    for(var i=0;i<qd.chips.length;i++) if(String(qd.chips[i].name).toLowerCase()===f) return i; return -1; }
   function addChips(lines){
+    var seen={}; lines.forEach(function(l){ if((parseInt(l.qty,10)||0)>0) seen[String(l.name).toLowerCase()]=1; });
+    var mint=Object.keys(seen).length<=QD_MINT_MAX; // a hold dump refreshes, never mints
+    var now=Date.now();
     lines.forEach(function(l){
       var q=parseInt(l.qty,10)||0; if(q<=0) return;
       var ix=chipIndex(l.name);
-      if(ix>=0){ chips[ix].qty=q; }               // remember the latest quantity
-      else{ chips.unshift({name:l.name, qty:q}); } // newest first
+      if(ix>=0){ var c=qd.chips[ix]; c.qty=q; c.n=(c.n||0)+1; c.lastAt=now; }
+      else if(mint) qd.chips.unshift({name:l.name, qty:q, n:1, lastAt:now});
     });
-    if(chips.length>QD_MAX) chips=chips.slice(0,QD_MAX);
+    if(qd.chips.length>QD_MAX) qd.chips=qd.chips.slice(0,QD_MAX);
     saveChips(); renderChips();
   }
   function chipValueHtml(name, qty){
@@ -713,21 +772,38 @@ tr.haulrow{ cursor:pointer; }
     return "<span class='qdv'>"+isk(Math.round(rate()*v.jita))+"</span>"; // buyback basis (what lands on your tab)
   }
   function renderChips(){
-    var wrap=el("quickdrops"), list=el("qdlist");
+    var wrap=el("quickdrops"), list=el("qdlist"), lab=el("qdlabel");
     if(!wrap||!list) return;
-    if(!chips.length){ wrap.style.display="none"; list.innerHTML=""; return; }
+    var cs=qd.chips;
+    if(!cs.length){ wrap.style.display="none"; list.innerHTML=""; return; }
     wrap.style.display="";
-    list.innerHTML=chips.map(function(c){
-      return "<div class='qd' data-name=\""+esc(c.name)+"\">"
-        +"<span class='qdn'>"+esc(c.name)+"</span>"
-        +"<input class='qdq' type='number' min='1' step='1' value='"+(parseInt(c.qty,10)||0)+"'>"
-        +chipValueHtml(c.name, c.qty)
-        +"<button class='qddrop'>drop</button>"
-        +"<button class='qdx' title='forget this ore'>&times;</button></div>";
+    cs.sort(function(a,b){ return (b.lastAt||0)-(a.lastAt||0); }); // freshest first
+    if(lab){
+      lab.innerHTML = qd.collapsed
+        ? "Quick drops &middot; "+cs.length+" ore"+(cs.length>1?"s":"")+" stashed<span class='qdcaret'>&#9656; show</span>"
+        : "Quick drops &middot; dial the number, hit drop<span class='qdcaret'>&#9662; hide</span>";
+      lab.onclick=function(){ qd.collapsed=!qd.collapsed; saveChips(); renderChips(); };
+    }
+    if(qd.collapsed){ list.innerHTML=""; return; }
+    if(!qd.open || chipIndex(qd.open)<0) qd.open=cs[0].name; // the freshest chip sits ready
+    list.innerHTML=cs.map(function(c){
+      if(c.name===qd.open)
+        return "<div class='qd' data-name=\""+esc(c.name)+"\">"
+          +"<span class='qdn'>"+esc(c.name)+"</span>"
+          +"<input class='qdq' type='number' min='1' step='1' value='"+(parseInt(c.qty,10)||0)+"'>"
+          +chipValueHtml(c.name, c.qty)
+          +"<button class='qddrop'>drop</button>"
+          +"<button class='qdx' title='forget this ore'>&times;</button></div>";
+      return "<button class='qdpill' data-pill=\""+esc(c.name)+"\" title=\""+esc(c.name)+"\">"
+        +esc(c.name)+" &middot; "+(parseInt(c.qty,10)||0).toLocaleString()+"</button>";
     }).join("");
-    // wire each chip
-    var rows=list.querySelectorAll(".qd");
-    for(var i=0;i<rows.length;i++){ (function(row){
+    // pills: tap one to make it the active chip (collapses the previous)
+    Array.prototype.forEach.call(list.querySelectorAll("[data-pill]"), function(b){
+      b.onclick=function(){ qd.open=b.getAttribute("data-pill"); saveChips(); renderChips();
+        var q=list.querySelector(".qd .qdq"); if(q){ q.focus(); q.select(); } }; });
+    // wire the one expanded chip
+    var row=list.querySelector(".qd");
+    if(row){ (function(row){
       var name=row.getAttribute("data-name");
       var input=row.querySelector(".qdq"), vspan=row.querySelector(".qdv");
       input.addEventListener("input", function(){
@@ -741,16 +817,19 @@ tr.haulrow{ cursor:pointer; }
         var q=parseInt(input.value,10);
         if(!(q>0)){ dmsg("Set a quantity above zero."); input.focus(); return; }
         if(commitDrop([{name:name, qty:q}], "")){
-          var ix=chipIndex(name); if(ix>=0){ chips[ix].qty=q; saveChips(); } // remember it
+          var ix=chipIndex(name);
+          // no re-render: the input keeps focus for the next grind cycle
+          if(ix>=0){ var c=qd.chips[ix]; c.qty=q; c.n=(c.n||0)+1; c.lastAt=Date.now(); saveChips(); }
           toast("Dropped "+q.toLocaleString()+" "+name+".");
         }
       });
       row.querySelector(".qdx").addEventListener("click", function(){
-        var ix=chipIndex(name); if(ix>=0){ chips.splice(ix,1); saveChips(); renderChips(); }
+        var ix=chipIndex(name);
+        if(ix>=0){ qd.chips.splice(ix,1); if(qd.open===name) qd.open=""; saveChips(); renderChips(); }
       });
-    })(rows[i]); }
+    })(row); }
   }
-  // Value-only refresh: updates the ISK estimate spans without rebuilding inputs,
+  // Value-only refresh: updates the ISK estimate span without rebuilding inputs,
   // so an hourly price reload never wipes a quantity the goblin is mid-typing.
   function refreshChipValues(){
     var list=el("qdlist"); if(!list) return;
@@ -763,7 +842,7 @@ tr.haulrow{ cursor:pointer; }
       vspan.className="qdv"+(m&&m[1]?" zero":""); vspan.textContent=(m?m[2]:"");
     }
   }
-  renderChips(); // show any chips carried over from a previous session
+  renderChips(); // chips from THIS round survive a reload; qdSyncRound wipes them when the op changes
 
   // ---------- render: everything below reads only from P (idempotent) ----------
   function rate(){ return (P && P.rate) || 0.90; }
@@ -775,7 +854,7 @@ tr.haulrow{ cursor:pointer; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
     renderTiles(); renderCmd(); renderAnnounce(); renderMarket(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
-    seedPilotsFromPortal(); refreshChipValues(); // track the live rate; never wipes a typed qty
+    seedPilotsFromPortal(); qdSyncRound(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
   // member-visible market indicator (op sees + sets it in the command strip)
@@ -823,7 +902,14 @@ tr.haulrow{ cursor:pointer; }
     var a=document.activeElement; if(a && a.id==="tipcustom") return; // don't wipe a mid-typed custom tip
     box.style.display="";
     if(P.lead && P.lead===who){
-      box.innerHTML="<span class='tiplbl'>You run this op</span><span class='tipnote'>you collect the tips &middot; "+isk(P.totalTips||0)+" so far</span>";
+      var lh="<span class='tiplbl'>You run this op</span><span class='tipnote'>you collect the tips &middot; "+isk(P.totalTips||0)+" so far</span>";
+      // The crown is a name claim; command is a password role. A lead who landed
+      // in member mode (auto-unlock does this silently) would otherwise see this
+      // banner with every command control hidden, so say it and hand them the
+      // switcher. NEVER auto-escalate: op mode exposes numbers members must not see.
+      if(!opKeys()) lh+="<span class='tipnote crownwarn'>you are in member mode, so fleet command is hidden &middot; <button id='crownsw' class='link'>switch to command</button> to finish the fleet and run the payout</span>";
+      box.innerHTML=lh;
+      var cw=el("crownsw"); if(cw) cw.onclick=function(){ rswShow(true); };
       return;
     }
     var pct = meM ? Math.round((meM.tipPct||0)*100) : 10;  // default 10% (corp norm) until you set your own
@@ -1413,7 +1499,7 @@ window.BONK_TOUR = {
     { sel: null, title: "The drop ledger", body: "Log the ore you mine, get paid your exact share at buyback. Here is the whole loop, takes ten seconds.", place: "center" },
     { sel: "#pilots", title: "Who are you mining as", body: "Pick your pilot here. Multiboxing? Add each alt once and switch between them, so every drop lands under the right name.", place: "auto" },
     { sel: "#dropbox", title: "Drop your ore here", body: "In the EVE client, right-click your jetcan or ore hold and Copy. Paste it in this box and hit Drop. That is the whole job. Do it every time your hold is full.", place: "auto" },
-    { sel: "#quickdrops", title: "The lazy way", body: "After you drop an ore once, it becomes a chip up here. Next cycle just dial the number and tap. No more pasting.", place: "auto" },
+    { sel: "#quickdrops", title: "The lazy way", body: "Grind an ore and it becomes a chip up here. Dial the number, tap drop. Chips reset with each op, and the label tucks them away when you want the room.", place: "auto" },
     { sel: "#feed", title: "Proof you dropped it", body: "Every drop shows here with its value. If it is on the feed, you get paid for it. Forget to log it and you just mined for free, which is a hobby, not a job.", place: "auto" },
     { sel: "#marketline", title: "What your ore is worth", body: "We value ore at the Jita sell price, the market where everything actually trades. That is the buyback basis, no guessing.", place: "auto" },
     { sel: "#tipctl", title: "Tip the fleet boss", body: "The boss runs the boosts and writes the checks. Corp norm is a 10% tip and it is already set. Tap none to opt out, no pressure.", place: "auto" },
