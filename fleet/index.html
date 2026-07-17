@@ -616,23 +616,30 @@ tr.haulrow{ cursor:pointer; }
   // Idle backoff: an EVE second-monitor tab left open all day would otherwise pin the
   // worker's Durable Object at full tilt for nothing. After 10min with no round change
   // and no local action, the poll stretches to 30s; any activity snaps it back to 5s.
-  // While the tab is hidden the chain stops entirely and resumes on visibilitychange.
+  // HIDDEN-TAB KEEPALIVE (QOL v2 item D): the chain no longer stops when the tab
+  // hides. It drops to one light /sync every 4min (KEEPALIVE_MS), so a zero-drop
+  // pilot (scout, hauler between trips) never ages past the server's 10min
+  // PRESENCE_TTL and falls off the roster. Rendering and price reloads wait for
+  // visibility; ~360 hidden syncs/day/tab is loose change against the DO budget.
+  var KEEPALIVE_MS=240000;
   var lastActive=Date.now(), pollTimer=null, lastSig="";
   function bump(){ lastActive=Date.now(); }
   function sigOf(d){ var es=d.entries||[];
     return es.length+":"+(es.length?es[es.length-1].id:"")+":"+(d.finished?1:0)+":"+(d.lead||"")+":"+((d.members||[]).length); }
   function schedule(){ if(!unlocked) return; clearTimeout(pollTimer);
-    pollTimer=setTimeout(tick, Date.now()-lastActive>600000 ? 30000 : 5000); }
+    pollTimer=setTimeout(tick, document.visibilityState!=="visible" ? KEEPALIVE_MS
+      : (Date.now()-lastActive>600000 ? 30000 : 5000)); }
   function tick(){
-    if(!unlocked || document.visibilityState!=="visible") return; // chain resumes on visibilitychange
+    if(!unlocked) return;
+    var hidden = document.visibilityState!=="visible";
     flushOutbox();
     // prices: recover if we never got them, and track refine's hourly rebake on long ops
-    if((!DATA || Date.now()-pricesAt>3600000) && Date.now()-pxTry>60000) loadPrices();
+    if(!hidden && (!DATA || Date.now()-pricesAt>3600000) && Date.now()-pxTry>60000) loadPrices();
     api("POST","/sync",{who:who}).then(function(d){
       if(d&&d.ok){ P=d; role=d.role||role; lsSet(LS_CACHE, JSON.stringify(d));
         var sg=sigOf(d); if(sg!==lastSig){ lastSig=sg; bump(); }
-        offline(false); renderAll();
-        if(tab==="hauls" && Date.now()-haulsAt>30000) loadHauls(); }
+        offline(false);
+        if(!hidden){ renderAll(); if(tab==="hauls" && Date.now()-haulsAt>30000) loadHauls(); } }
       schedule();
     }).catch(function(err){
       if(err==="unauthorized"){ lock(); } else { offline(true); schedule(); }
