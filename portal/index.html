@@ -2050,6 +2050,24 @@ var ACADEMY = [
 ];
 var ACAD_INDEX = (function(){ var m={}; for (var i=0;i<ACADEMY.length;i++) m[ACADEMY[i].key]=ACADEMY[i]; return m; })();
 var quizState = {}; // module_key -> { answers:{qIdx:optIdx}, graded:bool }
+// In-progress answers persist per account in localStorage (a goblin logged out
+// mid-academy 2026-07-17 and lost every selection). Certified modules were
+// always server side; this covers the un-certified middle so a logout, reload,
+// or crash never resets a half-done quiz. Hydrates once per account key.
+var quizLoadedFor = null;
+function quizLSKey(){ var c = (typeof mainChar === "function" && mainChar()) || null;
+  return "bonk_quiz_" + ((c && c.ign) || "x"); }
+function quizSave(){ try { localStorage.setItem(quizLSKey(), JSON.stringify(quizState)); } catch(e){} }
+function quizHydrate(){
+  var k = quizLSKey();
+  if (quizLoadedFor === k) return;
+  quizLoadedFor = k;
+  try {
+    var saved = JSON.parse(localStorage.getItem(k) || "null");
+    if (saved && typeof saved === "object")
+      Object.keys(saved).forEach(function(m){ if (!quizState[m]) quizState[m] = saved[m]; });
+  } catch(e){}
+}
 function moduleBody(mod){
   var h = '<div class="subtitle">' + esc(mod.sub) + '</div>';
   for (var i=0;i<mod.body.length;i++) h += '<p>' + mod.body[i] + '</p>';
@@ -2092,6 +2110,7 @@ function quizHTML(mod){
 function renderAcademy(){
   if (isAlly()) return hidePanel("panelAcademy");
   var el = $("panelAcademy");
+  quizHydrate(); // restore any saved in-progress answers for this account
   var ob = S.me.onboarding || {};
   var modules = (ob.modules && ob.modules.length) ? ob.modules
               : ["welcome","fleet_ops","doctrine","tools","payday","medals"];
@@ -2162,6 +2181,7 @@ function renderAcademy(){
     var key = modEl.getAttribute("data-mod");
     var st = quizState[key] || (quizState[key] = { answers:{}, graded:false });
     st.answers[parseInt(this.getAttribute("data-qi"),10)] = parseInt(this.getAttribute("data-oi"),10);
+    quizSave(); // every selection survives logout/reload
   });
   // certify: grade 100% locally, then the server writes completion
   var certs = el.querySelectorAll("[data-certify]");
@@ -2195,6 +2215,7 @@ function renderAcademy(){
     try {
       var j = await api("onboarding", { module_key: key });
       quizState[key] = { answers: st.answers, graded:false };
+      quizSave();
       if (j.complete && S.me.onboarding) S.me.onboarding.complete = true;
       await refreshMe();
       if (j.complete && j.medal) playGraduation(j.medal);
