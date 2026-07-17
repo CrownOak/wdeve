@@ -108,7 +108,12 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .rtab{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .rtip{ font-family:var(--mono); font-size:11px; color:var(--amber); flex:none; white-space:nowrap; }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
-.allyg{ flex:none; font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--amber); border:1px solid rgba(233,196,106,.45); padding:1px 5px; }
+/* portal-account role tag in the roster badge slot. MEMBER is the quiet default;
+   ADMIN ore, ALLY amber, OFFICER silver. Names the portal doesn't know get none. */
+.rtag{ flex:none; font-family:var(--mono); font-size:9px; letter-spacing:.1em; color:var(--muted); border:1px solid var(--line); padding:1px 5px; }
+.rtag.admin{ color:var(--ore); border-color:rgba(70,255,94,.45); }
+.rtag.officer{ color:var(--silver-dim); }
+.rtag.ally{ color:var(--amber); border-color:rgba(233,196,106,.45); }
 .glyph.orca{ font-size:12.5px; }
 #orcabtn.on2{ color:var(--ore); }
 /* member tip control (tip the fleet boss a fraction of your payout) */
@@ -1136,7 +1141,12 @@ tr.haulrow{ cursor:pointer; }
               : (m.role==="op" ? "<span class='glyph star' title='fleet command'>★</span>" : "");
         var orcaG = m.orca ? "<span class='glyph orca' title='flying the Orca (boosts, stays on the roster without drops)'>&#128011;</span>" : "";
         var pr = PORTAL_ROSTER && PORTAL_ROSTER[String(m.who).toLowerCase()];
-        var allyG = (pr && pr.role==="ally") ? "<span class='allyg' title='Friend of the Rock (allied corp)'>ALLY</span>" : "";
+        // every portal-known pilot wears a role tag (Kyle: fills the badge slot so
+        // a two-deck row never reads as empty). Unlinked names carry none.
+        var RTAGS={ admin:["admin","goblin command"], officer:["officer","corp officer"],
+                    ally:["ally","Friend of the Rock (allied corp)"], member:["member","corp goblin"] };
+        var rt = pr ? (RTAGS[pr.role] || RTAGS.member) : null;
+        var allyG = rt ? "<span class='rtag "+rt[0]+"' title='"+rt[1]+"'>"+rt[0].toUpperCase()+"</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
         // two decks: name line (dot, glyphs, name, badges, kick) + money line under
