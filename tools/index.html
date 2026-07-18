@@ -58,9 +58,21 @@ a.card:hover::after{ background:
     linear-gradient(var(--ore) 0 0) top    left  / 1px 10px no-repeat,
     linear-gradient(var(--ore) 0 0) bottom right / 10px 1px no-repeat,
     linear-gradient(var(--ore) 0 0) bottom right / 1px 10px no-repeat; }
-/* laser sweep on the accent bar */
-a.card:hover::before{ animation:sweep .35s ease-out 1; }
-@keyframes sweep{ from{ transform:translateX(0); } to{ transform:translateX(140px); } }
+/* laser sweep on the accent bar: the bar dissolves as it flies (never visibly
+   returns), then flickers back into place like a bad hologram. Last frame =
+   rest state, so there is no snap, only a spectral rematerialization. */
+a.card:hover::before{ animation:sweep .62s linear 1; }
+@keyframes sweep{
+  0%  { transform:translateX(0);     opacity:1;   box-shadow:0 0 0 rgba(70,255,94,0); }
+  30% { transform:translateX(70px);  opacity:.85; box-shadow:0 0 10px rgba(70,255,94,.55); }
+  55% { transform:translateX(150px); opacity:0;   box-shadow:0 0 14px rgba(182,255,192,.35); }
+  56% { transform:translateX(0);     opacity:0;   box-shadow:none; }
+  63% { opacity:.55; }
+  69% { opacity:.06; }
+  77% { opacity:.7;  }
+  84% { opacity:.12; }
+  100%{ transform:translateX(0);     opacity:1;   box-shadow:none; }
+}
 /* flagships */
 a.card.flag{ padding:20px 22px; }
 a.card.flag .name{ font-size:19px; }
