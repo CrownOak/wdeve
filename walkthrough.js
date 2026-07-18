@@ -4,8 +4,13 @@
        id: "portal",                 // localStorage namespace
        accountKey: null,             // portal sets this to the main IGN later (read lazily)
        readyWhen: "#panelIdentity",  // wait for this to be VISIBLE, then first-run auto-starts
-       steps: [{ sel, title, body, place }]   // sel:null => centered card; missing/hidden sel => step auto-skips
-     };
+       label: "the full loop",       // optional: humanizes the counter ("step 2 of 10 · the full loop")
+       steps: [{ sel, title, body, place,
+                 img: "/fleet/tut/hold.png",      // optional illustration inside the card (v5)
+                 kbd: [["Ctrl","A"],["Ctrl","C"]],// optional key chips under the body (v5)
+                 fallbackCenter: true,            // hidden target renders centered instead of skipping (v5)
+                 skipTo: 5 }]                     // optional quiet "skip ahead" link to step index (v5)
+     };                                            // sel:null => centered; missing/hidden sel => auto-skip
    First-run spotlight coach-mark tour. Page-only, no deps, no worker/DB. */
 (function () {
   "use strict";
@@ -80,6 +85,19 @@
   var idx = -1, active = false, lastFocus = null;
 
   function build() {
+    // v5 additions style themselves so common.css never needs a version sweep
+    var st5 = document.createElement("style");
+    st5.textContent =
+      ".wt-card.wt-wide{max-width:420px;}" +
+      ".wt-img{display:block;max-width:100%;border:1px solid rgba(150,168,158,.25);margin:10px 0 2px;}" +
+      ".wt-kbdrow{margin:9px 0 0;font-family:var(--mono,monospace);font-size:11px;color:var(--silver-dim,#9aa39c);}" +
+      ".wt-kbdrow kbd{font-family:var(--mono,monospace);font-size:11px;background:var(--black,#070809);" +
+        "border:1px solid rgba(150,168,158,.3);border-bottom-width:2px;padding:2px 7px;border-radius:3px;}" +
+      ".wt-jump{display:inline-block;margin-top:8px;font-family:var(--mono,monospace);font-size:10.5px;" +
+        "letter-spacing:.04em;color:var(--muted,#6f776f);background:none;border:none;cursor:pointer;" +
+        "text-decoration:underline;padding:0;}" +
+      ".wt-jump:hover{color:var(--ore,#46ff5e);}";
+    document.head.appendChild(st5);
     root = document.createElement("div");
     root.className = "wt-root"; root.style.display = "none";
     root.innerHTML =
@@ -107,14 +125,25 @@
   }
 
   // first showable step from `from` moving `dir` (skip null-target? no; skip only missing/hidden targets)
+  function showable(st) { return !st.sel || st.fallbackCenter || isVisible(q(st.sel)); }
   function resolveIndex(from, dir) {
     var i = from;
     while (i >= 0 && i < T.steps.length) {
-      var st = T.steps[i];
-      if (!st.sel || isVisible(q(st.sel))) return i;
+      if (showable(T.steps[i])) return i;
       i += dir;
     }
     return -1;
+  }
+  // counter over RENDERABLE steps only, so auto-skipped cards never leave holes
+  // in the numbering ("step 3 of 8" stays truthful for members and FCs alike)
+  function counted(upto) {
+    var pos = 0, total = 0;
+    for (var i = 0; i < T.steps.length; i++) {
+      if (!showable(T.steps[i])) continue;
+      total++;
+      if (i <= upto) pos++;
+    }
+    return { pos: pos, total: total };
   }
 
   function start(replay) {
@@ -158,10 +187,28 @@
   function render() {
     var st = T.steps[idx];
     var el = st.sel ? q(st.sel) : null;
+    if (st.sel && !isVisible(el)) el = null;   // fallbackCenter steps render centered
     cardTitle.textContent = st.title || "";
-    cardBody.innerHTML = esc(st.body || "").replace(/\n/g, "<br>");
-    cardCount.textContent = (idx + 1) + " / " + T.steps.length;
-    btnBack.style.visibility = resolveIndex(idx - 1, -1) >= 0 ? "" : "hidden";
+    var bodyHtml = esc(st.body || "").replace(/\n/g, "<br>");
+    if (st.img) bodyHtml += '<img class="wt-img" src="' + esc(st.img) + '" alt="" loading="eager" onerror="this.remove()">';
+    if (st.kbd && st.kbd.length) {
+      bodyHtml += '<div class="wt-kbdrow">' + st.kbd.map(function (combo) {
+        return combo.map(function (k) { return "<kbd>" + esc(k) + "</kbd>"; }).join(" + ");
+      }).join(" &nbsp;&middot;&nbsp; ") + "</div>";
+    }
+    if (typeof st.skipTo === "number") {
+      bodyHtml += '<button class="wt-jump" type="button">skip to the page tour</button>';
+    }
+    cardBody.innerHTML = bodyHtml;
+    var jump = cardBody.querySelector(".wt-jump");
+    if (jump) jump.onclick = function () {
+      var to = resolveIndex(st.skipTo, 1);
+      if (to >= 0) { idx = to; render(); } else finish(true);
+    };
+    card.classList.toggle("wt-wide", !!st.img);
+    var c = counted(idx);
+    cardCount.textContent = "step " + c.pos + " of " + c.total + (T.label ? " · " + T.label : "");
+    btnBack.style.visibility = resolveIndex(idx - 1, -1) >= 0 && idx > resolveIndex(0, 1) ? "" : "hidden";
     btnNext.textContent = resolveIndex(idx + 1, 1) < 0 ? "Done" : "Next";
     if (el) {
       try { el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" }); } catch (e) { try { el.scrollIntoView(); } catch (e2) {} }

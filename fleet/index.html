@@ -1516,19 +1516,43 @@ tr.haulrow{ cursor:pointer; }
 <script src="/nav.js?v=14"></script>
 <script>
 window.BONK_TOUR = {
-  id: "fleet", accountKey: null, readyWhen: "#dropbox",
+  id: "fleet", accountKey: null, readyWhen: "#dropbox", label: "the full loop",
   steps: [
-    { sel: null, title: "The drop ledger", body: "Log the ore you mine, get paid your exact share at buyback. Here is the whole loop, takes ten seconds.", place: "center" },
-    { sel: "#pilots", title: "Who are you mining as", body: "Pick your pilot here. Multiboxing? Add each alt once and switch between them, so every drop lands under the right name.", place: "auto" },
-    { sel: "#dropbox", title: "Drop your ore here", body: "In the EVE client, right-click your jetcan or ore hold and Copy. Paste it in this box and hit Drop. That is the whole job. Do it every time your hold is full.", place: "auto" },
-    { sel: "#quickdrops", title: "The lazy way", body: "Grind an ore and it becomes a chip up here. Dial the number, tap drop. Chips reset with each op, and the label tucks them away when you want the room.", place: "auto" },
-    { sel: "#feed", title: "Proof you dropped it", body: "Every drop shows here with its value. If it is on the feed, you get paid for it. Forget to log it and you just mined for free, which is a hobby, not a job.", place: "auto" },
-    { sel: "#marketline", title: "What your ore is worth", body: "We value ore at the Jita sell price, the market where everything actually trades. That is the buyback basis, no guessing.", place: "auto" },
-    { sel: "#tipctl", title: "Tip the fleet boss", body: "The boss runs the boosts and writes the checks. Corp norm is a 10% tip and it is already set. Tap none to opt out, no pressure.", place: "auto" },
-    { sel: null, title: "How you get paid", body: "When the op wraps, the lead finishes the fleet and the payout screen computes your exact cut at buyback. The ISK lands in your wallet, and the receipt lives forever in your portal under My Hauls. If your drops are on the feed, you are getting paid.", place: "center" },
-    { sel: "#cmdstrip", title: "Fleet command", body: "You are running this one. Set the market, finish the fleet, and open the payout from here. Hit the green Announce button to shout the op to Discord so the goblins form up.", place: "auto" }
+    { sel: null, place: "center", skipTo: 5,
+      title: "The whole job, in one loop",
+      body: "Mine rocks. Tell the ledger what you mined. Get paid your exact share when the op ends. This walkthrough shows the full loop once, including the part inside EVE. Thirty seconds, then you never think about it again." },
+    { sel: null, place: "center", img: "/fleet/tut/radar.png",
+      title: "Before the op: someone found this rock",
+      body: "Fleet command picks the spot with Radar, our belt scanner. You just fly where the fleet flies. If you ever want to scout your own, the Radar tool on the toolbelt knows every belt in New Eden." },
+    { sel: "#marketline", place: "auto", fallbackCenter: true,
+      title: "Your ore is priced the moment you drop it",
+      body: "The ledger values every rock at live Jita prices, the market where everything actually sells. Buyback pays you a fixed cut of that, set for the op. No haggling, no spreadsheets, the math is already done." },
+    { sel: null, place: "center", img: "/fleet/tut/hold.png", kbd: [["Ctrl","A"]],
+      title: "In EVE: select what you mined",
+      body: "Open your ore hold or the can you filled. Click one stack, then Ctrl+A grabs them all. Partial stacks are fine. This is just selecting, nothing moves yet." },
+    { sel: null, place: "center", img: "/fleet/tut/jettison.png", kbd: [["Ctrl","C"]],
+      title: "Copy FIRST. Then jettison.",
+      body: "With the stacks selected, Ctrl+C copies them as text. Do this BEFORE you jettison or compress, while the ore is still in front of you. Then right click and Jettison for the hauler like normal. Copy first, dump second. That order is the whole trick." },
+    { sel: "#pilots", place: "auto",
+      title: "Tell the ledger who you are",
+      body: "Pick the pilot the ISK should land on. Flying alts? Add each one once with + alt and tap between them. Every drop pays the name it was dropped under." },
+    { sel: "#dropbox", place: "auto", img: "/fleet/tut/dropbox.png",
+      title: "Paste it. Hit Drop. Done.",
+      body: "Click the box, Ctrl+V, hit Drop. The ledger reads the stacks, prices them, and adds them to your tab. Do this every time your hold fills. It becomes muscle memory by the second can." },
+    { sel: "#quickdrops", place: "auto",
+      title: "The lazy way, once you have a rhythm",
+      body: "Grinding one ore all night? After the first drop it becomes a chip up here. Dial the number, tap drop, back to the belt. Chips reset each op so Monday's ice never haunts Thursday's Veldspar." },
+    { sel: "#feed", place: "auto",
+      title: "The feed is your receipt",
+      body: "If your drop shows here, you are getting paid for it, and the receipt lives on your portal career page forever. If it is not on the feed, the ledger never saw it, and unlogged ore is charity. Check the feed, then go fill another hold." },
+    { sel: "#tipctl", place: "auto",
+      title: "Tips, payday, and you are done",
+      body: "Corp norm is a 10 percent tip to the fleet boss and it is already set; tap none to opt out, nobody is watching. When the op wraps, command runs the payout and your exact cut lands in your wallet. That is the loop: copy, paste, drop, get paid. Welcome to organized violence against geology." },
+    { sel: "#cmdstrip", place: "auto",
+      title: "Fleet command: your three buttons",
+      body: "You run this one. Announce the op to Discord so goblins form up, set the market if Rens pays better today, and when the belt is dust hit Finish Fleet, tick everyone paid on the payout screen, and Close. The archive and the Discord payday post handle the glory." }
   ]
 };
 </script>
-<script src="/walkthrough.js?v=4"></script>
+<script src="/walkthrough.js?v=5"></script>
 </body></html>
