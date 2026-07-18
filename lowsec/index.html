@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="60">
 <title>BONK - Radar</title>
-<link rel="stylesheet" href="/common.css?v=3">
+<link rel="stylesheet" href="/common.css?v=5">
 <style>
   button.rsec{ display:flex; align-items:baseline; gap:10px; width:100%; text-align:left;
          background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
@@ -57,20 +57,47 @@
   .rbar input[type=checkbox]{ accent-color:var(--ore); }
   .rsum{ margin-left:auto; color:var(--ore); }
   @media(max-width:640px){ .rsum{ margin-left:0; } }
+  /* V2: danger tiers (cartel language), recents, compare, stale banner, chips */
+  .tchip{ display:inline-block; font-family:var(--mono); font-size:9.5px; font-weight:700;
+          letter-spacing:.12em; padding:1px 7px; border:1px solid currentColor; margin-right:7px;
+          vertical-align:1px; }
+  .tchip.calm{ color:var(--ore); } .tchip.sketchy{ color:var(--amber); }
+  .tchip.hot{ color:var(--red); } .tchip.noeyes{ color:var(--muted); }
+  .rswhy{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:9px;
+          border-left:2px solid var(--line); padding-left:9px; line-height:1.5; }
+  .rchips{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
+  .rchips button{ font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; cursor:pointer;
+          background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:4px 10px; }
+  .rchips button:hover{ color:var(--ore); border-color:var(--ore); }
+  .cmpgrid{ display:grid; grid-template-columns:1fr; gap:12px; }
+  @media(min-width:900px){ .cmpgrid{ grid-template-columns:1fr 1fr; } }
+  .lkbtn{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+          background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:4px 10px;
+          cursor:pointer; transition:border-color .15s,color .15s; }
+  .lkbtn:hover{ border-color:var(--ore); color:var(--ore); }
+  .moonchip{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--amber);
+          border:1px solid rgba(233,196,106,.45); padding:1px 6px; }
+  .stalebar{ font-family:var(--mono); font-size:11.5px; color:var(--amber); background:var(--steel);
+          border:1px solid var(--line-soft); border-left:3px solid var(--amber); padding:9px 12px;
+          margin:10px 0 0; }
+  td .roadlk{ font-family:var(--mono); font-size:9.5px; color:var(--muted); text-decoration:none;
+          margin-left:7px; border:1px solid var(--line); padding:0 5px; }
+  td .roadlk:hover{ color:var(--ore); border-color:var(--ore); }
 </style></head>
-<body>
+<body data-generated="2026-07-18T03:37:32.676171+00:00">
   <header>
     <h1>&#128225; RADAR</h1>
-    <div class="sub">find the rocks, pick the system. belts are baked (they never move); the scout sweeps hourly.</div>
+    <div class="sub">find the rocks, pick the system. belts are baked (they never move); danger tiers and kill counts refresh live in your browser.</div>
   </header>
   <div class="wrap">
 
     <div class="rsrow">
       <input id="rsIn" list="rsList" autocomplete="off" spellcheck="false"
-             placeholder="scan any system&hellip; (U3K-4A, Mohas, Jita)" aria-label="Search a system">
+             placeholder="scan any system&hellip; or compare: Khabi vs Amamake" aria-label="Search a system">
       <datalist id="rsList"></datalist>
       <button id="rsGo" type="button">Scan</button>
     </div>
+    <div class="rchips" id="rsRecent"></div>
     <div id="rsOut"></div>
 
     <button class="rsec" type="button" data-sec="belt" aria-expanded="false" aria-controls="sec-belt">
@@ -88,19 +115,19 @@
     </div>
     <button class="rsec" type="button" data-sec="gw" aria-expanded="false" aria-controls="sec-gw">
       <span class="caret">&#9656;</span> GW Watch
-      <span class="rhint">100 of 101 systems quiet last hour &middot; 106 snapshots</span>
+      <span class="rhint">100 of 101 systems quiet last hour &middot; 55 snapshots</span>
     </button>
     <div class="rbody" id="sec-gw" hidden>
-    <p class="rsub">hourly recorder, zeros included &middot; 106 snapshots in the 7d window &middot; 100 of 101 systems had zero PvP kills last hour</p>
-<table><thead><tr><th>#</th><th data-tip="Great Wildlands system. Belt systems are pinned first.">SYSTEM</th><th data-tip="True security (2 decimals). Deeper negative = richer ore.">SEC</th><th data-tip="Static asteroid belts (from the Belt Radar bake).">BELTS</th><th data-tip="PvP kills (ship+pod) here in the last hour, live ESI.">PVP1h</th><th data-tip="NPC kills last hour — ratting activity means someone lives here.">NPC1h</th><th data-tip="Ship jumps through the system in the last hour.">JUMP</th><th data-tip="Average recorded PvP kills per hour over the window.">~AVG</th><th data-tip="Share of recorded hours with ZERO PvP kills. High = reliably dead.">QUIET%</th><th data-tip="Snapshots recorded for this system (recorder is new; grows hourly).">N</th></tr></thead><tbody><tr><td class='rank'>1</td><td class='sys'><a href='https://evemaps.dotlan.net/system/U3K-4A' target='_blank' rel='noopener'>U3K-4A</a></td><td class='num'>-0.752</td><td class='num strong'>30</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.08</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>2</td><td class='sys'><a href='https://evemaps.dotlan.net/system/6EG7-R' target='_blank' rel='noopener'>6EG7-R</a></td><td class='num'>-0.7053</td><td class='num strong'>18</td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>3</td><td class='sys'><a href='https://evemaps.dotlan.net/system/8DL-CP' target='_blank' rel='noopener'>8DL-CP</a></td><td class='num'>-0.8387</td><td class='num strong'>9</td><td class='num'>0</td><td class='num'>18</td><td class='num'>2</td><td class='num'>0.15</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>4</td><td class='sys'><a href='https://evemaps.dotlan.net/system/V-IH6B' target='_blank' rel='noopener'>V-IH6B</a></td><td class='num'>-1.0</td><td class='num strong'>6</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.05</td><td class='num good'>95</td><td class='num'>106</td></tr><tr><td class='rank'>5</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UMDQ-6' target='_blank' rel='noopener'>UMDQ-6</a></td><td class='num'>-0.8714</td><td class='num strong'>3</td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>6</td><td class='sys'><a href='https://evemaps.dotlan.net/system/56D-TC' target='_blank' rel='noopener'>56D-TC</a></td><td class='num'>-0.699</td><td class='num strong'>2</td><td class='num'>0</td><td class='num'>9</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>7</td><td class='sys'><a href='https://evemaps.dotlan.net/system/5FCV-A' target='_blank' rel='noopener'>5FCV-A</a></td><td class='num'>-0.0104</td><td class='num strong'></td><td class='num'>3</td><td class='num'>34</td><td class='num'>8</td><td class='num'>0.05</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>8</td><td class='sys'><a href='https://evemaps.dotlan.net/system/7Q-8Z2' target='_blank' rel='noopener'>7Q-8Z2</a></td><td class='num'>-0.3032</td><td class='num strong'></td><td class='num'>0</td><td class='num'>5</td><td class='num'>18</td><td class='num'>0.42</td><td class='num warn'>80</td><td class='num'>106</td></tr><tr><td class='rank'>9</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AB-FZE' target='_blank' rel='noopener'>AB-FZE</a></td><td class='num'>-0.109</td><td class='num strong'></td><td class='num'>0</td><td class='num'>2</td><td class='num'>18</td><td class='num'>0.12</td><td class='num good'>93</td><td class='num'>106</td></tr><tr><td class='rank'>10</td><td class='sys'><a href='https://evemaps.dotlan.net/system/K-IYNW' target='_blank' rel='noopener'>K-IYNW</a></td><td class='num'>-0.1234</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>18</td><td class='num'>0.17</td><td class='num warn'>86</td><td class='num'>106</td></tr><tr><td class='rank'>11</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-RAEL' target='_blank' rel='noopener'>N-RAEL</a></td><td class='num'>-0.0265</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>15</td><td class='num'>0.08</td><td class='num good'>93</td><td class='num'>106</td></tr><tr><td class='rank'>12</td><td class='sys'><a href='https://evemaps.dotlan.net/system/PUZ-IO' target='_blank' rel='noopener'>PUZ-IO</a></td><td class='num'>-0.1927</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>13</td><td class='num'>0.06</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>13</td><td class='sys'><a href='https://evemaps.dotlan.net/system/2X7Z-L' target='_blank' rel='noopener'>2X7Z-L</a></td><td class='num'>-0.5541</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>14</td><td class='sys'><a href='https://evemaps.dotlan.net/system/FVXK-D' target='_blank' rel='noopener'>FVXK-D</a></td><td class='num'>-0.3829</td><td class='num strong'></td><td class='num'>0</td><td class='num'>46</td><td class='num'>12</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>15</td><td class='sys'><a href='https://evemaps.dotlan.net/system/P7UZ-T' target='_blank' rel='noopener'>P7UZ-T</a></td><td class='num'>-0.2165</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.04</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>16</td><td class='sys'><a href='https://evemaps.dotlan.net/system/504Z-V' target='_blank' rel='noopener'>504Z-V</a></td><td class='num'>-0.0903</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.13</td><td class='num good'>95</td><td class='num'>106</td></tr><tr><td class='rank'>17</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M9U-75' target='_blank' rel='noopener'>M9U-75</a></td><td class='num'>-0.1371</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.82</td><td class='num warn'>79</td><td class='num'>106</td></tr><tr><td class='rank'>18</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-6Z8B' target='_blank' rel='noopener'>N-6Z8B</a></td><td class='num'>-0.0762</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>19</td><td class='sys'><a href='https://evemaps.dotlan.net/system/QQ3-YI' target='_blank' rel='noopener'>QQ3-YI</a></td><td class='num'>-0.2512</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>20</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UD-AOK' target='_blank' rel='noopener'>UD-AOK</a></td><td class='num'>-0.1146</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.26</td><td class='num warn'>89</td><td class='num'>106</td></tr><tr><td class='rank'>21</td><td class='sys'><a href='https://evemaps.dotlan.net/system/ZJ-GOU' target='_blank' rel='noopener'>ZJ-GOU</a></td><td class='num'>-0.1466</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.09</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>22</td><td class='sys'><a href='https://evemaps.dotlan.net/system/28-QWU' target='_blank' rel='noopener'>28-QWU</a></td><td class='num'>-0.0524</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.04</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>23</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SUR-F7' target='_blank' rel='noopener'>SUR-F7</a></td><td class='num'>-0.4371</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.15</td><td class='num warn'>88</td><td class='num'>106</td></tr><tr><td class='rank'>24</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0-3VW8' target='_blank' rel='noopener'>0-3VW8</a></td><td class='num'>-0.0338</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.33</td><td class='num warn'>88</td><td class='num'>106</td></tr><tr><td class='rank'>25</td><td class='sys'><a href='https://evemaps.dotlan.net/system/52V6-B' target='_blank' rel='noopener'>52V6-B</a></td><td class='num'>-0.0281</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>26</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F7A-MR' target='_blank' rel='noopener'>F7A-MR</a></td><td class='num'>-0.0629</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>27</td><td class='sys'><a href='https://evemaps.dotlan.net/system/O-OVOQ' target='_blank' rel='noopener'>O-OVOQ</a></td><td class='num'>-0.006</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>28</td><td class='sys'><a href='https://evemaps.dotlan.net/system/OK-6XN' target='_blank' rel='noopener'>OK-6XN</a></td><td class='num'>-0.5609</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.04</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>29</td><td class='sys'><a href='https://evemaps.dotlan.net/system/QM-20X' target='_blank' rel='noopener'>QM-20X</a></td><td class='num'>-0.1515</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.08</td><td class='num good'>95</td><td class='num'>106</td></tr><tr><td class='rank'>30</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UT-UZB' target='_blank' rel='noopener'>UT-UZB</a></td><td class='num'>-0.0085</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>31</td><td class='sys'><a href='https://evemaps.dotlan.net/system/CRXA-Y' target='_blank' rel='noopener'>CRXA-Y</a></td><td class='num'>-0.0754</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>32</td><td class='sys'><a href='https://evemaps.dotlan.net/system/HB-1NJ' target='_blank' rel='noopener'>HB-1NJ</a></td><td class='num'>-0.1345</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>33</td><td class='sys'><a href='https://evemaps.dotlan.net/system/JPL-RA' target='_blank' rel='noopener'>JPL-RA</a></td><td class='num'>-0.0994</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.07</td><td class='num good'>95</td><td class='num'>106</td></tr><tr><td class='rank'>34</td><td class='sys'><a href='https://evemaps.dotlan.net/system/7-IDWY' target='_blank' rel='noopener'>7-IDWY</a></td><td class='num'>-0.0087</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>35</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F8K-WQ' target='_blank' rel='noopener'>F8K-WQ</a></td><td class='num'>-0.0229</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.02</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>36</td><td class='sys'><a href='https://evemaps.dotlan.net/system/NK-7XO' target='_blank' rel='noopener'>NK-7XO</a></td><td class='num'>-0.0184</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>37</td><td class='sys'><a href='https://evemaps.dotlan.net/system/8YC-AN' target='_blank' rel='noopener'>8YC-AN</a></td><td class='num'>-0.1459</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>38</td><td class='sys'><a href='https://evemaps.dotlan.net/system/9SNK-O' target='_blank' rel='noopener'>9SNK-O</a></td><td class='num'>-0.0021</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>39</td><td class='sys'><a href='https://evemaps.dotlan.net/system/B-VIP9' target='_blank' rel='noopener'>B-VIP9</a></td><td class='num'>-0.0015</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.08</td><td class='num good'>94</td><td class='num'>106</td></tr><tr><td class='rank'>40</td><td class='sys'><a href='https://evemaps.dotlan.net/system/E02-IK' target='_blank' rel='noopener'>E02-IK</a></td><td class='num'>-0.0609</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>41</td><td class='sys'><a href='https://evemaps.dotlan.net/system/IX8-JB' target='_blank' rel='noopener'>IX8-JB</a></td><td class='num'>-0.0351</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>42</td><td class='sys'><a href='https://evemaps.dotlan.net/system/L1S-G1' target='_blank' rel='noopener'>L1S-G1</a></td><td class='num'>-0.0154</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.03</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>43</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M-MD3B' target='_blank' rel='noopener'>M-MD3B</a></td><td class='num'>-0.1193</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.15</td><td class='num good'>91</td><td class='num'>106</td></tr><tr><td class='rank'>44</td><td class='sys'><a href='https://evemaps.dotlan.net/system/NIH-02' target='_blank' rel='noopener'>NIH-02</a></td><td class='num'>-0.0445</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.01</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>45</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SL-YBS' target='_blank' rel='noopener'>SL-YBS</a></td><td class='num'>-0.0264</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>46</td><td class='sys'><a href='https://evemaps.dotlan.net/system/VXO-OM' target='_blank' rel='noopener'>VXO-OM</a></td><td class='num'>-0.0033</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.06</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>47</td><td class='sys'><a href='https://evemaps.dotlan.net/system/1L-AED' target='_blank' rel='noopener'>1L-AED</a></td><td class='num'>-0.0715</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>48</td><td class='sys'><a href='https://evemaps.dotlan.net/system/6WT-BE' target='_blank' rel='noopener'>6WT-BE</a></td><td class='num'>-0.0012</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>49</td><td class='sys'><a href='https://evemaps.dotlan.net/system/BY5-V8' target='_blank' rel='noopener'>BY5-V8</a></td><td class='num'>-0.0072</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.05</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>50</td><td class='sys'><a href='https://evemaps.dotlan.net/system/TET3-B' target='_blank' rel='noopener'>TET3-B</a></td><td class='num'>-0.017</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.06</td><td class='num good'>94</td><td class='num'>106</td></tr><tr><td class='rank'>51</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Y-DSSK' target='_blank' rel='noopener'>Y-DSSK</a></td><td class='num'>-0.0205</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>52</td><td class='sys'><a href='https://evemaps.dotlan.net/system/66U-1P' target='_blank' rel='noopener'>66U-1P</a></td><td class='num'>-0.4961</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>53</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AZF-GH' target='_blank' rel='noopener'>AZF-GH</a></td><td class='num'>-0.0268</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>54</td><td class='sys'><a href='https://evemaps.dotlan.net/system/BRT-OP' target='_blank' rel='noopener'>BRT-OP</a></td><td class='num'>-0.4584</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>55</td><td class='sys'><a href='https://evemaps.dotlan.net/system/DE71-9' target='_blank' rel='noopener'>DE71-9</a></td><td class='num'>-0.1391</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>56</td><td class='sys'><a href='https://evemaps.dotlan.net/system/EOE3-N' target='_blank' rel='noopener'>EOE3-N</a></td><td class='num'>-0.1724</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.05</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>57</td><td class='sys'><a href='https://evemaps.dotlan.net/system/I-QRJA' target='_blank' rel='noopener'>I-QRJA</a></td><td class='num'>-0.0741</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>58</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UNJ-GX' target='_blank' rel='noopener'>UNJ-GX</a></td><td class='num'>-0.0119</td><td class='num strong'></td><td class='num'>0</td><td class='num'>7</td><td class='num'>2</td><td class='num'>0.09</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>59</td><td class='sys'><a href='https://evemaps.dotlan.net/system/V89M-R' target='_blank' rel='noopener'>V89M-R</a></td><td class='num'>-0.5541</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>60</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0PI4-E' target='_blank' rel='noopener'>0PI4-E</a></td><td class='num'>-0.0035</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>61</td><td class='sys'><a href='https://evemaps.dotlan.net/system/7JF-0Z' target='_blank' rel='noopener'>7JF-0Z</a></td><td class='num'>-0.2676</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>62</td><td class='sys'><a href='https://evemaps.dotlan.net/system/CI4M-T' target='_blank' rel='noopener'>CI4M-T</a></td><td class='num'>-0.0301</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>63</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F5-CGW' target='_blank' rel='noopener'>F5-CGW</a></td><td class='num'>-0.0039</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>64</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M-YWAL' target='_blank' rel='noopener'>M-YWAL</a></td><td class='num'>-0.2327</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>65</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-DQ0D' target='_blank' rel='noopener'>N-DQ0D</a></td><td class='num'>-0.0675</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.13</td><td class='num good'>92</td><td class='num'>106</td></tr><tr><td class='rank'>66</td><td class='sys'><a href='https://evemaps.dotlan.net/system/O-8SOC' target='_blank' rel='noopener'>O-8SOC</a></td><td class='num'>-0.1049</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>67</td><td class='sys'><a href='https://evemaps.dotlan.net/system/OJOS-T' target='_blank' rel='noopener'>OJOS-T</a></td><td class='num'>-0.3137</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.04</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>68</td><td class='sys'><a href='https://evemaps.dotlan.net/system/P1T-LP' target='_blank' rel='noopener'>P1T-LP</a></td><td class='num'>-0.0571</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>69</td><td class='sys'><a href='https://evemaps.dotlan.net/system/R-ESG0' target='_blank' rel='noopener'>R-ESG0</a></td><td class='num'>-0.0461</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.06</td><td class='num good'>94</td><td class='num'>106</td></tr><tr><td class='rank'>70</td><td class='sys'><a href='https://evemaps.dotlan.net/system/WTIE-6' target='_blank' rel='noopener'>WTIE-6</a></td><td class='num'>-0.0305</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>71</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Y4-GQV' target='_blank' rel='noopener'>Y4-GQV</a></td><td class='num'>-0.0209</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>106</td></tr><tr><td class='rank'>72</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0NV-YU' target='_blank' rel='noopener'>0NV-YU</a></td><td class='num'>-0.2868</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>73</td><td class='sys'><a href='https://evemaps.dotlan.net/system/9-34L5' target='_blank' rel='noopener'>9-34L5</a></td><td class='num'>-0.0781</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>74</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AI-EVH' target='_blank' rel='noopener'>AI-EVH</a></td><td class='num'>-0.0583</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>75</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F-MKH3' target='_blank' rel='noopener'>F-MKH3</a></td><td class='num'>-0.1174</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.17</td><td class='num good'>95</td><td class='num'>106</td></tr><tr><td class='rank'>76</td><td class='sys'><a href='https://evemaps.dotlan.net/system/GF-3FL' target='_blank' rel='noopener'>GF-3FL</a></td><td class='num'>-0.4337</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.03</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>77</td><td class='sys'><a href='https://evemaps.dotlan.net/system/H-8F5Q' target='_blank' rel='noopener'>H-8F5Q</a></td><td class='num'>-0.0157</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.1</td><td class='num good'>93</td><td class='num'>106</td></tr><tr><td class='rank'>78</td><td class='sys'><a href='https://evemaps.dotlan.net/system/H9S-WC' target='_blank' rel='noopener'>H9S-WC</a></td><td class='num'>-0.0067</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.02</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>79</td><td class='sys'><a href='https://evemaps.dotlan.net/system/JUK0-1' target='_blank' rel='noopener'>JUK0-1</a></td><td class='num'>-0.6636</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>106</td></tr><tr><td class='rank'>80</td><td class='sys'><a href='https://evemaps.dotlan.net/system/LXTC-S' target='_blank' rel='noopener'>LXTC-S</a></td><td class='num'>-0.0339</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.03</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>81</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Q2FL-T' target='_blank' rel='noopener'>Q2FL-T</a></td><td class='num'>-0.2541</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.08</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>82</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SB-23C' target='_blank' rel='noopener'>SB-23C</a></td><td class='num'>-0.0179</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.05</td><td class='num good'>97</td><td class='num'>106</td></tr><tr><td class='rank'>83</td><td class='sys'><a href='https://evemaps.dotlan.net/system/V-2GYS' target='_blank' rel='noopener'>V-2GYS</a></td><td class='num'>-0.1944</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.01</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>84</td><td class='sys'><a href='https://evemaps.dotlan.net/system/VKU-BG' target='_blank' rel='noopener'>VKU-BG</a></td><td class='num'>-0.5464</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.02</td><td class='num good'>99</td><td class='num'>106</td></tr><tr><td class='rank'>85</td><td class='sys'><a href='https://evemaps.dotlan.net/system/YUY-LM' target='_blank' rel='noopener'>YUY-LM</a></td><td class='num'>-0.0173</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>106</td></tr><tr><td class='rank'>86</td><td class='sys'><a href='https://evemaps.dotlan.net/system/ZM-DNR' target='_blank' rel='noopener'>ZM-DNR</a></td><td class='num'>-0.0671</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.01</td><td class='num good'>99</td><td class='num'>106</td></tr></tbody></table>
+    <p class="rsub">hourly recorder, zeros included &middot; 55 snapshots in the 7d window &middot; 100 of 101 systems had zero PvP kills last hour</p>
+<table><thead><tr><th>#</th><th data-tip="Great Wildlands system. Belt systems are pinned first.">SYSTEM</th><th data-tip="True security (2 decimals). Deeper negative = richer ore.">SEC</th><th data-tip="Static asteroid belts (from the Belt Radar bake).">BELTS</th><th data-tip="PvP kills (ship+pod) here in the last hour, live ESI.">PVP1h</th><th data-tip="NPC kills last hour — ratting activity means someone lives here.">NPC1h</th><th data-tip="Ship jumps through the system in the last hour.">JUMP</th><th data-tip="Average recorded PvP kills per hour over the window.">~AVG</th><th data-tip="Share of recorded hours with ZERO PvP kills. High = reliably dead.">QUIET%</th><th data-tip="Snapshots recorded for this system (recorder is new; grows hourly).">N</th></tr></thead><tbody><tr><td class='rank'>1</td><td class='sys'><a href='https://evemaps.dotlan.net/system/U3K-4A' target='_blank' rel='noopener'>U3K-4A</a></td><td class='num'>-0.752</td><td class='num strong'>30</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>2</td><td class='sys'><a href='https://evemaps.dotlan.net/system/6EG7-R' target='_blank' rel='noopener'>6EG7-R</a></td><td class='num'>-0.7053</td><td class='num strong'>18</td><td class='num'>0</td><td class='num'>0</td><td class='num'>13</td><td class='num'>0.11</td><td class='num good'>95</td><td class='num'>55</td></tr><tr><td class='rank'>3</td><td class='sys'><a href='https://evemaps.dotlan.net/system/8DL-CP' target='_blank' rel='noopener'>8DL-CP</a></td><td class='num'>-0.8387</td><td class='num strong'>9</td><td class='num'>0</td><td class='num'>33</td><td class='num'>7</td><td class='num'>0.29</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>4</td><td class='sys'><a href='https://evemaps.dotlan.net/system/V-IH6B' target='_blank' rel='noopener'>V-IH6B</a></td><td class='num'>-1.0</td><td class='num strong'>6</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>5</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UMDQ-6' target='_blank' rel='noopener'>UMDQ-6</a></td><td class='num'>-0.8714</td><td class='num strong'>3</td><td class='num'>0</td><td class='num'>1</td><td class='num'>1</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>6</td><td class='sys'><a href='https://evemaps.dotlan.net/system/56D-TC' target='_blank' rel='noopener'>56D-TC</a></td><td class='num'>-0.699</td><td class='num strong'>2</td><td class='num'>0</td><td class='num'>0</td><td class='num'>16</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>7</td><td class='sys'><a href='https://evemaps.dotlan.net/system/5FCV-A' target='_blank' rel='noopener'>5FCV-A</a></td><td class='num'>-0.0104</td><td class='num strong'></td><td class='num'>1</td><td class='num'>94</td><td class='num'>8</td><td class='num'>0.04</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>8</td><td class='sys'><a href='https://evemaps.dotlan.net/system/2X7Z-L' target='_blank' rel='noopener'>2X7Z-L</a></td><td class='num'>-0.5541</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>17</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>9</td><td class='sys'><a href='https://evemaps.dotlan.net/system/K-IYNW' target='_blank' rel='noopener'>K-IYNW</a></td><td class='num'>-0.1234</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>17</td><td class='num'>0.09</td><td class='num good'>91</td><td class='num'>55</td></tr><tr><td class='rank'>10</td><td class='sys'><a href='https://evemaps.dotlan.net/system/504Z-V' target='_blank' rel='noopener'>504Z-V</a></td><td class='num'>-0.0903</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>13</td><td class='num'>0.25</td><td class='num good'>91</td><td class='num'>55</td></tr><tr><td class='rank'>11</td><td class='sys'><a href='https://evemaps.dotlan.net/system/VKU-BG' target='_blank' rel='noopener'>VKU-BG</a></td><td class='num'>-0.5464</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>13</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>12</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SL-YBS' target='_blank' rel='noopener'>SL-YBS</a></td><td class='num'>-0.0264</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>13</td><td class='sys'><a href='https://evemaps.dotlan.net/system/VXO-OM' target='_blank' rel='noopener'>VXO-OM</a></td><td class='num'>-0.0033</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>14</td><td class='sys'><a href='https://evemaps.dotlan.net/system/ZM-DNR' target='_blank' rel='noopener'>ZM-DNR</a></td><td class='num'>-0.0671</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>15</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AB-FZE' target='_blank' rel='noopener'>AB-FZE</a></td><td class='num'>-0.109</td><td class='num strong'></td><td class='num'>0</td><td class='num'>2</td><td class='num'>11</td><td class='num'>0.24</td><td class='num warn'>87</td><td class='num'>55</td></tr><tr><td class='rank'>16</td><td class='sys'><a href='https://evemaps.dotlan.net/system/O-OVOQ' target='_blank' rel='noopener'>O-OVOQ</a></td><td class='num'>-0.006</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>11</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>17</td><td class='sys'><a href='https://evemaps.dotlan.net/system/PUZ-IO' target='_blank' rel='noopener'>PUZ-IO</a></td><td class='num'>-0.1927</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>11</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>18</td><td class='sys'><a href='https://evemaps.dotlan.net/system/ZJ-GOU' target='_blank' rel='noopener'>ZJ-GOU</a></td><td class='num'>-0.1466</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>11</td><td class='num'>0.18</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>19</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F8K-WQ' target='_blank' rel='noopener'>F8K-WQ</a></td><td class='num'>-0.0229</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>20</td><td class='sys'><a href='https://evemaps.dotlan.net/system/QQ3-YI' target='_blank' rel='noopener'>QQ3-YI</a></td><td class='num'>-0.2512</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>10</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>21</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UNJ-GX' target='_blank' rel='noopener'>UNJ-GX</a></td><td class='num'>-0.0119</td><td class='num strong'></td><td class='num'>0</td><td class='num'>12</td><td class='num'>10</td><td class='num'>0.18</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>22</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AI-EVH' target='_blank' rel='noopener'>AI-EVH</a></td><td class='num'>-0.0583</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>23</td><td class='sys'><a href='https://evemaps.dotlan.net/system/CRXA-Y' target='_blank' rel='noopener'>CRXA-Y</a></td><td class='num'>-0.0754</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>24</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F-MKH3' target='_blank' rel='noopener'>F-MKH3</a></td><td class='num'>-0.1174</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.33</td><td class='num good'>91</td><td class='num'>55</td></tr><tr><td class='rank'>25</td><td class='sys'><a href='https://evemaps.dotlan.net/system/FVXK-D' target='_blank' rel='noopener'>FVXK-D</a></td><td class='num'>-0.3829</td><td class='num strong'></td><td class='num'>0</td><td class='num'>46</td><td class='num'>9</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>26</td><td class='sys'><a href='https://evemaps.dotlan.net/system/L1S-G1' target='_blank' rel='noopener'>L1S-G1</a></td><td class='num'>-0.0154</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>27</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-6Z8B' target='_blank' rel='noopener'>N-6Z8B</a></td><td class='num'>-0.0762</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>28</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-RAEL' target='_blank' rel='noopener'>N-RAEL</a></td><td class='num'>-0.0265</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.05</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>29</td><td class='sys'><a href='https://evemaps.dotlan.net/system/52V6-B' target='_blank' rel='noopener'>52V6-B</a></td><td class='num'>-0.0281</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>30</td><td class='sys'><a href='https://evemaps.dotlan.net/system/7Q-8Z2' target='_blank' rel='noopener'>7Q-8Z2</a></td><td class='num'>-0.3032</td><td class='num strong'></td><td class='num'>0</td><td class='num'>3</td><td class='num'>8</td><td class='num'>0.67</td><td class='num warn'>71</td><td class='num'>55</td></tr><tr><td class='rank'>31</td><td class='sys'><a href='https://evemaps.dotlan.net/system/NIH-02' target='_blank' rel='noopener'>NIH-02</a></td><td class='num'>-0.0445</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>32</td><td class='sys'><a href='https://evemaps.dotlan.net/system/QM-20X' target='_blank' rel='noopener'>QM-20X</a></td><td class='num'>-0.1515</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>33</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UT-UZB' target='_blank' rel='noopener'>UT-UZB</a></td><td class='num'>-0.0085</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>34</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Y7-XFD' target='_blank' rel='noopener'>Y7-XFD</a></td><td class='num'>-0.0519</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>35</td><td class='sys'><a href='https://evemaps.dotlan.net/system/7-IDWY' target='_blank' rel='noopener'>7-IDWY</a></td><td class='num'>-0.0087</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.13</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>36</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M-MD3B' target='_blank' rel='noopener'>M-MD3B</a></td><td class='num'>-0.1193</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.22</td><td class='num warn'>89</td><td class='num'>55</td></tr><tr><td class='rank'>37</td><td class='sys'><a href='https://evemaps.dotlan.net/system/P7UZ-T' target='_blank' rel='noopener'>P7UZ-T</a></td><td class='num'>-0.2165</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.07</td><td class='num good'>95</td><td class='num'>55</td></tr><tr><td class='rank'>38</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Q2FL-T' target='_blank' rel='noopener'>Q2FL-T</a></td><td class='num'>-0.2541</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>7</td><td class='num'>0.15</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>39</td><td class='sys'><a href='https://evemaps.dotlan.net/system/9SNK-O' target='_blank' rel='noopener'>9SNK-O</a></td><td class='num'>-0.0021</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>40</td><td class='sys'><a href='https://evemaps.dotlan.net/system/E02-IK' target='_blank' rel='noopener'>E02-IK</a></td><td class='num'>-0.0609</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.04</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>41</td><td class='sys'><a href='https://evemaps.dotlan.net/system/HB-1NJ' target='_blank' rel='noopener'>HB-1NJ</a></td><td class='num'>-0.1345</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>42</td><td class='sys'><a href='https://evemaps.dotlan.net/system/JPL-RA' target='_blank' rel='noopener'>JPL-RA</a></td><td class='num'>-0.0994</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>43</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SUR-F7' target='_blank' rel='noopener'>SUR-F7</a></td><td class='num'>-0.4371</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.18</td><td class='num warn'>87</td><td class='num'>55</td></tr><tr><td class='rank'>44</td><td class='sys'><a href='https://evemaps.dotlan.net/system/TET3-B' target='_blank' rel='noopener'>TET3-B</a></td><td class='num'>-0.017</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.05</td><td class='num good'>95</td><td class='num'>55</td></tr><tr><td class='rank'>45</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0-3VW8' target='_blank' rel='noopener'>0-3VW8</a></td><td class='num'>-0.0338</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.53</td><td class='num warn'>82</td><td class='num'>55</td></tr><tr><td class='rank'>46</td><td class='sys'><a href='https://evemaps.dotlan.net/system/28-QWU' target='_blank' rel='noopener'>28-QWU</a></td><td class='num'>-0.0524</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>47</td><td class='sys'><a href='https://evemaps.dotlan.net/system/AZF-GH' target='_blank' rel='noopener'>AZF-GH</a></td><td class='num'>-0.0268</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>48</td><td class='sys'><a href='https://evemaps.dotlan.net/system/GF-3FL' target='_blank' rel='noopener'>GF-3FL</a></td><td class='num'>-0.4337</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.04</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>49</td><td class='sys'><a href='https://evemaps.dotlan.net/system/NK-7XO' target='_blank' rel='noopener'>NK-7XO</a></td><td class='num'>-0.0184</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>50</td><td class='sys'><a href='https://evemaps.dotlan.net/system/UD-AOK' target='_blank' rel='noopener'>UD-AOK</a></td><td class='num'>-0.1146</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.36</td><td class='num warn'>89</td><td class='num'>55</td></tr><tr><td class='rank'>51</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0PI4-E' target='_blank' rel='noopener'>0PI4-E</a></td><td class='num'>-0.0035</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>52</td><td class='sys'><a href='https://evemaps.dotlan.net/system/B-VIP9' target='_blank' rel='noopener'>B-VIP9</a></td><td class='num'>-0.0015</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.11</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>53</td><td class='sys'><a href='https://evemaps.dotlan.net/system/F7A-MR' target='_blank' rel='noopener'>F7A-MR</a></td><td class='num'>-0.0629</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>54</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M9U-75' target='_blank' rel='noopener'>M9U-75</a></td><td class='num'>-0.1371</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.87</td><td class='num warn'>84</td><td class='num'>55</td></tr><tr><td class='rank'>55</td><td class='sys'><a href='https://evemaps.dotlan.net/system/6WT-BE' target='_blank' rel='noopener'>6WT-BE</a></td><td class='num'>-0.0012</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>56</td><td class='sys'><a href='https://evemaps.dotlan.net/system/8YC-AN' target='_blank' rel='noopener'>8YC-AN</a></td><td class='num'>-0.1459</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.13</td><td class='num good'>93</td><td class='num'>55</td></tr><tr><td class='rank'>57</td><td class='sys'><a href='https://evemaps.dotlan.net/system/BY5-V8' target='_blank' rel='noopener'>BY5-V8</a></td><td class='num'>-0.0072</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.02</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>58</td><td class='sys'><a href='https://evemaps.dotlan.net/system/LXTC-S' target='_blank' rel='noopener'>LXTC-S</a></td><td class='num'>-0.0339</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.05</td><td class='num good'>95</td><td class='num'>55</td></tr><tr><td class='rank'>59</td><td class='sys'><a href='https://evemaps.dotlan.net/system/WE3-BX' target='_blank' rel='noopener'>WE3-BX</a></td><td class='num'>-0.0161</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>60</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0R-GZQ' target='_blank' rel='noopener'>0R-GZQ</a></td><td class='num'>-0.4441</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>61</td><td class='sys'><a href='https://evemaps.dotlan.net/system/9-34L5' target='_blank' rel='noopener'>9-34L5</a></td><td class='num'>-0.0781</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>62</td><td class='sys'><a href='https://evemaps.dotlan.net/system/92-B0X' target='_blank' rel='noopener'>92-B0X</a></td><td class='num'>-0.0131</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>63</td><td class='sys'><a href='https://evemaps.dotlan.net/system/H-8F5Q' target='_blank' rel='noopener'>H-8F5Q</a></td><td class='num'>-0.0157</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.2</td><td class='num warn'>87</td><td class='num'>55</td></tr><tr><td class='rank'>64</td><td class='sys'><a href='https://evemaps.dotlan.net/system/N-DQ0D' target='_blank' rel='noopener'>N-DQ0D</a></td><td class='num'>-0.0675</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.18</td><td class='num warn'>89</td><td class='num'>55</td></tr><tr><td class='rank'>65</td><td class='sys'><a href='https://evemaps.dotlan.net/system/SB-23C' target='_blank' rel='noopener'>SB-23C</a></td><td class='num'>-0.0179</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.09</td><td class='num good'>95</td><td class='num'>55</td></tr><tr><td class='rank'>66</td><td class='sys'><a href='https://evemaps.dotlan.net/system/168-6H' target='_blank' rel='noopener'>168-6H</a></td><td class='num'>-0.132</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>67</td><td class='sys'><a href='https://evemaps.dotlan.net/system/H7O-JZ' target='_blank' rel='noopener'>H7O-JZ</a></td><td class='num'>-0.0081</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>68</td><td class='sys'><a href='https://evemaps.dotlan.net/system/M-EKDF' target='_blank' rel='noopener'>M-EKDF</a></td><td class='num'>-0.0047</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>69</td><td class='sys'><a href='https://evemaps.dotlan.net/system/NE-3GR' target='_blank' rel='noopener'>NE-3GR</a></td><td class='num'>-0.032</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>70</td><td class='sys'><a href='https://evemaps.dotlan.net/system/O-8SOC' target='_blank' rel='noopener'>O-8SOC</a></td><td class='num'>-0.1049</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>71</td><td class='sys'><a href='https://evemaps.dotlan.net/system/OK-6XN' target='_blank' rel='noopener'>OK-6XN</a></td><td class='num'>-0.5609</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>72</td><td class='sys'><a href='https://evemaps.dotlan.net/system/PUC-JZ' target='_blank' rel='noopener'>PUC-JZ</a></td><td class='num'>-0.0296</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>73</td><td class='sys'><a href='https://evemaps.dotlan.net/system/V-2GYS' target='_blank' rel='noopener'>V-2GYS</a></td><td class='num'>-0.1944</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>74</td><td class='sys'><a href='https://evemaps.dotlan.net/system/W-RFUO' target='_blank' rel='noopener'>W-RFUO</a></td><td class='num'>-0.1561</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>75</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Y4-GQV' target='_blank' rel='noopener'>Y4-GQV</a></td><td class='num'>-0.0209</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.0</td><td class='num good'>100</td><td class='num'>55</td></tr><tr><td class='rank'>76</td><td class='sys'><a href='https://evemaps.dotlan.net/system/0NV-YU' target='_blank' rel='noopener'>0NV-YU</a></td><td class='num'>-0.2868</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.07</td><td class='num good'>96</td><td class='num'>55</td></tr><tr><td class='rank'>77</td><td class='sys'><a href='https://evemaps.dotlan.net/system/EOE3-N' target='_blank' rel='noopener'>EOE3-N</a></td><td class='num'>-0.1724</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.04</td><td class='num good'>98</td><td class='num'>55</td></tr><tr><td class='rank'>78</td><td class='sys'><a href='https://evemaps.dotlan.net/system/R-ESG0' target='_blank' rel='noopener'>R-ESG0</a></td><td class='num'>-0.0461</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.11</td><td class='num warn'>89</td><td class='num'>55</td></tr><tr><td class='rank'>79</td><td class='sys'><a href='https://evemaps.dotlan.net/system/YUY-LM' target='_blank' rel='noopener'>YUY-LM</a></td><td class='num'>-0.0173</td><td class='num strong'></td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.13</td><td class='num good'>93</td><td class='num'>55</td></tr></tbody></table>
     </div>
     <button class="rsec" type="button" data-sec="scout" aria-expanded="false" aria-controls="sec-scout">
       <span class="caret">&#9656;</span> Lowsec Scout
       <span class="rhint">top 10 safe mining candidates &middot; sweeps hourly</span>
     </button>
     <div class="rbody" id="sec-scout" hidden>
-    <p class="rsub">space lowsec &middot; region all &middot; 139 snapshots in window &middot; recorder snapshot (blank ZK does not mean zero kills) &middot; generated 2026-07-18T01:45:00.768312+00:00 UTC</p>
-<table><thead><tr><th data-tip="Rank by overall score (best mining candidate first).">#</th><th data-tip="System name. Click for the map on Dotlan.">SYSTEM</th><th data-tip="Security status, EVE-rounded to one decimal (0.1 to 0.4 = lowsec).">SEC</th><th data-tip="Region the system is in.">REGION</th><th data-tip="Overall pick score: safety + ore suitability + low traffic, blended. Higher is better.">SCORE</th><th data-tip="Safety sub-score 0 to 100, from live + recorded kill activity. Higher = quieter.">SAFE</th><th data-tip="Ore-suitability sub-score: how good this system looks for mining.">ORE</th><th data-tip="PvP ship kills in this system in the last hour (live ESI).">PVP1h</th><th data-tip="Ship jumps through the system in the last hour (traffic; live ESI).">JUMP</th><th data-tip="Average recorded PvP kills per hour over the danger-history window.">~AVG</th><th data-tip="Number of recorded snapshots in the window (more = more reliable average).">N</th><th data-tip="Recent kills seen on zKillboard for the shortlist. Blank does NOT mean zero.">ZK</th><th data-tip="Hours since the last zKillboard kill here (blank if none seen / not checked).">LASTh</th></tr></thead><tbody><tr><td class='rank'>1</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Sheri' target='_blank' rel='noopener'>Sheri</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>79</td><td class='num good'>100</td><td class='num'>30</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0.02</td><td class='num'>135</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>2</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Edilkam' target='_blank' rel='noopener'>Edilkam</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>79</td><td class='num good'>100</td><td class='num'>29</td><td class='num'>0</td><td class='num'>9</td><td class='num'>0.04</td><td class='num'>138</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>3</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Ziriert' target='_blank' rel='noopener'>Ziriert</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.07</td><td class='num'>134</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>4</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Agaullores' target='_blank' rel='noopener'>Agaullores</a></td><td>0.1</td><td class='region'>Solitude</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.09</td><td class='num'>139</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>5</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Irmalin' target='_blank' rel='noopener'>Irmalin</a></td><td>0.1</td><td class='region'>Khanid</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>16</td><td class='num'>0.13</td><td class='num'>138</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>6</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Ennur' target='_blank' rel='noopener'>Ennur</a></td><td>0.1</td><td class='region'>Molden Heath</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>30</td><td class='num'>0.12</td><td class='num'>139</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>7</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Hoshoun' target='_blank' rel='noopener'>Hoshoun</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>28</td><td class='num'>0</td><td class='num'>2</td><td class='num'>0.09</td><td class='num'>138</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>8</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Hoseen' target='_blank' rel='noopener'>Hoseen</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>28</td><td class='num'>0</td><td class='num'>3</td><td class='num'>0.09</td><td class='num'>134</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>9</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Ausmaert' target='_blank' rel='noopener'>Ausmaert</a></td><td>0.1</td><td class='region'>Placid</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>28</td><td class='num'>0</td><td class='num'>24</td><td class='num'>0.08</td><td class='num'>139</td><td class='num'></td><td class='num'></td></tr><tr><td class='rank'>10</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Rephirib' target='_blank' rel='noopener'>Rephirib</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>100</td><td class='num'>27</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.02</td><td class='num'>138</td><td class='num'></td><td class='num'></td></tr></tbody></table>
+    <p class="rsub">space lowsec &middot; region all &middot; 85 snapshots in window &middot; zKill threat data included &middot; generated 2026-07-18T03:37:32.676171+00:00 UTC</p>
+<table><thead><tr><th data-tip="Rank by overall score (best mining candidate first).">#</th><th data-tip="System name. Click for the map on Dotlan.">SYSTEM</th><th data-tip="Security status, EVE-rounded to one decimal (0.1 to 0.4 = lowsec).">SEC</th><th data-tip="Region the system is in.">REGION</th><th data-tip="Overall pick score: safety + ore suitability + low traffic, blended. Higher is better.">SCORE</th><th data-tip="Safety sub-score 0 to 100, from live + recorded kill activity. Higher = quieter.">SAFE</th><th data-tip="Ore-suitability sub-score: how good this system looks for mining.">ORE</th><th data-tip="PvP ship kills in this system in the last hour (live ESI).">PVP1h</th><th data-tip="Ship jumps through the system in the last hour (traffic; live ESI).">JUMP</th><th data-tip="Average recorded PvP kills per hour over the danger-history window.">~AVG</th><th data-tip="Number of recorded snapshots in the window (more = more reliable average).">N</th><th data-tip="Recent kills seen on zKillboard for the shortlist. Blank does NOT mean zero.">ZK</th><th data-tip="Hours since the last zKillboard kill here (blank if none seen / not checked).">LASTh</th></tr></thead><tbody><tr><td class='rank'>1</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Sheri' target='_blank' rel='noopener'>Sheri</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>79</td><td class='num good'>100</td><td class='num'>30</td><td class='num'>0</td><td class='num'>1</td><td class='num'>0.01</td><td class='num'>84</td><td class='num'>200</td><td class='num'>122.1</td></tr><tr><td class='rank'>2</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Edilkam' target='_blank' rel='noopener'>Edilkam</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>79</td><td class='num good'>100</td><td class='num'>29</td><td class='num'>0</td><td class='num'>8</td><td class='num'>0.04</td><td class='num'>85</td><td class='num'>200</td><td class='num'>53.9</td></tr><tr><td class='rank'>3</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Ziriert' target='_blank' rel='noopener'>Ziriert</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.06</td><td class='num'>82</td><td class='num'>200</td><td class='num'>36.3</td></tr><tr><td class='rank'>4</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Irmalin' target='_blank' rel='noopener'>Irmalin</a></td><td>0.1</td><td class='region'>Khanid</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>12</td><td class='num'>0.13</td><td class='num'>85</td><td class='num'>200</td><td class='num'>6.1</td></tr><tr><td class='rank'>5</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Agaullores' target='_blank' rel='noopener'>Agaullores</a></td><td>0.1</td><td class='region'>Solitude</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>29</td><td class='num'>0</td><td class='num'>21</td><td class='num'>0.07</td><td class='num'>85</td><td class='num'>200</td><td class='num'>12.4</td></tr><tr><td class='rank'>6</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Hoseen' target='_blank' rel='noopener'>Hoseen</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>28</td><td class='num'>0</td><td class='num'>4</td><td class='num'>0.14</td><td class='num'>83</td><td class='num'>200</td><td class='num'>82.6</td></tr><tr><td class='rank'>7</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Hoshoun' target='_blank' rel='noopener'>Hoshoun</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>99</td><td class='num'>28</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.13</td><td class='num'>85</td><td class='num'>200</td><td class='num'>15.6</td></tr><tr><td class='rank'>8</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Ausmaert' target='_blank' rel='noopener'>Ausmaert</a></td><td>0.1</td><td class='region'>Placid</td><td class='num strong'>78</td><td class='num good'>100</td><td class='num'>28</td><td class='num'>0</td><td class='num'>19</td><td class='num'>0.01</td><td class='num'>85</td><td class='num'>200</td><td class='num'>61.2</td></tr><tr><td class='rank'>9</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Rephirib' target='_blank' rel='noopener'>Rephirib</a></td><td>0.1</td><td class='region'>Domain</td><td class='num strong'>78</td><td class='num good'>100</td><td class='num'>27</td><td class='num'>0</td><td class='num'>5</td><td class='num'>0.04</td><td class='num'>84</td><td class='num'>200</td><td class='num'>114.6</td></tr><tr><td class='rank'>10</td><td class='sys'><a href='https://evemaps.dotlan.net/system/Efu' target='_blank' rel='noopener'>Efu</a></td><td>0.1</td><td class='region'>Aridia</td><td class='num strong'>78</td><td class='num good'>100</td><td class='num'>27</td><td class='num'>0</td><td class='num'>6</td><td class='num'>0.01</td><td class='num'>85</td><td class='num'>200</td><td class='num'>13.3</td></tr></tbody></table>
     </div>
 
   </div>
@@ -134,11 +161,109 @@
 </script>
 
 <script>
+window.RadarLive = (function(){
+  var actP = null;
+  function act(){
+    if (!actP) actP = Promise.all([
+      fetch("https://esi.evetech.net/latest/universe/system_kills/").then(function(r){ return r.ok ? r.json() : null; }),
+      fetch("https://esi.evetech.net/latest/universe/system_jumps/").then(function(r){ return r.ok ? r.json() : null; })
+    ]).then(function(res){
+      if (!res[0] || !res[1]) return { ok:false, k:{}, j:{} };
+      var k = {}, j = {};
+      for (var i = 0; i < res[0].length; i++) k[res[0][i].system_id] = res[0][i];
+      for (var i2 = 0; i2 < res[1].length; i2++) j[res[1][i2].system_id] = res[1][i2].ship_jumps;
+      return { ok:true, k:k, j:j };
+    }).catch(function(){ return { ok:false, k:{}, j:{} }; });
+    return actP;
+  }
+  var IDK = "radar_ids_v1", idc = {};
+  try { idc = JSON.parse(localStorage.getItem(IDK) || "{}") || {}; } catch(e){}
+  function ids(names){
+    var need = [];
+    for (var i = 0; i < names.length; i++)
+      if (idc[names[i].toLowerCase()] == null) need.push(names[i]);
+    if (!need.length) return Promise.resolve(idc);
+    var chunks = [];
+    for (var c = 0; c < need.length; c += 500) chunks.push(need.slice(c, c + 500));
+    return Promise.all(chunks.map(function(ch){
+      return fetch("https://esi.evetech.net/latest/universe/ids/", { method:"POST",
+        headers:{ "Content-Type":"application/json" }, body: JSON.stringify(ch) })
+        .then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+    })).then(function(all){
+      all.forEach(function(d){ if (d && d.systems)
+        d.systems.forEach(function(s){ idc[s.name.toLowerCase()] = s.id; }); });
+      try { localStorage.setItem(IDK, JSON.stringify(idc)); } catch(e){}
+      return idc;
+    });
+  }
+  // the cartel's danger words: one model across the whole suite
+  function tier(live, sid){
+    if (!live.ok) return { t:"noeyes", label:"no eyes", why:"ESI is not answering, so nobody fakes green." };
+    var k = live.k[sid] || {}, ship = k.ship_kills || 0, pod = k.pod_kills || 0, tot = ship + pod;
+    if (pod >= 2) return { t:"hot", label:"HOT", why: pod + " pods down here this hour. Pods die at camps and gank crews, not belt brawls." };
+    if (tot >= 3) return { t:"hot", label:"HOT", why: tot + " kills this hour (" + ship + " ships, " + pod + " pods). That is a fight, not a fluke." };
+    if (tot >= 1) return { t:"sketchy", label:"SKETCHY", why: tot + " kill" + (tot === 1 ? "" : "s") + " this hour. Someone is working this system." };
+    return { t:"calm", label:"CALM", why:"Nothing died here this hour. Quiet as it gets." };
+  }
+  function chip(t){ return "<span class='tchip " + t.t + "'>" + t.label + "</span>"; }
+  return { act:act, ids:ids, tier:tier, chip:chip };
+})();
+// live-patch the baked GW + Scout tables: the kill/jump columns recompute in the
+// browser so a dead hourly bake can never serve stale numbers as fresh. History
+// columns stay baked and the banner below says so when the brain is asleep.
+(function(){
+  var gen = document.body.getAttribute("data-generated") || "";
+  var ts = Date.parse(gen.replace(" ", "T").replace(/(Z|[+-]\d\d:?\d\d)?$/, "Z"));
+  if (ts && (Date.now() - ts) > 3 * 3600 * 1000){
+    var hrs = Math.round((Date.now() - ts) / 3600000);
+    var bar = document.createElement("div");
+    bar.className = "stalebar";
+    bar.innerHTML = "the hourly brain last fed " + hrs + "h ago \u00B7 live columns below still refresh " +
+      "in your browser and stay true \u00B7 history columns (~AVG, QUIET%, scores) are asleep until it wakes";
+    var wrap = document.querySelector(".wrap");
+    if (wrap) wrap.insertBefore(bar, wrap.firstChild);
+  }
+  function patch(tableSel, mapping){
+    var rows = document.querySelectorAll(tableSel + " tbody tr");
+    if (!rows.length) return;
+    var names = [];
+    for (var i = 0; i < rows.length; i++){
+      var a = rows[i].querySelector("td.sys a");
+      if (a) names.push(a.textContent);
+    }
+    Promise.all([RadarLive.ids(names), RadarLive.act()]).then(function(res){
+      var idc = res[0], live = res[1];
+      for (var i = 0; i < rows.length; i++){
+        var a = rows[i].querySelector("td.sys a"); if (!a) continue;
+        var sid = idc[a.textContent.toLowerCase()]; if (sid == null) continue;
+        var t = RadarLive.tier(live, sid);
+        var syscell = rows[i].querySelector("td.sys");
+        if (syscell && !syscell.querySelector(".tchip"))
+          syscell.insertAdjacentHTML("afterbegin", RadarLive.chip(t));
+        if (!live.ok) continue;
+        var k = live.k[sid] || {}, tds = rows[i].children;
+        for (var col in mapping){
+          var v = mapping[col] === "jumps" ? (live.j[sid] || 0)
+                : mapping[col] === "pvp" ? ((k.ship_kills || 0) + (k.pod_kills || 0))
+                : (k.npc_kills || 0);
+          if (tds[col]) tds[col].textContent = String(v);
+        }
+      }
+    });
+  }
+  patch("#sec-gw",    { 4:"pvp", 5:"npc", 6:"jumps" });
+  patch("#sec-scout", { 7:"pvp", 8:"jumps" });
+})();
+</script>
+
+<script>
 (function(){
   var input = document.getElementById("rsIn"), list = document.getElementById("rsList"),
-      out = document.getElementById("rsOut"), go = document.getElementById("rsGo");
+      out = document.getElementById("rsOut"), go = document.getElementById("rsGo"),
+      recentBox = document.getElementById("rsRecent");
   if (!input) return;
-  var KEY = "radar_search_v1";
+  var KEY = "radar_search_v1", RKEY = "radar_recents_v1";
+  var MOHAS_ID = 30000031, RENS_ID = 30002510;
   var idx = null, names = [];
   (window.__beltsP = window.__beltsP || fetch("belts.json").then(function(r){ return r.json(); }))
   .then(function(d){
@@ -152,6 +277,7 @@
       }
     }
     names.sort();
+    paintRecents();
     var q = null;
     var m = location.search.match(/[?&]sys=([^&]+)/);
     if (m) q = decodeURIComponent(m[1].replace(/\+/g, " "));
@@ -161,29 +287,47 @@
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function band(s){ var r = Math.round(s*10)/10; return r >= 0.5 ? "good" : (r >= 0.1 ? "warn" : "bad"); }
-  var actP = null;
-  function activity(){
-    if (!actP) actP = Promise.all([
-      fetch("https://esi.evetech.net/latest/universe/system_kills/").then(function(r){ return r.json(); }),
-      fetch("https://esi.evetech.net/latest/universe/system_jumps/").then(function(r){ return r.json(); })
-    ]).then(function(res){
-      var k = {}, j = {};
-      for (var i = 0; i < res[0].length; i++) k[res[0][i].system_id] = res[0][i];
-      for (var i2 = 0; i2 < res[1].length; i2++) j[res[1][i2].system_id] = res[1][i2].ship_jumps;
-      return { k: k, j: j };
+  function recents(){ try { return JSON.parse(localStorage.getItem(RKEY) || "[]") || []; } catch(e){ return []; } }
+  function remember(name){
+    var r = recents().filter(function(x){ return x !== name; });
+    r.unshift(name); r = r.slice(0, 5);
+    try { localStorage.setItem(RKEY, JSON.stringify(r)); } catch(e){}
+    paintRecents();
+  }
+  function paintRecents(){
+    if (!recentBox) return;
+    var r = recents();
+    recentBox.innerHTML = r.map(function(n){ return "<button data-r='" + esc(n) + "'>" + esc(n) + "</button>"; }).join("");
+    Array.prototype.forEach.call(recentBox.querySelectorAll("[data-r]"), function(b){
+      b.addEventListener("click", function(){ input.value = b.getAttribute("data-r"); scan(); });
     });
-    return actP;
+  }
+  // fuzzy resolve: exact, then unique prefix, then unique substring
+  function resolve(q){
+    q = q.toLowerCase();
+    if (idx[q]) return idx[q];
+    var pre = [], sub = [];
+    for (var key in idx){
+      if (key.indexOf(q) === 0) pre.push(idx[key]);
+      else if (key.indexOf(q) >= 0) sub.push(idx[key]);
+    }
+    if (pre.length === 1) return pre[0];
+    if (!pre.length && sub.length === 1) return sub[0];
+    return null;
   }
   function suggest(){
     if (!names.length) return;
     var q = input.value.trim().toLowerCase();
     list.innerHTML = "";
     if (!q) return;
-    var hits = 0;
-    for (var i = 0; i < names.length && hits < 15; i++){
+    var hits = 0, i;
+    for (i = 0; i < names.length && hits < 12; i++)
       if (names[i].toLowerCase().indexOf(q) === 0){
-        var o = document.createElement("option"); o.value = names[i]; list.appendChild(o); hits++;
-      }
+        var o = document.createElement("option"); o.value = names[i]; list.appendChild(o); hits++; }
+    for (i = 0; i < names.length && hits < 15; i++){
+      var nl = names[i].toLowerCase();
+      if (nl.indexOf(q) > 0){
+        var o2 = document.createElement("option"); o2.value = names[i]; list.appendChild(o2); hits++; }
     }
   }
   function gwRow(name){
@@ -202,57 +346,94 @@
     return "<div class='rsstat'><div class='v " + (cls || "") + "'>" + v +
            "</div><div class='k'>" + label + "</div></div>";
   }
+  function routeJumps(sid, fromId){
+    return fetch("https://esi.evetech.net/latest/route/" + fromId + "/" + sid + "/?flag=shortest")
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ return Array.isArray(j) ? (j.length - 1) : null; })
+      .catch(function(){ return null; });
+  }
+  function cardHtml(hit, sid, live, cid){
+    var t = RadarLive.tier(live, sid);
+    var k = (sid && live.k[sid]) || {};
+    var pvp = (k.ship_kills || 0) + (k.pod_kills || 0);
+    var disp = Math.round(hit.s * 10) / 10;
+    var html = "<div class='rscard'><div class='rshead'>" +
+      "<span class='nm'>" + RadarLive.chip(t) + esc(hit.n) + "</span>" +
+      "<span class='rg'>" + esc(hit.region) + " &middot; " +
+        (hit.b ? hit.b + " belts" : "no static belts") + "</span>" +
+      (disp === 0.5 ? "<span class='moonchip'>0.5 &middot; moon drills legal</span>" : "") +
+      "<span class='lk'>" +
+      "<a href='https://evemaps.dotlan.net/system/" + encodeURIComponent(hit.n.replace(/ /g, "_")) +
+        "' target='_blank' rel='noopener'>Dotlan</a>" +
+      (sid ? "<a href='https://zkillboard.com/system/" + sid + "/' target='_blank' rel='noopener'>zKill</a>" : "") +
+      "<a href='/cartel/?from=Mohas&to=" + encodeURIComponent(hit.n) + "' title='read the road on the Watchtower'>Route</a>" +
+      "<button class='lkbtn' data-copy='" + esc(hit.n) + "'>Copy</button>" +
+      "<button class='lkbtn' data-share='" + esc(hit.n) + "'>Share</button>" +
+      "</span></div><div class='rsgrid'>" +
+      stat(hit.s.toFixed(2), "true sec", band(hit.s)) +
+      stat(hit.b, "belts", hit.b ? "good" : "") +
+      stat(hit.m, "moons") +
+      stat(hit.st, "stations") +
+      stat(pvp, "pvp kills 1h", pvp ? "bad" : "good") +
+      stat(k.npc_kills || 0, "npc kills 1h") +
+      stat(k.pod_kills || 0, "pod kills 1h") +
+      stat((sid && live.j[sid]) || 0, "jumps 1h") +
+      "<div class='rsstat'><div class='v' id='jm_" + cid + "'>&hellip;</div><div class='k'>jumps from Mohas</div></div>" +
+      "<div class='rsstat'><div class='v' id='jr_" + cid + "'>&hellip;</div><div class='k'>jumps from Rens</div></div>";
+    var g = gwRow(hit.n);
+    if (g) html += stat(g.avg, "~avg pvp/hr") +
+                   stat(g.quiet + "%", "quiet hours", (parseInt(g.quiet, 10) || 0) >= 90 ? "good" : "warn") +
+                   stat(g.n, "snapshots");
+    html += "</div><div class='rswhy'>" + t.why + "</div>" +
+            "<div class='rsnote'>live ESI, last hour &middot; belts/moons/stations are fixed celestials" +
+            (g ? " &middot; recorded history from the GW watch" : "") + "</div></div>";
+    return html;
+  }
+  function wireCard(hit, sid, cid){
+    if (sid){
+      routeJumps(sid, MOHAS_ID).then(function(n){
+        var el = document.getElementById("jm_" + cid); if (el) el.textContent = (n == null ? "?" : n); });
+      routeJumps(sid, RENS_ID).then(function(n){
+        var el = document.getElementById("jr_" + cid); if (el) el.textContent = (n == null ? "?" : n); });
+    }
+    Array.prototype.forEach.call(out.querySelectorAll("[data-copy]"), function(b){
+      b.onclick = function(){
+        var v = b.getAttribute("data-copy");
+        try { navigator.clipboard.writeText(v); b.textContent = "Copied"; setTimeout(function(){ b.textContent = "Copy"; }, 1200); } catch(e){}
+      };
+    });
+    Array.prototype.forEach.call(out.querySelectorAll("[data-share]"), function(b){
+      b.onclick = function(){
+        var v = location.origin + location.pathname + "?sys=" + encodeURIComponent(b.getAttribute("data-share"));
+        try { navigator.clipboard.writeText(v); b.textContent = "Link copied"; setTimeout(function(){ b.textContent = "Share"; }, 1200); } catch(e){}
+      };
+    });
+  }
   function scan(qRaw){
     var q = String(qRaw || input.value || "").trim();
     if (!idx) return;
     if (!q){ out.innerHTML = ""; try { localStorage.removeItem(KEY); } catch(e){} return; }
-    var hit = idx[q.toLowerCase()];
-    if (!hit){
-      var pre = [];
-      for (var key in idx) if (key.indexOf(q.toLowerCase()) === 0) pre.push(idx[key]);
-      if (pre.length === 1) hit = pre[0];
+    // compare mode: "A vs B" renders two cards side by side
+    var parts = q.split(/\s+vs\.?\s+/i);
+    var hits = [], bad = null;
+    for (var p = 0; p < Math.min(parts.length, 2); p++){
+      var h = resolve(parts[p].trim());
+      if (h) hits.push(h); else { bad = parts[p].trim(); break; }
     }
-    if (!hit){
-      out.innerHTML = "<div class='rserr'>No system called \"" + esc(q) +
-                      "\" on the k-space map. Check the spelling, capsuleer.</div>";
+    if (bad !== null || !hits.length){
+      out.innerHTML = "<div class='rserr'>No system called &quot;" + esc(bad || q) +
+                      "&quot; on the k-space map. Check the spelling, capsuleer.</div>";
       return;
     }
-    try { localStorage.setItem(KEY, hit.n); } catch(e){}
-    out.innerHTML = "<div class='rsnote'>scanning " + esc(hit.n) + "&hellip;</div>";
-    Promise.all([
-      fetch("https://esi.evetech.net/latest/universe/ids/", { method: "POST",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify([hit.n]) })
-        .then(function(r){ return r.json(); }),
-      activity()
-    ]).then(function(res){
-      var sid = (res[0].systems && res[0].systems[0] && res[0].systems[0].id) || null;
-      var act = res[1];
-      var k = (sid && act.k[sid]) || {};
-      var pvp = (k.ship_kills || 0) + (k.pod_kills || 0);
-      var html = "<div class='rscard'><div class='rshead'>" +
-        "<span class='nm'>" + esc(hit.n) + "</span>" +
-        "<span class='rg'>" + esc(hit.region) + " &middot; " +
-          (hit.b ? hit.b + " belts" : "no static belts") + "</span>" +
-        "<span class='lk'>" +
-        "<a href='https://evemaps.dotlan.net/system/" + encodeURIComponent(hit.n.replace(/ /g, "_")) +
-          "' target='_blank' rel='noopener'>Dotlan</a>" +
-        (sid ? "<a href='https://zkillboard.com/system/" + sid + "/' target='_blank' rel='noopener'>zKill</a>" : "") +
-        "</span></div><div class='rsgrid'>" +
-        stat(hit.s.toFixed(2), "true sec", band(hit.s)) +
-        stat(hit.b, "belts", hit.b ? "good" : "") +
-        stat(hit.m, "moons") +
-        stat(hit.st, "stations") +
-        stat(pvp, "pvp kills 1h", pvp ? "bad" : "good") +
-        stat(k.npc_kills || 0, "npc kills 1h") +
-        stat(k.pod_kills || 0, "pod kills 1h") +
-        stat((sid && act.j[sid]) || 0, "jumps 1h");
-      var g = gwRow(hit.n);
-      if (g) html += stat(g.avg, "~avg pvp/hr") +
-                     stat(g.quiet + "%", "quiet hours", (parseInt(g.quiet, 10) || 0) >= 90 ? "good" : "warn") +
-                     stat(g.n, "snapshots");
-      html += "</div><div class='rsnote'>live ESI, last hour &middot; belts/moons/stations are fixed celestials" +
-              (g ? " &middot; recorded history from the GW watch" : "") + "</div></div>";
-      out.innerHTML = html;
+    try { localStorage.setItem(KEY, q); } catch(e){}
+    hits.forEach(function(h){ remember(h.n); });
+    out.innerHTML = "<div class='rsnote'>scanning " + hits.map(function(h){ return esc(h.n); }).join(" and ") + "&hellip;</div>";
+    Promise.all([ RadarLive.ids(hits.map(function(h){ return h.n; })), RadarLive.act() ])
+    .then(function(res){
+      var idc = res[0], live = res[1];
+      var cards = hits.map(function(h, i){ return cardHtml(h, idc[h.n.toLowerCase()] || null, live, i); });
+      out.innerHTML = hits.length > 1 ? "<div class='cmpgrid'>" + cards.join("") + "</div>" : cards[0];
+      hits.forEach(function(h, i){ wireCard(h, idc[h.n.toLowerCase()] || null, i); });
     }).catch(function(){
       out.innerHTML = "<div class='rserr'>ESI is not answering. Give it a moment and scan again.</div>";
     });
@@ -272,12 +453,13 @@
     return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function band(s){ var r = Math.round(s*10)/10;
     return r >= 0.5 ? "good" : (r >= 0.1 ? "warn" : "bad"); }
+  var liveSeq = 0;
   function render(){
     if (!data) return;
     var rows = data.regions[sel.value] || [];
     var totB = 0, withB = 0;
     for (var i = 0; i < rows.length; i++){ totB += rows[i].b; if (rows[i].b > 0) withB++; }
-    sum.textContent = rows.length + " systems \u00B7 " + withB + " with belts \u00B7 " + totB + " belts";
+    sum.textContent = rows.length + " systems · " + withB + " with belts · " + totB + " belts";
     var shown = only.checked ? rows.filter(function(r){ return r.b > 0; }) : rows;
     if (!shown.length){
       box.innerHTML = '<div class="empty">No static belts in this region. The ore hides in anomalies here; warp in and probe.</div>';
@@ -285,24 +467,55 @@
     }
     var h = "<table><thead><tr>" +
       "<th>#</th>" +
-      '<th data-tip="System name. Click for the map on Dotlan.">SYSTEM</th>' +
+      '<th data-tip="System name. Click for the map on Dotlan; the small chip checks the road from Mohas.">SYSTEM</th>' +
+      '<th data-tip="Right now, from live kills: CALM, SKETCHY, HOT, or no eyes. Same words the Watchtower uses.">TIER</th>' +
       '<th data-tip="True security status (2 decimals). Deeper negative = better nullsec ore.">SEC</th>' +
       '<th data-tip="Asteroid belts in the system. Fixed celestials, always there.">BELTS</th>' +
+      '<th data-tip="PvP kills (ship+pod) here in the last hour. Fetched live in your browser.">PVP1h</th>' +
+      '<th data-tip="Ship jumps through here in the last hour. Traffic = eyes.">JUMP</th>' +
       '<th data-tip="Moons in the system (moon-mining and structure context).">MOONS</th>' +
       '<th data-tip="NPC stations in the system (docking, staging, insta-dock safety).">STATIONS</th>' +
       "</tr></thead><tbody>";
     for (var j = 0; j < shown.length; j++){
       var r = shown[j];
-      h += "<tr><td class='rank'>" + (j+1) + "</td>" +
+      h += "<tr data-bn='" + esc(r.n) + "'><td class='rank'>" + (j+1) + "</td>" +
         "<td class='sys'><a href='https://evemaps.dotlan.net/system/" +
           encodeURIComponent(String(r.n).replace(/ /g, "_")) +
-          "' target='_blank' rel='noopener'>" + esc(r.n) + "</a></td>" +
+          "' target='_blank' rel='noopener'>" + esc(r.n) + "</a>" +
+          "<a class='roadlk' href='/cartel/?from=Mohas&to=" + encodeURIComponent(r.n) + "' title='read the road on the Watchtower'>road</a></td>" +
+        "<td class='btier'><span class='tchip noeyes'>&hellip;</span></td>" +
         "<td class='num " + band(r.s) + "'>" + r.s.toFixed(2) + "</td>" +
         "<td class='num strong'>" + (r.b || "") + "</td>" +
+        "<td class='num bpvp'></td>" +
+        "<td class='num bjmp'></td>" +
         "<td class='num'>" + r.m + "</td>" +
         "<td class='num'>" + (r.st || "") + "</td></tr>";
     }
     box.innerHTML = h + "</tbody></table>";
+    paintLive(shown, ++liveSeq);
+  }
+  // live layer: one cached id batch per region + the shared kills/jumps arrays.
+  // A region change mid-flight bumps liveSeq so a slow fetch never paints the wrong table.
+  function paintLive(shown, seq){
+    var names = shown.map(function(r){ return r.n; });
+    Promise.all([RadarLive.ids(names), RadarLive.act()]).then(function(res){
+      if (seq !== liveSeq) return;
+      var idc = res[0], live = res[1];
+      var trs = box.querySelectorAll("tr[data-bn]");
+      for (var i = 0; i < trs.length; i++){
+        var nm = trs[i].getAttribute("data-bn");
+        var sid = idc[nm.toLowerCase()];
+        var t = (sid == null) ? { t:"noeyes", label:"no eyes" } : RadarLive.tier(live, sid);
+        var tc = trs[i].querySelector(".btier");
+        if (tc) tc.innerHTML = RadarLive.chip(t);
+        if (sid != null && live.ok){
+          var k = live.k[sid] || {};
+          var pv = trs[i].querySelector(".bpvp"), jm = trs[i].querySelector(".bjmp");
+          if (pv) pv.textContent = String((k.ship_kills || 0) + (k.pod_kills || 0));
+          if (jm) jm.textContent = String(live.j[sid] || 0);
+        }
+      }
+    });
   }
   (window.__beltsP = window.__beltsP || fetch("belts.json").then(function(r){ return r.json(); })).then(function(d){
     data = d;
@@ -312,7 +525,18 @@
       o.value = names[i]; o.textContent = names[i];
       sel.appendChild(o);
     }
+    // ?region= deep link wins and opens the section; else the remembered region
     var want = localStorage.getItem("radar_region") || "Great Wildlands";
+    var m = location.search.match(/[?&]region=([^&]+)/);
+    if (m){
+      var q = decodeURIComponent(m[1].replace(/\+/g, " "));
+      for (var x = 0; x < names.length; x++)
+        if (names[x].toLowerCase() === q.toLowerCase()){ want = names[x]; break; }
+      var btn = document.querySelector('button.rsec[data-sec="belt"]');
+      var body = document.getElementById("sec-belt");
+      if (btn && body){ body.hidden = false; btn.setAttribute("aria-expanded", "true");
+        var c = btn.querySelector(".caret"); if (c) c.innerHTML = "&#9662;"; }
+    }
     if (names.indexOf(want) >= 0) sel.value = want;
     render();
   }).catch(function(){
@@ -324,5 +548,5 @@
   only.addEventListener("change", render);
 })();
 </script>
-<script src="/nav.js?v=10"></script>
+<script src="/nav.js?v=14"></script>
 </body></html>
