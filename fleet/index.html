@@ -107,6 +107,7 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .rsub{ display:flex; align-items:baseline; justify-content:flex-end; gap:10px; margin-top:2px; }
 .rtab{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .rtip{ font-family:var(--mono); font-size:11px; color:var(--amber); flex:none; white-space:nowrap; }
+.rbelt{ font-family:var(--mono); font-size:11px; color:var(--muted); flex:none; white-space:nowrap; }
 .glyph{ flex:none; font-size:12px; } .glyph.crown{ color:var(--amber); } .glyph.star{ color:var(--ore); }
 /* portal-account role tag in the roster badge slot. MEMBER is the quiet default;
    ADMIN ore, ALLY amber, OFFICER silver. Names the portal doesn't know get none. */
@@ -327,6 +328,9 @@ tr.haulrow{ cursor:pointer; }
     if(a>=1e9) return (v/1e9).toFixed(2)+"B"; if(a>=1e6) return (v/1e6).toFixed(1)+"M";
     if(a>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
   function m3fmt(v){ v=v||0; if(v>=1e6) return (v/1e6).toFixed(2)+"M"; if(v>=1e3) return (v/1e3).toFixed(1)+"k"; return String(Math.round(v)); }
+  // belt time: ms -> "2.3h" / "45m" / "0". Gap-capped server-side, so idle time
+  // never counts and just holding a fleet open logs nothing.
+  function hrs(ms){ ms=ms||0; if(ms<60000) return "0"; var h=ms/3600000; return h>=1 ? h.toFixed(1)+"h" : Math.round(ms/60000)+"m"; }
   function parse(t){ var out=[];
     t.split(/\n/).forEach(function(ln){ ln=ln.replace(/\s+$/,"");
       if(!ln.trim()) return;
@@ -887,10 +891,13 @@ tr.haulrow{ cursor:pointer; }
     (P.entries||[]).forEach(function(e){ if(e.who===who) my+=e.jita88||0; });
     var meM=null; (P.members||[]).forEach(function(m){ if(m.who===who) meM=m; });
     var myTip = meM ? (meM.tip||0) : 0;
+    var myBelt = meM ? (meM.beltMs||0) : 0;
     var h="<div><div class='k'>Your tab</div><div class='v good'>"+isk(my)+"</div></div>"
         +(myTip>0 ? "<div><div class='k'>Your tip</div><div class='v warn'>"+isk(myTip)+"</div></div>" : "")
+        +"<div><div class='k'>Your time on belt</div><div class='v'>"+hrs(myBelt)+"</div></div>"
         +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>"
-        +"<div><div class='k'>Fleet m&sup3;</div><div class='v'>"+m3fmt(P.fleetM3||0)+"</div></div>";
+        +"<div><div class='k'>Fleet m&sup3;</div><div class='v'>"+m3fmt(P.fleetM3||0)+"</div></div>"
+        +"<div><div class='k'>Fleet hours</div><div class='v'>"+hrs(P.fleetBeltMs||0)+"</div></div>";
     if(opKeys()){
       var mpct=Math.round((1-rate())*100);
       h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue)+"</div></div>"
@@ -1156,13 +1163,14 @@ tr.haulrow{ cursor:pointer; }
         var allyG = rt ? "<span class='rtag "+rt[0]+"' title='"+rt[1]+"'>"+rt[0].toUpperCase()+"</span>" : "";
         var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
+        var beltG = (m.beltMs||0)>=60000 ? "<span class='rbelt' title='time on the belt this op (idle time does not count)'>"+hrs(m.beltMs)+"</span>" : "";
         // two decks: name line (dot, glyphs, name, badges, kick) + money line under
         // it. The name owns the leftover width, so money and badges never crush it
         // to a single letter; the full name also rides the title tooltip.
         h+="<div class='rrow"+(m.who===who?" me":"")+"' data-ri='"+i+"'>"
           +"<div class='rtop'><span class='dot"+(m.online?" on":"")+"'></span>"+g+orcaG
           +"<span class='rname' title=\""+esc(m.who)+"\">"+esc(m.who)+"</span>"+allyG+kick+"</div>"
-          +"<div class='rsub'><span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+"</div></div>";
+          +"<div class='rsub'>"+beltG+"<span class='rtab'>"+isk(m.tab||0)+"</span>"+tipG+"</div></div>";
       });
       box.innerHTML=h;
       if(role==="op"){

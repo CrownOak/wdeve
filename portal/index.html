@@ -906,6 +906,9 @@ function renderStats(){
        A single drop career has no rate; the payout alone tells the story. */
     var beltMs = Number(fleet.beltMs) || 0;
     if (beltMs > 0){
+      var beltH = beltMs / 3600000;
+      html += '<div class="tile"><div class="tv">' + (beltH >= 1 ? beltH.toFixed(1) : Math.round(beltMs/60000) + 'm') + (beltH >= 1 ? 'h' : '') + '</div>' +
+              '<div class="tk">Hours on belt</div></div>';
       html += '<div class="tile"><div class="tv">' + fmtIsk((Number(fleet.isk)||0) / (beltMs/3600000)) + '/hr</div>' +
               '<div class="tk">ISK/hr on belt</div></div>';
       if ((Number(st.opsAttended)||0) > 0){
