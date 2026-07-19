@@ -42,8 +42,16 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .pgrow input{ width:220px; padding:9px 11px; background:var(--black); border:1px solid var(--line);
   color:var(--silver); font-family:var(--mono); font-size:13px; }
 .pgrow .gobtn{ padding:9px 16px; }
-.fgrid{ display:grid; grid-template-columns:1fr 260px; gap:18px; align-items:start; }
-@media(max-width:820px){ .fgrid{ grid-template-columns:1fr; } }
+/* three columns (Kyle 2026-07-19): scout | ledger | roster+comms. The scout
+   column is sticky so the bubble stays glanceable while the feed scrolls. */
+.fgrid{ display:grid; grid-template-columns:280px 1fr 260px; gap:18px; align-items:start; }
+.scol{ position:sticky; top:12px; align-self:start; max-height:calc(100vh - 24px); overflow-y:auto; }
+@media(max-width:1150px){ /* medium: scout drops to a full-width row under the ledger */
+  .fgrid{ grid-template-columns:1fr 260px; }
+  .scol{ grid-column:1 / -1; order:3; position:static; max-height:none; }
+}
+@media(max-width:820px){ .fgrid{ grid-template-columns:1fr; }
+  .fcol{ order:1; } .scol{ grid-column:auto; order:2; } .fgrid>div:last-child{ order:3; } }
 .totline{ flex-wrap:wrap; gap:22px; }
 .totline .v{ font-size:18px; }
 .thin{ padding:7px 12px; margin:0 0 12px; font-family:var(--mono); font-size:12px;
@@ -266,7 +274,21 @@ tr.haulrow{ cursor:pointer; }
 #chatsend{ padding:7px 12px; }
 /* route scout (spec Downloads/BONK-FLEET-SCOUT-SPEC.md): collapsed card below
    the feed. Route ribbon chips are sec-colored; verdict carries the only voice. */
-.scoutcard{ margin-top:18px; }
+.scoutcard{ margin-top:0; }
+.scsys{ cursor:pointer; }
+.scsys:hover{ border-color:var(--ore); }
+/* kill-detail panel (click a system chip): zKill + ESI names, click-driven only */
+.sckill{ margin-top:10px; padding:8px 11px; background:var(--steel); border:1px solid var(--line-soft); font-size:12px; }
+.sckill .skhead{ display:flex; align-items:baseline; gap:8px; font-family:var(--mono); font-size:11px;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ore); margin-bottom:6px; }
+.sckill .skx{ margin-left:auto; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; }
+.sckill .skx:hover{ color:var(--red); }
+.skrow{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin:3px 0; line-height:1.45; }
+.skrow b{ color:var(--silver); }
+.skminers{ font-family:var(--mono); font-size:11.5px; color:var(--red); font-weight:700; margin:4px 0; }
+.skcamp{ font-family:var(--mono); font-size:11.5px; color:var(--amber); margin:4px 0; }
+.sknote{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:4px 0; }
+.sklink{ font-family:var(--mono); font-size:11px; margin-top:6px; }
 .schead{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
   color:var(--ore); cursor:pointer; user-select:none; padding:6px 0; }
 .schead .sccaret{ color:var(--muted); margin-left:8px; }
@@ -308,7 +330,7 @@ tr.haulrow{ cursor:pointer; }
   .fcol{ display:flex; flex-direction:column; }
   #opstatus{ order:0; } #pxbar{ order:1; } #frozenbar{ order:2; } #dropbox{ order:3; }
   #unmbar{ order:4; } #tiles{ order:5; } #tipctl{ order:6; } #cmdstrip{ order:7; }
-  #opannounce{ order:8; } #feed{ order:9; } #scoutcard{ order:10; }
+  #opannounce{ order:8; } #feed{ order:9; }
 }
 @media(max-width:620px){
   .ovin{ margin:16px 10px; padding:18px 14px 22px; }
@@ -369,6 +391,26 @@ tr.haulrow{ cursor:pointer; }
 
       <div id="fleetTab">
         <div class="fgrid">
+          <!-- scout column (Kyle: at a glance, left of the paste box). Static DOM
+               per DR-FLEET-12: only #scout / #scfrom / #scfoot / #sckillwrap
+               re-render; inputs are never rebuilt. -->
+          <div class="scol">
+            <div id="scoutcard" class="scoutcard">
+              <div class="schead" id="schead">&#9906; Scout<span id="scsum" class="scsum"> a destination</span><span class="sccaret" id="sccaret">&#9656;</span></div>
+              <div id="scbody" style="display:none">
+                <div class="scrow">
+                  <span id="scfrom" class="scfrom" data-i18n-skip></span>
+                  <input id="scorigin" class="scin" maxlength="60" placeholder="where are we now?" autocomplete="off" list="scsyslist" style="display:none">
+                  <input id="scdest" class="scin" maxlength="60" placeholder="where next? type a system" autocomplete="off" list="scsyslist">
+                  <datalist id="scsyslist"></datalist>
+                  <button id="scpref" class="ratep on" title="safer weighs lowsec heavily; shortest counts jumps only">safer route</button>
+                </div>
+                <div id="scout" data-i18n-skip></div>
+                <div id="sckillwrap" data-i18n-skip></div>
+                <div id="scfoot" class="scfoot" data-i18n-skip></div>
+              </div>
+            </div>
+          </div>
           <div class="fcol">
             <div id="opstatus" class="opstatus" style="display:none" data-i18n-skip></div>
             <div id="tiles" class="totline"></div>
@@ -392,23 +434,6 @@ tr.haulrow{ cursor:pointer; }
             </div>
             <div id="unmbar" class="thin warn" style="display:none" data-i18n-skip>Some pasted lines are not in the price table and count 0 ISK.</div>
             <div id="feed" data-i18n-skip></div>
-            <!-- route scout (spec BONK-FLEET-SCOUT-SPEC): type a destination, get the
-                 route from the fleet's current system + surroundings + danger. Static
-                 DOM per DR-FLEET-12: only #scout / #scfrom / #scfoot re-render. -->
-            <div id="scoutcard" class="scoutcard">
-              <div class="schead" id="schead">&#9906; Scout<span id="scsum" class="scsum"> a destination</span><span class="sccaret" id="sccaret">&#9656;</span></div>
-              <div id="scbody" style="display:none">
-                <div class="scrow">
-                  <span id="scfrom" class="scfrom" data-i18n-skip></span>
-                  <input id="scorigin" class="scin" maxlength="60" placeholder="where are we now?" autocomplete="off" list="scsyslist" style="display:none">
-                  <input id="scdest" class="scin" maxlength="60" placeholder="where next? type a system" autocomplete="off" list="scsyslist">
-                  <datalist id="scsyslist"></datalist>
-                  <button id="scpref" class="ratep on" title="safer weighs lowsec heavily; shortest counts jumps only">safer route</button>
-                </div>
-                <div id="scout" data-i18n-skip></div>
-                <div id="scfoot" class="scfoot" data-i18n-skip></div>
-              </div>
-            </div>
           </div>
           <div>
             <div class="rhead">Fleet <button id="orcabtn" class="link" style="display:none;margin-left:8px"></button></div>
@@ -1532,7 +1557,8 @@ tr.haulrow{ cursor:pointer; }
   var SMAP=null, SIDX=null, SBYID=null;       // topology + name index + id index
   var SKILLS=null, SJUMPS=null, sKillsExp=0, sKillsStale=false;
   var SBELTS=null;                            // /lowsec/belts.json name-join (lazy)
-  var scOpen = lsGet(LS_SC_OPEN)==="1";       // collapsed by default (DR-FLEET-9)
+  var scOpen = lsGet(LS_SC_OPEN)!=="0";       // OPEN by default (Kyle 2026-07-19: the left
+                                              // column IS the at-a-glance surface now)
   var scPref = lsGet(LS_SC_PREF)==="shorter" ? "shorter" : "safer";
   var scT=null, scEsiBackoffUntil=0, scMapState="";
 
@@ -1610,6 +1636,32 @@ tr.haulrow{ cursor:pointer; }
         if(seen[v]===undefined){ seen[v]=d+1; rings[d+1].push(v); q.push(v); } }
     }
     return rings;
+  }
+  // digest a zKill system feed (full ESI-merged killmails, newest first) into
+  // the last hour's story: top player kills, npc noise count, camp detection
+  // (same attacker corp >=3 kills), and whether MINING hulls are dying here.
+  function scKillSummarize(rows, nowMs){
+    var MINING={32880:1,17478:1,17476:1,17480:1,22546:1,22548:1,22544:1,37135:1,30836:1,28606:1,42244:1,33697:1};
+    var out={player:[], npc:0, camp:null, miners:false};
+    var corpCount={}, i, r, ts, v, at, fc, j;
+    for(i=0;i<rows.length;i++){
+      r=rows[i]||{};
+      ts=Date.parse(r.killmail_time||"")||0;
+      if(!ts || nowMs-ts>3600000) continue;              // last hour only
+      if(r.zkb && r.zkb.npc){ out.npc++; continue; }     // rats + gate guns = noise (counted)
+      v=r.victim||{}; at=r.attackers||[];
+      fc=null;
+      for(j=0;j<at.length;j++){ if(at[j] && at[j].corporation_id){ fc=at[j].corporation_id; if(at[j].final_blow) break; } }
+      if(MINING[v.ship_type_id]) out.miners=true;
+      if(fc) corpCount[fc]=(corpCount[fc]||0)+1;
+      if(out.player.length<5) out.player.push({
+        agoMs:nowMs-ts, ship:v.ship_type_id||0, val:(r.zkb&&r.zkb.totalValue)||0,
+        n:at.length, corp:fc||0, solo:!!(r.zkb&&r.zkb.solo) });
+    }
+    var best=null;
+    for(var c in corpCount) if(corpCount[c]>=3 && (!best || corpCount[c]>corpCount[best])) best=c;
+    if(best) out.camp={corp:parseInt(best,10), n:corpCount[best]};
+    return out;
   }
   // verdict over route (incl dest) + dest neighbors; rows = [{name,tier}]
   function scVerdict(routeRows, nbrRows){
@@ -1798,7 +1850,7 @@ tr.haulrow{ cursor:pointer; }
   function scChip(i){
     var s=SMAP.sys[i], k=scKillsOf(s[1]), tier=scSecTier(s[2]);
     var choke=!!SC_CHOKES[s[0].toLowerCase()];
-    var h="<span class='scsys "+tier+"' title='"+esc(SMAP.regions[s[3]]||"")+"'>"+esc(s[0])
+    var h="<span class='scsys "+tier+"' data-si='"+i+"' title='"+esc(SMAP.regions[s[3]]||"")+" &middot; click for kill details'>"+esc(s[0])
       +"<span class='ssec'>"+s[2].toFixed(1)+"</span>";
     if(k.s>0) h+="<span class='skill'>&#9760;"+k.s+"</span>";
     if(k.p>0) h+="<span class='skill'>&#129370;"+k.p+"</span>";
@@ -1901,6 +1953,73 @@ tr.haulrow{ cursor:pointer; }
       // composer from P.system and the FC could @everyone the WRONG system.
       var ai=el("anSys"); if(ai){ ai.value=ds[0]; ai.focus(); ai.scrollIntoView({block:"center"}); } };
   }
+  // ---------- kill details on chip click (zKill + one ESI name resolve) ----------
+  // Click-driven ONLY (no polling): one zKill GET per system per 5min, one
+  // batched /universe/names/ POST. Panel lives in #sckillwrap (static slot —
+  // scRun re-renders never touch it).
+  var scKC={}, scKBusy=false;
+  function scKillClose(){ el("sckillwrap").innerHTML=""; }
+  function scKillOpen(si){
+    if(scKBusy || !SMAP) return;
+    var s=SMAP.sys[si], wrap=el("sckillwrap");
+    var cached=scKC[s[1]];
+    if(cached && Date.now()-cached.at<300000){ scKillRender(s, cached.sum, cached.names); return; }
+    scKBusy=true;
+    wrap.innerHTML="<div class='sckill'><div class='skhead'>"+esc(s[0])+" &middot; pulling the killboard&hellip;</div></div>";
+    fetch("https://zkillboard.com/api/kills/systemID/"+s[1]+"/", {headers:{Accept:"application/json"}})
+      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(rows){
+        var sum=scKillSummarize(rows||[], Date.now());
+        var ids={}, i;
+        for(i=0;i<sum.player.length;i++){ if(sum.player[i].ship) ids[sum.player[i].ship]=1; if(sum.player[i].corp) ids[sum.player[i].corp]=1; }
+        if(sum.camp) ids[sum.camp.corp]=1;
+        var idArr=Object.keys(ids).map(Number).slice(0,40);
+        if(!idArr.length) return {sum:sum, names:{}};
+        return fetch("https://esi.evetech.net/latest/universe/names/",{method:"POST",
+          headers:{"Content-Type":"application/json"}, body:JSON.stringify(idArr)})
+          .then(function(r){ return r.ok?r.json():[]; })
+          .then(function(ns){ var m={}; (ns||[]).forEach(function(n){ m[n.id]=n.name; }); return {sum:sum, names:m}; });
+      })
+      .then(function(res){
+        scKBusy=false;
+        scKC[s[1]]={at:Date.now(), sum:res.sum, names:res.names};
+        scKillRender(s, res.sum, res.names);
+      })
+      .catch(function(){
+        scKBusy=false;
+        wrap.innerHTML="<div class='sckill'><div class='skhead'>"+esc(s[0])+"<button class='skx' id='skx'>&times;</button></div>"
+          +"<div class='sknote'>zKill is not answering right now.</div>"
+          +"<div class='sklink'><a href='https://zkillboard.com/system/"+s[1]+"/' target='_blank' rel='noopener'>open the killboard directly</a></div></div>";
+        var x=el("skx"); if(x) x.onclick=scKillClose;
+      });
+  }
+  function scKillRender(s, sum, names){
+    var nm=function(id){ return names[id] ? esc(names[id]) : "unknown"; };
+    var h="<div class='sckill'><div class='skhead'>"+esc(s[0])+" &middot; killboard, last hour"
+      +"<button class='skx' id='skx'>&times;</button></div>";
+    if(sum.miners) h+="<div class='skminers'>They are hunting MINERS here.</div>";
+    if(sum.camp) h+="<div class='skcamp'>&#9873; "+nm(sum.camp.corp)+" is working this system &middot; "+sum.camp.n+" kills this hour</div>";
+    if(!sum.player.length) h+="<div class='sknote'>No player kills in the last hour. The killboard is quiet.</div>";
+    else sum.player.forEach(function(p){
+      h+="<div class='skrow'>"+Math.max(1,Math.round(p.agoMs/60000))+"m ago &middot; <b>"+nm(p.ship)+"</b>"
+        +(p.val?" &middot; "+isk(p.val):"")
+        +" &middot; "+p.n+" attacker"+(p.n===1?"":"s")
+        +(p.corp?" &middot; "+nm(p.corp):"")
+        +(p.solo?" &middot; solo":"")+"</div>";
+    });
+    if(sum.npc) h+="<div class='sknote'>+"+sum.npc+" rat and sentry kill"+(sum.npc===1?"":"s")+" (noise)</div>";
+    h+="<div class='sklink'><a href='https://zkillboard.com/system/"+s[1]+"/' target='_blank' rel='noopener'>full story on zKillboard</a></div></div>";
+    el("sckillwrap").innerHTML=h;
+    var x=el("skx"); if(x) x.onclick=scKillClose;
+  }
+  el("scout").addEventListener("click",function(e){
+    var t=e.target;
+    while(t && t!==this && !(t.classList && t.classList.contains("scsys"))) t=t.parentNode;
+    if(!t || t===this) return;
+    var si=parseInt(t.getAttribute("data-si"),10);
+    if(isFinite(si)) scKillOpen(si);
+  });
+
   function scToggle(){
     scOpen=!scOpen; lsSet(LS_SC_OPEN, scOpen?"1":"0");
     el("scbody").style.display=scOpen?"":"none";
