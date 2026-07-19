@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=4"></script>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=5"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>BONK &middot; Member Portal</title>
@@ -1169,7 +1169,7 @@ function renderCorpStrip(){
     html += '<div class="station"><div class="sthead">' +
       '<img class="stpic" src="/portal/athanor.jpg" alt="Athanor refinery" loading="lazy">' +
       '<div class="stinfo">' +
-        '<div class="sttitle">&#129706; Project: Our Own Rock</div>' +
+        '<div class="sttitle">&#127968; Project: The Goblin Den</div>' +
         '<div class="stsub">' + esc(station.note || "We are buying BONK its own Athanor refinery. Our home, our buyback refined in house, moon mining later.") + '</div>' +
         '<div class="pl">' + fmtIsk(sraised) + ' / ' + fmtIsk(starget) + ' ISK &middot; ' + sp + '%</div>' +
         '<div class="pbar stbar"><i style="width:' + sp + '%"></i></div>' +
@@ -1235,21 +1235,23 @@ function renderCorpStrip(){
   if (!window._bonkAnchorIv) window._bonkAnchorIv = setInterval(updateAnchorTimer, 60000);
 }
 
-/* Holding-corp 7-day anchor gate: Goblin Offshore Trust founded 2026-07-12
-   02:04 UTC, so the Athanor can be anchored on/after 2026-07-19 02:04 UTC. */
-var BONK_ANCHOR_TS = Date.UTC(2026, 6, 19, 2, 4, 0);
+/* Core + docking gate: the Athanor finishes anchoring and comes online, the
+   Quantum Core drops in, and docking is permitted. ~11h from 2026-07-19 16:16
+   UTC, so the Den opens 2026-07-20 03:16 UTC. */
+var GOBLIN_DEN_TS = Date.UTC(2026, 6, 20, 3, 16, 0);
 function updateAnchorTimer(){
   var e = $("stAnchor"); if (!e) return;
-  var ms = BONK_ANCHOR_TS - Date.now();
+  var ms = GOBLIN_DEN_TS - Date.now();
   if (ms <= 0){
     e.className = "stanchor open";
-    e.innerHTML = "&#9875; Anchor window <b>OPEN</b> &middot; Goblin Offshore Trust can deploy the Athanor at Abudban.";
+    e.innerHTML = "&#127968; Docking is OPEN &middot; the core is in, and the Goblin Den is home. Welcome, goblins.";
     return;
   }
   var d = Math.floor(ms/86400000), h = Math.floor((ms%86400000)/3600000), m = Math.floor((ms%3600000)/60000);
+  var t = (d > 0 ? d + "d " : "") + h + "h " + m + "m";
   e.className = "stanchor";
-  e.innerHTML = "&#9203; Anchor window opens in <b>" + d + "d " + h + "h " + m + "m</b> "
-    + "<span class='stanchor-sub'>holding-corp 7-day minimum &middot; Jul 19</span>";
+  e.innerHTML = "&#9203; Core + docking in <b>" + t + "</b> "
+    + "<span class='stanchor-sub'>then we drop the core and the Den opens its doors</span>";
 }
 
 /* ============ event + live op banners ============ */
@@ -2481,7 +2483,7 @@ window.BONK_TOUR = {
     { sel: "#panelIdentity", title: "This is you", body: "Your name, your rank, how long you have been a goblin. The number that matters is lifetime ISK, and it only goes up.", place: "auto" },
     { sel: "#panelChars", title: "Your pilots + who gets paid", body: "Got mining alts? Add them here so every drop counts as YOU. Pick your payout character so the buyback ISK lands on the right pilot.", place: "auto" },
     { sel: "#panelAcademy", title: "Start here: the Academy", body: "Six short modules. Do them and you learn the doctrine, the workflow, and where the checks come from. Finish all six and you earn your first medal. Do this first.", place: "auto" },
-    { sel: "#corpStripWrap", title: "Project: Our Own Rock", body: "The corp is buying its own station. Watch the bar climb, and hit Contribute to help build it. Every goblin who chips in gets counted.", place: "auto" },
+    { sel: "#corpStripWrap", title: "Project: The Goblin Den", body: "The corp is buying its own station, our home in the belt. Watch the bar climb, and hit Contribute to help build it. Every goblin who chips in gets counted.", place: "auto" },
     { sel: "#panelStats", title: "Your numbers", body: "Your ISK, your ops, your ore. Every drop you log lands here. No mystery math, the ledger saw you drop it so you get paid for it.", place: "auto" },
     { sel: "#panelHauls", title: "Your receipts", body: "Every op you flew: what you dropped, what you were paid, at what rate, ISK per hour on the belt. Paydays with paper trails. Nobody argues with a receipt.", place: "auto" },
     { sel: "#bnburger", title: "Everything else lives here", body: "All the corp tools sit in this menu: ore prices at every hub, the Radar, arbitrage, blueprints, the works. When a fleet op is live and hauling, the Fleet link up here glows. That glow means ISK.", place: "auto" },
