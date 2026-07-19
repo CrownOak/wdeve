@@ -107,6 +107,9 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .dsec .sh{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em; font-size:13px; color:var(--ice); margin-bottom:4px; }
 .dsec .sb{ font-size:14px; color:var(--silver-dim); line-height:1.6; }
 .grade{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); padding:1px 6px; margin-left:8px; vertical-align:2px; }
+.gaptag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--amberw); border:1px solid rgba(233,196,106,.4); padding:1px 6px; margin-left:8px; vertical-align:2px; }
+.dsec-gap .sh{ color:var(--ice-dim); }
+.sb-empty{ color:var(--muted); font-style:italic; font-size:12.5px; }
 .rels{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
 .rel{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); border:1px solid var(--line-soft); padding:4px 9px; }
 .rel b{ color:var(--ice-dim); text-transform:uppercase; font-size:9.5px; letter-spacing:.05em; }
@@ -290,8 +293,15 @@ function openEntity(id){
       var kq=ds.key_question?'<div class="kq"><div class="lab">Standing question</div><div class="q">'+esc(ds.key_question)+'</div></div>':'';
       var vd=ds.verdict?'<div class="verdict"><div class="lab">Verdict</div><div class="v">'+esc(ds.verdict)+'</div></div>':'';
       var secs=(ds.sections||[]).map(function(s){
+        var raw=(s.body||"");
+        var hadGap=/COLLECTION GAP/i.test(raw);
+        // strip the analyst prompt (it belongs in the editor, not the filed reader), plus the md signoff/rule artifacts
+        var body=raw.replace(/>?\s*COLLECTION GAP[^\n]*/gi,"").replace(/---+\s*$/,"").replace(/\*GSS\.[^*]*\*/gi,"").replace(/[—-]{1,2}\s*$/,"").trim();
+        if(/^Machine seed:?\s*$/i.test(body)) body="";
         var g=(s.reliability||s.credibility||s.confidence)?'<span class="grade">'+esc((s.reliability||"?")+(s.credibility||"?"))+(s.confidence?" &middot; "+esc(s.confidence):"")+'</span>':'';
-        return '<div class="dsec"><div class="sh">'+esc(s.h||"")+g+'</div><div class="sb">'+esc(s.body||"")+'</div></div>';
+        var tag=hadGap?'<span class="gaptag">gap</span>':'';
+        var bodyHtml=body?'<div class="sb">'+esc(body)+'</div>':'<div class="sb sb-empty">awaiting analyst</div>';
+        return '<div class="dsec'+(hadGap?' dsec-gap':'')+'"><div class="sh">'+esc(s.h||"")+g+tag+'</div>'+bodyHtml+'</div>';
       }).join("");
       return kq+vd+secs;
     }).join("")||'<div class="foot-line">no written file yet</div>';
