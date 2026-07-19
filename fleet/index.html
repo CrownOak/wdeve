@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=5"></script>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BONK - FLEET DROP LEDGER</title>
 <link rel="stylesheet" href="/common.css?v=5">
@@ -255,7 +255,7 @@ tr.haulrow{ cursor:pointer; }
               <div id="pilots" class="pilots"></div>
               <div id="quickdrops" class="qdwrap" style="display:none">
                 <div id="qdlabel" class="qdlabel">Quick drops &middot; dial the number, hit drop</div>
-                <div id="qdlist" class="qdlist"></div>
+                <div id="qdlist" class="qdlist" data-i18n-skip></div>
               </div>
               <textarea id="oretxt" placeholder="Paste what you dropped, one per line:&#10;Compressed Veldspar	3,000&#10;..."></textarea>
               <div class="droprow">
@@ -264,8 +264,8 @@ tr.haulrow{ cursor:pointer; }
               </div>
               <div id="dmsg" class="dmsg"></div>
             </div>
-            <div id="unmbar" class="thin warn" style="display:none">Some pasted lines are not in the price table and count 0 ISK.</div>
-            <div id="feed"></div>
+            <div id="unmbar" class="thin warn" style="display:none" data-i18n-skip>Some pasted lines are not in the price table and count 0 ISK.</div>
+            <div id="feed" data-i18n-skip></div>
           </div>
           <div>
             <div class="rhead">Fleet <button id="orcabtn" class="link" style="display:none;margin-left:8px"></button></div>

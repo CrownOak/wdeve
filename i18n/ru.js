@@ -15,7 +15,11 @@ window.BONK_RU = {
   /* recruitment tooling stays English (Kyle 2026-07-19: serving existing RU
      speakers, not recruiting RU-side); the portal's ESI "Alliance" row keeps
      its translation, so the nav labels are pinned to English here instead. */
-  ".topnav": { "Recruiting": "Recruiting", "Alliance": "Alliance" }
+  ".topnav": { "Recruiting": "Recruiting", "Alliance": "Alliance" },
+  /* Ice/Ore/Gas are ORE-CATEGORY words: dangerous as flat keys (they collide
+     with bare item-name/data text nodes, e.g. a fleet drop stack line), so
+     they live ONLY here, scoped to the landing buyback board's type column. */
+  ".ty": { "Ice": "Лёд", "Gas": "Газ" }
 },
 
 /* ---------------- shared nav (nav.js) ---------------- */
@@ -204,9 +208,7 @@ window.BONK_RU = {
 "Highsec ore": "Руда хайсека",
 "Lowsec ore": "Руда лоусека",
 "Nullsec ore": "Руда нулей",
-"Ice": "Лёд",
 "Moon ore": "Лунная руда",
-"Gas": "Газ",
 "What the goblins say": "Что говорят гоблины",
 "join the corp": "вступай в корпу",
 "THIS IS NOT A RECRUITMENT AD": "ЭТО НЕ РЕКРУТИНГОВАЯ РЕКЛАМА",
@@ -705,7 +707,6 @@ window.BONK_RU = {
 "accepted": "принят",
 "rejected": "отклонён",
 "pending review": "на проверке",
-"Ore": "Руда",
 "Qty": "Кол-во",
 "Jita line": "Строка Jita",
 "Add a solo contract": "Добавить соло-контракт",
