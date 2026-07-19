@@ -1855,8 +1855,8 @@ tr.haulrow{ cursor:pointer; }
     var choke=!!SC_CHOKES[s[0].toLowerCase()];
     var h="<span class='scsys "+tier+"' data-si='"+i+"' title='"+esc(SMAP.regions[s[3]]||"")+" &middot; click for kill details'>"+esc(s[0])
       +"<span class='ssec'>"+s[2].toFixed(1)+"</span>";
-    if(k.s>0) h+="<span class='skill'>&#9760;"+k.s+"</span>";
-    if(k.p>0) h+="<span class='skill'>&#129370;"+k.p+"</span>";
+    if(k.s>0) h+="<span class='skill'>&#9760;&#8201;"+k.s+"</span>";
+    if(k.p>0) h+="<span class='skill'>&#129370;&#8201;"+k.p+"</span>";
     if(choke) h+="<span class='schoke' title='known gank chokepoint'>&#9873;</span>";
     return h+"</span>";
   }
