@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BONK - Apply</title>
 <link rel="stylesheet" href="/common.css?v=3">
@@ -157,7 +157,8 @@
   var LIM = { ign:40, ships:200, looking_for:500, found_us:200, contact:100, notes:1000 };
 
   var ans = { ign:"", timezone:"", experience:"", activities:[], ships:[], shipsOther:"",
-              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp" };
+              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp",
+              lang: (window.BONKLANG && window.BONKLANG.lang) || "en" };
   // Ally track can arrive by link (?track=ally) from the gate/tools ally CTAs.
   if (/[?&]track=ally/.test(location.search)) ans.track = "ally";
   var idx = 0, editReturn = false, sending = false;
@@ -453,6 +454,24 @@
       "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
     sub.style.marginBottom = "10px";
     answer.appendChild(sub);
+    // Language check (Kyle): the pick flips the interview live, rides the
+    // application, and becomes the member's default portal language at claim.
+    var lq = el("div", "coverSub", "Language · Язык");
+    lq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
+    answer.appendChild(lq);
+    var langWrap = el("div", "chips"); langWrap.style.marginBottom = "14px";
+    langWrap.setAttribute("data-i18n-skip", "");
+    [["en","English"],["ru","Русский"]].forEach(function(o){
+      var c = el("button", "chip" + (ans.lang === o[0] ? " onpick" : ""), o[1]); c.type = "button";
+      c.addEventListener("click", function(){
+        ans.lang = o[0]; saveDraft();
+        Array.prototype.forEach.call(langWrap.children, function(x){ x.classList.remove("onpick"); });
+        c.classList.add("onpick");
+        if (window.BONKLANG) window.BONKLANG.set(o[0]);
+      });
+      langWrap.appendChild(c);
+    });
+    answer.appendChild(langWrap);
     // What brings you to the rock: join the corp, or an alliance/community ally seat.
     var tq = el("div", "coverSub", "What brings you to the rock?");
     tq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
@@ -568,6 +587,7 @@
     var notes = ans.notes.trim().slice(0, LIM.notes);
     if (notes) p.notes = notes;
     if (ans.track === "ally") p.applying_for = "ally";
+    p.lang = ans.lang === "ru" ? "ru" : "en";
     return p;
   }
 
@@ -637,5 +657,5 @@
   });
 })();
 </script>
-<script src="/nav.js?v=14"></script>
+<script src="/nav.js?v=15"></script>
 </body></html>

@@ -7,6 +7,16 @@
   var ORIGIN = "";        // relative to the current domain (bonkeve.com); no cross-domain redirect hop
   var BASE = "/";         // the site lives at the domain root now, not under /wdeve/
 
+  // ---- i18n loader: hand-authored pages include /i18n.js directly in <head>;
+  // the cloud-generated tool pages get it here, same pattern as the walkthrough
+  // loader below. The engine is inert for English (the default), so this costs
+  // nothing unless the goblin picked Russian. ----
+  if (!window.BONKLANG && !document.querySelector('script[src*="i18n.js"]')) {
+    var i18nJs = document.createElement("script");
+    i18nJs.src = ORIGIN + BASE + "i18n.js?v=1";
+    (document.head || document.documentElement).appendChild(i18nJs);
+  }
+
   // Favicon: project pages must set it explicitly (the browser's auto /favicon.ico
   // request hits the domain root, not /wdeve/). Inject once if not already present.
   if (!document.querySelector("link[rel='icon']")) {
@@ -63,6 +73,10 @@
   html += '</nav>'
         + '<span class="bn-eve" title="EVE time (UTC)"><span class="bn-eve-l">EVE</span>'
         + '<b data-eve-time="hm">--:--</b></span>'
+        + '<span class="bn-lang" id="bnlang" data-i18n-skip role="group" aria-label="Language / Язык">'
+        + '<button type="button" data-lang="en">EN</button>'
+        + '<span class="bn-lang-d" aria-hidden="true">·</span>'
+        + '<button type="button" data-lang="ru">RU</button></span>'
         + '<button type="button" class="bn-burger' + (curUnpinned ? " cur" : "") + '" id="bnburger"'
         + ' aria-expanded="false" aria-controls="bnpanel" aria-label="Open the tools menu">'
         + '<span class="bn-lines" aria-hidden="true"><span></span><span></span><span></span></span>'
@@ -74,6 +88,9 @@
       if (ITEMS[i][2] === GROUPS[g]) html += linkHtml(ITEMS[i], "bn-item");
     html += '</div>';
   }
+  html += '<div class="bn-group" data-i18n-skip><div class="bn-glabel">LANGUAGE · ЯЗЫК</div>'
+        + '<button type="button" class="bn-item" data-lang="en">English</button>'
+        + '<button type="button" class="bn-item" data-lang="ru">Русский</button></div>';
   html += '</div>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
@@ -98,6 +115,31 @@
       if (e.key === "Escape" && isOpen()) setOpen(false, true);
     });
   }
+
+  // ---- language switch wiring: EN is the default; RU is the opt-in. The
+  // i18n engine (BONKLANG) swaps text live with no reload; if a click lands
+  // before the engine finished loading (generator pages inject it async), we
+  // persist the pick and reload once as the fallback. ----
+  function curLang() {
+    if (window.BONKLANG) return window.BONKLANG.lang;
+    try { return localStorage.getItem("bonk.lang") || localStorage.getItem("bonk.lang.acct") || "en"; }
+    catch (e) { return "en"; }
+  }
+  function paintLang() {
+    var on = curLang(), bs = bar.querySelectorAll("[data-lang]");
+    for (var k4 = 0; k4 < bs.length; k4++)
+      bs[k4].classList[bs[k4].getAttribute("data-lang") === on ? "add" : "remove"]("on");
+  }
+  paintLang();
+  bar.addEventListener("click", function (e) {
+    var b = e.target && e.target.closest ? e.target.closest("[data-lang]") : null;
+    if (!b) return;
+    var v = b.getAttribute("data-lang");
+    if (window.BONKLANG) window.BONKLANG.set(v);
+    else { try { localStorage.setItem("bonk.lang", v); } catch (e2) {} location.reload(); return; }
+    paintLang();
+  });
+  document.addEventListener("bonk:lang", paintLang);
 
   // Fleet live indicator: a live op with ore actually in it (round value > 0)
   // lights a pulsing dot on the Fleet links and sets the burger lines pulsing
@@ -195,7 +237,20 @@
     "font-variant-numeric:tabular-nums;}" +
     "@media(max-width:700px){.bn-eve{margin-left:auto;border-left:0;padding-left:0;}" +
     ".topnav .bn-burger{margin-left:12px;}}" +
-    "@media(max-width:390px){.bn-eve .bn-eve-l{display:none;}}";
+    "@media(max-width:390px){.bn-eve .bn-eve-l{display:none;}}" +
+    /* ---- language switch (EN·RU): quiet instrument next to the EVE clock ---- */
+    ".bn-lang{display:inline-flex;align-items:center;gap:4px;flex:none;white-space:nowrap;" +
+    "font-family:var(--mono,ui-monospace,monospace);padding-left:12px;" +
+    "border-left:1px solid var(--line,rgba(150,168,158,.16));}" +
+    ".bn-lang button{background:transparent;border:0;padding:4px 3px;cursor:pointer;" +
+    "font-family:inherit;font-size:10.5px;letter-spacing:.14em;color:var(--muted,#6f776f);" +
+    "transition:color .15s;}" +
+    ".bn-lang button:hover{color:var(--ore,#46ff5e);}" +
+    ".bn-lang button.on{color:var(--ore,#46ff5e);font-weight:700;text-shadow:0 0 8px rgba(70,255,94,.35);}" +
+    ".bn-lang .bn-lang-d{color:var(--muted,#6f776f);font-size:10px;}" +
+    ".bn-panel button.bn-item{width:100%;text-align:left;background:transparent;border:0;cursor:pointer;}" +
+    ".bn-panel button.bn-item.on{background:var(--ore,#46ff5e);color:#04140a;font-weight:700;}" +
+    "@media(max-width:700px){.bn-lang{padding-left:8px;}}";
   (document.head || document.documentElement).appendChild(st);
 
   // ---- EVE time ticker: EVE runs on UTC, every op is called in it. Updates the
@@ -229,6 +284,14 @@
     fetch(ORIGIN + BASE + "api/whoami", { credentials: "same-origin" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
+        // account language default (set on the application, or by an explicit
+        // toggle while logged in): RU members get the site in Russian by
+        // default on any device; an explicit local pick always wins.
+        if (d && d.loggedIn && (d.lang === "ru" || d.lang === "en")) {
+          if (window.BONKLANG) window.BONKLANG.accountDefault(d.lang);
+          else { try { localStorage.setItem("bonk.lang.acct", d.lang); } catch (e3) {} }
+          paintLang();
+        }
         if (d && d.loggedIn) {
           w.className = "navwho in";
           w.innerHTML = '<span class="dotln"></span><span class="lbl">logged in as&nbsp;</span><b class="nm"></b>';

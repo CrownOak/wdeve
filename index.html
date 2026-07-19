@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><script src="/i18n.js?v=1"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <meta name="googlebot" content="noindex, nofollow">
@@ -42,6 +42,11 @@
   .eveclk .eveclk-l{font-size:10px;letter-spacing:.24em;color:var(--ore);font-weight:700}
   .eveclk b{font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--silver);font-variant-numeric:tabular-nums}
   @media(max-width:760px){.eveclk{display:none}}
+  .langsw{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);padding-right:18px;border-right:1px solid var(--line)}
+  .langsw button{background:transparent;border:0;padding:4px 3px;cursor:pointer;font-family:inherit;font-size:10.5px;letter-spacing:.14em;color:var(--muted, #6f776f);transition:color .15s}
+  .langsw button:hover{color:var(--ore)}
+  .langsw button.on{color:var(--ore);font-weight:700}
+  .langsw span{color:var(--muted,#6f776f);font-size:10px}
   .nav .btn-mini{color:#04140a;background:var(--ore);padding:8px 14px;font-weight:700;transition:transform .15s, box-shadow .2s}
   .nav .btn-mini:hover{color:#04140a;transform:translateY(-1px);box-shadow:0 6px 22px rgba(70,255,94,.3)}
   @media(max-width:720px){.nav a:not(.btn-mini){display:none}}
@@ -199,6 +204,7 @@
     <a class="brandmark" href="#top"><span class="tick">BONK</span><b>BIG ROCK ENERGY</b><span class="alli">Est. 2014</span></a>
     <nav class="nav">
       <span class="eveclk" title="EVE time (UTC)"><span class="eveclk-l">EVE</span><b data-eve-time="hms">--:--:--</b></span>
+      <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
       <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a><a href="tools/">Tools</a><a href="portal/">Portal</a>
       <a class="btn-mini" href="apply/">Apply</a>
        <a class="btn-mini" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
@@ -595,6 +601,26 @@
     if(c){var t="EVE time is UTC. Your local time: "+p(d.getHours())+":"+p(d.getMinutes());if(c.title!==t)c.title=t;}
   }
   tick();setInterval(tick,1000);document.addEventListener("visibilitychange",tick);
+})();
+
+/* Language switch (EN·RU): the landing has no nav.js, so it carries its own
+   tiny wiring into the shared i18n engine. English is the default; the pick
+   persists and follows the goblin across the whole site. */
+(function(){
+  var sw=document.getElementById("langsw"); if(!sw) return;
+  function cur(){ if(window.BONKLANG) return window.BONKLANG.lang;
+    try{ return localStorage.getItem("bonk.lang")||localStorage.getItem("bonk.lang.acct")||"en"; }catch(e){ return "en"; } }
+  function paint(){ var on=cur(), bs=sw.querySelectorAll("[data-lang]");
+    for(var i=0;i<bs.length;i++) bs[i].classList[bs[i].getAttribute("data-lang")===on?"add":"remove"]("on"); }
+  paint();
+  sw.addEventListener("click",function(e){
+    var b=e.target && e.target.closest ? e.target.closest("[data-lang]") : null; if(!b) return;
+    var v=b.getAttribute("data-lang");
+    if(window.BONKLANG) window.BONKLANG.set(v);
+    else { try{ localStorage.setItem("bonk.lang",v); }catch(e2){} location.reload(); return; }
+    paint();
+  });
+  document.addEventListener("bonk:lang",paint);
 })();
 </script>
 </body>
