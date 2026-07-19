@@ -270,7 +270,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
           <div class="addform" id="addForm">
             <div class="row">
               <input class="nm" id="f_name" placeholder="entity name (alliance, corp, or pilot)" autocomplete="off">
-              <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option><option value="channel">channel</option></select>
+              <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option><option value="channel">channel</option><option value="region">region</option></select>
               <select id="f_class">
                 <option value="watch">watch</option><option value="hostile">hostile</option><option value="hostile_priority">hostile priority</option>
                 <option value="neutral">neutral</option><option value="friendly">friendly</option><option value="ally">ally</option>
@@ -476,6 +476,8 @@ function renderGraph(){
     if(n.eve_type==="channel"){
       var side=r*1.8;
       out+='<rect x="'+(p.x-side/2)+'" y="'+(p.y-side/2)+'" width="'+side+'" height="'+side+'" fill="'+ci.c+'" fill-opacity=".85" stroke="'+ci.c+'" stroke-width="1.3"/>';
+    } else if(n.eve_type==="region"){
+      out+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(r+5)+'" fill="none" stroke="'+ci.c+'" stroke-width="1.6"/><circle cx="'+p.x+'" cy="'+p.y+'" r="2.5" fill="'+ci.c+'"/>';
     } else {
       out+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+(hollow?"none":ci.c)+'" stroke="'+ci.c+'" stroke-width="1.3"'+(hollow?' stroke-dasharray="3 3"':'')+' fill-opacity="'+(n.key==="self"?"1":".85")+'"/>';
     }
@@ -556,7 +558,7 @@ function showTip(key,ev){
   var n=nodeById(key); if(!n) return;
   var t=document.getElementById("gtip"), ci=clsInfo(n.classification);
   t.innerHTML='<div class="tn" style="color:'+ci.c+'">'+esc(n.name)+'</div><div class="tm">'+ci.l+
-    (n.eve_type==="channel"?' &middot; chat room, '+(n.members||0)+' recorded':'')+
+    (n.eve_type==="channel"?' &middot; chat room, '+(n.members||0)+' recorded':'')+(n.eve_type==="region"?' &middot; terrain file':'')+
     (n.threat_level?' &middot; threat '+n.threat_level:'')+(n.bonk_standing&&n.bonk_standing!=="neutral"?' &middot; '+esc(n.bonk_standing):'')+
     (n.prox?' &middot; ACTIVE IN OUR FOOTPRINT':'')+(n.classification==="unfiled"?' &middot; no file yet, click to open one':'')+'</div>';
   t.style.display="block";
@@ -573,8 +575,9 @@ function loadDanger(){
     if(!d||!d.ok){ document.getElementById("dbody").innerHTML='<div class="foot-line">the killfeed is not answering</div>'; return; }
     document.getElementById("dsub").textContent="fetched "+agoMin(d.fetched_at);
     var lane=(d.watch||[]).filter(function(s){return s.lane!=null;}).sort(function(a,b){return a.lane-b.lane;});
-    var pocket=(d.watch||[]).filter(function(s){return s.lane==null&&!s.shortcut;}).sort(function(a,b){return (b.ship_kills+b.pod_kills)-(a.ship_kills+a.pod_kills)||(a.jumps||9)-(b.jumps||9);});
+    var pocket=(d.watch||[]).filter(function(s){return s.lane==null&&!s.shortcut&&!s.funnel;}).sort(function(a,b){return (b.ship_kills+b.pod_kills)-(a.ship_kills+a.pod_kills)||(a.jumps||9)-(b.jumps||9);});
     var cut=(d.watch||[]).filter(function(s){return s.lane==null&&s.shortcut;});
+    var funnels=(d.watch||[]).filter(function(s){return s.funnel;}).sort(function(a,b){return (b.ship_kills+b.pod_kills)-(a.ship_kills+a.pod_kills);});
     function row(s2){
       var k=s2.ship_kills, p=s2.pod_kills;
       var dotc=k+p>=3?"hot":(k+p>=1?"warm":"");
@@ -586,6 +589,7 @@ function loadDanger(){
     var html='<div class="dh-sec">The haul lane, Rens to Mohas</div>'+lane.map(row).join("");
     html+='<div class="dh-sec">The pocket, around home</div>'+pocket.map(row).join("");
     if(cut.length) html+='<div class="dh-sec">The lowsec shortcut, not our lane</div>'+cut.map(row).join("");
+    if(funnels.length) html+='<div class="dh-sec" style="color:var(--hostile)">The funnels, PHEW country, avoid</div>'+funnels.map(row).join("");
     if(d.hot&&d.hot.length){
       html+='<div class="dh-sec">Hot elsewhere in Derelik</div>'+d.hot.map(function(s2){
         var secR=Math.round(s2.sec*10)/10;
@@ -652,6 +656,7 @@ function openEntity(id){
     var e=d.entity, ci=clsInfo(e.classification);
     var hostile = e.classification==="hostile"||e.classification==="hostile_priority";
     var isChannel = e.eve_type==="channel";
+    var noEsi = isChannel || e.eve_type==="region";
     var meta='<span><b>type</b> '+esc(e.eve_type)+'</span><span><b>class</b> '+ci.l+'</span><span><b>threat</b> '+e.threat_level+'/5</span><span><b>standing</b> '+esc(e.bonk_standing)+'</span><span><b>reviewed</b> '+ago(e.verified_at)+'</span>';
     var doss=(e.dossiers||[]).map(function(ds){
       if(ds.sealed) return '<div class="sealed">Sealed file &middot; lead only &middot; '+esc(ds.doc_type)+'</div>';
@@ -702,7 +707,7 @@ function openEntity(id){
     } else {
       live='<div class="dblock"><div class="lab">Live data</div><div class="live" style="color:var(--muted)">not enriched yet</div></div>';
     }
-    if(isChannel) live="";
+    if(noEsi) live="";
     var roster="";
     if(isChannel){
       var rrows=(e.roster||[]).map(function(m){
@@ -747,7 +752,7 @@ function openEntity(id){
       '<button class="dclose" onclick="closeDetail()">close</button>'+
       '<div class="dhead"><div class="dn" style="border-left:3px solid '+ci.c+';padding-left:12px">'+esc(e.name)+(e.ticker?' <span style="font-family:var(--mono);font-size:14px;color:var(--muted)">['+esc(e.ticker)+']</span>':'')+'</div><div class="dmeta">'+meta+'</div></div>'+
       doss+rels+live+roster+person+rules+
-      '<div class="dblock">'+(isChannel?'':'<button class="dclose" style="position:static" onclick="enrich('+e.id+')">refresh from ESI</button> ')+'<button class="dclose" style="position:static" onclick="markVerified('+e.id+')">mark reviewed today</button></div>';
+      '<div class="dblock">'+(noEsi?'':'<button class="dclose" style="position:static" onclick="enrich('+e.id+')">refresh from ESI</button> ')+'<button class="dclose" style="position:static" onclick="markVerified('+e.id+')">mark reviewed today</button></div>';
     document.getElementById("detail").style.display="block";
     document.body.style.overflow="hidden";
   });
