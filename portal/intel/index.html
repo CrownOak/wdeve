@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <title>GSS</title>
-<link rel="icon" href="/favicon-32.png">
+<link rel="icon" href="/portal/intel/gss-96.png">
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
 /* GOBLIN STATE SECURITY — the cold room. No goblin jokes in here, per doctrine. */
@@ -18,9 +18,8 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* header */
 .gss-head{ display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:8px; }
-.seal{ width:54px; height:54px; flex:none; display:flex; align-items:center; justify-content:center;
-  border:1px solid rgba(143,183,201,.5); color:var(--ice); font-family:var(--display); font-weight:700; font-size:18px; letter-spacing:.05em;
-  clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); background:radial-gradient(circle at 50% 40%, rgba(143,183,201,.12), transparent 70%); }
+.seal-img{ width:76px; height:76px; flex:none; border-radius:10px; box-shadow:0 0 26px rgba(143,183,201,.14); }
+.gate-logo{ width:190px; max-width:62vw; display:block; margin:0 auto 12px; filter:drop-shadow(0 0 34px rgba(143,183,201,.13)); }
 .gss-title{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:19px; color:var(--silver); }
 .gss-motto{ margin-left:auto; font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice-dim); }
 .subline{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); margin:0 0 26px; }
@@ -125,15 +124,18 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 <body>
 <div class="gss-wrap">
   <div class="gss-head">
-    <div class="seal">GSS</div>
+    <img class="seal-img" src="/portal/intel/gss-96.png" alt="Goblin State Security seal">
     <div>
       <div class="gss-title">Goblin State Security</div>
     </div>
     <div class="gss-motto" id="motto">Assume nothing</div>
   </div>
-  <div class="subline">We watch, we record, we know. Officers only. There is always a file.</div>
+  <div class="subline">We watch, we record, we know. There is always a file.</div>
 
-  <div id="gate" class="gss-gate"><p>Checking clearance...</p></div>
+  <div id="gate" class="gss-gate">
+    <img class="gate-logo" src="/portal/intel/gss-256.png" alt="Goblin State Security">
+    <div id="gatemsg"><p>Checking clearance...</p></div>
+  </div>
 
   <main id="app" style="display:none">
     <div class="board" id="board"></div>
@@ -194,16 +196,15 @@ var curClass = "";
 
 function init(){
   api("/whoami").then(function(w){
-    var gate=document.getElementById("gate");
-    if(!w || !w.loggedIn){ gate.innerHTML='<div class="lock">&#128274;</div><h2>Log in</h2><p>GSS is behind your portal login. <a href="/portal/">Go to the portal</a>.</p>'; return; }
-    var role=w.role||"member";
-    if(role!=="officer" && role!=="admin"){
-      gate.innerHTML='<div class="lock">&#128274;</div><h2>Not your clearance</h2><p>The cold room is officers only. There is always a file. This visit is one line in it.</p>'; return;
+    var msg=document.getElementById("gatemsg");
+    if(!w || !w.loggedIn){ msg.innerHTML='<h2>Log in</h2><p>GSS is behind your portal login. <a href="/portal/">Go to the portal</a>.</p>'; return; }
+    if(!w.gss){
+      msg.innerHTML='<h2>Not your clearance</h2><p>The cold room is officers, admins, and the designated. There is always a file. This visit is one line in it.</p>'; return;
     }
-    gate.style.display="none";
+    document.getElementById("gate").style.display="none";
     document.getElementById("app").style.display="block";
     loadBoard(); loadEntities("");
-  }).catch(function(){ document.getElementById("gate").innerHTML='<p class="err">GSS is not answering. Try again.</p>'; });
+  }).catch(function(){ document.getElementById("gatemsg").innerHTML='<p class="err">GSS is not answering. Try again.</p>'; });
 }
 
 function loadBoard(){
