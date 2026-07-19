@@ -6,8 +6,16 @@
 <style>
 /* page-specific chrome; everything structural comes from common.css */
 .howto{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
-  padding:11px 15px; margin-bottom:16px; font-size:13.5px; line-height:1.55; color:var(--silver-dim); }
+  padding:11px 15px; margin-bottom:16px; font-size:13.5px; line-height:1.55; color:var(--silver-dim);
+  position:relative; }
 .howto b{ color:var(--silver); }
+.howtox{ position:absolute; top:6px; right:9px; background:none; border:none; color:var(--muted);
+  cursor:pointer; font-size:16px; line-height:1; padding:2px; }
+.howtox:hover{ color:var(--silver); }
+.howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-bottom:14px; }
+.howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
+  font-size:11.5px; text-decoration:underline dotted; padding:0; }
+.howtomini button:hover{ color:var(--ore); }
 .howto kbd{ font-family:var(--mono); font-size:12px; background:var(--black);
   border:1px solid var(--line); padding:1px 6px; color:var(--ore); }
 .pgrow{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
@@ -27,15 +35,36 @@
   border:1px solid var(--line-soft); background:var(--steel); color:var(--silver-dim); }
 .thin.warn{ color:var(--amber); border-left:3px solid var(--amber); }
 .thin.bad{ color:var(--red); border-left:3px solid var(--red); }
-.thin.mkt{ color:var(--silver); border-left:3px solid var(--ore); }
-.thin.mkt b{ color:var(--ore); }
 .rowmeta{ color:var(--muted); font-size:11px; }
-.cmd{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; margin:0 0 16px;
-  background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
+/* op status strip (U1): the ONE ore-accent line on the page, all roles.
+   Answers the late joiner's question first: where IS the fleet. */
+.opstatus{ padding:8px 12px; margin:0 0 12px; font-family:var(--mono); font-size:12.5px;
+  border:1px solid var(--line-soft); border-left:3px solid var(--ore); background:var(--steel);
+  color:var(--silver-dim); }
+.opstatus b{ color:var(--ore); }
+.opstatus .sysunset{ color:var(--muted); }
+.opstatus .link{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
+  font-size:11.5px; text-decoration:underline dotted; padding:0; }
+.opstatus .link:hover{ color:var(--ore); }
+/* command cluster (U2): plain card, no accent bar — the status strip is the headline */
+.cmd{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 14px; margin:0 0 14px;
+  background:var(--steel); border:1px solid var(--line-soft);
   font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .cmd b{ color:var(--silver); }
 .cmd .gobtn{ padding:7px 14px; font-size:12px; }
 .cmd button:disabled{ opacity:.45; cursor:not-allowed; }
+.cmdrow2{ flex-basis:100%; display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+  font-size:11.5px; color:var(--muted); padding-top:2px; }
+.cmdrow2 .warnv{ color:var(--amber); }
+.cmdrow2 .goodv{ color:var(--ore); }
+.sysin{ width:130px; padding:5px 8px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12px; }
+.sysset{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:4px 10px;
+  font-family:var(--mono); font-size:11px; cursor:pointer; }
+.sysset:hover{ border-color:var(--ore); color:var(--ore); }
+.cmdmore{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
+  font-size:11.5px; text-decoration:underline dotted; padding:0; margin-left:auto; }
+.cmdmore:hover{ color:var(--silver); }
 #oretxt{ min-height:120px; }
 .droprow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 0; }
 .droprow input{ flex:1; min-width:180px; width:auto; padding:9px 11px; background:var(--black);
@@ -117,9 +146,13 @@ tr.drow .dl{ display:flex; gap:14px; justify-content:space-between; max-width:46
 .rtag.ally{ color:var(--amber); border-color:rgba(233,196,106,.45); }
 .glyph.orca{ font-size:12.5px; }
 #orcabtn.on2{ color:var(--ore); }
-/* member tip control (tip the fleet boss a fraction of your payout) */
-.tipctl{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:9px 12px; margin:0 0 14px;
-  background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber); }
+/* member tip control (tip the fleet boss a fraction of your payout).
+   Collapsed to one quiet line (U4); amber is for warnings, not furniture. */
+.tipctl{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:7px 12px; margin:0 0 12px;
+  background:var(--steel); border:1px solid var(--line-soft); }
+.tipchg{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
+  font-size:11px; text-decoration:underline dotted; padding:0; }
+.tipchg:hover{ color:var(--amber); }
 .tiplbl{ font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
 .tipp{ background:transparent; color:var(--silver-dim); border:1px solid var(--line); padding:3px 9px;
   font-family:var(--mono); font-size:12px; cursor:pointer; }
@@ -187,6 +220,35 @@ td.subwho{ padding-left:24px; color:var(--silver-dim); }
   color:var(--ore); margin:20px 0 8px; }
 tr.haulrow{ cursor:pointer; }
 #dropbtn:disabled{ opacity:.4; cursor:not-allowed; }
+.dropbox textarea:focus{ border-color:var(--ore); outline:none; }
+/* your-numbers vs fleet-numbers split in the tile row (U3) */
+.totline .v.hero{ font-size:22px; }
+.tsep{ width:1px; align-self:stretch; background:var(--line-soft); }
+/* fleet comms (chat card, rail): log rebuilds, input never does */
+.chatcard{ margin-top:18px; }
+.chathead{ display:flex; align-items:center; }
+.chathead .link{ margin-left:auto; }
+.chatnew{ font-family:var(--mono); font-size:10px; background:var(--ore); color:#04140a; font-weight:700;
+  padding:1px 6px; margin-left:8px; }
+#chatlog{ max-height:280px; overflow-y:auto; background:var(--steel); border:1px solid var(--line-soft);
+  padding:8px 10px; font-size:12.5px; }
+.cmsg{ margin:3px 0; line-height:1.45; overflow-wrap:break-word; word-break:break-word; color:var(--silver-dim); }
+.cmsg .ct{ color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-right:5px; }
+.cmsg b{ color:var(--silver); font-weight:600; }
+.cmsg.csys{ color:var(--ore); font-family:var(--mono); font-size:11.5px; }
+.cempty{ color:var(--muted); font-size:12px; padding:4px 0; }
+.chatrow{ display:flex; gap:6px; margin-top:6px; }
+#chatin{ flex:1 1 auto; min-width:0; padding:7px 9px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12.5px; }
+#chatin:focus{ border-color:var(--ore); outline:none; }
+#chatsend{ padding:7px 12px; }
+/* mobile (U8): the paste box leads; command furniture follows */
+@media(max-width:820px){
+  .fcol{ display:flex; flex-direction:column; }
+  #opstatus{ order:0; } #pxbar{ order:1; } #frozenbar{ order:2; } #dropbox{ order:3; }
+  #unmbar{ order:4; } #tiles{ order:5; } #tipctl{ order:6; } #cmdstrip{ order:7; }
+  #opannounce{ order:8; } #feed{ order:9; }
+}
 @media(max-width:620px){
   .ovin{ margin:16px 10px; padding:18px 14px 22px; }
   .totline{ gap:16px; }
@@ -201,11 +263,13 @@ tr.haulrow{ cursor:pointer; }
     <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
   </header>
   <div class="wrap">
-    <div class="howto"><b>How it works:</b> enter the fleet password and say who you are. During the op,
+    <div class="howto" id="howto"><button id="howtox" class="howtox" title="dismiss">&times;</button>
+    <b>How it works:</b> enter the fleet password and say who you are. During the op,
     select what you jettison in your inventory (<kbd>Ctrl</kbd>+<kbd>A</kbd> or <kbd>Ctrl</kbd>+click),
     copy with <kbd>Ctrl</kbd>+<kbd>C</kbd>, and paste it here. The ledger values it at Jita and tracks
     your tab live, next to everyone else's. When the op wraps, fleet command runs the payout at the
     buyback rate. The ledger saw you drop it, so no arguing at the end.</div>
+    <div class="howtomini" id="howtomini" style="display:none"><button id="howtoshow">How it works</button> &middot; <button id="howtotour">take the tour</button></div>
 
     <!-- gate: refine Project Tracker idiom. Password goes out as X-Token; it never lives in this file. -->
     <div id="gate" class="howto" style="display:none"><b>Fleet Drop Ledger.</b> The round ledger, roster and
@@ -243,12 +307,12 @@ tr.haulrow{ cursor:pointer; }
 
       <div id="fleetTab">
         <div class="fgrid">
-          <div>
+          <div class="fcol">
+            <div id="opstatus" class="opstatus" style="display:none" data-i18n-skip></div>
             <div id="tiles" class="totline"></div>
             <div id="tipctl" class="tipctl" style="display:none"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
             <div id="opannounce" class="announce" style="display:none"></div>
-            <div id="marketline" class="thin" style="display:none"></div>
             <div id="pxbar" class="thin bad" style="display:none"></div>
             <div id="frozenbar" class="thin warn" style="display:none">Fleet is finishing. Drops are frozen.</div>
             <div id="dropbox" class="dropbox">
@@ -271,6 +335,18 @@ tr.haulrow{ cursor:pointer; }
             <div class="rhead">Fleet <button id="orcabtn" class="link" style="display:none;margin-left:8px"></button></div>
             <div id="roster"></div>
             <div id="takeleadwrap"></div>
+            <!-- fleet comms: round-scoped chat. The log is the ONLY node that
+                 re-renders; the input is static so a poll never eats a half-typed
+                 message. Delivery rides the /sync payload (no second poll loop). -->
+            <div id="chatcard" class="chatcard">
+              <div class="rhead chathead"><span>Fleet comms</span><span id="chatnew" class="chatnew" style="display:none"></span>
+                <button id="chattog" class="link">hide</button></div>
+              <div id="chatwrap">
+                <div id="chatlog" data-i18n-skip></div>
+                <div class="chatrow"><input id="chatin" maxlength="240" placeholder="say it to the fleet" autocomplete="off">
+                <button id="chatsend" class="gobtn" title="send">&gt;</button></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -319,7 +395,7 @@ tr.haulrow{ cursor:pointer; }
   var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
   var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
       LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots",
-      LS_CHIPS="bonk_fleet_chips";
+      LS_CHIPS="bonk_fleet_chips", LS_HOWTO="bonk_fleet_howto", LS_CHATOPEN="bonk_fleet_chatopen";
 
   // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
@@ -401,6 +477,13 @@ tr.haulrow{ cursor:pointer; }
   // ---------- state ----------
   var token="", who=lsGet(LS_WHO)||"", role="", unlocked=false;
   var anSending=false;        // an op announcement POST is in flight (block re-render/re-enable)
+  var anOpen=false;           // announce composer visible (U2: it opens on demand, not always-on)
+  var chSending=false;        // a chat POST is in flight (block the double-Enter)
+  var chatSeen=0;             // highest chat seq the goblin has SEEN (log expanded + tab visible)
+  var chatOpen = lsGet(LS_CHATOPEN)!==null ? lsGet(LS_CHATOPEN)==="1"
+    : !(window.matchMedia && window.matchMedia("(max-width:820px)").matches); // phones start collapsed
+  var tipOpen=false;          // tip control expanded (U4: collapsed one-liner by default)
+  var cmdMore=false;          // command cluster "more" (Reset) disclosure
   var P=null;                 // last /sync payload (server truth)
   var DATA=null, pricesAt=0, pxTry=0;  // refine price blob + when we got it + last fetch attempt
   var unmNames={};            // ore names we pasted that the price table doesn't know (round banner)
@@ -650,7 +733,10 @@ tr.haulrow{ cursor:pointer; }
     });
   }
   document.addEventListener("visibilitychange",function(){
-    if(document.visibilityState==="visible"){ bump(); tick(); } });
+    if(document.visibilityState==="visible"){ bump(); tick(); }
+    else{ // FC alt-tabs back to EVE with the caret parked in the system box:
+          // blur it so its focus guard doesn't freeze the command strip all op
+      var a=document.activeElement; if(a && a.id==="sysin") a.blur(); } });
 
   // ---------- unsent drop queue ----------
   function loadOutbox(){ try{ (JSON.parse(lsGet(LS_QUEUE)||"[]")||[]).forEach(function(p){
@@ -728,6 +814,8 @@ tr.haulrow{ cursor:pointer; }
     var o={p:payload, state:"sending", t:Date.now()};
     outbox.push(o);
     sendDrop(o);
+    // a goblin who has logged a drop no longer needs the paste instructions (U5)
+    if(lsGet(LS_HOWTO)!=="1"){ lsSet(LS_HOWTO,"1"); applyHowto(); }
     return true;
   }
   el("dropbtn").onclick=function(){
@@ -871,39 +959,49 @@ tr.haulrow{ cursor:pointer; }
   function basisLabel(b){ return (b||basisNow())==="jita" ? "Jita" : "Rens"; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
-    renderTiles(); renderCmd(); renderAnnounce(); renderMarket(); renderFrozen(); renderPilots(); renderFeed(); renderRoster();
+    renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
     seedPilotsFromPortal(); qdSyncRound(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
-  // member-visible market indicator (op sees + sets it in the command strip)
-  function renderMarket(){
-    var ml=el("marketline"); if(!ml) return;
-    if(opKeys()){ ml.style.display="none"; return; }
-    ml.style.display=""; ml.className="thin mkt";
-    ml.innerHTML="Ore valued at <b>"+basisLabel()+" sell</b>"+(basisNow()==="rens"?" &middot; the corp delivery hub" : "");
+  // op status strip (U1), all roles: where the fleet IS, what it mines, who runs
+  // it, which market, what buyback pays. Replaced the member market line AND the
+  // info half of the old command strip. The system is /set-system's display side:
+  // it updates quietly as the fleet moves — never a Discord ping (Kyle 2026-07-19).
+  function renderStatus(){
+    var box=el("opstatus"); if(!box) return;
+    if(!P){ box.style.display="none"; return; }
+    box.style.display="";
+    var sys = (P.system && P.system.name)
+      ? "<b>"+esc(P.system.name)+"</b>"
+      : "<span class='sysunset'>location not set</span>"
+        +(opKeys() ? " <button id='stset' class='link'>set it</button>" : "");
+    var tgt = (P.announce && P.announce.target) ? esc(P.announce.target) : "whatever the belt gives us";
+    var h="&#9935; "+sys
+      +" &middot; mining "+tgt
+      +" &middot; lead "+(P.lead?esc(P.lead):"nobody yet")
+      +" &middot; "+basisLabel()+" sell &middot; "+Math.round(rate()*100)+"% buyback";
+    box.innerHTML=h;
+    var st=el("stset"); if(st) st.onclick=function(){ var si=el("sysin"); if(si){ si.focus(); si.scrollIntoView({block:"center"}); } };
   }
 
   function renderTiles(){
-    // "Your tab" is the sum of your entries' jita88 (already rate-scaled server-side).
-    // The two op tiles render ONLY when the server sent the op-only keys; members never
-    // get them and we never back-compute them here (DR-FLEET-4).
+    // U3 tile diet: YOUR numbers first (tab is the hero), then a thin rule, then
+    // the fleet trio. "Your tab" = sum of your entries' jita88 (rate-scaled
+    // server-side). Op intel (true value / margin / tips in) lives in the
+    // command cluster now — the server still only sends those keys to the op
+    // token (DR-FLEET-4); this function never back-computes them.
     var my=0;
     (P.entries||[]).forEach(function(e){ if(e.who===who) my+=e.jita88||0; });
     var meM=null; (P.members||[]).forEach(function(m){ if(m.who===who) meM=m; });
     var myTip = meM ? (meM.tip||0) : 0;
     var myBelt = meM ? (meM.beltMs||0) : 0;
-    var h="<div><div class='k'>Your tab</div><div class='v good'>"+isk(my)+"</div></div>"
+    var h="<div><div class='k'>Your tab</div><div class='v good hero'>"+isk(my)+"</div></div>"
         +(myTip>0 ? "<div><div class='k'>Your tip</div><div class='v warn'>"+isk(myTip)+"</div></div>" : "")
         +"<div><div class='k'>Your time on belt</div><div class='v'>"+hrs(myBelt)+"</div></div>"
+        +"<div class='tsep'></div>"
         +"<div><div class='k'>Fleet total</div><div class='v'>"+isk(P.fleetDisplay||0)+"</div></div>"
         +"<div><div class='k'>Fleet m&sup3;</div><div class='v'>"+m3fmt(P.fleetM3||0)+"</div></div>"
         +"<div><div class='k'>Fleet hours</div><div class='v'>"+hrs(P.fleetBeltMs||0)+"</div></div>";
-    if(opKeys()){
-      var mpct=Math.round((1-rate())*100);
-      h+="<div><div class='k'>True value</div><div class='v warn'>"+isk(P.trueValue)+"</div></div>"
-        +"<div><div class='k'>Margin ("+mpct+"%)</div><div class='v warn'>"+isk(P.margin||0)+"</div></div>"
-        +"<div><div class='k'>Tips in</div><div class='v good'>"+isk(P.totalTips||0)+"</div></div>";
-    }
     el("tiles").innerHTML=h;
     renderTipCtl(meM);
   }
@@ -935,6 +1033,17 @@ tr.haulrow{ cursor:pointer; }
     }
     var pct = meM ? Math.round((meM.tipPct||0)*100) : 10;  // default 10% (corp norm) until you set your own
     var myTip = meM ? (meM.tip||0) : 0;
+    // U4: one quiet line by default; the preset row expands on "change" and
+    // collapses on "done". Session state only (tipOpen) — a reload re-collapses.
+    if(!tipOpen){
+      // pinned spec copy: no ISK here — the tile row already carries the figure
+      var line="<span class='tiplbl'>Tip</span><span class='tipnote'>"
+        +(pct===0 ? "opted out" : pct+"% to the fleet boss")
+        +"</span><button id='tipchg' class='tipchg'>change</button>";
+      box.innerHTML=line;
+      var tg=el("tipchg"); if(tg) tg.onclick=function(){ tipOpen=true; renderTipCtl(meM); };
+      return;
+    }
     var h="<span class='tiplbl'>Tip the fleet boss</span>";
     [0,5,10,15].forEach(function(p){
       h+="<button class='tipp"+(pct===p?" on":"")+"' data-tip='"+p+"'>"+(p===0?"none":p+"%")+"</button>"; });
@@ -942,9 +1051,11 @@ tr.haulrow{ cursor:pointer; }
     if(myTip>0) h+="<span class='tipnote'>you tip "+isk(myTip)+" to "+esc(P.lead||"the boss")+"</span>";
     else if(pct===0) h+="<span class='tipnote'>you opted out</span>";
     else h+="<span class='tipnote'>10% is the corp default &middot; tap none to opt out</span>";
+    h+="<button id='tipdone' class='tipchg'>done</button>";
     box.innerHTML=h;
     Array.prototype.forEach.call(box.querySelectorAll("[data-tip]"), function(b){
       b.onclick=function(){ pushTip(parseInt(b.getAttribute("data-tip"),10)/100); }; });
+    var td=el("tipdone"); if(td) td.onclick=function(){ tipOpen=false; renderTipCtl(meM); };
     var tc=el("tipcustom");
     if(tc) tc.onkeydown=function(e){ if(e.key==="Enter"){ var v=parseFloat(String(tc.value).replace(/[^0-9.]/g,"")); if(isFinite(v)) pushTip(Math.max(0,Math.min(50,v))/100); } };
   }
@@ -956,23 +1067,46 @@ tr.haulrow{ cursor:pointer; }
       else if(d&&d.error){ toast(String(d.error)); tick(); } })
       .catch(function(){ toast("market change failed, still offline?"); });
   }
+  // set the fleet's current system (quiet, in-ledger only — never Discord)
+  function pushSystem(name){
+    api("POST","/set-system",{name:name, by:who}).then(function(d){
+      if(d&&d.ok){ toast(d.system ? "Fleet location: "+d.system.name : "Fleet location cleared."); tick(); }
+      else if(d&&d.error){ toast(d.error==="not found" ? "Ledger is still updating, try again in a minute." : String(d.error)); tick(); } })
+      .catch(function(){ toast("could not set the system, still offline?"); });
+  }
   function renderCmd(){
     var box=el("cmdstrip");
     if(!opKeys()){ box.style.display="none"; return; }
+    // never wipe a half-typed system name on the 5s poll re-render
+    var a=document.activeElement; if(a && a.id==="sysin") return;
     box.style.display="";
     var isLead = P.lead && P.lead===who;
     var basis=basisNow(), mktLocked=((P.entries||[]).length>0);
+    // row 1: the verbs. Finish is the FC's end-of-op action; Announce opens the
+    // composer on demand (it fires once per op, it does not rent a whole bar);
+    // the system box is the quiet mid-op "we moved" update. Reset hides behind
+    // "more" — destructive wants one extra click (U2).
+    var h="<button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead can finish'")+">Finish Fleet</button>";
+    if(P.finished) h+="<button id='cPayout' class='gobtn'>Payout screen</button>";
+    h+="<button id='cAnnounce' class='gobtn"+(anOpen?"":" ")+"' title='open the op announcement composer (pings @everyone when sent)'>&#128226; Announce"+(anOpen?" &#9662;":"")+"</button>";
+    h+="<span class='rateset'>system <input id='sysin' class='sysin' maxlength='60' placeholder='where we are'"
+      +" value=\""+esc(P.system?P.system.name:"")+"\">"
+      +"<button id='sysset' class='sysset' title='update the fleet location in the ledger (no Discord ping)'>Set</button></span>";
+    if(cmdMore) h+="<button id='cReset' class='gobtn'>Reset</button>";
+    h+="<button id='cmdmore' class='cmdmore'>"+(cmdMore?"less":"more &#9662;")+"</button>";
+    // row 2: command intel (server sends these keys to the op token only) + book state
     var mkt = mktLocked
-      ? " &middot; market <b>"+basisLabel(basis)+"</b> <span class='rowmeta'>(locked, reset to change)</span>"
-      : " &middot; market <button class='ratep"+(basis==='rens'?' on':'')+"' data-basis='rens'>Rens</button>"
+      ? "market <b>"+basisLabel(basis)+"</b> <span class='rowmeta'>(locked, reset to change)</span>"
+      : "market <button class='ratep"+(basis==='rens'?' on':'')+"' data-basis='rens'>Rens</button>"
         +"<button class='ratep"+(basis==='jita'?' on':'')+"' data-basis='jita'>Jita</button>";
-    var h="Lead: <b>"+(P.lead?esc(P.lead):"nobody")+"</b>"
-        +" &middot; buyback "+Math.round(rate()*100)+"%"
-        + mkt
-        +" &middot; entries "+((P.entries||[]).length)+"/500"
-        +" <button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead can finish'")+">Finish Fleet</button>";
-    if(P.finished) h+=" <button id='cPayout' class='gobtn'>Payout screen</button>";
-    h+=" <button id='cReset' class='gobtn'>Reset</button>";
+    var mpct=Math.round((1-rate())*100);
+    h+="<div class='cmdrow2'>"
+      +"<span>true <span class='warnv'>"+isk(P.trueValue||0)+"</span></span>"
+      +"<span>margin ("+mpct+"%) <span class='warnv'>"+isk(P.margin||0)+"</span></span>"
+      +"<span>tips in <span class='goodv'>"+isk(P.totalTips||0)+"</span></span>"
+      +"<span>entries "+((P.entries||[]).length)+"/500</span>"
+      +"<span>"+mkt+"</span>"
+      +"</div>";
     box.innerHTML=h;
     Array.prototype.forEach.call(box.querySelectorAll("[data-basis]"), function(b){
       b.onclick=function(){ pushBasis(b.getAttribute("data-basis")); }; });
@@ -981,9 +1115,13 @@ tr.haulrow{ cursor:pointer; }
       api("POST","/finish",{by:who}).then(function(d){ if(d&&d.ok){ tick(); openPayout(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("finish failed, still offline?"); }); };
     var pb=el("cPayout"); if(pb) pb.onclick=openPayout;
-    el("cReset").onclick=function(){
+    var ab=el("cAnnounce"); if(ab) ab.onclick=function(){ anOpen=!anOpen; renderCmd(); renderAnnounce(); };
+    var sy=el("sysset"); if(sy) sy.onclick=function(){ pushSystem((el("sysin").value||"").trim()); };
+    var si=el("sysin"); if(si) si.onkeydown=function(e){ if(e.key==="Enter") pushSystem((si.value||"").trim()); };
+    var mo=el("cmdmore"); if(mo) mo.onclick=function(){ cmdMore=!cmdMore; renderCmd(); };
+    var rs=el("cReset"); if(rs) rs.onclick=function(){
       if(!confirm("Discard this round with NO haul log entry?")) return;
-      api("POST","/reset",{by:who}).then(function(d){ if(d&&d.ok){ toast("Round reset. Fresh ledger."); tick(); }
+      api("POST","/reset",{by:who}).then(function(d){ if(d&&d.ok){ toast("Round reset. Fresh ledger."); cmdMore=false; tick(); }
         else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("reset failed, still offline?"); }); };
   }
 
@@ -1004,11 +1142,13 @@ tr.haulrow{ cursor:pointer; }
   // re-render, and reflects the last announcement sent this round.
   function renderAnnounce(){
     var box=el("opannounce");
-    if(!opKeys()){ box.style.display="none"; return; }
+    // U2: the composer opens from the Announce button — it fires once per op
+    // and has no claim on a permanent bar. The sent-state note lives in here.
+    if(!opKeys() || !anOpen){ box.style.display="none"; return; }
     box.style.display="";
     if(anSending) return; // a send is in flight: never rebuild (would re-enable the button -> double post)
     var a=document.activeElement;
-    if(a && (a.id==="anLoc"||a.id==="anTgt"||a.id==="anOther")) return; // don't clobber typing
+    if(a && (a.id==="anSys"||a.id==="anLoc"||a.id==="anTgt"||a.id==="anOther")) return; // don't clobber typing
     var an=(P&&P.announce)||null;
     var known=an&&an.target&&MINING_TARGETS.some(function(g){ return g[1].indexOf(an.target)>=0; });
     var otherSel=!!(an&&an.target&&!known);
@@ -1019,30 +1159,42 @@ tr.haulrow{ cursor:pointer; }
       opts+="</optgroup>";
     });
     opts+="<option value='__other'"+(otherSel?" selected":"")+">Other…</option>";
+    // system + optional detail (spec B2): the system both leads the Discord
+    // WHERE line and seeds the ledger's live location. Legacy announces (before
+    // the split) stored everything in .location — prefill the system from it.
+    var anSysVal = an ? (an.system!=null ? an.system : an.location) : (P.system?P.system.name:"");
+    // don't prefill the detail with a copy of the system (the old-worker
+    // fallback below, and legacy folds, store the same text in both)
+    var anLocVal = an && an.system!=null && an.location!==an.system ? an.location : "";
     var h="<span class='anlbl'>Announce op</span>"
-      +"<input id='anLoc' class='aninput' maxlength='300' placeholder='where we&#39;re forming: paste a dock, system, or fleet link' value='"+esc(an?an.location:"")+"'>"
+      +"<input id='anSys' class='aninput other' maxlength='60' placeholder='system, like Radima' value=\""+esc(anSysVal||"")+"\">"
+      +"<input id='anLoc' class='aninput' maxlength='300' placeholder='dock or fleet link, optional' value=\""+esc(anLocVal||"")+"\">"
       +"<select id='anTgt' class='ansel'>"+opts+"</select>"
       +"<input id='anOther' class='aninput other' maxlength='80' placeholder='what we&#39;re mining' value='"+(otherSel?esc(an.target):"")+"'"+(otherSel?"":" style='display:none'")+">"
       +"<button id='anSend' class='gobtn anbtn'>📢 Announce op</button>";
     var noteCls="annote", noteTxt="";
     if(an){
-      if(an.webhook==="sent") noteTxt="Announced "+esc(an.target)+" @ "+esc(an.location)+" &middot; posted "+hhmm(an.at);
+      if(an.webhook==="sent") noteTxt="Announced "+esc(an.target)+" @ "+esc(an.system!=null?an.system:an.location)+" &middot; posted "+hhmm(an.at);
       else if(an.webhook==="sending") noteTxt="Posting to Discord…";
       else if(an.webhook==="skipped"){ noteCls+=" warn"; noteTxt="Saved, but no Discord webhook is set, so nothing was posted."; }
       else if(an.webhook==="duplicate-suppressed") noteTxt="Already sent that a moment ago.";
       else { noteCls+=" warn"; noteTxt="Last send failed. Discord did not accept it. Try again."; }
-    } else noteTxt="Paste the form-up spot, pick the target, and hit Announce. This pings @everyone in Discord, so fire it when the fleet is actually forming.";
+    } else noteTxt="Name the system, pick the target, and hit Announce. This pings @everyone in Discord, so fire it when the fleet is actually forming. It also sets the fleet location up top.";
     h+="<span class='"+noteCls+"'>"+noteTxt+"</span>";
     box.innerHTML=h;
     var sel=el("anTgt"), oth=el("anOther");
     sel.onchange=function(){ oth.style.display=(sel.value==="__other")?"":"none"; if(sel.value==="__other") oth.focus(); };
     el("anSend").onclick=function(){
+      var sys=(el("anSys").value||"").trim();
       var loc=(el("anLoc").value||"").trim();
       var tgt=(sel.value==="__other")?(oth.value||"").trim():sel.value;
-      if(!loc){ toast("Paste where the op is forming first."); el("anLoc").focus(); return; }
+      if(!sys){ toast("Name the system the op is forming in."); el("anSys").focus(); return; }
       if(!tgt){ toast("Pick or type what we're mining."); (sel.value==="__other"?oth:sel).focus(); return; }
       var btn=this; btn.disabled=true; anSending=true; // block the poll re-render from re-enabling mid-flight
-      api("POST","/announce",{location:loc,target:tgt,by:who}).then(function(d){
+      // location falls back to the system when the detail is empty: the OLD
+      // worker (brief mid-deploy window) requires location, and the new one
+      // drops a detail that just repeats the system — compatible both ways.
+      api("POST","/announce",{system:sys,location:loc||sys,target:tgt,by:who}).then(function(d){
         anSending=false; btn.disabled=false;
         if(d&&d.ok){
           if(d.webhook==="sent") toast("Op announced to Discord.");
@@ -1216,6 +1368,72 @@ tr.haulrow{ cursor:pointer; }
       if(d&&d.ok){ toast(d.orca ? name+" is boosting the fleet. Stays on the roster now." : name+" no longer flagged as boosting."); tick(); }
       else if(d&&d.error) toast(String(d.error)); }).catch(function(){ toast("could not update, still offline?"); });
   }
+
+  // ---------- fleet comms (round-scoped chat; delivery rides /sync) ----------
+  // The card's input is static HTML and never rebuilt, so a poll can't eat a
+  // half-typed message. Only #chatlog re-renders. Seen-state advances only when
+  // the log is expanded AND the tab is visible; collapsed shows an unread chip.
+  var chatInit=false, chatRound="";
+  function renderChat(){
+    var log=el("chatlog"); if(!log) return;
+    var latest=(P&&P.chatSeq)||0, rows=(P&&P.chat)||[];
+    // first payload after unlock: old chatter isn't "unread", the card header
+    // already says comms exist. Only messages after you joined count.
+    if(!chatInit && P){ chatInit=true; chatRound=(P&&P.round)||""; if(!chatOpen) chatSeen=latest; }
+    // review-caught: chat seq RESTARTS each round (reset/close), so the old
+    // round's watermark would swallow the new round's badge. Round change =
+    // everything in the new round is unread; the clamp also catches a stale
+    // LS_CACHE replay where latest briefly runs behind the watermark.
+    else if(P && P.round!==chatRound){ chatRound=P.round; chatSeen=0; }
+    if(latest<chatSeen) chatSeen=latest;
+    el("chatwrap").style.display = chatOpen ? "" : "none";
+    el("chattog").textContent = chatOpen ? "hide" : "show";
+    if(chatOpen && document.visibilityState==="visible"){
+      var pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48; // stay glued to the newest unless the goblin scrolled up
+      var h="";
+      if(!rows.length) h="<div class='cempty'>No chatter yet. The rocks can't hear you, but the fleet can.</div>";
+      else rows.forEach(function(m){
+        h += m.sys
+          ? "<div class='cmsg csys'>&#9935; "+esc(m.text)+"</div>"
+          : "<div class='cmsg'><span class='ct'>"+hhmm(m.at)+"</span><b>"+esc(m.who)+"</b> "+esc(m.text)+"</div>";
+      });
+      log.innerHTML=h;
+      if(pinned) log.scrollTop=log.scrollHeight;
+      chatSeen=latest;
+    }
+    var badge=el("chatnew"), unread=latest-chatSeen;
+    if(!chatOpen && unread>0){ badge.style.display=""; badge.textContent=(unread>50?"50+":unread)+" new"; }
+    else badge.style.display="none";
+  }
+  function sendChat(){
+    if(chSending) return;
+    var inp=el("chatin"), text=(inp.value||"").trim();
+    if(!text) return;
+    if(!who){ showNamebox(true); el("whoin").focus(); return; }
+    chSending=true; el("chatsend").disabled=true;
+    api("POST","/chat",{who:who, text:text}).then(function(d){
+      chSending=false; el("chatsend").disabled=false;
+      if(d&&d.ok){ inp.value=""; tick(); }      // fresh payload echoes it right back
+      // "not found" = the worker is mid-deploy and still running old code
+      else if(d&&d.error) toast(d.error==="not found" ? "Comms are still warming up, try again in a minute." : String(d.error));
+    }).catch(function(){
+      chSending=false; el("chatsend").disabled=false;
+      toast("not sent, still offline?");         // NO outbox for chat: stale chatter is noise, not money
+    });
+  }
+  el("chatsend").onclick=sendChat;
+  el("chatin").addEventListener("keydown",function(e){ if(e.key==="Enter") sendChat(); });
+  el("chattog").onclick=function(){ chatOpen=!chatOpen; lsSet(LS_CHATOPEN, chatOpen?"1":"0"); renderChat(); };
+
+  // ---------- how-it-works collapse (U5): dismissed, or first drop logged ----------
+  function applyHowto(){ var seen=lsGet(LS_HOWTO)==="1";
+    el("howto").style.display=seen?"none":"";
+    el("howtomini").style.display=seen?"":"none"; }
+  el("howtox").onclick=function(){ lsSet(LS_HOWTO,"1"); applyHowto(); };
+  el("howtoshow").onclick=function(){ lsDel(LS_HOWTO); applyHowto(); };
+  var ht=el("howtotour"); if(ht) ht.onclick=function(){
+    if(window.BONKTour && window.BONKTour.start) window.BONKTour.start(); };
+  applyHowto();
 
   // ---------- kick a member from the current op (op-only on the worker) ----------
   function kickMember(name){
@@ -1532,9 +1750,9 @@ window.BONK_TOUR = {
     { sel: null, place: "center", img: "/fleet/tut/radar.png",
       title: "Before the op: someone found this rock",
       body: "Fleet command picks the spot with Radar, our belt scanner. You just fly where the fleet flies. If you ever want to scout your own, the Radar tool on the toolbelt knows every belt in New Eden." },
-    { sel: "#marketline", place: "auto", fallbackCenter: true,
+    { sel: "#opstatus", place: "auto", fallbackCenter: true,
       title: "Your ore is priced the moment you drop it",
-      body: "The ledger values every rock at live Jita prices, the market where everything actually sells. Buyback pays you a fixed cut of that, set for the op. No haggling, no spreadsheets, the math is already done." },
+      body: "This strip is the op at a glance: the system the fleet is in right now, what we are mining, who runs it, and the buyback cut. The ledger values every rock at live Jita prices, the market where everything actually sells. No haggling, no spreadsheets, the math is already done." },
     { sel: null, place: "center", img: "/fleet/tut/hold.png", kbd: [["Ctrl","A"]],
       title: "In EVE: select what you mined",
       body: "Open your ore hold or the can you filled. Click one stack, then Ctrl+A grabs them all. Partial stacks are fine. This is just selecting, nothing moves yet." },
