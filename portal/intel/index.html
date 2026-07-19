@@ -303,8 +303,24 @@ function openEntity(id){
       if(en.corp_count!=null) parts.push("<b>corps</b> "+en.corp_count);
       if(en.date_founded) parts.push("<b>founded</b> "+esc(String(en.date_founded).slice(0,10)));
       if(en.war_eligible!=null) parts.push("<b>war eligible</b> "+(en.war_eligible?"yes":"no"));
-      if(en.eve_id) parts.push("<b>id</b> "+en.eve_id);
-      live='<div class="dblock"><div class="lab">Live data &middot; ESI '+ago(e.enrich_at)+'</div><div class="live">'+(parts.join(" &middot; ")||"nothing resolved")+'</div></div>';
+      if(en.sov_count!=null) parts.push("<b>sov</b> "+en.sov_count);
+      var c=en.combat;
+      if(c){
+        if(c.danger_ratio!=null) parts.push("<b>danger</b> "+c.danger_ratio+"%");
+        if(c.has_supers!=null) parts.push("<b>supers</b> "+(c.has_supers?"yes":"no"));
+        if(c.ships_destroyed_3mo!=null) parts.push("<b>kills 3mo</b> "+c.ships_destroyed_3mo);
+        if(c.active_pvp!=null) parts.push("<b>active pvp</b> "+c.active_pvp);
+        if(c.top_systems&&c.top_systems.length) parts.push("<b>top sys</b> "+c.top_systems.slice(0,4).map(function(s){return esc(s.name);}).join(", "));
+        if(c.top_ships&&c.top_ships.length) parts.push("<b>top ships</b> "+c.top_ships.slice(0,4).map(function(s){return esc(s.name);}).join(", "));
+      }
+      var cmpLine="";
+      if(en.computed){ var cp=en.computed; var bits=[];
+        if(cp.suggested_threat_level!=null) bits.push("machine threat "+cp.suggested_threat_level+"/5");
+        if(cp.alt_inflation&&cp.alt_inflation.likely) bits.push("ALT INFLATED "+cp.alt_inflation.ratio+"x ("+cp.alt_inflation.active_pvp+" active)");
+        if(cp.proximity_hits&&cp.proximity_hits.length) bits.push("PROXIMITY: "+cp.proximity_hits.map(function(p){return esc(p.system);}).join(", "));
+        if(bits.length) cmpLine='<div class="live" style="margin-top:7px;color:var(--amberw)">'+bits.join(" &middot; ")+'</div>';
+      }
+      live='<div class="dblock"><div class="lab">Live data &middot; '+ago(e.enrich_at)+'</div><div class="live">'+(parts.join(" &middot; ")||"nothing resolved")+'</div>'+cmpLine+'</div>';
     } else {
       live='<div class="dblock"><div class="lab">Live data</div><div class="live" style="color:var(--muted)">not enriched yet</div></div>';
     }
