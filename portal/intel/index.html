@@ -8,17 +8,16 @@
 <link rel="icon" href="/portal/intel/gss2-96.png">
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
-/* GOBLIN STATE SECURITY — the cold room. No goblin jokes in here, per doctrine. */
-:root{ --ice:#8fb7c9; --ice-dim:#5f7f8c; --hostile:#f0817a; --amberw:#e9c46a; --ally:#7fb0ff; --ctx:#6f776f; }
+/* GOBLIN STATE SECURITY — the cold room, elevated to a workbench. No goblin jokes in here, per doctrine. */
+:root{ --ice:#8fb7c9; --ice-dim:#5f7f8c; --hostile:#f0817a; --amberw:#e9c46a; --ally:#7fb0ff; --ctx:#6f776f; --selfg:#46ff5e; }
 body{ background:#06070a; }
 body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:linear-gradient(rgba(150,168,158,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(150,168,158,.025) 1px, transparent 1px);
   background-size:44px 44px; }
-.gss-wrap{ max-width:1120px; margin:0 auto; padding:26px 20px 80px; position:relative; z-index:1; }
+.gss-wrap{ max-width:1240px; margin:0 auto; padding:26px 20px 80px; position:relative; z-index:1; }
 
 /* header */
 .gss-head{ display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:8px; }
-/* the seal: big, centered, static, translucent, behind everything (Kyle) */
 .gss-watermark{ position:fixed; top:47%; left:50%; transform:translate(-50%,-50%); width:680px; max-width:94vw;
   opacity:.13; pointer-events:none; user-select:none; z-index:0; }
 @media(max-width:640px){ .gss-watermark{ opacity:.09; width:120vw; } }
@@ -31,7 +30,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .gss-gate .hint a{ color:var(--ice); }
 .gss-title{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:19px; color:var(--silver); }
 .gss-motto{ margin-left:auto; font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice-dim); }
-.subline{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); margin:0 0 26px; }
+.subline{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); margin:0 0 18px; }
 
 /* gate / denial */
 .gss-gate{ min-height:calc(100vh - 80px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
@@ -39,21 +38,67 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .gss-gate h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.14em; font-size:18px; color:var(--silver); margin:0 0 8px; }
 .gss-gate p{ font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em; }
 .gss-gate a{ color:var(--ice); }
-/* the official terminal stamp under the checkpoint (classy, not a clock) */
 .gss-stamp{ margin-top:44px; font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ice-dim); display:flex; align-items:center; justify-content:center; gap:9px; }
 .gss-stamp .rec{ width:7px; height:7px; border-radius:50%; background:var(--hostile); box-shadow:0 0 8px rgba(240,129,122,.65); animation:recpulse 2.4s ease-in-out infinite; }
 @keyframes recpulse{ 50%{ opacity:.3; } }
 .gss-stamp2{ margin-top:7px; font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted); }
-@media(prefers-reduced-motion:reduce){ .gss-stamp .rec{ animation:none; } }
+@media(prefers-reduced-motion:reduce){ .gss-stamp .rec{ animation:none; } .prox-ring{ animation:none!important; } .ddot.hot{ animation:none!important; } }
 
-/* board */
-.board{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:0 0 30px; }
-@media(max-width:760px){ .board{ grid-template-columns:1fr; } }
-.card{ border:1px solid var(--line); background:rgba(20,23,26,.5); padding:16px 18px; }
-.card h3{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice); margin:0 0 12px; }
-.counts{ display:flex; flex-wrap:wrap; gap:8px; }
+/* status strip */
+.strip{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 18px; }
+.strip .sline{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); letter-spacing:.03em; margin-right:6px; }
 .chip{ font-family:var(--mono); font-size:11px; letter-spacing:.04em; padding:4px 9px; border:1px solid var(--line); color:var(--silver-dim); background:#0a0c0f; }
 .chip b{ color:var(--silver); }
+
+/* workbench grid */
+.wb{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:16px; align-items:start; }
+@media(max-width:960px){ .wb{ grid-template-columns:1fr; } }
+.card{ border:1px solid var(--line); background:rgba(20,23,26,.5); padding:16px 18px; }
+.card h3{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice); margin:0 0 12px; }
+.card h3 .sub{ float:right; color:var(--muted); letter-spacing:.06em; text-transform:none; }
+.rail{ display:flex; flex-direction:column; gap:16px; }
+
+/* the neighborhood graph */
+#gcard{ padding-bottom:8px; }
+#gsvg{ width:100%; height:430px; display:block; }
+#gsvg .edge{ stroke:rgba(159,178,188,.22); stroke-width:1; }
+#gsvg .edge.dashed{ stroke-dasharray:3 4; }
+#gsvg .elab{ font-family:var(--mono); font-size:8.5px; fill:#5f7f8c; letter-spacing:.04em; }
+#gsvg .node{ cursor:pointer; }
+#gsvg .nlab{ font-family:var(--mono); font-size:9.5px; fill:#aeb6ba; letter-spacing:.03em; text-anchor:middle; pointer-events:none; }
+#gsvg .nlab.selfl{ fill:var(--selfg); font-weight:700; }
+#gsvg .prox-ring{ fill:none; stroke:var(--hostile); stroke-width:1.2; opacity:.8; animation:proxp 2.6s ease-in-out infinite; }
+@keyframes proxp{ 50%{ opacity:.25; } }
+#gsvg .dim{ opacity:.22; }
+#gsvg .selring{ fill:none; stroke:#e8edef; stroke-width:1.4; stroke-dasharray:2 3; }
+.gtip{ position:fixed; z-index:80; background:#0a0c10; border:1px solid var(--line); padding:8px 11px; pointer-events:none; display:none; max-width:260px; }
+.gtip .tn{ font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:12px; color:var(--silver); }
+.gtip .tm{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:3px; }
+.gsel{ border-top:1px solid var(--line-soft); margin-top:6px; padding:10px 2px 4px; display:none; }
+.gsel .gs-top{ display:flex; align-items:center; gap:10px; }
+.gsel .gs-nm{ font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:14px; color:var(--silver); }
+.gsel .gs-sum{ font-size:12.5px; color:var(--silver-dim); margin-top:5px; line-height:1.5; }
+.gsel button{ margin-left:auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; padding:5px 12px; border:1px solid var(--ice); background:transparent; color:var(--ice); cursor:pointer; }
+
+/* danger HUD */
+.dger .dh-sec{ font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--ice-dim); margin:10px 0 4px; }
+.dger .dh-sec:first-of-type{ margin-top:0; }
+.drow{ display:flex; align-items:center; gap:8px; padding:4px 0; font-family:var(--mono); font-size:11px; color:var(--silver-dim); border-top:1px solid rgba(159,178,188,.06); }
+.drow:first-of-type{ border-top:0; }
+.ddot{ width:8px; height:8px; border-radius:50%; flex:none; background:#20323a; }
+.ddot.warm{ background:var(--amberw); box-shadow:0 0 6px rgba(233,196,106,.5); }
+.ddot.hot{ background:var(--hostile); box-shadow:0 0 8px rgba(240,129,122,.7); animation:recpulse 1.8s ease-in-out infinite; }
+.drow .dn{ color:var(--silver); }
+.drow .dsec{ font-size:10px; }
+.drow .dsec.hi{ color:var(--ice-dim); }
+.drow .dsec.lo{ color:var(--amberw); }
+.drow .dbadge{ font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--line); padding:1px 5px; color:var(--muted); }
+.drow .dbadge.fp{ color:var(--selfg); border-color:rgba(70,255,94,.35); }
+.drow .dk{ margin-left:auto; color:var(--muted); font-size:10px; white-space:nowrap; }
+.drow .dk b{ color:var(--hostile); font-weight:700; }
+.dger .dnote{ font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-top:9px; letter-spacing:.03em; }
+
+/* rail minis */
 .mini{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line-soft); }
 .mini:first-of-type{ border-top:0; }
 .mini .nm{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:13px; color:var(--silver); cursor:pointer; }
@@ -77,6 +122,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 @media(max-width:760px){ .grid{ grid-template-columns:1fr; } }
 .ecard{ border:1px solid var(--line); background:rgba(20,23,26,.5); padding:14px 16px; cursor:pointer; position:relative; transition:border-color .15s, transform .15s; }
 .ecard:hover{ transform:translateY(-2px); border-color:var(--ice); }
+.ecard.sel{ border-color:#e8edef; box-shadow:0 0 0 1px rgba(232,237,239,.25); }
 .ecard .bar{ position:absolute; left:0; top:0; bottom:0; width:3px; }
 .ecard .top{ display:flex; align-items:baseline; gap:9px; }
 .ecard .en{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.02em; font-size:15px; color:var(--silver); }
@@ -87,6 +133,32 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .ecard .mt .th{ color:var(--amberw); }
 .ecard .mt .st b{ color:var(--silver-dim); }
 .stale{ color:var(--hostile)!important; }
+
+/* persons */
+.pcard{ border:1px solid var(--line); background:rgba(20,23,26,.5); padding:14px 16px; position:relative; }
+.pcard .bar{ position:absolute; left:0; top:0; bottom:0; width:3px; }
+.pcard .top{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+.pcard .en{ font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:15px; color:var(--silver); cursor:pointer; }
+.pcard .en:hover{ color:var(--ice); }
+.pcard .org{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+.pcard .cl{ margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+.pbadge{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; border:1px solid rgba(233,196,106,.4); color:var(--amberw); padding:1px 6px; }
+.gradechip{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; border:1px solid var(--line); color:var(--ice); padding:1px 6px; }
+.pcard .tell{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
+.pcard .pact{ display:flex; gap:8px; margin-top:10px; }
+.pcard .pact button{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border:1px solid var(--line); background:transparent; color:var(--silver-dim); cursor:pointer; }
+.pcard .pact button:hover{ border-color:var(--ice); color:var(--ice); }
+
+/* corp history timeline */
+.tl{ margin-top:10px; }
+.tl .tlbar{ position:relative; height:20px; background:#0a0c0f; border:1px solid var(--line-soft); }
+.tl .stint{ position:absolute; top:0; bottom:0; overflow:hidden; white-space:nowrap; font-family:var(--mono); font-size:8.5px;
+  color:#04140a; display:flex; align-items:center; padding:0 4px; border-right:1px solid #06070a; }
+.tl .stint.neut{ background:#3a4750; color:#aeb6ba; }
+.tl .stint.selfc{ background:var(--selfg); }
+.tl .stint.hostilec{ background:var(--hostile); }
+.tl .stint.watchc{ background:var(--amberw); }
+.tl .tlax{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:3px; }
 
 /* detail */
 .detail{ position:fixed; inset:0; z-index:60; background:rgba(4,5,8,.86); overflow-y:auto; padding:30px 16px; }
@@ -105,11 +177,12 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .verdict .v{ font-size:14.5px; color:var(--silver); margin-top:5px; line-height:1.6; }
 .dsec{ margin:14px 0; }
 .dsec .sh{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em; font-size:13px; color:var(--ice); margin-bottom:4px; }
-.dsec .sb{ font-size:14px; color:var(--silver-dim); line-height:1.6; }
+.dsec .sb{ font-size:14px; color:var(--silver-dim); line-height:1.6; white-space:pre-line; }
 .grade{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); padding:1px 6px; margin-left:8px; vertical-align:2px; }
 .gaptag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--amberw); border:1px solid rgba(233,196,106,.4); padding:1px 6px; margin-left:8px; vertical-align:2px; }
 .dsec-gap .sh{ color:var(--ice-dim); }
 .sb-empty{ color:var(--muted); font-style:italic; font-size:12.5px; }
+.sealed{ border:1px solid rgba(240,129,122,.35); background:rgba(240,129,122,.05); padding:12px 16px; margin:14px 0; font-family:var(--mono); font-size:11px; color:var(--hostile); letter-spacing:.08em; text-transform:uppercase; }
 .rels{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
 .rel{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); border:1px solid var(--line-soft); padding:4px 9px; }
 .rel b{ color:var(--ice-dim); text-transform:uppercase; font-size:9.5px; letter-spacing:.05em; }
@@ -125,6 +198,26 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .rule .rn{ font-family:var(--display); font-weight:700; color:var(--ice-dim); font-size:14px; min-width:22px; }
 .rule .rt b{ color:var(--silver); }
 .rule .rt{ font-size:13px; color:var(--muted); line-height:1.5; }
+
+/* debrief panel */
+.dbf{ margin-top:6px; }
+.dbf .stage{ border:1px solid var(--line); background:rgba(20,23,26,.4); padding:14px 16px; margin:12px 0; }
+.dbf .stage .st-h{ font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice); margin-bottom:9px; }
+.dbf .rule1{ border-left:3px solid var(--ice); background:rgba(143,183,201,.06); padding:11px 14px; font-size:13.5px; color:var(--silver); line-height:1.55; }
+.dbf .prep-line{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); padding:4px 0; line-height:1.55; }
+.dbf .prep-line b{ color:var(--ice-dim); }
+.dbf .qs .q1{ padding:8px 0; border-top:1px solid var(--line-soft); }
+.dbf .qs .q1:first-child{ border-top:0; }
+.dbf .qs .qh{ font-family:var(--display); font-weight:700; text-transform:uppercase; font-size:12px; color:var(--silver); }
+.dbf .qs .qt{ font-size:13px; color:var(--muted); line-height:1.55; margin-top:2px; }
+.dbf label{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ice-dim); margin:12px 0 4px; }
+.dbf input, .dbf select, .dbf textarea{ width:100%; background:#06070a; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12px; padding:8px 10px; box-sizing:border-box; }
+.dbf textarea{ min-height:54px; resize:vertical; }
+.dbf .two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.dbf .file-btn{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:10px 18px; background:var(--ice); color:#04140a; border:0; cursor:pointer; margin-top:16px; }
+.dbf .guard{ font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.04em; margin-top:12px; line-height:1.6; }
+.dbrow{ border:1px solid var(--line-soft); padding:10px 12px; margin:8px 0; font-family:var(--mono); font-size:11px; color:var(--silver-dim); line-height:1.6; }
+.dbrow b{ color:var(--ice-dim); }
 
 /* add form */
 .addbar{ margin:22px 0 0; }
@@ -155,42 +248,68 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
     </div>
     <div class="subline">We watch, we record, we know. There is always a file.</div>
 
-    <div class="board" id="board"></div>
+    <div class="strip" id="strip"></div>
 
-    <div class="sec-h"><span class="ix">The Cabinet</span></div>
-    <div class="filters" id="filters"></div>
-    <div class="grid" id="grid"></div>
-
-    <div class="addbar">
-      <button class="open" id="addToggle">+ open a file</button>
-      <div class="addform" id="addForm">
-        <div class="row">
-          <input class="nm" id="f_name" placeholder="entity name (alliance, corp, or pilot)" autocomplete="off">
-          <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option></select>
-          <select id="f_class">
-            <option value="watch">watch</option><option value="hostile">hostile</option><option value="hostile_priority">hostile priority</option>
-            <option value="neutral">neutral</option><option value="friendly">friendly</option><option value="ally">ally</option>
-            <option value="target">target</option><option value="context">context</option>
-          </select>
-          <select id="f_standing"><option value="neutral">neutral</option><option value="red">red</option><option value="blue">blue</option><option value="nip">nip</option><option value="active_deal">active deal</option></select>
-          <input id="f_threat" type="number" min="0" max="5" value="0" style="width:64px" title="threat 0-5">
+    <div class="wb">
+      <div class="main-col">
+        <div class="card" id="gcard">
+          <h3>The Neighborhood <span class="sub" id="gsub">who ties to whom</span></h3>
+          <svg id="gsvg" role="img" aria-label="relationship graph"></svg>
+          <div class="gsel" id="gsel"></div>
         </div>
-        <div class="row"><textarea id="f_summary" placeholder="one line summary"></textarea></div>
-        <button class="go" id="f_go">file it (resolves + enriches from ESI)</button>
-        <div class="err" id="f_err"></div>
+
+        <div class="sec-h"><span class="ix">The Cabinet</span></div>
+        <div class="filters" id="filters"></div>
+        <div class="grid" id="grid"></div>
+
+        <div class="sec-h"><span class="ix">Persons of Interest</span></div>
+        <div class="grid" id="pgrid"></div>
+
+        <div class="addbar">
+          <button class="open" id="addToggle">+ open a file</button>
+          <div class="addform" id="addForm">
+            <div class="row">
+              <input class="nm" id="f_name" placeholder="entity name (alliance, corp, or pilot)" autocomplete="off">
+              <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option></select>
+              <select id="f_class">
+                <option value="watch">watch</option><option value="hostile">hostile</option><option value="hostile_priority">hostile priority</option>
+                <option value="neutral">neutral</option><option value="friendly">friendly</option><option value="ally">ally</option>
+                <option value="target">target</option><option value="context">context</option>
+              </select>
+              <select id="f_standing"><option value="neutral">neutral</option><option value="red">red</option><option value="blue">blue</option><option value="nip">nip</option><option value="active_deal">active deal</option></select>
+              <input id="f_threat" type="number" min="0" max="5" value="0" style="width:64px" title="threat 0-5">
+            </div>
+            <div class="row"><textarea id="f_summary" placeholder="one line summary"></textarea></div>
+            <button class="go" id="f_go">file it (resolves + enriches from ESI)</button>
+            <div class="err" id="f_err"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="card dger" id="dcard">
+          <h3>Derelik Danger <span class="sub" id="dsub"></span></h3>
+          <div id="dbody"><div class="foot-line">reading the killfeeds...</div></div>
+        </div>
+        <div class="card" id="threats-card"><h3>Top Threats</h3><div id="threats"></div></div>
+        <div class="card" id="deals-card"><h3>Active Files &amp; Deals</h3><div id="deals"></div></div>
+        <div class="card" id="fp-card"><h3>Footprint</h3><div id="fp"></div></div>
+        <div class="card"><h3>Field Rules</h3><div class="foot-line" style="color:var(--muted)">Assume nothing. Everyone may be under enemy control. The warning trips on the third, not the first.</div><div class="foot-line"><span class="nm" style="cursor:pointer;color:var(--ice)" onclick="openRules()">read all ten &#8594;</span></div></div>
       </div>
     </div>
   </main>
 </div>
 
 <div class="detail" id="detail" style="display:none"><div class="dwrap" id="dwrap"></div></div>
+<div class="gtip" id="gtip"></div>
 
 <script>
 var CLS = {
   hostile:{c:"#f0817a",l:"hostile"}, hostile_priority:{c:"#f0817a",l:"hostile priority"},
   watch:{c:"#e9c46a",l:"watch"}, neutral:{c:"#9aa39c",l:"neutral"},
   friendly:{c:"#7fb0ff",l:"friendly"}, ally:{c:"#7fb0ff",l:"ally"},
-  target:{c:"#ff9d5c",l:"target"}, context:{c:"#6f776f",l:"context"}, self:{c:"#46ff5e",l:"self"}
+  target:{c:"#ff9d5c",l:"target"}, context:{c:"#6f776f",l:"context"}, self:{c:"#46ff5e",l:"self"},
+  unfiled:{c:"#4a545c",l:"unfiled"}
 };
 var FIELD_RULES = [
   ["Assume nothing.","A standing you did not verify is not set. A system you did not scout is not clear. Confirm, then move."],
@@ -204,12 +323,16 @@ var FIELD_RULES = [
   ["Keep the exit open.","Every op, deal, and structure has a way out priced in before we commit. Nothing load bearing rests on their word."],
   ["Once is accident, twice coincidence, three times enemy action.","One kill in our space is noise. A pattern is a campaign. The warning trips on the third, not the first."]
 ];
+var SELF_CORPS = { "wealthy dropouts":1, "wealthydropouts":1, "bonk":1 };
+var NPC_SCHOOLS = { "hedion university":1, "royal amarr institute":1, "science and trade institute":1, "state war academy":1, "pator tech school":1, "republic military school":1, "university of caille":1, "center for advanced studies":1, "federal navy academy":1, "imperial academy":1, "royal khanid navy":1, "school of applied knowledge":1 };
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
 function clsInfo(k){ return CLS[k]||{c:"#9aa39c",l:k}; }
 function ago(iso){ if(!iso) return "never"; var d=Math.floor((Date.now()-Date.parse(iso))/86400000); return d<=0?"today":d+"d ago"; }
+function agoMin(iso){ if(!iso) return ""; var m=Math.floor((Date.now()-Date.parse(iso))/60000); return m<=0?"just now":m+"m ago"; }
 function api(path,opts){ return fetch("/api"+path,Object.assign({credentials:"same-origin"},opts||{})).then(function(r){return r.json();}); }
 
 var curClass = "";
+var GRAPH=null, GPOS=null, SELECTED=null, PERSONS=[], FLAGGED={}, ENTS=[];
 
 // GSS emergency override. do not share.
 var OVERRIDE = "assume-everything";
@@ -241,48 +364,282 @@ function init(){
     if(w && w.loggedIn && w.gss){
       document.getElementById("gate").style.display="none";
       document.getElementById("app").style.display="block";
-      loadBoard(); loadEntities(""); return;
+      loadBoard(); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
+      setInterval(loadDanger, 300000);
+      return;
     }
     showCheckpoint(); // everyone else meets the bait
   }).catch(function(){ document.getElementById("gatemsg").innerHTML='<p class="err">GSS is not answering. Try again.</p>'; });
 }
 
+/* ---------- board: status strip + rail ---------- */
 function loadBoard(){
   api("/gss/board").then(function(d){
     if(!d||!d.ok) return;
     document.getElementById("motto").textContent = d.motto||"Assume nothing";
     var counts=d.counts||{}, order=["hostile_priority","hostile","watch","target","neutral","friendly","ally","context"];
+    var hostiles=(counts.hostile_priority||0)+(counts.hostile||0);
+    var sline=d.total+" files. "+hostiles+" hostile, "+(counts.watch||0)+" on watch."+(d.stalest?(" Stalest file: "+d.stalest.name+", reviewed "+ago(d.stalest.verified_at)+"."):"");
     var chips=order.filter(function(k){return counts[k];}).map(function(k){ var ci=clsInfo(k); return '<span class="chip" style="border-color:'+ci.c+'33"><b style="color:'+ci.c+'">'+counts[k]+'</b> '+ci.l+'</span>'; }).join("");
-    function miniRow(e){ var ci=clsInfo(e.classification); return '<div class="mini"><span class="dot" style="background:'+ci.c+'"></span><span class="nm" onclick="openEntity('+e.id+')">'+esc(e.name)+'</span><span class="tag" style="color:'+ci.c+'">'+ci.l+'</span><span class="sm">threat '+e.threat_level+' &middot; '+esc(e.bonk_standing)+'</span></div>'; }
-    var threats=(d.threats||[]).map(miniRow).join("")||'<div class="foot-line">nothing on the board</div>';
-    var deals=(d.deals||[]).map(miniRow).join("")||'<div class="foot-line">no active files</div>';
-    var fp=(d.footprint||[]).map(function(f){ return '<div class="foot-line"><b>'+esc(f.kind)+'</b> &nbsp;'+esc(f.label)+' &middot; '+esc((f.systems||[]).join(", "))+'</div>'; }).join("");
-    var stale=d.stalest?('<div class="foot-line"><b>stalest</b> &nbsp;<span class="nm" style="cursor:pointer;color:var(--silver)" onclick="openEntity('+d.stalest.id+')">'+esc(d.stalest.name)+'</span> &middot; reviewed '+ago(d.stalest.verified_at)+'</div>'):'';
-    document.getElementById("board").innerHTML =
-      '<div class="card"><h3>Situation &middot; '+d.total+' files</h3><div class="counts">'+chips+'</div>'+stale+'<div style="margin-top:12px">'+fp+'</div></div>'+
-      '<div class="card"><h3>Top threats</h3>'+threats+'</div>'+
-      '<div class="card"><h3>Active files &amp; deals</h3>'+deals+'</div>'+
-      '<div class="card"><h3>Field Rules</h3><div class="foot-line" style="color:var(--muted)">Assume nothing. Everyone may be under enemy control. The warning trips on the third, not the first.</div><div class="foot-line"><span class="nm" style="cursor:pointer;color:var(--ice)" onclick="openRules()">read all ten &#8594;</span></div></div>';
+    document.getElementById("strip").innerHTML='<span class="sline">'+esc(sline)+'</span>'+chips;
+    function miniRow(e){ var ci=clsInfo(e.classification); return '<div class="mini"><span class="dot" style="background:'+ci.c+'"></span><span class="nm" onclick="openEntity('+e.id+')">'+esc(e.name)+'</span><span class="tag" style="color:'+ci.c+'">'+ci.l+'</span><span class="sm">threat '+e.threat_level+'</span></div>'; }
+    document.getElementById("threats").innerHTML=(d.threats||[]).map(miniRow).join("")||'<div class="foot-line">nothing on the board</div>';
+    document.getElementById("deals").innerHTML=(d.deals||[]).map(miniRow).join("")||'<div class="foot-line">no active files</div>';
+    document.getElementById("fp").innerHTML=(d.footprint||[]).map(function(f){ return '<div class="foot-line"><b>'+esc(f.kind.replace(/_/g," "))+'</b> &nbsp;'+esc((f.systems||[]).join(", "))+'</div>'; }).join("");
   });
 }
 
+/* ---------- cabinet ---------- */
 function loadEntities(cls){
   curClass=cls;
   var fl=[["","all"],["hostile_priority","priority"],["hostile","hostile"],["watch","watch"],["neutral","neutral"],["friendly","friendly"],["ally","ally"],["target","target"],["context","context"]];
   document.getElementById("filters").innerHTML=fl.map(function(f){ return '<button class="'+(cls===f[0]?"on":"")+'" onclick="loadEntities(\''+f[0]+'\')">'+f[1]+'</button>'; }).join("");
   api("/gss/entities"+(cls?("?class="+cls):"")).then(function(d){
     if(!d||!d.ok) return;
-    document.getElementById("grid").innerHTML=(d.entities||[]).map(function(e){
+    ENTS=d.entities||[];
+    document.getElementById("grid").innerHTML=ENTS.map(function(e){
       var ci=clsInfo(e.classification);
       var staleCls = e.verified_at && (Date.now()-Date.parse(e.verified_at))>21*86400000 ? "stale":"";
-      return '<div class="ecard" onclick="openEntity('+e.id+')"><span class="bar" style="background:'+ci.c+'"></span>'+
+      var selCls = SELECTED==="e:"+e.id ? " sel":"";
+      return '<div class="ecard'+selCls+'" id="ec'+e.id+'" onclick="openEntity('+e.id+')"><span class="bar" style="background:'+ci.c+'"></span>'+
         '<div class="top"><span class="en">'+esc(e.name)+'</span>'+(e.ticker?'<span class="tk">['+esc(e.ticker)+']</span>':'')+'<span class="cl" style="color:'+ci.c+'">'+ci.l+'</span></div>'+
         '<div class="sy">'+esc(e.summary||"")+'</div>'+
         '<div class="mt"><span class="th">threat '+e.threat_level+'</span><span class="st">standing <b>'+esc(e.bonk_standing)+'</b></span><span class="'+staleCls+'">reviewed '+ago(e.verified_at)+'</span></div></div>';
     }).join("")||'<div class="foot-line">no files on this shelf</div>';
+    dimGraph(cls);
   });
 }
 
+/* ---------- the neighborhood graph ---------- */
+function loadGraph(){
+  api("/gss/graph").then(function(d){
+    if(!d||!d.ok) return;
+    GRAPH=d;
+    renderGraph();
+  });
+}
+function layoutGraph(nodes, edges, W, H){
+  var pos={};
+  var R=Math.min(W,H)/2.9;
+  nodes.forEach(function(n,i){
+    if(n.key==="self"){ pos[n.key]={x:W/2,y:H/2}; return; }
+    var a=2*Math.PI*i/nodes.length;
+    pos[n.key]={x:W/2+R*Math.cos(a), y:H/2+R*Math.sin(a)};
+  });
+  var pairs=edges.map(function(e){return [e.a,e.b];});
+  for(var it=0; it<280; it++){
+    var t=1-it/280, step=10*t+1;
+    var f={}; nodes.forEach(function(n){ f[n.key]={x:0,y:0}; });
+    for(var i=0;i<nodes.length;i++) for(var k=i+1;k<nodes.length;k++){
+      var A=nodes[i].key,B=nodes[k].key;
+      var dx=pos[A].x-pos[B].x, dy=pos[A].y-pos[B].y;
+      var d2=dx*dx+dy*dy+0.01, d=Math.sqrt(d2), rep=8800/d2;
+      f[A].x+=dx/d*rep; f[A].y+=dy/d*rep; f[B].x-=dx/d*rep; f[B].y-=dy/d*rep;
+    }
+    pairs.forEach(function(p){
+      if(!pos[p[0]]||!pos[p[1]]) return;
+      var dx=pos[p[1]].x-pos[p[0]].x, dy=pos[p[1]].y-pos[p[0]].y, d=Math.sqrt(dx*dx+dy*dy)+0.01;
+      var k2=0.055*(d-120);
+      f[p[0]].x+=dx/d*k2; f[p[0]].y+=dy/d*k2; f[p[1]].x-=dx/d*k2; f[p[1]].y-=dy/d*k2;
+    });
+    nodes.forEach(function(n){
+      if(n.key==="self") return;
+      f[n.key].x+=(W/2-pos[n.key].x)*0.012; f[n.key].y+=(H/2-pos[n.key].y)*0.012;
+      var fx=Math.max(-step,Math.min(step,f[n.key].x)), fy=Math.max(-step,Math.min(step,f[n.key].y));
+      pos[n.key].x=Math.max(46,Math.min(W-46,pos[n.key].x+fx));
+      pos[n.key].y=Math.max(30,Math.min(H-34,pos[n.key].y+fy));
+    });
+  }
+  return pos;
+}
+function renderGraph(){
+  if(!GRAPH) return;
+  var svg=document.getElementById("gsvg");
+  var W=svg.clientWidth||800, H=430;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  GPOS=layoutGraph(GRAPH.nodes, GRAPH.edges, W, H);
+  var out="";
+  GRAPH.edges.forEach(function(e){
+    var a=GPOS[e.a], b=GPOS[e.b]; if(!a||!b) return;
+    var dash=(e.b&&String(e.b).slice(0,2)==="u:")||(String(e.a).slice(0,2)==="u:")?" dashed":"";
+    out+='<line class="edge'+dash+'" data-ek="'+esc(e.a)+'|'+esc(e.b)+'" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';
+    out+='<text class="elab" x="'+((a.x+b.x)/2)+'" y="'+((a.y+b.y)/2-3)+'" text-anchor="middle">'+esc(e.type.replace(/_/g," "))+'</text>';
+  });
+  GRAPH.nodes.forEach(function(n){
+    var p=GPOS[n.key]; if(!p) return;
+    var ci=clsInfo(n.classification);
+    var r=n.key==="self"?11:(7+(n.threat_level||0)*2);
+    var hollow=n.classification==="unfiled";
+    out+='<g class="node" data-nk="'+esc(n.key)+'">';
+    if(n.prox) out+='<circle class="prox-ring" cx="'+p.x+'" cy="'+p.y+'" r="'+(r+5)+'"/>';
+    if(SELECTED===n.key) out+='<circle class="selring" cx="'+p.x+'" cy="'+p.y+'" r="'+(r+8)+'"/>';
+    out+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+(hollow?"none":ci.c)+'" stroke="'+ci.c+'" stroke-width="1.3"'+(hollow?' stroke-dasharray="3 3"':'')+' fill-opacity="'+(n.key==="self"?"1":".85")+'"/>';
+    out+='<text class="nlab'+(n.key==="self"?" selfl":"")+'" x="'+p.x+'" y="'+(p.y+r+12)+'">'+esc(n.name)+'</text>';
+    out+='</g>';
+  });
+  svg.innerHTML=out;
+  dimGraph(curClass);
+  Array.prototype.forEach.call(svg.querySelectorAll("g.node"),function(g){
+    var key=g.getAttribute("data-nk");
+    g.addEventListener("click",function(ev){ ev.stopPropagation(); nodeClick(key); });
+    g.addEventListener("mousemove",function(ev){ showTip(key,ev); });
+    g.addEventListener("mouseleave",hideTip);
+  });
+  svg.addEventListener("click",function(){ selectNode(null); });
+}
+function dimGraph(cls){
+  if(!GRAPH) return;
+  var svg=document.getElementById("gsvg");
+  Array.prototype.forEach.call(svg.querySelectorAll("g.node"),function(g){
+    var key=g.getAttribute("data-nk");
+    var n=GRAPH.nodes.filter(function(x){return x.key===key;})[0];
+    var on=!cls || !n || n.key==="self" || n.classification===cls;
+    g.classList.toggle("dim",!on);
+  });
+  Array.prototype.forEach.call(svg.querySelectorAll(".edge, .elab"),function(el){ el.classList.toggle("dim",!!cls); });
+}
+function nodeById(key){ return (GRAPH&&GRAPH.nodes||[]).filter(function(n){return n.key===key;})[0]; }
+function nodeClick(key){
+  var n=nodeById(key); if(!n) return;
+  if(n.classification==="unfiled"){
+    var af=document.getElementById("addForm");
+    af.classList.add("show");
+    document.getElementById("f_name").value=n.name;
+    af.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  if(n.key==="self") return;
+  if(SELECTED===key){ if(n.id) openEntity(n.id); return; }
+  selectNode(key);
+}
+function selectNode(key){
+  SELECTED=key;
+  renderGraphSel();
+  Array.prototype.forEach.call(document.querySelectorAll(".ecard"),function(el){ el.classList.remove("sel"); });
+  var box=document.getElementById("gsel");
+  if(!key){ box.style.display="none"; return; }
+  var n=nodeById(key);
+  var ci=clsInfo(n.classification);
+  box.style.display="block";
+  box.innerHTML='<div class="gs-top"><span class="dot" style="background:'+ci.c+'"></span><span class="gs-nm">'+esc(n.name)+'</span>'+
+    '<span class="tag" style="color:'+ci.c+';font-family:var(--mono);font-size:9.5px;text-transform:uppercase;border:1px solid currentColor;padding:2px 7px">'+ci.l+'</span>'+
+    (n.threat_level?'<span class="sm" style="font-family:var(--mono);font-size:10px;color:var(--amberw)">threat '+n.threat_level+'</span>':'')+
+    (n.id?'<button onclick="openEntity('+n.id+')">open the file</button>':'')+'</div>'+
+    '<div class="gs-sum">'+esc(summaryFor(n)||"")+'<span style="color:var(--muted)"> Click the node again to open the file.</span></div>';
+  if(n.id){
+    var card=document.getElementById("ec"+n.id);
+    if(card){ card.classList.add("sel"); card.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+  }
+}
+function summaryFor(n){
+  if(!n.id) return "";
+  var e=ENTS.filter(function(x){return x.id===n.id;})[0];
+  return e?e.summary:"";
+}
+function renderGraphSel(){
+  var svg=document.getElementById("gsvg");
+  Array.prototype.forEach.call(svg.querySelectorAll(".selring"),function(el){ el.remove(); });
+  if(!SELECTED||!GPOS||!GPOS[SELECTED]) return;
+  var n=nodeById(SELECTED); if(!n) return;
+  var p=GPOS[SELECTED], r=(n.key==="self"?11:(7+(n.threat_level||0)*2))+8;
+  var g=svg.querySelector('g[data-nk="'+SELECTED+'"]');
+  if(g){ var c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("class","selring"); c.setAttribute("cx",p.x); c.setAttribute("cy",p.y); c.setAttribute("r",r);
+    g.insertBefore(c,g.firstChild); }
+}
+function showTip(key,ev){
+  var n=nodeById(key); if(!n) return;
+  var t=document.getElementById("gtip"), ci=clsInfo(n.classification);
+  t.innerHTML='<div class="tn" style="color:'+ci.c+'">'+esc(n.name)+'</div><div class="tm">'+ci.l+
+    (n.threat_level?' &middot; threat '+n.threat_level:'')+(n.bonk_standing&&n.bonk_standing!=="neutral"?' &middot; '+esc(n.bonk_standing):'')+
+    (n.prox?' &middot; ACTIVE IN OUR FOOTPRINT':'')+(n.classification==="unfiled"?' &middot; no file yet, click to open one':'')+'</div>';
+  t.style.display="block";
+  t.style.left=Math.min(window.innerWidth-270,ev.clientX+14)+"px";
+  t.style.top=(ev.clientY+12)+"px";
+}
+function hideTip(){ document.getElementById("gtip").style.display="none"; }
+var rsz; window.addEventListener("resize",function(){ clearTimeout(rsz); rsz=setTimeout(renderGraph,220); });
+
+/* ---------- Derelik danger HUD ---------- */
+function loadDanger(){
+  if(document.hidden) return;
+  api("/gss/danger").then(function(d){
+    if(!d||!d.ok){ document.getElementById("dbody").innerHTML='<div class="foot-line">the killfeed is not answering</div>'; return; }
+    document.getElementById("dsub").textContent="fetched "+agoMin(d.fetched_at);
+    var lane=(d.watch||[]).filter(function(s){return s.lane!=null;}).sort(function(a,b){return a.lane-b.lane;});
+    var pocket=(d.watch||[]).filter(function(s){return s.lane==null&&!s.shortcut;}).sort(function(a,b){return (b.ship_kills+b.pod_kills)-(a.ship_kills+a.pod_kills)||(a.jumps||9)-(b.jumps||9);});
+    var cut=(d.watch||[]).filter(function(s){return s.lane==null&&s.shortcut;});
+    function row(s2){
+      var k=s2.ship_kills, p=s2.pod_kills;
+      var dotc=k+p>=3?"hot":(k+p>=1?"warm":"");
+      var secR=Math.round(s2.sec*10)/10;
+      var badges=(s2.footprint||[]).map(function(f){ return '<span class="dbadge fp">'+esc(f.replace(/_/g," "))+'</span>'; }).join("");
+      var kills=k+p>0?('<b>'+k+'</b> kill'+(k===1?'':'s')+(p?' +'+p+' pods':'')):('quiet');
+      return '<div class="drow"><span class="ddot '+dotc+'"></span><span class="dn">'+esc(s2.name)+'</span><span class="dsec '+(secR>=0.5?"hi":"lo")+'">'+secR.toFixed(1)+'</span>'+badges+'<span class="dk">'+kills+' &middot; '+s2.traffic+' thru</span></div>';
+    }
+    var html='<div class="dh-sec">The haul lane, Rens to Mohas</div>'+lane.map(row).join("");
+    html+='<div class="dh-sec">The pocket, around home</div>'+pocket.map(row).join("");
+    if(cut.length) html+='<div class="dh-sec">The lowsec shortcut, not our lane</div>'+cut.map(row).join("");
+    if(d.hot&&d.hot.length){
+      html+='<div class="dh-sec">Hot elsewhere in Derelik</div>'+d.hot.map(function(s2){
+        var secR=Math.round(s2.sec*10)/10;
+        return '<div class="drow"><span class="ddot '+(s2.ship_kills+s2.pod_kills>=3?"hot":"warm")+'"></span><span class="dn">'+esc(s2.name)+'</span><span class="dsec '+(secR>=0.5?"hi":"lo")+'">'+secR.toFixed(1)+'</span><span class="dk"><b>'+s2.ship_kills+'</b> kills'+(s2.pod_kills?' +'+s2.pod_kills+' pods':'')+'</span></div>';
+      }).join("");
+    }
+    html+='<div class="dnote">Ship and pod kills, '+esc(d.window)+'. Quiet is a state, not a promise. Assume nothing.</div>';
+    document.getElementById("dbody").innerHTML=html;
+  });
+}
+
+/* ---------- persons of interest ---------- */
+function loadPersons(){
+  api("/gss/persons").then(function(d){
+    if(!d||!d.ok) return;
+    PERSONS=d.persons||[]; FLAGGED=d.flagged||{};
+    document.getElementById("pgrid").innerHTML=PERSONS.map(function(p){
+      var ci=clsInfo(p.classification);
+      var tell=p.combat_tell?("killboard: "+fmtIsk(p.combat_tell.isk_destroyed)+" destroyed vs "+fmtIsk(p.combat_tell.isk_lost)+" lost, danger "+(p.combat_tell.danger_ratio||0)+"%"):"no killboard read";
+      return '<div class="pcard"><span class="bar" style="background:'+ci.c+'"></span>'+
+        '<div class="top"><span class="en" onclick="openEntity('+p.id+')">'+esc(p.name)+'</span>'+
+        (p.role?'<span class="org">'+esc(p.role)+'</span>':'')+
+        (p.org?'<span class="org">'+esc(p.org)+'</span>':'')+
+        (p.sealed_file?'<span class="pbadge">sealed file</span>':'')+
+        (p.source_grade?'<span class="gradechip">source '+esc(p.source_grade)+'</span>':'')+
+        '<span class="cl" style="color:'+ci.c+'">'+ci.l+'</span></div>'+
+        renderTimeline(p.corp_history)+
+        '<div class="tell">'+esc(tell)+'</div>'+
+        '<div class="pact"><button onclick="openEntity('+p.id+')">open the file</button>'+
+        '<button onclick="openDebrief('+p.id+')">'+(p.debriefs&&p.debriefs.count?'debriefs ('+p.debriefs.count+')':'run the debrief')+'</button>'+
+        (p.next_review?'<span class="org" style="margin-left:auto">next review '+esc(p.next_review)+'</span>':'')+'</div>'+
+        '</div>';
+    }).join("")||'<div class="foot-line">no persons filed. Pilots filed in the cabinet appear here.</div>';
+  });
+}
+function fmtIsk(v){ if(v==null) return "?"; if(v>=1e9) return (v/1e9).toFixed(1)+"B"; if(v>=1e6) return (v/1e6).toFixed(0)+"M"; if(v>=1e3) return (v/1e3).toFixed(0)+"K"; return String(v); }
+function flagFor(corp){
+  var c=String(corp||"").toLowerCase();
+  if(SELF_CORPS[c]) return "self";
+  for(var k in FLAGGED){ if(c===k||c.indexOf(k)>=0) return FLAGGED[k]; }
+  if(NPC_SCHOOLS[c]) return null;
+  return null;
+}
+function renderTimeline(hist){
+  if(!hist||!hist.length) return '<div class="tl"><div class="foot-line" style="color:var(--muted)">no corp history yet, refresh from ESI</div></div>';
+  var now=Date.now();
+  var stints=hist.map(function(h){ return { corp:h.corp, s:Date.parse(h.start), e:h.end?Date.parse(h.end):now }; }).sort(function(a,b){return a.s-b.s;});
+  var t0=stints[0].s, span=Math.max(1,now-t0);
+  var bars=stints.map(function(st){
+    var l=(st.s-t0)/span*100, w=Math.max(1.2,(st.e-st.s)/span*100);
+    var fl=flagFor(st.corp);
+    var cls2=fl==="self"?"selfc":(fl==="hostile"||fl==="hostile_priority"?"hostilec":(fl==="watch"?"watchc":"neut"));
+    var days=Math.round((st.e-st.s)/86400000);
+    var title=esc(st.corp)+", "+new Date(st.s).toISOString().slice(0,10)+" to "+(st.e>=now-86400000?"now":new Date(st.e).toISOString().slice(0,10))+", "+days+"d";
+    return '<span class="stint '+cls2+'" style="left:'+l+'%;width:'+w+'%" title="'+title+'">'+(w>14?esc(st.corp):'')+'</span>';
+  }).join("");
+  return '<div class="tl"><div class="tlbar">'+bars+'</div><div class="tlax"><span>'+new Date(t0).toISOString().slice(0,10)+'</span><span>now</span></div></div>';
+}
+
+/* ---------- entity dossier ---------- */
 function openEntity(id){
   api("/gss/entity/"+id).then(function(d){
     if(!d||!d.ok) return;
@@ -290,6 +647,7 @@ function openEntity(id){
     var hostile = e.classification==="hostile"||e.classification==="hostile_priority";
     var meta='<span><b>type</b> '+esc(e.eve_type)+'</span><span><b>class</b> '+ci.l+'</span><span><b>threat</b> '+e.threat_level+'/5</span><span><b>standing</b> '+esc(e.bonk_standing)+'</span><span><b>reviewed</b> '+ago(e.verified_at)+'</span>';
     var doss=(e.dossiers||[]).map(function(ds){
+      if(ds.sealed) return '<div class="sealed">Sealed file &middot; lead only &middot; '+esc(ds.doc_type)+'</div>';
       var kq=ds.key_question?'<div class="kq"><div class="lab">Standing question</div><div class="q">'+esc(ds.key_question)+'</div></div>':'';
       var vd=ds.verdict?'<div class="verdict"><div class="lab">Verdict</div><div class="v">'+esc(ds.verdict)+'</div></div>':'';
       var secs=(ds.sections||[]).map(function(s){
@@ -305,13 +663,15 @@ function openEntity(id){
       }).join("");
       return kq+vd+secs;
     }).join("")||'<div class="foot-line">no written file yet</div>';
-    var rels=(e.relationships||[]).length?('<div class="dblock"><div class="lab">Relationships</div><div class="rels">'+e.relationships.map(function(r){ return '<span class="rel"><b>'+esc(r.rel_type)+'</b> '+esc(r.to||"")+'</span>'; }).join("")+'</div></div>'):'';
+    var rels=(e.relationships||[]).length?('<div class="dblock"><div class="lab">Relationships</div><div class="rels">'+e.relationships.map(function(r){ return '<span class="rel"><b>'+esc(r.rel_type.replace(/_/g," "))+'</b> '+esc(r.to||"")+'</span>'; }).join("")+'</div></div>'):'';
     var live="";
     if(e.enrich){ var en=e.enrich; var parts=[];
       if(en.ticker) parts.push("<b>ticker</b> "+esc(en.ticker));
       if(en.member_count!=null) parts.push("<b>members</b> "+en.member_count);
       if(en.corp_count!=null) parts.push("<b>corps</b> "+en.corp_count);
+      if(en.corporation&&en.corporation.name) parts.push("<b>corp</b> "+esc(en.corporation.name));
       if(en.date_founded) parts.push("<b>founded</b> "+esc(String(en.date_founded).slice(0,10)));
+      if(en.birthday) parts.push("<b>born</b> "+esc(String(en.birthday).slice(0,10)));
       if(en.war_eligible!=null) parts.push("<b>war eligible</b> "+(en.war_eligible?"yes":"no"));
       if(en.sov_count!=null) parts.push("<b>sov</b> "+en.sov_count);
       var c=en.combat;
@@ -330,15 +690,38 @@ function openEntity(id){
         if(cp.proximity_hits&&cp.proximity_hits.length) bits.push("PROXIMITY: "+cp.proximity_hits.map(function(p){return esc(p.system);}).join(", "));
         if(bits.length) cmpLine='<div class="live" style="margin-top:7px;color:var(--amberw)">'+bits.join(" &middot; ")+'</div>';
       }
-      live='<div class="dblock"><div class="lab">Live data &middot; '+ago(e.enrich_at)+'</div><div class="live">'+(parts.join(" &middot; ")||"nothing resolved")+'</div>'+cmpLine+'</div>';
+      var tl = e.eve_type==="pilot" && en.corp_history ? '<div style="margin-top:10px">'+renderTimeline(en.corp_history)+'</div>' : '';
+      live='<div class="dblock"><div class="lab">Live data &middot; '+ago(e.enrich_at)+'</div><div class="live">'+(parts.join(" &middot; ")||"nothing resolved")+'</div>'+cmpLine+tl+'</div>';
     } else {
       live='<div class="dblock"><div class="lab">Live data</div><div class="live" style="color:var(--muted)">not enriched yet</div></div>';
+    }
+    var person="";
+    if(e.eve_type==="pilot"){
+      var p=e.person||{};
+      var pparts=[];
+      if(p.role) pparts.push("<b>role</b> "+esc(p.role));
+      if(p.org) pparts.push("<b>org</b> "+esc(p.org));
+      if(p.source_grade) pparts.push("<b>source grade</b> "+esc(p.source_grade));
+      if(p.next_review) pparts.push("<b>next review</b> "+esc(p.next_review));
+      if(p.watch) pparts.push("<b>watch</b> "+esc(p.watch));
+      var dbrs=(e.debriefs||[]).map(function(db){
+        return '<div class="dbrow"><b>debrief '+esc(String(db.conducted_at).slice(0,10))+'</b> by '+esc(db.conducted_by||"?")+
+          (db.motivation_read?' &middot; reads <b>'+esc(db.motivation_read)+'</b>':'')+
+          (db.consistency?' &middot; account '+esc(db.consistency.replace(/_/g," ")):'')+
+          (db.source_grade?' &middot; grade <b>'+esc(db.source_grade)+'</b>':'')+
+          (db.motivation?'<br>motivation: '+esc(db.motivation):'')+
+          (db.intel?'<br>volunteered: '+esc(db.intel):'')+'</div>';
+      }).join("");
+      person='<div class="dblock"><div class="lab">Person</div>'+
+        (pparts.length?'<div class="live">'+pparts.join(" &middot; ")+'</div>':'<div class="live" style="color:var(--muted)">no person meta yet</div>')+
+        dbrs+
+        '<div style="margin-top:10px"><button class="dclose" style="position:static" onclick="openDebrief('+e.id+')">run the debrief</button></div></div>';
     }
     var rules=hostile?('<div class="dblock"><div class="lab">GSS Field Rules</div><div class="rules">'+FIELD_RULES.map(function(r,i){ return '<div class="rule"><span class="rn">'+(i+1)+'</span><span class="rt"><b>'+esc(r[0])+'</b> '+esc(r[1])+'</span></div>'; }).join("")+'</div></div>'):'';
     document.getElementById("dwrap").innerHTML=
       '<button class="dclose" onclick="closeDetail()">close</button>'+
       '<div class="dhead"><div class="dn" style="border-left:3px solid '+ci.c+';padding-left:12px">'+esc(e.name)+(e.ticker?' <span style="font-family:var(--mono);font-size:14px;color:var(--muted)">['+esc(e.ticker)+']</span>':'')+'</div><div class="dmeta">'+meta+'</div></div>'+
-      doss+rels+live+rules+
+      doss+rels+live+person+rules+
       '<div class="dblock"><button class="dclose" style="position:static" onclick="enrich('+e.id+')">refresh from ESI</button> <button class="dclose" style="position:static" onclick="markVerified('+e.id+')">mark reviewed today</button></div>';
     document.getElementById("detail").style.display="block";
     document.body.style.overflow="hidden";
@@ -351,8 +734,96 @@ function openRules(){
   document.getElementById("detail").style.display="block"; document.body.style.overflow="hidden";
 }
 function closeDetail(){ document.getElementById("detail").style.display="none"; document.body.style.overflow=""; }
-function enrich(id){ api("/gss/entity/"+id+"/enrich",{method:"POST"}).then(function(d){ openEntity(id); loadEntities(curClass); }); }
+function enrich(id){ api("/gss/entity/"+id+"/enrich",{method:"POST"}).then(function(d){ openEntity(id); loadEntities(curClass); loadPersons(); }); }
 function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadEntities(curClass); }); }
+
+/* ---------- the debrief module ---------- */
+function personById(id){ return PERSONS.filter(function(p){return p.id===id;})[0]; }
+function openDebrief(id){
+  var p=personById(id);
+  if(!p){ openEntity(id); return; }
+  var hist=p.corp_history||[];
+  var flaggedStints=hist.filter(function(h){ var f=flagFor(h.corp); return f&&f!=="self"; });
+  var arc=hist.length?
+    hist.slice().sort(function(a,b){return Date.parse(a.start)-Date.parse(b.start);}).map(function(h){
+      var days=Math.round(((h.end?Date.parse(h.end):Date.now())-Date.parse(h.start))/86400000);
+      return h.corp+" ("+days+"d)";
+    }).join(" &#8594; ") : "no corp history on file, refresh from ESI first";
+  var tell="no killboard read";
+  var tellRead="";
+  if(p.combat_tell){
+    var ct=p.combat_tell;
+    tell=fmtIsk(ct.isk_destroyed)+" destroyed vs "+fmtIsk(ct.isk_lost)+" lost &middot; "+(ct.ships_destroyed||0)+" kills, "+(ct.ships_lost||0)+" losses &middot; danger "+(ct.danger_ratio||0)+"% &middot; "+(ct.ships_destroyed_3mo!=null?ct.ships_destroyed_3mo+" kills in 3mo":"");
+    tellRead=(ct.danger_ratio||0)<=15 && (ct.isk_lost||0)>(ct.isk_destroyed||0)
+      ? "Reads as an industrialist who dies more than they kill. Leans genuine. Weak evidence, a smart plant can fly a miner."
+      : "Combat capable killboard. Read the story it tells before the chat.";
+  }
+  var gap=flaggedStints.length?
+    flaggedStints.map(function(h){ return h.corp+", "+String(h.start).slice(0,10)+" to "+(h.end?String(h.end).slice(0,10):"now"); }).join("; ")
+    : "none flagged";
+  var sealedDefault=p.sealed_file?"lead_only":"officer";
+  document.getElementById("dwrap").innerHTML=
+    '<button class="dclose" onclick="closeDetail()">close</button>'+
+    '<div class="dhead"><div class="dn" style="border-left:3px solid var(--ice);padding-left:12px">The Debrief &middot; '+esc(p.name)+'</div>'+
+    '<div class="dmeta"><span>A great debrief is indistinguishable from a warm welcome. The vetting is a byproduct of rapport.</span></div></div>'+
+    '<div class="dbf">'+
+    '<div class="rule1">Warm in the room, cold in the file. The coldness lives in this record, never in the conversation. If they walk away feeling more part of the family, you did it right, and you still got everything.</div>'+
+
+    '<div class="stage"><div class="st-h">1 &middot; Prepare, the paper trail first</div>'+
+    '<div class="prep-line"><b>corp arc</b> '+arc+'</div>'+
+    '<div class="prep-line"><b>flagged stints</b> '+esc(gap)+'</div>'+
+    '<div class="prep-line"><b>killboard tell</b> '+tell+'</div>'+
+    (tellRead?'<div class="prep-line" style="color:var(--amberw)">'+esc(tellRead)+'</div>':'')+
+    '<label>the three or four facts you will silently check the story against</label>'+
+    '<textarea id="db_facts" placeholder="dates, corps, gaps. A spy is caught in the small details, never the big lie."></textarea></div>'+
+
+    '<div class="stage"><div class="st-h">2 &middot; The room, questions in order of rapport</div><div class="qs">'+
+    '<div class="q1"><div class="qh">Warm up, innocuous</div><div class="qt">What are you flying, what do you like to mine, what pulled you toward a mining corp. Pure welcome. Never open with the enemy bloc.</div></div>'+
+    '<div class="q1"><div class="qh">The motivation question, the crux</div><div class="qt">What made you want to trade the nullsec life for highsec rocks with a pack of goblins? Textured and real reads genuine. Vague or evasive is a flag. This is the fork between the asset and the risk reading.</div></div>'+
+    '<div class="q1"><div class="qh">The asset and check question, triple duty</div><div class="qt">What was it actually like from the inside, bigger than it looked or mostly alts? What were you doing day to day? Were you around for the collapse? Extracts real intel, validates they were there, surfaces motivation. You are just curious.</div></div>'+
+    '<div class="q1"><div class="qh">Let it breathe</div><div class="qt">Follow their threads. The best material comes from where they want to talk, not where you push.</div></div>'+
+    '</div></div>'+
+
+    '<div class="stage"><div class="st-h">3 &middot; Evaluate, cold, into the file</div>'+
+    '<label>stated motivation, verbatim if you can</label><textarea id="db_motivation"></textarea>'+
+    '<div class="two"><div><label>how it reads</label><select id="db_read"><option value="">not assessed</option><option>genuine</option><option>textured</option><option>vague</option><option>evasive</option></select></div>'+
+    '<div><label>account vs paper trail</label><select id="db_consistency"><option value="">not assessed</option><option value="consistent">consistent</option><option value="minor_gaps">minor gaps</option><option value="contradicts">contradicts the record</option></select></div></div>'+
+    '<label>where it diverged, if it did</label><input id="db_cnote" placeholder="the detail that did not match">'+
+    '<label>intel volunteered, the asset side</label><textarea id="db_intel" placeholder="what they told you that we did not have"></textarea>'+
+    '<div class="two"><div><label>source reliability, provisional</label><select id="db_grel"><option value="">?</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></div>'+
+    '<div><label>information credibility</label><select id="db_gcred"><option value="">?</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div></div>'+
+    '<div class="two"><div><label>access granted today</label><input id="db_access" value="member only"></div>'+
+    '<div><label>next review</label><input id="db_review" type="date"></div></div>'+
+    '<label>watch list, behavioral, observed over weeks</label><textarea id="db_watch" placeholder="unusual interest in our diplo situation is the signal. It comes from watching, never from asking."></textarea>'+
+    '<label>the read, asset leaning or risk leaning, with confidence</label><textarea id="db_notes"></textarea>'+
+    '<div class="two"><div><label>file visibility</label><select id="db_vis"><option value="officer"'+(sealedDefault==="officer"?" selected":"")+'>officer</option><option value="lead_only"'+(sealedDefault==="lead_only"?" selected":"")+'>lead only</option></select></div><div></div></div>'+
+    '<button class="file-btn" id="db_file">File the debrief</button>'+
+    '<div class="err" id="db_err"></div>'+
+    '<div class="guard">In game data only, never real world. Never accuse, even if the timing looks bad. Graduated access plus behavioral watch is the real defense, not this chat. Sensitive access is never day one.</div>'+
+    '</div></div>';
+  document.getElementById("db_file").addEventListener("click",function(){ fileDebrief(id); });
+  document.getElementById("detail").style.display="block";
+  document.body.style.overflow="hidden";
+}
+function fileDebrief(id){
+  var v=function(x){ return (document.getElementById(x).value||"").trim(); };
+  var grel=v("db_grel"), gcred=v("db_gcred");
+  var body={
+    motivation:v("db_motivation"), motivation_read:v("db_read"), consistency:v("db_consistency"),
+    consistency_note:v("db_cnote"), intel:v("db_intel"),
+    source_grade:(grel||gcred)?(grel+gcred):"",
+    access_granted:v("db_access")||"member only", watch:v("db_watch"), next_review:v("db_review"),
+    notes:(v("db_notes")+(v("db_facts")?" Prepared facts: "+v("db_facts"):"")).trim(),
+    visibility:v("db_vis")
+  };
+  var btn=document.getElementById("db_file"); btn.disabled=true;
+  api("/gss/person/"+id+"/debrief",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(d){
+    btn.disabled=false;
+    if(!d||!d.ok){ document.getElementById("db_err").textContent=(d&&d.error)||"the file did not take"; return; }
+    loadPersons(); loadBoard();
+    openEntity(id);
+  });
+}
 
 document.getElementById("detail").addEventListener("click",function(e){ if(e.target.id==="detail") closeDetail(); });
 document.getElementById("addToggle").addEventListener("click",function(){ document.getElementById("addForm").classList.toggle("show"); });
@@ -368,7 +839,7 @@ document.getElementById("f_go").addEventListener("click",function(){
     if(!d||!d.ok){ document.getElementById("f_err").textContent=(d&&d.error)||"could not file it"; return; }
     document.getElementById("f_name").value=""; document.getElementById("f_summary").value="";
     document.getElementById("addForm").classList.remove("show");
-    loadBoard(); loadEntities(curClass);
+    loadBoard(); loadEntities(curClass); loadGraph(); loadPersons();
   });
 });
 
