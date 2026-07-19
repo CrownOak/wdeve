@@ -34,11 +34,17 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .subline{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); margin:0 0 26px; }
 
 /* gate / denial */
-.gss-gate{ padding:70px 24px; text-align:center; }
+.gss-gate{ min-height:calc(100vh - 80px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; }
 .gss-gate .lock{ font-size:30px; color:var(--hostile); }
-.gss-gate h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.1em; font-size:17px; color:var(--silver); margin:14px 0 6px; }
+.gss-gate h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.14em; font-size:18px; color:var(--silver); margin:0 0 8px; }
 .gss-gate p{ font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em; }
 .gss-gate a{ color:var(--ice); }
+/* the official terminal stamp under the checkpoint (classy, not a clock) */
+.gss-stamp{ margin-top:44px; font-family:var(--mono); font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ice-dim); display:flex; align-items:center; justify-content:center; gap:9px; }
+.gss-stamp .rec{ width:7px; height:7px; border-radius:50%; background:var(--hostile); box-shadow:0 0 8px rgba(240,129,122,.65); animation:recpulse 2.4s ease-in-out infinite; }
+@keyframes recpulse{ 50%{ opacity:.3; } }
+.gss-stamp2{ margin-top:7px; font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted); }
+@media(prefers-reduced-motion:reduce){ .gss-stamp .rec{ animation:none; } }
 
 /* board */
 .board{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:0 0 30px; }
@@ -133,19 +139,19 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 <body>
 <img class="gss-watermark" src="/portal/intel/gss2-512.png" alt="" aria-hidden="true">
 <div class="gss-wrap">
-  <div class="gss-head">
-    <div>
-      <div class="gss-title">Goblin State Security</div>
-    </div>
-    <div class="gss-motto" id="motto">Assume nothing</div>
-  </div>
-  <div class="subline">We watch, we record, we know. There is always a file.</div>
-
   <div id="gate" class="gss-gate">
     <div id="gatemsg"><p>Checking clearance...</p></div>
   </div>
 
   <main id="app" style="display:none">
+    <div class="gss-head">
+      <div>
+        <div class="gss-title">Goblin State Security</div>
+      </div>
+      <div class="gss-motto" id="motto">Assume nothing</div>
+    </div>
+    <div class="subline">We watch, we record, we know. There is always a file.</div>
+
     <div class="board" id="board"></div>
 
     <div class="sec-h"><span class="ix">The Cabinet</span></div>
@@ -220,7 +226,9 @@ function showCheckpoint(){
     '<p>Cleared personnel are recognized by session. Officers, admins, and designated GSS pass without a code.</p>'+
     '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus><button id="gsspwgo">submit</button></div>'+
     '<div class="err" id="gsspwerr" style="text-align:center"></div>'+
-    '<p class="hint">Cleared and still seeing this? <a href="/portal/">Log in to the portal</a> first.</p>';
+    '<p class="hint">Cleared and still seeing this? <a href="/portal/">Log in to the portal</a> first.</p>'+
+    '<div class="gss-stamp"><span class="rec"></span>Restricted terminal &middot; GSS-01 &middot; Tranquility</div>'+
+    '<div class="gss-stamp2">this session is monitored &middot; every entry is logged</div>';
   document.getElementById("gsspwgo").addEventListener("click",tryCode);
   document.getElementById("gsspw").addEventListener("keydown",function(e){ if(e.key==="Enter") tryCode(); });
 }
