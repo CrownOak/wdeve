@@ -270,7 +270,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
           <div class="addform" id="addForm">
             <div class="row">
               <input class="nm" id="f_name" placeholder="entity name (alliance, corp, or pilot)" autocomplete="off">
-              <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option></select>
+              <select id="f_type"><option value="alliance">alliance</option><option value="corp">corp</option><option value="pilot">pilot</option><option value="channel">channel</option></select>
               <select id="f_class">
                 <option value="watch">watch</option><option value="hostile">hostile</option><option value="hostile_priority">hostile priority</option>
                 <option value="neutral">neutral</option><option value="friendly">friendly</option><option value="ally">ally</option>
@@ -473,7 +473,12 @@ function renderGraph(){
     out+='<g class="node" data-nk="'+esc(n.key)+'">';
     if(n.prox) out+='<circle class="prox-ring" cx="'+p.x+'" cy="'+p.y+'" r="'+(r+5)+'"/>';
     if(SELECTED===n.key) out+='<circle class="selring" cx="'+p.x+'" cy="'+p.y+'" r="'+(r+8)+'"/>';
-    out+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+(hollow?"none":ci.c)+'" stroke="'+ci.c+'" stroke-width="1.3"'+(hollow?' stroke-dasharray="3 3"':'')+' fill-opacity="'+(n.key==="self"?"1":".85")+'"/>';
+    if(n.eve_type==="channel"){
+      var side=r*1.8;
+      out+='<rect x="'+(p.x-side/2)+'" y="'+(p.y-side/2)+'" width="'+side+'" height="'+side+'" fill="'+ci.c+'" fill-opacity=".85" stroke="'+ci.c+'" stroke-width="1.3"/>';
+    } else {
+      out+='<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+(hollow?"none":ci.c)+'" stroke="'+ci.c+'" stroke-width="1.3"'+(hollow?' stroke-dasharray="3 3"':'')+' fill-opacity="'+(n.key==="self"?"1":".85")+'"/>';
+    }
     out+='<text class="nlab'+(n.key==="self"?" selfl":"")+'" x="'+p.x+'" y="'+(p.y+r+12)+'">'+esc(n.name)+'</text>';
     out+='</g>';
   });
@@ -551,6 +556,7 @@ function showTip(key,ev){
   var n=nodeById(key); if(!n) return;
   var t=document.getElementById("gtip"), ci=clsInfo(n.classification);
   t.innerHTML='<div class="tn" style="color:'+ci.c+'">'+esc(n.name)+'</div><div class="tm">'+ci.l+
+    (n.eve_type==="channel"?' &middot; chat room, '+(n.members||0)+' recorded':'')+
     (n.threat_level?' &middot; threat '+n.threat_level:'')+(n.bonk_standing&&n.bonk_standing!=="neutral"?' &middot; '+esc(n.bonk_standing):'')+
     (n.prox?' &middot; ACTIVE IN OUR FOOTPRINT':'')+(n.classification==="unfiled"?' &middot; no file yet, click to open one':'')+'</div>';
   t.style.display="block";
@@ -645,6 +651,7 @@ function openEntity(id){
     if(!d||!d.ok) return;
     var e=d.entity, ci=clsInfo(e.classification);
     var hostile = e.classification==="hostile"||e.classification==="hostile_priority";
+    var isChannel = e.eve_type==="channel";
     var meta='<span><b>type</b> '+esc(e.eve_type)+'</span><span><b>class</b> '+ci.l+'</span><span><b>threat</b> '+e.threat_level+'/5</span><span><b>standing</b> '+esc(e.bonk_standing)+'</span><span><b>reviewed</b> '+ago(e.verified_at)+'</span>';
     var doss=(e.dossiers||[]).map(function(ds){
       if(ds.sealed) return '<div class="sealed">Sealed file &middot; lead only &middot; '+esc(ds.doc_type)+'</div>';
@@ -695,6 +702,23 @@ function openEntity(id){
     } else {
       live='<div class="dblock"><div class="lab">Live data</div><div class="live" style="color:var(--muted)">not enriched yet</div></div>';
     }
+    if(isChannel) live="";
+    var roster="";
+    if(isChannel){
+      var rrows=(e.roster||[]).map(function(m){
+        var badges=(m.ours?'<span class="dbadge fp">ours</span>':'')+
+          (m.filed_id?'<span class="dbadge" style="color:var(--amberw);border-color:rgba(233,196,106,.4);cursor:pointer" onclick="openEntity('+m.filed_id+')">filed</span>':'');
+        var also=(m.also||[]).map(function(a){ return '<span class="dbadge" style="color:var(--ice)">also '+esc(a)+'</span>'; }).join("");
+        return '<div class="drow" style="gap:7px"><span class="dn">'+esc(m.name)+'</span>'+badges+also+
+          '<span class="dk">seen x'+m.times_seen+' &middot; first '+esc(String(m.first_seen).slice(0,10))+' &middot; last '+esc(String(m.last_seen).slice(0,10))+'</span></div>';
+      }).join("")||'<div class="foot-line">no roster yet, paste the room</div>';
+      roster='<div class="dblock"><div class="lab">Roster &middot; '+(e.roster||[]).length+' recorded &middot; the visible list ebbs, this one accumulates</div>'+rrows+
+        '<div style="margin-top:12px"><button class="dclose" style="position:static" onclick="togglePaste()">paste the room</button>'+
+        '<div id="pastebox" style="display:none;margin-top:10px">'+
+        '<textarea id="rpaste" style="width:100%;min-height:110px;background:#06070a;border:1px solid var(--line);color:var(--silver);font-family:var(--mono);font-size:12px;padding:8px 10px;box-sizing:border-box" placeholder="one name per line, exactly as the member list shows. New names are filed, known names get their last seen bumped."></textarea>'+
+        '<button class="dclose" style="position:static;margin-top:8px" onclick="submitPaste('+e.id+')">merge it</button><span class="err" id="rperr" style="margin-left:10px"></span>'+
+        '</div></div></div>';
+    }
     var person="";
     if(e.eve_type==="pilot"){
       var p=e.person||{};
@@ -721,8 +745,8 @@ function openEntity(id){
     document.getElementById("dwrap").innerHTML=
       '<button class="dclose" onclick="closeDetail()">close</button>'+
       '<div class="dhead"><div class="dn" style="border-left:3px solid '+ci.c+';padding-left:12px">'+esc(e.name)+(e.ticker?' <span style="font-family:var(--mono);font-size:14px;color:var(--muted)">['+esc(e.ticker)+']</span>':'')+'</div><div class="dmeta">'+meta+'</div></div>'+
-      doss+rels+live+person+rules+
-      '<div class="dblock"><button class="dclose" style="position:static" onclick="enrich('+e.id+')">refresh from ESI</button> <button class="dclose" style="position:static" onclick="markVerified('+e.id+')">mark reviewed today</button></div>';
+      doss+rels+live+roster+person+rules+
+      '<div class="dblock">'+(isChannel?'':'<button class="dclose" style="position:static" onclick="enrich('+e.id+')">refresh from ESI</button> ')+'<button class="dclose" style="position:static" onclick="markVerified('+e.id+')">mark reviewed today</button></div>';
     document.getElementById("detail").style.display="block";
     document.body.style.overflow="hidden";
   });
@@ -734,6 +758,15 @@ function openRules(){
   document.getElementById("detail").style.display="block"; document.body.style.overflow="hidden";
 }
 function closeDetail(){ document.getElementById("detail").style.display="none"; document.body.style.overflow=""; }
+function togglePaste(){ var b=document.getElementById("pastebox"); b.style.display=b.style.display==="none"?"block":"none"; if(b.style.display==="block") document.getElementById("rpaste").focus(); }
+function submitPaste(id){
+  var v=(document.getElementById("rpaste").value||"").trim();
+  if(!v){ document.getElementById("rperr").textContent="nothing pasted"; return; }
+  api("/gss/channel/"+id+"/roster",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paste:v})}).then(function(d){
+    if(!d||!d.ok){ document.getElementById("rperr").textContent=(d&&d.error)||"the merge did not take"; return; }
+    openEntity(id); loadGraph(); loadBoard();
+  });
+}
 function enrich(id){ api("/gss/entity/"+id+"/enrich",{method:"POST"}).then(function(d){ openEntity(id); loadEntities(curClass); loadPersons(); }); }
 function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadEntities(curClass); }); }
 
