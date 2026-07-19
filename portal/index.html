@@ -837,6 +837,8 @@ function renderIdentity(){
       '<div class="idacts">' +
         ((role === "officer" || role === "admin")
           ? '<a class="mini cc" href="/portal/admin/" title="Leadership command center">&#9881; Command Center</a>' : '') +
+        ((role === "officer" || role === "admin" || a.gss)
+          ? '<a class="mini cc" href="/portal/intel/" title="Goblin State Security" style="border-color:rgba(143,183,201,.5);color:#8fb7c9">&#128373;&#65039; GSS</a>' : '') +
         '<button class="mini" id="editProfileBtn">Profile &amp; settings</button>' +
         '<button class="bell" id="bellBtn" title="Your inbox">&#128276;' +
           (unread > 0 ? '<span class="bellbadge">' + unread + '</span>' : '') +
@@ -2350,6 +2352,7 @@ function renderFoot(){
     '<a href="/portal/roster/">the wall of goblin faces</a>' +
     '<a href="/portal/leaderboard/">Leaderboards</a>' +
     (role === "officer" || role === "admin" ? '<a href="/portal/admin/">Command Center</a>' : '') +
+    (role === "officer" || role === "admin" || (S.me.account && S.me.account.gss) ? '<a href="/portal/intel/">GSS</a>' : '') +
     '<button class="mini" id="logoutBtn">Log out</button>' +
     '<button class="mini warn" id="logoutAllBtn">Log out everywhere</button>';
   el.innerHTML = html;

@@ -982,6 +982,7 @@ async function openMemberDrawer(id){
     +(ISADMIN?'<div><label>Role</label><select id="dw_role" data-orig="'+esc(curRole)+'">'
       +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(curRole===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
+    +(ISADMIN?'<div><label>GSS clearance</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_gss" type="checkbox" data-orig="'+(a.gss?"1":"0")+'"'+(a.gss?" checked":"")+'> designate to Goblin State Security</label></div>':"")
     +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
     +'</div><button class="inv" id="dw_save">Save identity</button> '
     +'<button class="cmail" id="dw_viewas">View as member</button></div>';
@@ -1102,6 +1103,10 @@ function wireDrawer(aid, chars, main){
       var rs=q("#dw_role");
       if(ISADMIN && rs && rs.value!==rs.getAttribute("data-orig")){
         await api("/api/admin/role",{account_id:aid, role:rs.value});
+      }
+      var gc=q("#dw_gss");
+      if(ISADMIN && gc && (gc.checked?"1":"0")!==gc.getAttribute("data-orig")){
+        await api("/api/admin/gss-clearance",{account_id:aid, on:gc.checked});
       }
       toast("Saved. The record stands.");
       openMemberDrawer(aid);
