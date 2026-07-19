@@ -709,7 +709,8 @@ function openEntity(id){
         var badges=(m.ours?'<span class="dbadge fp">ours</span>':'')+
           (m.filed_id?'<span class="dbadge" style="color:var(--amberw);border-color:rgba(233,196,106,.4);cursor:pointer" onclick="openEntity('+m.filed_id+')">filed</span>':'');
         var also=(m.also||[]).map(function(a){ return '<span class="dbadge" style="color:var(--ice)">also '+esc(a)+'</span>'; }).join("");
-        return '<div class="drow" style="gap:7px"><span class="dn">'+esc(m.name)+'</span>'+badges+also+
+        var mnote=m.note?'<span class="dbadge" style="color:var(--silver-dim);text-transform:none;letter-spacing:.02em">'+esc(m.note)+'</span>':'';
+        return '<div class="drow" style="gap:7px;flex-wrap:wrap"><span class="dn">'+esc(m.name)+'</span>'+badges+mnote+also+
           '<span class="dk">seen x'+m.times_seen+' &middot; first '+esc(String(m.first_seen).slice(0,10))+' &middot; last '+esc(String(m.last_seen).slice(0,10))+'</span></div>';
       }).join("")||'<div class="foot-line">no roster yet, paste the room</div>';
       roster='<div class="dblock"><div class="lab">Roster &middot; '+(e.roster||[]).length+' recorded &middot; the visible list ebbs, this one accumulates</div>'+rrows+
