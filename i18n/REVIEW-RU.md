@@ -40,7 +40,17 @@ punctuation (тире); intra-word hyphens are grammar, not style, and are allow
 | Project: Our Own Rock | Проект: Свой камень | |
 | The pecking order | Иерархия клюва | leaderboard heading, playful |
 
-## Known-English remainders in v1 (accepted, by design)
+## Round 2 (2026-07-19, same day)
+Deep tool coverage shipped: Ore Calculator (tabs, buttons, table heads, tooltips),
+Reprocessing Reference (full chrome + tooltips + footer para), Hub Arbitrage
+(full chrome, all column tooltips, model/route explainers), Radar (all three
+instruments' chrome + tooltips), Corp Kill Log, Cartel Map statics. **Kyle
+ruling:** recruitment tooling (Prospect Finder, Alliance Builder, their tours
+and nav labels) stays English on purpose — we serve Russian speakers who are
+already here or wander in; we are not recruiting Russian-side. Command Center
+stays English likewise.
+
+## Known-English remainders (accepted, by design)
 - **Interpolated JS strings** (composed at runtime with data): "Good name, {ign}. …",
   "step {n} of {m}" in tours, count lines like "Fresh: X · sent: N", portal ESI
   transparency paragraph and ally banner (built from concatenated fragments).

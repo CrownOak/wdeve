@@ -12,7 +12,7 @@
   if (window.BONKLANG) return; // one engine per page (direct include + nav loader)
 
   var LS_EXPLICIT = "bonk.lang", LS_ACCT = "bonk.lang.acct";
-  var RU_SRC = "/i18n/ru.js?v=1";
+  var RU_SRC = "/i18n/ru.js?v=2";
   var RU_FONTS = "https://fonts.googleapis.com/css2?family=Russo+One&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap";
   var ATTRS = ["placeholder", "title", "aria-label", "data-tip", "alt", "value"];
 
