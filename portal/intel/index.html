@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
 <title>GSS</title>
-<link rel="icon" href="/portal/intel/gss-96.png">
+<link rel="icon" href="/portal/intel/gss2-96.png">
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
 /* GOBLIN STATE SECURITY — the cold room. No goblin jokes in here, per doctrine. */
@@ -19,9 +19,9 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 /* header */
 .gss-head{ display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:8px; }
 /* the seal: big, centered, static, translucent, behind everything (Kyle) */
-.gss-watermark{ position:fixed; top:47%; left:50%; transform:translate(-50%,-50%); width:660px; max-width:92vw;
-  opacity:.09; pointer-events:none; user-select:none; z-index:0; }
-@media(max-width:640px){ .gss-watermark{ opacity:.06; width:118vw; } }
+.gss-watermark{ position:fixed; top:47%; left:50%; transform:translate(-50%,-50%); width:680px; max-width:94vw;
+  opacity:.13; pointer-events:none; user-select:none; z-index:0; }
+@media(max-width:640px){ .gss-watermark{ opacity:.09; width:120vw; } }
 /* clearance checkpoint (the honeypot bait) */
 .cp{ display:flex; gap:8px; justify-content:center; max-width:340px; margin:16px auto 0; }
 .cp input{ flex:1; background:#06070a; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:13px; padding:9px 11px; text-align:center; letter-spacing:.1em; }
@@ -131,7 +131,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 </style>
 </head>
 <body>
-<img class="gss-watermark" src="/portal/intel/gss-256.png" alt="" aria-hidden="true">
+<img class="gss-watermark" src="/portal/intel/gss2-512.png" alt="" aria-hidden="true">
 <div class="gss-wrap">
   <div class="gss-head">
     <div>
@@ -204,7 +204,6 @@ var curClass = "";
 
 // GSS emergency override. do not share.
 var OVERRIDE = "assume-everything";
-var gssTries = 0;
 function toVoid(reason){
   try{ fetch("/api/gss/trip",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({reason:reason})}); }catch(e){}
   location.href="/portal/intel/void/";
@@ -212,11 +211,8 @@ function toVoid(reason){
 function tryCode(){
   var el=document.getElementById("gsspw"); var v=(el.value||"").trim();
   if(!v){ el.focus(); return; }
-  if(v===OVERRIDE){ toVoid("override"); return; }   // the "master key" is the trap
-  gssTries++;
-  if(gssTries>=2){ toVoid("wrong"); return; }        // two wrong guesses = same wall
-  document.getElementById("gsspwerr").textContent="Rejected. Assume nothing.";
-  el.value=""; el.focus();
+  // one attempt, any code: this route is not a way in, it is a trip. Straight to the wall.
+  toVoid(v===OVERRIDE ? "override" : "wrong");
 }
 function showCheckpoint(){
   document.getElementById("gatemsg").innerHTML=
