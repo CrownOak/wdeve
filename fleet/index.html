@@ -270,6 +270,9 @@ tr.haulrow{ cursor:pointer; }
 .schead{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
   color:var(--ore); cursor:pointer; user-select:none; padding:6px 0; }
 .schead .sccaret{ color:var(--muted); margin-left:8px; }
+.scsum{ color:var(--muted); text-transform:none; letter-spacing:.05em; }
+.scsum.watch{ color:var(--amber); }
+.scsum.hot{ color:var(--red); }
 .scrow{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:4px 0 8px; }
 .scfrom{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
 .scfrom b{ color:var(--ore); }
@@ -393,7 +396,7 @@ tr.haulrow{ cursor:pointer; }
                  route from the fleet's current system + surroundings + danger. Static
                  DOM per DR-FLEET-12: only #scout / #scfrom / #scfoot re-render. -->
             <div id="scoutcard" class="scoutcard">
-              <div class="schead" id="schead">&#9906; Scout a destination<span class="sccaret" id="sccaret">&#9656;</span></div>
+              <div class="schead" id="schead">&#9906; Scout<span id="scsum" class="scsum"> a destination</span><span class="sccaret" id="sccaret">&#9656;</span></div>
               <div id="scbody" style="display:none">
                 <div class="scrow">
                   <span id="scfrom" class="scfrom" data-i18n-skip></span>
@@ -1034,7 +1037,11 @@ tr.haulrow{ cursor:pointer; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
     renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
-    renderScoutOrigin(); if(scOpen) scLoadKills(); // origin tracks the fleet; kills re-arm hourly (guarded + backoff)
+    renderScoutOrigin();
+    // ambient bubble needs the map + kills even while the card is collapsed;
+    // both loaders are guarded (once/session, hourly fresh-check, busy flags)
+    if(scOpen || (P.system && P.system.name)){ scLoadMap(); scLoadKills(); }
+    scAmbient();
     seedPilotsFromPortal(); qdSyncRound(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
@@ -1590,6 +1597,20 @@ tr.haulrow{ cursor:pointer; }
     if(choke) return "watch";
     return "calm";
   }
+  // rings around a system: [[origin],[1 jump],[2 jumps]] of indexes (BFS, depth-capped)
+  function scRings(map, s, maxd){
+    var seen={}; seen[s]=0;
+    var q=[s], qi=0, rings=[[s]], d, c, nb, j, v;
+    for(d=1; d<=maxd; d++) rings.push([]);
+    while(qi<q.length){
+      c=q[qi++]; d=seen[c];
+      if(d>=maxd) continue;
+      nb=map.sys[c][4];
+      for(j=0;j<nb.length;j++){ v=nb[j];
+        if(seen[v]===undefined){ seen[v]=d+1; rings[d+1].push(v); q.push(v); } }
+    }
+    return rings;
+  }
   // verdict over route (incl dest) + dest neighbors; rows = [{name,tier}]
   function scVerdict(routeRows, nbrRows){
     var i, hotR=[], hotN=[], watch=[];
@@ -1644,8 +1665,9 @@ tr.haulrow{ cursor:pointer; }
         if(!(j && j.v===1 && j.sys)) throw 0;
         if(SMAP && SMAP.generated===j.generated) return;
         SMAP=j; var ix2=scBuildIdx(j); SIDX=ix2.idx; SBYID=ix2.byid;
-        scMapState="ok"; lsSet(LS_SC_MAP, JSON.stringify(j));
-        renderScoutOrigin(); scRun();
+        scMapState="ok"; scAmbKey=""; // indexes shifted: ambient memo is stale
+        lsSet(LS_SC_MAP, JSON.stringify(j));
+        renderScoutOrigin(); scAmbient(); scRun();
       }).catch(function(){ scMapFetching=false; if(!SMAP){ scMapState="failed"; scRun(); } });
   }
   var scKillsBusy=false, sKillsAt=0;
@@ -1709,6 +1731,50 @@ tr.haulrow{ cursor:pointer; }
     if(ov && SIDX && SIDX[ov]!=null) return {i:SIDX[ov], fleet:false};
     return null;
   }
+  // ---------- ambient local bubble (Kyle 2026-07-19): where we sit + 2 jumps,
+  // security + live danger. Re-centers instantly when the fleet moves (5s sync);
+  // kill badges re-arm when the hourly ESI cache rolls — that IS the fastest
+  // legitimate cadence (ESI serves the same cached body for 60min; polling
+  // faster is pure waste, cache-clock refetch carries zero ban risk). ----------
+  var scAmbKey="", scAmbVal=null;
+  function scAmbient(){
+    var sum=el("scsum"); if(!sum) return null;
+    var pn=(P && P.system && P.system.name) ? String(P.system.name) : "";
+    var oi=(pn && SIDX) ? SIDX[pn.toLowerCase()] : null;
+    if(oi==null){ sum.className="scsum"; sum.textContent=" a destination"; return null; }
+    var key=pn+"|"+sKillsAt;
+    if(key!==scAmbKey){
+      var rings=scRings(SMAP, oi, 2), rows=[], d, i, s;
+      for(d=0; d<rings.length; d++){
+        rows.push([]);
+        for(i=0;i<rings[d].length;i++){ s=SMAP.sys[rings[d][i]];
+          rows[d].push({i:rings[d][i], name:s[0],
+            tier:scSysTier(s[2], scKillsOf(s[1]), !!SC_CHOKES[s[0].toLowerCase()])}); }
+      }
+      // worst signal: the NEAREST hot ring wins; else all watches; else calm
+      var worst=null, hots, ws=[], wd=0, j;
+      for(d=0; d<rows.length && !worst; d++){
+        hots=[];
+        for(j=0;j<rows[d].length;j++) if(rows[d][j].tier==="hot") hots.push(rows[d][j].name);
+        if(hots.length) worst={cls:"hot", d:d, names:hots};
+      }
+      if(!worst){
+        for(d=0; d<rows.length; d++)
+          for(j=0;j<rows[d].length;j++) if(rows[d][j].tier==="watch"){ if(!ws.length) wd=d; ws.push(rows[d][j].name); }
+        if(ws.length) worst={cls:"watch", d:wd, names:ws};
+      }
+      if(!worst) worst={cls:"calm", d:0, names:[]};
+      scAmbVal={rings:rows, worst:worst, origin:pn};
+      scAmbKey=key;
+    }
+    var w=scAmbVal.worst;
+    if(w.cls==="calm"){ sum.className="scsum"; sum.innerHTML=" &middot; bubble clean"; }
+    else if(w.cls==="hot" && w.d===0){ sum.className="scsum hot"; sum.innerHTML=" &middot; IT IS HERE"; }
+    else if(w.cls==="hot"){ sum.className="scsum hot"; sum.innerHTML=" &middot; trouble "+w.d+" jump"+(w.d>1?"s":"")+" out"; }
+    else { sum.className="scsum watch"; sum.innerHTML=" &middot; eyes up"; }
+    return scAmbVal;
+  }
+
   var scLastOrigin="";
   function renderScoutOrigin(){
     if(!scOpen) return;
@@ -1725,10 +1791,9 @@ tr.haulrow{ cursor:pointer; }
     else{
       chip.innerHTML=pn ? "fleet location isn't a system name" : "";
       chip.style.display=pn?"":"none"; inp.style.display=""; }
-    // review-caught: when the fleet MOVES, the rendered route must follow the
-    // chip — re-run against the new origin (rebuilds #scout only, inputs safe)
-    if(pn!==scLastOrigin){ scLastOrigin=pn;
-      if((el("scdest").value||"").trim()) scRun(); }
+    // review-caught: when the fleet MOVES, the rendered route (or bubble) must
+    // follow the chip — re-run against the new origin (rebuilds #scout only)
+    if(pn!==scLastOrigin){ scLastOrigin=pn; scRun(); }
   }
   function scChip(i){
     var s=SMAP.sys[i], k=scKillsOf(s[1]), tier=scSecTier(s[2]);
@@ -1753,7 +1818,30 @@ tr.haulrow{ cursor:pointer; }
       +(sKillsStale?" <span class='warn'>(danger data from "+(staleAge?staleAge+"m ago":"earlier")+", ESI unreachable)</span>":"")
       +" &middot; belt intel via <a href='/lowsec/'>Radar</a>";
     var dn=(el("scdest").value||"").trim();
-    if(!dn){ box.innerHTML=""; return; }
+    if(!dn){
+      // resting state = the LOCAL BUBBLE: where we sit + 2 jumps, sec + danger
+      var amb=scAmbient();
+      if(!amb){
+        box.innerHTML=(P && P.system && P.system.name) ? ""
+          : "<div class='scnote'>Set the fleet location and the bubble readout lives here. Or type a destination.</div>";
+        return; }
+      var bh="", lbls=["where we sit","1 jump out","2 jumps out"], d2, r2, b2;
+      for(d2=0; d2<amb.rings.length; d2++){
+        r2=amb.rings[d2]; if(!r2.length) continue;
+        bh+="<div class='scnbrlbl'>"+lbls[d2]+"</div><div class='scribbon'>";
+        for(b2=0;b2<r2.length;b2++) bh+=scChip(r2[b2].i);
+        bh+="</div>";
+      }
+      var wv=amb.worst, bt="";
+      if(wv.cls==="calm") bt="Bubble clean. Nothing within two jumps but rocks and us.";
+      else if(wv.cls==="hot" && wv.d===0) bt="IT IS HERE. "+scNames(wv.names)+" is popping ships. Align out and watch local.";
+      else if(wv.cls==="hot") bt="Trouble "+wv.d+" jump"+(wv.d>1?"s":"")+" out in "+scNames(wv.names)+". Watch local.";
+      else bt="Eyes up. Elevated activity in "+scNames(wv.names)+".";
+      if(!SKILLS) bt+=" (kills feed unreachable, judging by sec status alone)";
+      bh+="<div class='scverdict "+wv.cls+"'>"+bt+"</div>";
+      box.innerHTML=bh;
+      return;
+    }
     var di=SIDX[dn.toLowerCase()];
     if(di==null){ if(dn.length>=3) box.innerHTML="<div class='scnote'>No system by that name. Keep typing, the box suggests as you go.</div>";
       else box.innerHTML=""; return; }
