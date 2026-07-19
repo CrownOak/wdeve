@@ -236,6 +236,13 @@ tr.haulrow{ cursor:pointer; }
 .cmsg .ct{ color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-right:5px; }
 .cmsg b{ color:var(--silver); font-weight:600; }
 .cmsg.csys{ color:var(--ore); font-family:var(--mono); font-size:11.5px; }
+/* location history: superseded location lines grey out; the CURRENT one
+   carries a soft pulse (same idiom as the nav live-op dot) */
+.cmsg.csys.old{ color:var(--muted); }
+@keyframes syspulse{ 0%,100%{opacity:1;} 50%{opacity:.55;} }
+.cmsg.csys.cur{ animation:syspulse 2.6s ease-in-out infinite; }
+.opstatus .syslive{ display:inline-block; animation:syspulse 2.6s ease-in-out infinite; }
+@media(prefers-reduced-motion:reduce){ .cmsg.csys.cur,.opstatus .syslive{ animation:none; } }
 .cempty{ color:var(--muted); font-size:12px; padding:4px 0; }
 .chatrow{ display:flex; gap:6px; margin-top:6px; }
 #chatin{ flex:1 1 auto; min-width:0; padding:7px 9px; background:var(--black); border:1px solid var(--line);
@@ -976,7 +983,9 @@ tr.haulrow{ cursor:pointer; }
       : "<span class='sysunset'>location not set</span>"
         +(opKeys() ? " <button id='stset' class='link'>set it</button>" : "");
     var tgt = (P.announce && P.announce.target) ? esc(P.announce.target) : "whatever the belt gives us";
-    var h="&#9935; "+sys
+    // the glyph pulses softly while a live location is set (dead-still when unset)
+    var glyph = (P.system && P.system.name) ? "<span class='syslive'>&#9935;</span>" : "&#9935;";
+    var h=glyph+" "+sys
       +" &middot; mining "+tgt
       +" &middot; lead "+(P.lead?esc(P.lead):"nobody yet")
       +" &middot; "+basisLabel()+" sell &middot; "+Math.round(rate()*100)+"% buyback";
@@ -1390,12 +1399,21 @@ tr.haulrow{ cursor:pointer; }
     el("chattog").textContent = chatOpen ? "hide" : "show";
     if(chatOpen && document.visibilityState==="visible"){
       var pinned = log.scrollHeight - log.scrollTop - log.clientHeight < 48; // stay glued to the newest unless the goblin scrolled up
+      // location history (Kyle 2026-07-19): superseded location lines grey out,
+      // the current one pulses. "Current" = the newest location-bearing sys line,
+      // and only while a system is actually set (cleared -> everything greys).
+      var isLocRow=function(t){ return /^(Fleet is now in |Op announced: )/.test(t||""); };
+      var curIdx=-1;
+      if(P && P.system && P.system.name)
+        for(var ci=rows.length-1;ci>=0;ci--){ if(rows[ci].sys && isLocRow(rows[ci].text)){ curIdx=ci; break; } }
       var h="";
       if(!rows.length) h="<div class='cempty'>No chatter yet. The rocks can't hear you, but the fleet can.</div>";
-      else rows.forEach(function(m){
-        h += m.sys
-          ? "<div class='cmsg csys'>&#9935; "+esc(m.text)+"</div>"
-          : "<div class='cmsg'><span class='ct'>"+hhmm(m.at)+"</span><b>"+esc(m.who)+"</b> "+esc(m.text)+"</div>";
+      else rows.forEach(function(m,mi){
+        if(m.sys){
+          var scls = isLocRow(m.text) ? (mi===curIdx ? " cur" : " old") : " old";
+          h += "<div class='cmsg csys"+scls+"'>&#9935; "+esc(m.text)+"</div>";
+        }
+        else h += "<div class='cmsg'><span class='ct'>"+hhmm(m.at)+"</span><b>"+esc(m.who)+"</b> "+esc(m.text)+"</div>";
       });
       log.innerHTML=h;
       if(pinned) log.scrollTop=log.scrollHeight;
