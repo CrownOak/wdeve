@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BONK - FLEET DROP LEDGER</title>
+<title>BONK - FLEET COMMAND</title>
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
 /* page-specific chrome; everything structural comes from common.css */
@@ -9,9 +9,22 @@
   padding:11px 15px; margin-bottom:16px; font-size:13.5px; line-height:1.55; color:var(--silver-dim);
   position:relative; }
 .howto b{ color:var(--silver); }
-.howtox{ position:absolute; top:6px; right:9px; background:none; border:none; color:var(--muted);
+/* centered command-deck header (Kyle: elevate it) — page-scoped, common.css untouched */
+header.fchead{ text-align:center; padding:34px 20px 22px; }
+.fcover{ font-family:var(--mono); font-size:11px; letter-spacing:.42em; text-transform:uppercase;
+  color:var(--ore); opacity:.75; margin-bottom:10px; }
+header.fchead h1{ font-size:34px; letter-spacing:.16em;
+  text-shadow:0 0 26px rgba(70,255,94,.22), 0 0 3px rgba(70,255,94,.25); }
+header.fchead .sub{ margin-top:10px; }
+header.fchead::after{ content:""; display:block; width:150px; height:2px; margin:18px auto 0;
+  background:linear-gradient(90deg, transparent, var(--ore), transparent); opacity:.8; }
+@media(max-width:620px){
+  header.fchead h1{ font-size:23px; letter-spacing:.09em; }
+  .fcover{ letter-spacing:.28em; }
+}
+.howtox{ position:absolute; top:6px; right:9px; background:none; border:none; color:var(--red);
   cursor:pointer; font-size:16px; line-height:1; padding:2px; }
-.howtox:hover{ color:var(--silver); }
+.howtox:hover{ filter:brightness(1.25); }
 .howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-bottom:14px; }
 .howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
   font-size:11.5px; text-decoration:underline dotted; padding:0; }
@@ -265,8 +278,9 @@ tr.haulrow{ cursor:pointer; }
 }
 </style></head>
 <body>
-  <header>
-    <h1>BIG ROCK ENERGY [BONK] &middot; FLEET DROP LEDGER</h1>
+  <header class="fchead">
+    <div class="fcover">BIG ROCK ENERGY [BONK] &middot; MINING OPS</div>
+    <h1>&#129704; FLEET COMMAND &#129482;</h1>
     <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
   </header>
   <div class="wrap">
@@ -402,7 +416,7 @@ tr.haulrow{ cursor:pointer; }
   var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
   var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
       LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots",
-      LS_CHIPS="bonk_fleet_chips", LS_HOWTO="bonk_fleet_howto", LS_CHATOPEN="bonk_fleet_chatopen";
+      LS_CHIPS="bonk_fleet_chips", LS_CHATOPEN="bonk_fleet_chatopen";
 
   // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
@@ -821,8 +835,6 @@ tr.haulrow{ cursor:pointer; }
     var o={p:payload, state:"sending", t:Date.now()};
     outbox.push(o);
     sendDrop(o);
-    // a goblin who has logged a drop no longer needs the paste instructions (U5)
-    if(lsGet(LS_HOWTO)!=="1"){ lsSet(LS_HOWTO,"1"); applyHowto(); }
     return true;
   }
   el("dropbtn").onclick=function(){
@@ -1443,12 +1455,14 @@ tr.haulrow{ cursor:pointer; }
   el("chatin").addEventListener("keydown",function(e){ if(e.key==="Enter") sendChat(); });
   el("chattog").onclick=function(){ chatOpen=!chatOpen; lsSet(LS_CHATOPEN, chatOpen?"1":"0"); renderChat(); };
 
-  // ---------- how-it-works collapse (U5): dismissed, or first drop logged ----------
-  function applyHowto(){ var seen=lsGet(LS_HOWTO)==="1";
-    el("howto").style.display=seen?"none":"";
-    el("howtomini").style.display=seen?"":"none"; }
-  el("howtox").onclick=function(){ lsSet(LS_HOWTO,"1"); applyHowto(); };
-  el("howtoshow").onclick=function(){ lsDel(LS_HOWTO); applyHowto(); };
+  // ---------- how-it-works: MINIMIZED BY DEFAULT (Kyle 2026-07-19) ----------
+  // The tour owns onboarding; the full box is one click away and never sticks open.
+  var howOpen=false;
+  function applyHowto(){
+    el("howto").style.display=howOpen?"":"none";
+    el("howtomini").style.display=howOpen?"none":""; }
+  el("howtox").onclick=function(){ howOpen=false; applyHowto(); };
+  el("howtoshow").onclick=function(){ howOpen=true; applyHowto(); };
   var ht=el("howtotour"); if(ht) ht.onclick=function(){
     if(window.BONKTour && window.BONKTour.start) window.BONKTour.start(); };
   applyHowto();
