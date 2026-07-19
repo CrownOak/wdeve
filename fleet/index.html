@@ -264,12 +264,48 @@ tr.haulrow{ cursor:pointer; }
   color:var(--silver); font-family:var(--mono); font-size:12.5px; }
 #chatin:focus{ border-color:var(--ore); outline:none; }
 #chatsend{ padding:7px 12px; }
+/* route scout (spec Downloads/BONK-FLEET-SCOUT-SPEC.md): collapsed card below
+   the feed. Route ribbon chips are sec-colored; verdict carries the only voice. */
+.scoutcard{ margin-top:18px; }
+.schead{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ore); cursor:pointer; user-select:none; padding:6px 0; }
+.schead .sccaret{ color:var(--muted); margin-left:8px; }
+.scrow{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:4px 0 8px; }
+.scfrom{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+.scfrom b{ color:var(--ore); }
+.scin{ padding:7px 9px; background:var(--black); border:1px solid var(--line);
+  color:var(--silver); font-family:var(--mono); font-size:12.5px; width:190px; }
+.scin:focus{ border-color:var(--ore); outline:none; }
+#scout{ font-size:12.5px; }
+.scribbon{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.scsys{ font-family:var(--mono); font-size:11.5px; padding:4px 8px; background:var(--steel);
+  border:1px solid var(--line-soft); border-left:3px solid var(--muted); white-space:nowrap; }
+.scsys.hs{ border-left-color:var(--ore); }
+.scsys.ls{ border-left-color:var(--amber); }
+.scsys.ns{ border-left-color:var(--red); }
+.scsys .ssec{ color:var(--muted); margin-left:5px; }
+.scsys .skill{ color:var(--red); margin-left:5px; }
+.scsys .schoke{ color:var(--amber); margin-left:4px; }
+.scverdict{ font-family:var(--mono); font-size:12px; padding:8px 11px; margin:8px 0;
+  border:1px solid var(--line-soft); background:var(--steel); }
+.scverdict.calm{ color:var(--ore); border-left:3px solid var(--ore); }
+.scverdict.watch{ color:var(--amber); border-left:3px solid var(--amber); }
+.scverdict.hot{ color:var(--red); border-left:3px solid var(--red); }
+.scdest{ margin:8px 0; padding:8px 11px; background:var(--steel); border:1px solid var(--line-soft); }
+.scdest .sdname{ color:var(--silver); font-weight:600; }
+.scdest .sdmeta{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:3px; }
+.scnbrlbl{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted); margin:8px 0 5px; }
+.scfoot{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
+.scfcrow{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.scnote{ font-family:var(--mono); font-size:11.5px; color:var(--muted); padding:6px 0; }
+.scnote.warn{ color:var(--amber); }
 /* mobile (U8): the paste box leads; command furniture follows */
 @media(max-width:820px){
   .fcol{ display:flex; flex-direction:column; }
   #opstatus{ order:0; } #pxbar{ order:1; } #frozenbar{ order:2; } #dropbox{ order:3; }
   #unmbar{ order:4; } #tiles{ order:5; } #tipctl{ order:6; } #cmdstrip{ order:7; }
-  #opannounce{ order:8; } #feed{ order:9; }
+  #opannounce{ order:8; } #feed{ order:9; } #scoutcard{ order:10; }
 }
 @media(max-width:620px){
   .ovin{ margin:16px 10px; padding:18px 14px 22px; }
@@ -353,6 +389,23 @@ tr.haulrow{ cursor:pointer; }
             </div>
             <div id="unmbar" class="thin warn" style="display:none" data-i18n-skip>Some pasted lines are not in the price table and count 0 ISK.</div>
             <div id="feed" data-i18n-skip></div>
+            <!-- route scout (spec BONK-FLEET-SCOUT-SPEC): type a destination, get the
+                 route from the fleet's current system + surroundings + danger. Static
+                 DOM per DR-FLEET-12: only #scout / #scfrom / #scfoot re-render. -->
+            <div id="scoutcard" class="scoutcard">
+              <div class="schead" id="schead">&#9906; Scout a destination<span class="sccaret" id="sccaret">&#9656;</span></div>
+              <div id="scbody" style="display:none">
+                <div class="scrow">
+                  <span id="scfrom" class="scfrom" data-i18n-skip></span>
+                  <input id="scorigin" class="scin" maxlength="60" placeholder="where are we now?" autocomplete="off" list="scsyslist" style="display:none">
+                  <input id="scdest" class="scin" maxlength="60" placeholder="where next? type a system" autocomplete="off" list="scsyslist">
+                  <datalist id="scsyslist"></datalist>
+                  <button id="scpref" class="ratep on" title="safer weighs lowsec heavily; shortest counts jumps only">safer route</button>
+                </div>
+                <div id="scout" data-i18n-skip></div>
+                <div id="scfoot" class="scfoot" data-i18n-skip></div>
+              </div>
+            </div>
           </div>
           <div>
             <div class="rhead">Fleet <button id="orcabtn" class="link" style="display:none;margin-left:8px"></button></div>
@@ -981,6 +1034,7 @@ tr.haulrow{ cursor:pointer; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
     renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
+    renderScoutOrigin(); if(scOpen) scLoadKills(); // origin tracks the fleet; kills re-arm hourly (guarded + backoff)
     seedPilotsFromPortal(); qdSyncRound(); refreshChipValues(); // track the live rate; never wipes a typed qty
     if(payoverOpen) maybeRenderPayout(); }
 
@@ -1457,6 +1511,328 @@ tr.haulrow{ cursor:pointer; }
   el("chatin").addEventListener("keydown",function(e){ if(e.key==="Enter") sendChat(); });
   el("chattog").onclick=function(){ chatOpen=!chatOpen; lsSet(LS_CHATOPEN, chatOpen?"1":"0"); renderChat(); };
 
+  // ---------- route scout (spec Downloads/BONK-FLEET-SCOUT-SPEC.md) ----------
+  // Client-only: routing = BFS/Dijkstra over the baked /fleet/systems.json
+  // topology; danger = the two public hourly ESI arrays Radar already uses;
+  // zero worker involvement. Asset + kills cached in localStorage.
+  var LS_SC_MAP="bonk_scout_map", LS_SC_KILLS="bonk_scout_kills",
+      LS_SC_PREF="bonk_scout_pref", LS_SC_OPEN="bonk_fleet_scout";
+  // public-knowledge gank chokepoints ONLY (cartel notes stay behind the watch
+  // word: this page's HTML is public, DR-FLEET-11)
+  var SC_CHOKES={ "uedama":1,"sivala":1,"ahbazon":1,"rancer":1,"tama":1,"amamake":1,
+    "old man star":1,"aufay":1,"balle":1,"hek":1,"ignoitton":1,"miroitem":1,
+    "crielere":1,"niarja":1,"khabi":1 };
+  var SMAP=null, SIDX=null, SBYID=null;       // topology + name index + id index
+  var SKILLS=null, SJUMPS=null, sKillsExp=0, sKillsStale=false;
+  var SBELTS=null;                            // /lowsec/belts.json name-join (lazy)
+  var scOpen = lsGet(LS_SC_OPEN)==="1";       // collapsed by default (DR-FLEET-9)
+  var scPref = lsGet(LS_SC_PREF)==="shorter" ? "shorter" : "safer";
+  var scT=null, scEsiBackoffUntil=0, scMapState="";
+
+  /*SCOUT-FN-START*/
+  function scSecTier(ts){ return ts>=0.45 ? "hs" : (ts>0 ? "ls" : "ns"); }
+  function scBuildIdx(map){ var idx={}, byid={}, i;
+    for(i=0;i<map.sys.length;i++){ idx[map.sys[i][0].toLowerCase()]=i; byid[map.sys[i][1]]=i; }
+    return {idx:idx, byid:byid}; }
+  // unweighted BFS origin->dest over neighbor indexes; returns index path or null
+  function scBfs(map, s, t){
+    if(s===t) return [s];
+    var prev={}, q=[s], qi=0, c, nb, j, v;
+    prev[s]=-1;
+    while(qi<q.length){
+      c=q[qi++];
+      nb=map.sys[c][4];
+      for(j=0;j<nb.length;j++){ v=nb[j];
+        if(prev[v]===undefined){ prev[v]=c; if(v===t){ qi=q.length; break; } q.push(v); } }
+    }
+    if(prev[t]===undefined) return null;
+    var out=[]; c=t;
+    while(c!==-1){ out.push(c); c=prev[c]; }
+    return out.reverse();
+  }
+  // "safer": Dijkstra, cost of ENTERING a system: highsec 1, lowsec 50, null 60
+  // (mirrors ESI flag=secure behavior: lowsec only when unavoidable)
+  function scDijkstra(map, s, t){
+    if(s===t) return [s];
+    var n=map.sys.length, dist={}, prev={}, done={}, heap=[[0,s]];
+    dist[s]=0; prev[s]=-1;
+    function hpush(x){ heap.push(x); var i=heap.length-1, p, tmp;
+      while(i>0){ p=(i-1)>>1; if(heap[p][0]<=heap[i][0]) break;
+        tmp=heap[p]; heap[p]=heap[i]; heap[i]=tmp; i=p; } }
+    function hpop(){ var top=heap[0], last=heap.pop(), i=0, l, r, m, tmp;
+      if(heap.length){ heap[0]=last;
+        for(;;){ l=2*i+1; r=l+1; m=i;
+          if(l<heap.length && heap[l][0]<heap[m][0]) m=l;
+          if(r<heap.length && heap[r][0]<heap[m][0]) m=r;
+          if(m===i) break; tmp=heap[m]; heap[m]=heap[i]; heap[i]=tmp; i=m; } }
+      return top; }
+    while(heap.length){
+      var cur=hpop(), u=cur[1];
+      if(done[u]) continue; done[u]=1;
+      if(u===t) break;
+      var nb=map.sys[u][4];
+      for(var j=0;j<nb.length;j++){ var v=nb[j];
+        if(done[v]) continue;
+        var ts=map.sys[v][2], w=ts>=0.45?1:(ts>0?50:60), nd=cur[0]+w;
+        if(dist[v]===undefined || nd<dist[v]){ dist[v]=nd; prev[v]=u; hpush([nd,v]); } }
+    }
+    if(!done[t]) return null;
+    var out=[], c=t;
+    while(c!==-1){ out.push(c); c=prev[c]; }
+    return out.reverse();
+  }
+  // per-system danger tier; k={s,p,n} kills (zeros when absent), first match wins
+  function scSysTier(ts, k, choke){
+    if(scSecTier(ts)!=="hs") return "hot";      // a barge fleet does not do lowsec
+    if((k.p||0)>=3) return "hot";               // pods dying = camp/ganks NOW
+    if((k.s||0)>=8 && choke) return "hot";      // the funnel is running
+    if((k.s||0)>=5) return "watch";
+    if(choke) return "watch";
+    return "calm";
+  }
+  // verdict over route (incl dest) + dest neighbors; rows = [{name,tier}]
+  function scVerdict(routeRows, nbrRows){
+    var i, hotR=[], hotN=[], watch=[];
+    for(i=0;i<routeRows.length;i++){
+      if(routeRows[i].tier==="hot") hotR.push(routeRows[i].name);
+      else if(routeRows[i].tier==="watch") watch.push(routeRows[i].name); }
+    for(i=0;i<nbrRows.length;i++){
+      if(nbrRows[i].tier==="hot") hotN.push(nbrRows[i].name);
+      else if(nbrRows[i].tier==="watch") watch.push(nbrRows[i].name); }
+    if(hotR.length) return {cls:"hot", kind:"route", names:hotR};
+    if(hotN.length) return {cls:"hot", kind:"rock", names:hotN};
+    if(watch.length) return {cls:"watch", kind:"watch", names:watch};
+    return {cls:"calm", kind:"calm", names:[]};
+  }
+  /*SCOUT-FN-END*/
+
+  function scNames(a){ var v=a.slice(0,3).map(esc).join(", ");
+    return a.length>3 ? v+" +"+(a.length-3)+" more" : v; }
+  function scKillsOf(id){ return (SKILLS && SKILLS[id]) || {s:0,p:0,n:0}; }
+  // bounded typeahead (spec: >=2 chars, max 12) — never the full 5,485-option dump
+  function scSuggest(val){
+    var dl=el("scsyslist"); if(!dl || !SMAP) return;
+    dl.innerHTML="";
+    var q=String(val||"").toLowerCase(); if(q.length<2) return;
+    var hits=[], i, n;
+    for(i=0;i<SMAP.sys.length && hits.length<12;i++){
+      n=SMAP.sys[i][0]; if(n.toLowerCase().indexOf(q)===0) hits.push(n); }
+    for(i=0;i<SMAP.sys.length && hits.length<12;i++){
+      n=SMAP.sys[i][0];
+      if(n.toLowerCase().indexOf(q)>0 && hits.indexOf(n)<0) hits.push(n); }
+    var frag=document.createDocumentFragment();
+    hits.forEach(function(h){ var o=document.createElement("option"); o.value=h; frag.appendChild(o); });
+    dl.appendChild(frag);
+  }
+  var scMapFetching=false, scMapChecked=false;
+  function scLoadMap(){
+    if(scMapChecked && SMAP) return; // one freshness check per session
+    var c=null;
+    if(!SMAP){
+      try{ c=JSON.parse(lsGet(LS_SC_MAP)||"null"); }catch(e){}
+      if(c && c.v===1 && c.sys){
+        SMAP=c; var ix=scBuildIdx(c); SIDX=ix.idx; SBYID=ix.byid;
+        scMapState="ok"; scRun(); }
+      else scMapState="loading";
+    }
+    if(scMapFetching) return; // review-caught: rapid open/close must not stack 240KB fetches
+    scMapFetching=true; scMapChecked=true;
+    // fetch regardless of an LS hit: replaces the copy when a rebake shipped
+    fetch("/fleet/systems.json?v=1").then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(j){
+        scMapFetching=false;
+        if(!(j && j.v===1 && j.sys)) throw 0;
+        if(SMAP && SMAP.generated===j.generated) return;
+        SMAP=j; var ix2=scBuildIdx(j); SIDX=ix2.idx; SBYID=ix2.byid;
+        scMapState="ok"; lsSet(LS_SC_MAP, JSON.stringify(j));
+        renderScoutOrigin(); scRun();
+      }).catch(function(){ scMapFetching=false; if(!SMAP){ scMapState="failed"; scRun(); } });
+  }
+  var scKillsBusy=false, sKillsAt=0;
+  function scLoadKills(){
+    var now=Date.now();
+    if(scKillsBusy) return;                 // review-caught: the 5s poll must never stack fetch pairs
+    if(SKILLS && now<sKillsExp) return;
+    var c=null; try{ c=JSON.parse(lsGet(LS_SC_KILLS)||"null"); }catch(e){}
+    if(c && now<(c.exp||0)){ SKILLS=c.k; SJUMPS=c.j; sKillsExp=c.exp; sKillsAt=c.at||0; sKillsStale=false; scRun(); return; }
+    if(now<scEsiBackoffUntil){
+      // serve the stale copy once a minute (short revalidate TTL so each tick
+      // does not re-parse a 200KB blob), and re-render so the note shows
+      if(c && !sKillsStale){ SKILLS=c.k; SJUMPS=c.j; sKillsAt=c.at||0; sKillsStale=true; scRun(); }
+      sKillsExp=now+60000;
+      return; }
+    scKillsBusy=true;
+    Promise.all([
+      fetch("https://esi.evetech.net/latest/universe/system_kills/"),
+      fetch("https://esi.evetech.net/latest/universe/system_jumps/")
+    ]).then(function(rs){
+      var lim=parseInt(rs[0].headers.get("X-Esi-Error-Limit-Remain")||"100",10);
+      if(lim<20) scEsiBackoffUntil=Date.now()
+        +(parseInt(rs[0].headers.get("X-Esi-Error-Limit-Reset")||"60",10)+5)*1000;
+      if(!rs[0].ok || !rs[1].ok) throw 0;
+      var exp=Date.parse(rs[0].headers.get("Expires")||"")||0;
+      if(!exp || exp<Date.now()) exp=Date.now()+1800000;
+      return Promise.all([rs[0].json(), rs[1].json()]).then(function(js){
+        var k={}, j={};
+        js[0].forEach(function(r){ k[r.system_id]={s:r.ship_kills||0,p:r.pod_kills||0,n:r.npc_kills||0}; });
+        js[1].forEach(function(r){ j[r.system_id]=r.ship_jumps||0; });
+        SKILLS=k; SJUMPS=j; sKillsExp=exp; sKillsAt=Date.now(); sKillsStale=false;
+        scKillsBusy=false;
+        lsSet(LS_SC_KILLS, JSON.stringify({exp:exp, at:sKillsAt, k:k, j:j}));
+        scRun();
+      });
+    }).catch(function(){
+      // total fetch failure: back off 2min so the 5s poll can't hammer ESI
+      scKillsBusy=false;
+      scEsiBackoffUntil=Math.max(scEsiBackoffUntil, Date.now()+120000);
+      sKillsExp=Date.now()+60000; // short revalidate: don't re-enter every tick
+      if(c){ SKILLS=c.k; SJUMPS=c.j; sKillsAt=c.at||0; sKillsStale=true; scRun(); }
+      else if(SKILLS){ sKillsStale=true; scRun(); } // keep a good in-memory copy (LS write may have failed)
+      else scRun();
+    });
+  }
+  function scLoadBelts(){
+    if(SBELTS!==null) return;
+    SBELTS=false; // in-flight / failed marker: panel omits belts silently
+    fetch("/lowsec/belts.json").then(function(r){ return r.ok?r.json():null; }).then(function(bj){
+      if(!(bj && bj.regions)) return;
+      var m={};
+      for(var reg in bj.regions) bj.regions[reg].forEach(function(s){
+        m[String(s.n).toLowerCase()]={b:s.b||0, m:s.m||0, st:s.st||0}; });
+      SBELTS=m; scRun();
+    }).catch(function(){});
+  }
+  function scOriginIdx(){
+    var pn=(P && P.system && P.system.name) ? String(P.system.name).toLowerCase() : "";
+    if(pn && SIDX && SIDX[pn]!=null) return {i:SIDX[pn], fleet:true};
+    var ov=(el("scorigin").value||"").trim().toLowerCase();
+    if(ov && SIDX && SIDX[ov]!=null) return {i:SIDX[ov], fleet:false};
+    return null;
+  }
+  var scLastOrigin="";
+  function renderScoutOrigin(){
+    if(!scOpen) return;
+    var chip=el("scfrom"), inp=el("scorigin");
+    var pn=(P && P.system && P.system.name) ? String(P.system.name) : "";
+    if(!SIDX){ // map not parsed yet: a valid fleet system is NOT "bad" (review-caught)
+      chip.innerHTML=pn ? "from <b>"+esc(pn)+"</b> (fleet)" : "";
+      chip.style.display=pn?"":"none";
+      if(document.activeElement!==inp) inp.style.display=pn?"none":"";
+      return; }
+    var known=!!(pn && SIDX[pn.toLowerCase()]!=null);
+    if(known){ chip.innerHTML="from <b>"+esc(pn)+"</b> (fleet)"; chip.style.display="";
+      if(document.activeElement!==inp) inp.style.display="none"; }
+    else{
+      chip.innerHTML=pn ? "fleet location isn't a system name" : "";
+      chip.style.display=pn?"":"none"; inp.style.display=""; }
+    // review-caught: when the fleet MOVES, the rendered route must follow the
+    // chip — re-run against the new origin (rebuilds #scout only, inputs safe)
+    if(pn!==scLastOrigin){ scLastOrigin=pn;
+      if((el("scdest").value||"").trim()) scRun(); }
+  }
+  function scChip(i){
+    var s=SMAP.sys[i], k=scKillsOf(s[1]), tier=scSecTier(s[2]);
+    var choke=!!SC_CHOKES[s[0].toLowerCase()];
+    var h="<span class='scsys "+tier+"' title='"+esc(SMAP.regions[s[3]]||"")+"'>"+esc(s[0])
+      +"<span class='ssec'>"+s[2].toFixed(1)+"</span>";
+    if(k.s>0) h+="<span class='skill'>&#9760;"+k.s+"</span>";
+    if(k.p>0) h+="<span class='skill'>&#129370;"+k.p+"</span>";
+    if(choke) h+="<span class='schoke' title='known gank chokepoint'>&#9873;</span>";
+    return h+"</span>";
+  }
+  function scRun(){
+    var box=el("scout"), foot=el("scfoot");
+    if(!box || !scOpen) return;
+    renderScoutOrigin();
+    if(scMapState==="failed"){ box.innerHTML="<div class='scnote warn'>Scout is missing its map. <button id='scretry' class='link'>retry</button></div>";
+      var rb=el("scretry"); if(rb) rb.onclick=function(){ scMapState=""; scLoadMap(); };
+      foot.textContent=""; return; }
+    if(!SMAP){ box.innerHTML="<div class='scnote'>pulling the map&hellip;</div>"; foot.textContent=""; return; }
+    var staleAge = sKillsStale && sKillsAt ? Math.max(1,Math.round((Date.now()-sKillsAt)/60000)) : 0;
+    foot.innerHTML="map "+esc((SMAP.generated||"").slice(0,10))+" &middot; kills refresh hourly"
+      +(sKillsStale?" <span class='warn'>(danger data from "+(staleAge?staleAge+"m ago":"earlier")+", ESI unreachable)</span>":"")
+      +" &middot; belt intel via <a href='/lowsec/'>Radar</a>";
+    var dn=(el("scdest").value||"").trim();
+    if(!dn){ box.innerHTML=""; return; }
+    var di=SIDX[dn.toLowerCase()];
+    if(di==null){ if(dn.length>=3) box.innerHTML="<div class='scnote'>No system by that name. Keep typing, the box suggests as you go.</div>";
+      else box.innerHTML=""; return; }
+    var o=scOriginIdx();
+    if(!o){ box.innerHTML="<div class='scnote'>Say where the fleet is first"
+      +(opKeys()?" (set the fleet location in the command bar, or type an origin here)":" (type an origin above, or ask command to set the fleet location)")+".</div>"; return; }
+    var path = o.i===di ? [di] : (scPref==="safer" ? scDijkstra(SMAP,o.i,di) : scBfs(SMAP,o.i,di));
+    var noKills = !SKILLS;
+    var h="";
+    if(!path){ h+="<div class='scnote warn'>No gate route. That is a wormhole problem, not a mining fleet problem.</div>"; box.innerHTML=h; return; }
+    // route ribbon + tier rows. The DESTINATION belongs to the "rock" group
+    // (review-caught: a hot destination must read HOT AT THE ROCK, not HOT
+    // ROUTE), so routeRows covers the path EXCLUDING the final system.
+    var routeRows=[], i, s, tierOf=function(pi){ var y=SMAP.sys[pi];
+      return {name:y[0], tier:scSysTier(y[2], scKillsOf(y[1]), !!SC_CHOKES[y[0].toLowerCase()])}; };
+    if(path.length>1){
+      h+="<div class='scnbrlbl'>"+(path.length-1)+" jump"+(path.length>2?"s":"")+" &middot; "+(scPref==="safer"?"safer":"shortest")+" route</div><div class='scribbon'>";
+      for(i=0;i<path.length;i++){
+        if(i<path.length-1) routeRows.push(tierOf(path[i]));
+        h+=scChip(path[i]); }
+      h+="</div>";
+    }
+    // destination panel
+    var ds=SMAP.sys[di], dk=scKillsOf(ds[1]), bl=(SBELTS && SBELTS[ds[0].toLowerCase()])||null;
+    h+="<div class='scdest'><span class='sdname'>"+esc(ds[0])+"</span>"
+      +"<div class='sdmeta'>"+esc(SMAP.regions[ds[3]]||"")+" &middot; sec "+ds[2].toFixed(2)
+      +(bl ? " &middot; "+bl.b+" belt"+(bl.b===1?"":"s")+" &middot; "+bl.m+" moons"+(bl.st?" &middot; "+bl.st+" station"+(bl.st===1?"":"s"):"") : "")
+      +(noKills ? "" : " &middot; rats "+dk.n+"/hr &middot; traffic "+((SJUMPS&&SJUMPS[ds[1]])||0)+" jumps/hr")
+      +"</div></div>";
+    // rock group = destination + neighbors (1 jump out — where the ganks stage)
+    var destRow=tierOf(di), nbrRows=[destRow], nb=ds[4];
+    if(nb.length){
+      h+="<div class='scnbrlbl'>around "+esc(ds[0])+"</div><div class='scribbon'>";
+      for(i=0;i<nb.length;i++){ nbrRows.push(tierOf(nb[i])); h+=scChip(nb[i]); }
+      h+="</div>";
+    }
+    // verdict
+    var v=scVerdict(routeRows, nbrRows), vt="";
+    if(v.cls==="calm") vt="CLEAR. Boring space the whole way. Perfect. Rocks won't know what hit them.";
+    else if(v.cls==="watch") vt="WATCH. Elevated activity in "+scNames(v.names)+". Eyes on local, keep aligned.";
+    else if(v.kind==="route") vt="HOT ROUTE. "+scNames(v.names)+" is popping ships right now. Reroute, escort, or wait it out.";
+    else if(destRow.tier==="hot") vt="HOT AT THE ROCK. "+esc(ds[0])+" itself is active. Scout it in something cheap first.";
+    else vt="HOT AT THE ROCK. "+scNames(v.names)+" next door is active. Scout it in something cheap first.";
+    if(noKills) vt+=" (kills feed unreachable, judging by sec status alone)";
+    h+="<div class='scverdict "+v.cls+"'>"+vt+"</div>";
+    // FC one-taps
+    if(opKeys()){
+      h+="<div class='scfcrow'><button id='scset' class='gobtn'>Set as fleet location</button>"
+        +"<button id='scann' class='gobtn'>Announce op here</button></div>";
+    }
+    box.innerHTML=h;
+    var sb=el("scset"); if(sb) sb.onclick=function(){ pushSystem(ds[0]); };
+    var ab=el("scann"); if(ab) ab.onclick=function(){
+      anOpen=true; renderCmd(); renderAnnounce();
+      // review-caught: FOCUS the input so renderAnnounce's activeElement guard
+      // protects the prefill — unfocused, the next 5s poll would rebuild the
+      // composer from P.system and the FC could @everyone the WRONG system.
+      var ai=el("anSys"); if(ai){ ai.value=ds[0]; ai.focus(); ai.scrollIntoView({block:"center"}); } };
+  }
+  function scToggle(){
+    scOpen=!scOpen; lsSet(LS_SC_OPEN, scOpen?"1":"0");
+    el("scbody").style.display=scOpen?"":"none";
+    el("sccaret").innerHTML=scOpen?"&#9662;":"&#9656;";
+    if(scOpen){ scLoadMap(); scLoadKills(); scLoadBelts(); renderScoutOrigin(); scRun(); }
+  }
+  el("schead").onclick=scToggle;
+  if(scOpen){ el("scbody").style.display=""; el("sccaret").innerHTML="&#9662;";
+    scLoadMap(); scLoadKills(); scLoadBelts(); }
+  el("scdest").addEventListener("input",function(){ scSuggest(this.value); clearTimeout(scT); scT=setTimeout(scRun,250); });
+  el("scdest").addEventListener("keydown",function(e){ if(e.key==="Enter"){ clearTimeout(scT); scRun(); } });
+  el("scorigin").addEventListener("input",function(){ scSuggest(this.value); clearTimeout(scT); scT=setTimeout(scRun,250); });
+  el("scpref").textContent = scPref==="safer" ? "safer route" : "shortest route"; // LS pref may differ from static HTML
+  el("scpref").onclick=function(){
+    scPref = scPref==="safer" ? "shorter" : "safer";
+    lsSet(LS_SC_PREF, scPref);
+    el("scpref").textContent = scPref==="safer" ? "safer route" : "shortest route";
+    scRun();
+  };
+
   // ---------- how-it-works: MINIMIZED BY DEFAULT (Kyle 2026-07-19) ----------
   // The tour owns onboarding; the full box is one click away and never sticks open.
   var howOpen=false;
@@ -1802,6 +2178,9 @@ window.BONK_TOUR = {
     { sel: "#quickdrops", place: "auto",
       title: "The lazy way, once you have a rhythm",
       body: "Grinding one ore all night? After the first drop it becomes a chip up here. Dial the number, tap drop, back to the belt. Chips reset each op so Monday's ice never haunts Thursday's Veldspar." },
+    { sel: "#scoutcard", place: "auto",
+      title: "Scout the next rock before you undock",
+      body: "See a fat anomaly in the Agency window? Type the system here. The scout draws the route from where the fleet sits right now, checks every system on the way plus the destination's neighbors against the last hour of kills, and hands down a verdict. Command can set the fleet location or announce the op there in one tap." },
     { sel: "#feed", place: "auto",
       title: "The feed is your receipt",
       body: "If your drop shows here, you are getting paid for it, and the receipt lives on your portal career page forever. If it is not on the feed, the ledger never saw it, and unlogged ore is charity. Check the feed, then go fill another hold." },
