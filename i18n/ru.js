@@ -1513,5 +1513,15 @@ window.BONK_RU = {
 "back to all boards": "назад ко всем доскам",
 "● LIVE · Jita 4-4 ·": "● ВЖИВУЮ · Jita 4-4 ·",
 
+/* ---------------- ex-goblins wall + door speech ---------------- */
+"⚰ EX-GOBLINS · THE ONES WHO LEFT": "⚰ ЭКС-ГОБЛИНЫ · ТЕ, КТО УШЁЛ",
+"They chose a life without boosts. The rock does not forgive. The rock does not forget.": "Они выбрали жизнь без бустов. Камень не прощает. Камень не забывает.",
+"Ah. It’s you.": "А. Это ты.",
+"Buddy. You LEFT. We noticed. The rocks noticed. Your chair went to a goblin who stayed, and honestly, he is thriving in it.": "Дружище. Ты УШЁЛ. Мы заметили. Камни заметили. Твой стул достался гоблину, который остался, и, честно говоря, он в нём процветает.",
+"There is nothing behind this door for you anymore. Except this message. Which we built specifically for you. Which is, if you think about it, kind of flattering.": "За этой дверью для тебя больше ничего нет. Кроме этого сообщения. Которое мы построили специально для тебя. Что, если подумать, даже льстит.",
+"So, with warmth, with history, with a full hold of love: fuck off. 🪨": "Так что, с теплом, с историей, с полным трюмом любви: пошёл ты. 🪨",
+"The ore flows fine without you. It barely noticed either.": "Руда прекрасно течёт без тебя. Она тоже почти не заметила.",
+"back to the cold, empty belt →": "назад в холодный пустой белт →",
+
 "@end": 1
 };
