@@ -18,8 +18,17 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 
 /* header */
 .gss-head{ display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:18px; margin-bottom:8px; }
-.seal-img{ width:76px; height:76px; flex:none; border-radius:10px; box-shadow:0 0 26px rgba(143,183,201,.14); }
-.gate-logo{ width:190px; max-width:62vw; display:block; margin:0 auto 12px; filter:drop-shadow(0 0 34px rgba(143,183,201,.13)); }
+/* the seal: big, centered, static, translucent, behind everything (Kyle) */
+.gss-watermark{ position:fixed; top:47%; left:50%; transform:translate(-50%,-50%); width:660px; max-width:92vw;
+  opacity:.09; pointer-events:none; user-select:none; z-index:0; }
+@media(max-width:640px){ .gss-watermark{ opacity:.06; width:118vw; } }
+/* clearance checkpoint (the honeypot bait) */
+.cp{ display:flex; gap:8px; justify-content:center; max-width:340px; margin:16px auto 0; }
+.cp input{ flex:1; background:#06070a; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:13px; padding:9px 11px; text-align:center; letter-spacing:.1em; }
+.cp input:focus{ outline:none; border-color:var(--ice); }
+.cp button{ background:var(--ice); color:#04140a; border:0; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:0 16px; cursor:pointer; }
+.gss-gate .hint{ margin-top:16px; font-size:11px; color:var(--muted); }
+.gss-gate .hint a{ color:var(--ice); }
 .gss-title{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em; font-size:19px; color:var(--silver); }
 .gss-motto{ margin-left:auto; font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ice-dim); }
 .subline{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); margin:0 0 26px; }
@@ -122,9 +131,9 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 </style>
 </head>
 <body>
+<img class="gss-watermark" src="/portal/intel/gss-256.png" alt="" aria-hidden="true">
 <div class="gss-wrap">
   <div class="gss-head">
-    <img class="seal-img" src="/portal/intel/gss-96.png" alt="Goblin State Security seal">
     <div>
       <div class="gss-title">Goblin State Security</div>
     </div>
@@ -133,7 +142,6 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
   <div class="subline">We watch, we record, we know. There is always a file.</div>
 
   <div id="gate" class="gss-gate">
-    <img class="gate-logo" src="/portal/intel/gss-256.png" alt="Goblin State Security">
     <div id="gatemsg"><p>Checking clearance...</p></div>
   </div>
 
@@ -194,16 +202,41 @@ function api(path,opts){ return fetch("/api"+path,Object.assign({credentials:"sa
 
 var curClass = "";
 
+// GSS emergency override. do not share.
+var OVERRIDE = "assume-everything";
+var gssTries = 0;
+function toVoid(reason){
+  try{ fetch("/api/gss/trip",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({reason:reason})}); }catch(e){}
+  location.href="/portal/intel/void/";
+}
+function tryCode(){
+  var el=document.getElementById("gsspw"); var v=(el.value||"").trim();
+  if(!v){ el.focus(); return; }
+  if(v===OVERRIDE){ toVoid("override"); return; }   // the "master key" is the trap
+  gssTries++;
+  if(gssTries>=2){ toVoid("wrong"); return; }        // two wrong guesses = same wall
+  document.getElementById("gsspwerr").textContent="Rejected. Assume nothing.";
+  el.value=""; el.focus();
+}
+function showCheckpoint(){
+  document.getElementById("gatemsg").innerHTML=
+    '<h2>Clearance checkpoint</h2>'+
+    '<p>Cleared personnel are recognized by session. Officers, admins, and designated GSS pass without a code.</p>'+
+    '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus><button id="gsspwgo">submit</button></div>'+
+    '<div class="err" id="gsspwerr" style="text-align:center"></div>'+
+    '<p class="hint">Cleared and still seeing this? <a href="/portal/">Log in to the portal</a> first.</p>';
+  document.getElementById("gsspwgo").addEventListener("click",tryCode);
+  document.getElementById("gsspw").addEventListener("keydown",function(e){ if(e.key==="Enter") tryCode(); });
+}
 function init(){
   api("/whoami").then(function(w){
-    var msg=document.getElementById("gatemsg");
-    if(!w || !w.loggedIn){ msg.innerHTML='<h2>Log in</h2><p>GSS is behind your portal login. <a href="/portal/">Go to the portal</a>.</p>'; return; }
-    if(!w.gss){
-      msg.innerHTML='<h2>Not your clearance</h2><p>The cold room is officers, admins, and the designated. There is always a file. This visit is one line in it.</p>'; return;
+    // the ONLY true way in: a cleared session (officer, admin, or designated GSS)
+    if(w && w.loggedIn && w.gss){
+      document.getElementById("gate").style.display="none";
+      document.getElementById("app").style.display="block";
+      loadBoard(); loadEntities(""); return;
     }
-    document.getElementById("gate").style.display="none";
-    document.getElementById("app").style.display="block";
-    loadBoard(); loadEntities("");
+    showCheckpoint(); // everyone else meets the bait
   }).catch(function(){ document.getElementById("gatemsg").innerHTML='<p class="err">GSS is not answering. Try again.</p>'; });
 }
 

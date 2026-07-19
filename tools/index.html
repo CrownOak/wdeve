@@ -207,6 +207,12 @@ a.card.secret:hover .name{ animation:glitch .12s steps(2) 1; }
       empty and you never opened it. The rocks have eyes. &#128065;</div>
     </a>
 
+    <a class="card secret" href="/portal/intel/" data-gss="1">
+      <div class="row"><span class="name" data-gname>&#9608;&#9608;&#9608; CLASSIFIED &#9608;&#9608;&#9608;</span><span class="lock" data-glock>&#128274; clearance required</span></div>
+      <div class="desc" data-gdesc>A room that is not on this list, except it is, right here, and you still cannot open it. The door
+      knows its own. If it does not know you, do not test it. It remembers everyone who knocks, and it never forgets a face.</div>
+    </a>
+
     </div>
 
     <div class="workbench"><span class="ix">05 //</span> On the workbench</div>
@@ -302,6 +308,12 @@ a.card.secret:hover .name{ animation:glitch .12s steps(2) 1; }
       });
       var gh = document.getElementById("goblinhint");
       if (gh) gh.innerHTML = "you are logged in &middot; these open themselves &middot; mine on";
+    }
+    // GSS reveals itself only to the cleared (officer, admin, designated).
+    if (w.gss){
+      var gn=document.querySelector('[data-gname]'); if(gn) gn.innerHTML="Goblin State Security";
+      var gd=document.querySelector('[data-gdesc]'); if(gd) gd.innerHTML="The intelligence sector. Dossiers, target packages, the neighborhood map, the standings watch, and the Field Rules. The cold room. Officers, admins, and the designated. Assume nothing.";
+      var gl=document.querySelector('[data-glock]'); if(gl){ gl.className="lock you"; gl.innerHTML="&#9672; opens for you"; }
     }
   }).catch(function(){});
 })();
