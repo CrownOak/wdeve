@@ -1,10 +1,10 @@
 {
  "generated": "run of i18n/extract.mjs",
- "total": 6507,
- "translated": 1055,
- "missing": 5452,
+ "total": 6536,
+ "translated": 1200,
+ "missing": 5336,
  "interpolated": 0,
- "orphans": 156,
+ "orphans": 238,
  "strings": [
   {
    "s": "BIG ROCK ENERGY [BONK] — Highsec Mining & Industry",
@@ -43,6 +43,20 @@
     "index.html",
     "portal/index.html",
     "portal/claim/index.html"
+   ]
+  },
+  {
+   "s": "EN",
+   "kind": "html",
+   "files": [
+    "index.html"
+   ]
+  },
+  {
+   "s": "RU",
+   "kind": "html",
+   "files": [
+    "index.html"
    ]
   },
   {
@@ -1145,6 +1159,14 @@
    "ru": true
   },
   {
+   "s": "Language / Язык",
+   "kind": "attr",
+   "files": [
+    "index.html",
+    "nav.js"
+   ]
+  },
+  {
    "s": "Big Rock Energy [BONK] emblem — crossed mining lasers over a green ore crystal",
    "kind": "attr",
    "files": [
@@ -1426,6 +1448,13 @@
   },
   {
    "s": "EVE time is UTC. Your local time:",
+   "kind": "js",
+   "files": [
+    "index.html"
+   ]
+  },
+  {
+   "s": "bonk:lang",
    "kind": "js",
    "files": [
     "index.html"
@@ -1925,16 +1954,14 @@
    "kind": "js",
    "files": [
     "tools/index.html"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Finds corp‑less, freshly ganked miners and hands you a personalized opener. Shared done markers so no prospect gets double mailed. Vet any pilot before you pitch.",
    "kind": "js",
    "files": [
     "tools/index.html"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Alliance Builder",
@@ -1942,16 +1969,14 @@
    "files": [
     "tools/index.html",
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Ranked independent mining corps for the alliance pitch, one personalized CEO mail per row, same shared done markers. Founder to founder.",
    "kind": "js",
    "files": [
     "tools/index.html"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "lock you",
@@ -3620,12 +3645,11 @@
    ]
   },
   {
-   "s": "What brings you to the rock?",
+   "s": "Language · Язык",
    "kind": "js",
    "files": [
     "apply/index.html"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "14px",
@@ -3633,6 +3657,29 @@
    "files": [
     "apply/index.html"
    ]
+  },
+  {
+   "s": "data-i18n-skip",
+   "kind": "js",
+   "files": [
+    "apply/index.html"
+   ]
+  },
+  {
+   "s": "English",
+   "kind": "js",
+   "files": [
+    "apply/index.html"
+   ],
+   "ru": true
+  },
+  {
+   "s": "What brings you to the rock?",
+   "kind": "js",
+   "files": [
+    "apply/index.html"
+   ],
+   "ru": true
   },
   {
    "s": "Join Wealthy Dropouts",
@@ -4955,7 +5002,14 @@
    ]
   },
   {
-   "s": ").value }) }); var j = null; try { j = await r.json(); } catch(e2){} if (j && j.ok){ location.reload(); return; } err.textContent = (j && j.error) ||",
+   "s": ").value }) }); var j = null; try { j = await r.json(); } catch(e2){} if (j && j.ok){ location.reload(); return; } if (j && j.left){ renderFarewell(j.ign || $(",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ").value.trim()); return; } err.textContent = (j && j.error) ||",
    "kind": "js",
    "files": [
     "portal/index.html"
@@ -4969,7 +5023,99 @@
    ]
   },
   {
-   "s": "; } btn.disabled = false; }); /* ============ identity header + bell ============ */ function isAlly(){ return !!(S.me && S.me.account && S.me.account.role ===",
+   "s": "; } btn.disabled = false; }); /* The ex-goblin door speech. status='left' accounts get this instead of a login, every time, forever. Friendly. Sarcastic. Final. */ function renderFarewell(who){ var gate = $(",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "); gate.innerHTML = '<div style=",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">' + '<div style=",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">Ah. It’s you.",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "' + '<p style=",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "><b style=",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">' + esc(who) + '.",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "Buddy. You LEFT. We noticed. The rocks noticed. Your chair went to a goblin who stayed, and honestly, he is thriving in it.",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ],
+   "ru": true
+  },
+  {
+   "s": ">There is nothing behind this door for you anymore. Except this message. Which we built specifically for you. Which is, if you think about it, kind of flattering.",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">So, with warmth, with history, with a full hold of love: fuck off. \\u{1FAA8}",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">The ore flows fine without you. It barely noticed either.",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "' + '<a href=",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": ">back to the cold, empty belt →",
+   "kind": "js",
+   "files": [
+    "portal/index.html"
+   ]
+  },
+  {
+   "s": "'; } /* ============ identity header + bell ============ */ function isAlly(){ return !!(S.me && S.me.account && S.me.account.role ===",
    "kind": "js",
    "files": [
     "portal/index.html"
@@ -13018,6 +13164,43 @@
    "ru": true
   },
   {
+   "s": "⚰ EX-GOBLINS · THE ONES WHO LEFT",
+   "kind": "js",
+   "files": [
+    "portal/roster/index.html"
+   ],
+   "ru": true
+  },
+  {
+   "s": "They chose a life without boosts. The rock does not forgive. The rock does not forget.",
+   "kind": "js",
+   "files": [
+    "portal/roster/index.html"
+   ],
+   "ru": true
+  },
+  {
+   "s": "left the belt",
+   "kind": "js",
+   "files": [
+    "portal/roster/index.html"
+   ]
+  },
+  {
+   "s": "· was a goblin",
+   "kind": "js",
+   "files": [
+    "portal/roster/index.html"
+   ]
+  },
+  {
+   "s": "· chair reassigned",
+   "kind": "js",
+   "files": [
+    "portal/roster/index.html"
+   ]
+  },
+  {
    "s": "MEMBERS ONLY",
    "kind": "js",
    "files": [
@@ -13222,21 +13405,24 @@
    "kind": "js",
    "files": [
     "portal/leaderboard/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "tips to bosses",
    "kind": "js",
    "files": [
     "portal/leaderboard/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "one ore",
    "kind": "js",
    "files": [
     "portal/leaderboard/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "#controls button[data-metric]",
@@ -20386,6 +20572,13 @@
    "ru": true
   },
   {
+   "s": "script[src*=\"i18n.js\"]",
+   "kind": "js",
+   "files": [
+    "nav.js"
+   ]
+  },
+  {
    "s": "s auto /favicon.ico // request hits the domain root, not /wdeve/). Inject once if not already present. if (!document.querySelector(\"link[rel=",
    "kind": "js",
    "files": [
@@ -20492,6 +20685,13 @@
    ]
   },
   {
+   "s": "; html +=",
+   "kind": "js",
+   "files": [
+    "nav.js"
+   ]
+  },
+  {
    "s": "; bar.innerHTML = html; if (document.body) document.body.insertBefore(bar, document.body.firstChild); // The toolbelt open/close: click toggles, Escape closes (focus back on the // burger), any click outside closes. Links are plain",
    "kind": "js",
    "files": [
@@ -20499,7 +20699,14 @@
    ]
   },
   {
-   "s": "so middle-click and // ctrl-click behave. Panel z-index sits below the walkthrough overlays (9998+). var burger = document.getElementById(\"bnburger\"), panel = document.getElementById(\"bnpanel\"); function setOpen(on, refocus) { if (!burger || !panel) return; panel.hidden = !on; burger.setAttribute(\"aria-expanded\", on ? \"true\" : \"false\"); if (!on && refocus) burger.focus(); } function isOpen() { return !!panel && !panel.hidden; } if (burger && panel) { burger.addEventListener(\"click\", function () { setOpen(!isOpen()); }); document.addEventListener(\"click\", function (e) { if (isOpen() && !panel.contains(e.target) && !burger.contains(e.target)) setOpen(false); }); document.addEventListener(\"keydown\", function (e) { if (e.key === \"Escape\" && isOpen()) setOpen(false, true); }); } // Fleet live indicator: a live op with ore actually in it (round value > 0) // lights a pulsing dot on the Fleet links and sets the burger lines pulsing // (the bar link is hidden on mobile, so the burger carries the signal there). // Rides /api/public-stats (60s server memo, no figures exposed); checked on // load, then every 2 minutes while the tab is visible. function setFleetHot(on) { var links = bar.querySelectorAll(",
+   "s": "so middle-click and // ctrl-click behave. Panel z-index sits below the walkthrough overlays (9998+). var burger = document.getElementById(\"bnburger\"), panel = document.getElementById(\"bnpanel\"); function setOpen(on, refocus) { if (!burger || !panel) return; panel.hidden = !on; burger.setAttribute(\"aria-expanded\", on ? \"true\" : \"false\"); if (!on && refocus) burger.focus(); } function isOpen() { return !!panel && !panel.hidden; } if (burger && panel) { burger.addEventListener(\"click\", function () { setOpen(!isOpen()); }); document.addEventListener(\"click\", function (e) { if (isOpen() && !panel.contains(e.target) && !burger.contains(e.target)) setOpen(false); }); document.addEventListener(\"keydown\", function (e) { if (e.key === \"Escape\" && isOpen()) setOpen(false, true); }); } // ---- language switch wiring: EN is the default; RU is the opt-in. The // i18n engine (BONKLANG) swaps text live with no reload; if a click lands // before the engine finished loading (generator pages inject it async), we // persist the pick and reload once as the fallback. ---- function curLang() { if (window.BONKLANG) return window.BONKLANG.lang; try { return localStorage.getItem(\"bonk.lang\") || localStorage.getItem(\"bonk.lang.acct\") || \"en\"; } catch (e) { return \"en\"; } } function paintLang() { var on = curLang(), bs = bar.querySelectorAll(\"[data-lang]\"); for (var k4 = 0; k4",
+   "kind": "js",
+   "files": [
+    "nav.js"
+   ]
+  },
+  {
+   "s": "0) // lights a pulsing dot on the Fleet links and sets the burger lines pulsing // (the bar link is hidden on mobile, so the burger carries the signal there). // Rides /api/public-stats (60s server memo, no figures exposed); checked on // load, then every 2 minutes while the tab is visible. function setFleetHot(on) { var links = bar.querySelectorAll(",
    "kind": "js",
    "files": [
     "nav.js"
@@ -20795,56 +21002,49 @@
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Corp-less pilots who recently lost a mining ship, worth a friendly recruiting mail. Recruiters only.",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Send one",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "MAIL and MSG copy a personalized message ready to paste in game. The X marks a pilot done for every recruiter, so nobody double-sends.",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Recruiting targets at the corp level: independent mining corps worth pitching to fly under BONK. Recruiters only.",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Work the list",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Same drill as the pilot list: the X marks a corp done for every recruiter, so nobody double-contacts. Fresh targets refill daily.",
    "kind": "js",
    "files": [
     "walkthrough.js"
-   ],
-   "ru": true
+   ]
   },
   {
    "s": "Every medal the corp gives out, and exactly how each one is earned.",
@@ -21033,7 +21233,8 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ore to materials, hub prices for every rock, or materials to the ore you need · 440 ore types + 55 gases · five hub markets, updated 2026-07-18T10:46:24.576548+00:00 UTC",
@@ -21082,7 +21283,8 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": ": paste the same ore and see what the load is worth raw at Jita, Amarr, Dodixie, Rens, and Hek, which hub actually pays, and the full price board for every rock in the game.",
@@ -21124,7 +21326,8 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "(corp password): a shared Keep plus build queue that shows the shortfall, what to mine, and what to buy to fulfill the whole queue.",
@@ -21145,14 +21348,16 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Materials → Ore",
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BUILD TARGET",
@@ -21173,14 +21378,16 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Calculate",
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Buyback of the refined value. Reprocesses in 100-unit batches (rounds down).",
@@ -21236,14 +21443,16 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Add to queue",
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "The Keep",
@@ -21264,7 +21473,8 @@
    "kind": "html",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Yields from the EVE SDE; refined material prices are Jita and Rens sell, ore market prices cover all five hubs (region aggregates), refreshed hourly. BUYBACK is the buyback percent of the JITA refined value, the number to pay out for corp fleet ops. Ore Prices: instant is the top buy order, list is the robust cheapest 5 percent sell. The Project Tracker is corp only, gated by a password, with the Keep and build queue shared on the server (never in this page); buy costs are estimates and the order book moves on big buys. Auto-refreshes every 60m.",
@@ -21313,7 +21523,8 @@
    "kind": "attr",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Arkonor II-Grade",
@@ -40818,7 +41029,8 @@
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "NEED",
@@ -40826,7 +41038,8 @@
    "files": [
     "refine/index.html",
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "MINE",
@@ -40834,7 +41047,8 @@
    "files": [
     "refine/index.html",
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "SPACE",
@@ -40842,7 +41056,8 @@
    "files": [
     "refine/index.html",
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ORE UNITS",
@@ -40850,14 +41065,16 @@
    "files": [
     "refine/index.html",
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "CONTRACT",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\"; rows.forEach(function(r){ var bpu=r.price>0?isk(r.price*bb):\"n/a\", con=r.price>0?isk(r.contract):\"n/a\"; h+=\"",
@@ -41273,7 +41490,8 @@
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\"; HUBS.forEach(function(hh){ h+=\"",
@@ -41330,21 +41548,24 @@
    "files": [
     "refine/index.html",
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "JITA VALUE",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BUYBACK 90%",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "><input class=",
@@ -41540,28 +41761,32 @@
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "IN KEEP",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "SHORTFALL",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "SOURCE",
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\"; mats.forEach(function(x){ var cls=(bn&&x.m===bn.m)?\" class=",
@@ -41708,7 +41933,8 @@
    "kind": "js",
    "files": [
     "refine/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\"; buy.forEach(function(x){ h+=\"",
@@ -41883,14 +42109,16 @@
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BIG ROCK ENERGY [BONK] · ORE / ICE REPROCESSING REFERENCE",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "every ore/ice + refined output + our buyback + ISK/m³ + ISK/hr, search and sort · 47 ores · Jita and Rens prices, updated 2026-07-18T01:08:07.153613+00:00 UTC",
@@ -41933,21 +42161,24 @@
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Sort by material",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "(off)",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "CLASS",
@@ -41961,140 +42192,160 @@
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "REFINES INTO",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "VALUE / UNIT",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BUYBACK",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "M3 / UNIT",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ISK / M3",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ISK / HR",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Reprocess outputs + volumes from the EVE SDE; VALUE/UNIT is Jita sell and BUYBACK is 90% of the Jita refined value, refreshed hourly. Compression keeps the exact same mineral yield, it only shrinks volume (so only M3 and ISK/m³ change). ISK/hr assumes you mine raw ore at the rate you set. \"Found in\" is curated from the EVE University wiki; treat it as a guide. For your own inventory totals, use the Ore Refinery Calculator. Auto-refreshes hourly.",
    "kind": "html",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ore name...",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ISK/hr = ISK per m3 (uncompressed, since you mine raw ore) times this rate. Set it to your ship's m3/hour.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Rank every ore by how much of one mineral it yields per unit. Need a fuckton of Tritanium? Pick it here.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Ore class: asteroid, ice, moon, or Pochven.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Ore name. The toggle swaps between compressed and uncompressed.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Security space it commonly spawns in. Hi/Lo/Null/WH/Pochven.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Refined materials per reprocessing batch (100 units for ore, 1 for ice).",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Refined value of one unit at Jita sell. Same compressed or not.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Our buyback per unit: 90% of the Jita refined value. Same compressed or not.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Volume of one unit. Compression shrinks this ~100x.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Refined value per cubic metre at Jita. Best metric for hauling.",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Refined ISK per hour at your mining rate (uses uncompressed m3, you mine raw).",
    "kind": "attr",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Hi / Lo",
@@ -42227,7 +42478,8 @@
    "kind": "js",
    "files": [
     "reprocess/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "th[data-sort]",
@@ -42248,14 +42500,16 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BIG ROCK ENERGY [BONK] · HUB ARBITRAGE",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "buy low in one hub, sell high in another · ranked by ISK per jump, because travel is the job · 358 items across 5 hubs (Jita, Amarr, Dodixie, Rens, Hek) · prices updated 2026-07-18T01:03:51.925067+00:00 UTC",
@@ -42283,49 +42537,56 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Sales tax %",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Broker %",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Freight ISK/m³",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Cargo m³",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Days of vol",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Min day vol",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Model",
@@ -42339,7 +42600,8 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Flip",
@@ -42416,14 +42678,16 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "NET / UNIT",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "MARGIN",
@@ -42438,21 +42702,24 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ISK / JUMP",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "DAY VOL",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "From",
@@ -42480,21 +42747,24 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "For a curated set of liquid, haulable items we pull buy and sell prices across the major trade hubs, work out the best cross hub spread, and rank by what each jump of travel earns.",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "is the profitable direction: buy at the first hub, sell at the second.",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "LIST",
@@ -42508,7 +42778,8 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "FLIP",
@@ -42522,28 +42793,32 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "come from the in game route: Highsec is the safe freighter path, Shortest is fewest jumps and may cross lowsec.",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "is the net profit for the cargo you can realistically move, divided by the jumps, so a fat margin twenty jumps away loses to a fair one next door. The haul is capped at your hold AND at the days of volume the destination actually trades (from ESI market history), so a spread in a market that only moves a few units a day cannot pretend to fill a freighter.",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "is the average units traded per day at the sell hub, the real liquidity and the binding limit on most hauls. All figures are net of fees, never gross. Buy cost uses the robust cheapest 5% sell price so a single mispriced order cannot invent a margin; a",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "thin",
@@ -42557,147 +42832,168 @@
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "scores recent gank risk on the selected route: any lowsec or null on the path reads deadly, otherwise it is PvP kills along the highsec path smoothed over recent hours. Hover it for the worst system on the route, and sort by it to keep the freighter alive. Prices are region level and refresh hourly. This is market data, not a promise of profit. Fly safe, the gank on the Tama gate is now a column.",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "item name...",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Sales tax paid on every market sale. Set it to your Accounting skill level.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Broker fee paid to place a sell order (the LIST model only). Set it to your Broker Relations skill and standings.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Your hauling cost in ISK per cubic metre. Folds into ISK/m3 and ISK/jump so you see what survives the trip.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "How much cargo you fill per run, in cubic metres. A jump freighter is about 60000. ISK/jump never assumes more than this, or more than the destination can absorb.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Days of the destination's traded volume you move per trip. ISK/jump caps the haul at this many days of what the sell hub actually trades, so a thin market cannot pretend to fill a freighter.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Hide items the destination trades fewer than this many units per day. A spread you cannot actually sell into is not an opportunity.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Item name. A thin tag means one hub's cheapest sell order looks like a fat finger, so treat its margin with suspicion.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "The profitable direction: buy at the first hub, sell at the second. Switches with the Model toggle (relist hub for LIST, the hub whose buy orders pay most for FLIP).",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Jumps between the two hubs on the selected route type. Highsec is the safe freighter route; Shortest is fewest jumps and may cross lowsec.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Recent gank risk on the selected route: lowsec or null exposure plus PvP kills along the path, smoothed over recent hours. Switches with the Route toggle. Sort it to float the safe hauls to the top.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Cost to buy one unit at the first hub, using the robust cheapest 5% sell price (not the single lowest order).",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Net ISK per unit on the selected model, after fees and before freight. LIST pays sales tax plus broker; FLIP pays sales tax only. Never guaranteed on the LIST model.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Net profit as a percent of buy cost. How hard your ISK works.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Volume of one unit. Ships use packaged (transport) volume.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Net ISK per cubic metre, after fees and your freight rate. Rank cargo by this when distance does not matter.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "The headline: net ISK per jump for the cargo you can realistically move, after fees and freight. The haul is capped at your hold AND at the days of volume the destination actually trades, so thin markets cannot inflate it. Travel is the job, so this ranks routes by what each jump pays.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Average units actually TRADED per day at the sell hub (ESI market history). The real cap on how much one haul can move, not an order book snapshot.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "How much cargo you fill, in cubic metres. A jump freighter is about 60000.",
    "kind": "attr",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "100MN Afterburner II",
@@ -44864,14 +45160,16 @@
    "kind": "js",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "ISK/m³",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\"; load.forEach(function(l){ h+=\"",
@@ -45172,21 +45470,24 @@
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "📡 RADAR",
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "find the rocks, pick the system. belts are baked (they never move); danger tiers and kill counts refresh live in your browser.",
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Scan",
@@ -45200,14 +45501,16 @@
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "belts are fixed celestials: this map does not go stale. pick a region.",
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "region",
@@ -45221,14 +45524,16 @@
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Sweeping the radar…",
    "kind": "html",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "GW Watch",
@@ -45942,28 +46247,32 @@
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Search a system",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Pick a region",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Great Wildlands system. Belt systems are pinned first.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "True security (2 decimals). Deeper negative = richer ore.",
@@ -45977,7 +46286,8 @@
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "PvP kills (ship+pod) here in the last hour, live ESI.",
@@ -45991,126 +46301,144 @@
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Ship jumps through the system in the last hour.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Average recorded PvP kills per hour over the window.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Share of recorded hours with ZERO PvP kills. High = reliably dead.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Snapshots recorded for this system (recorder is new; grows hourly).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Rank by overall score (best mining candidate first).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "System name. Click for the map on Dotlan.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Security status, EVE-rounded to one decimal (0.1 to 0.4 = lowsec).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Region the system is in.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Overall pick score: safety + ore suitability + low traffic, blended. Higher is better.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Safety sub-score 0 to 100, from live + recorded kill activity. Higher = quieter.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Ore-suitability sub-score: how good this system looks for mining.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "PvP ship kills in this system in the last hour (live ESI).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Ship jumps through the system in the last hour (traffic; live ESI).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Average recorded PvP kills per hour over the danger-history window.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Number of recorded snapshots in the window (more = more reliable average).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Recent kills seen on zKillboard for the shortlist. Blank does NOT mean zero.",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Hours since the last zKillboard kill here (blank if none seen / not checked).",
    "kind": "attr",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "button.rsec[data-sec]",
@@ -46432,7 +46760,8 @@
    "kind": "js",
    "files": [
     "lowsec/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "\" + esc(hit.n) + \"",
@@ -47083,14 +47412,16 @@
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BONK · BLUEPRINT PROFITABILITY SCANNER",
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "top 5 per category by ISK/hour · ME10 · buy materials at Jita sell, sell product at Jita sell, ~5% job fee · generated 2026-07-12T22:53:59.580269+00:00 UTC",
@@ -47125,14 +47456,16 @@
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Mining plan · mine these, then build",
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "~470.0k m³ of raw ore total (per-mineral upper bound; the richest ores drop byproducts that cover others, so real volume is less). Lo/Null minerals can also just be bought.",
@@ -47188,7 +47521,8 @@
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Build or buy: Fried Interface Circuit ×450 · Armor Plates ×400 · Contaminated Nanite Compound ×300",
@@ -47314,14 +47648,16 @@
    "kind": "html",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Rank within this category by ISK per hour.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "What you build. Click for its EVE Ref page (market + manufacturing).",
@@ -47335,70 +47671,80 @@
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Units produced per build run. Some blueprints (bombs, charges) make a batch, so the run totals cover all of them.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Product sell price PER UNIT at Jita. This matches what you see on the market / EVE Ref.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Material cost per unit (run material cost divided by units per run), at Jita sell, ME-adjusted.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Profit as a percent of total cost.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Profit from one full build run (all OUT units): sell minus materials minus ~5% fee.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Build time in hours for one run at the assumed Material Efficiency.",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Daily units sold on the market (liquidity; low = hard to offload).",
    "kind": "attr",
    "files": [
     "blueprints/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "BONK - Corp Kill Log",
    "kind": "html",
    "files": [
     "kills/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Protected. Enter the password.",
    "kind": "html",
    "files": [
     "kills/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "password",
@@ -47406,7 +47752,8 @@
    "files": [
     "kills/index.html",
     "cartel/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "JveKsNDQ7gdjcaw9rjW2zQ==",
@@ -47460,14 +47807,16 @@
    "kind": "html",
    "files": [
     "cartel/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "Protected. Enter the password, or log in to the portal and it opens itself.",
    "kind": "html",
    "files": [
     "cartel/index.html"
-   ]
+   ],
+   "ru": true
   },
   {
    "s": "bgfgI8fyvplqPpxLNfospA==",

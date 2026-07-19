@@ -13,7 +13,7 @@
   // nothing unless the goblin picked Russian. ----
   if (!window.BONKLANG && !document.querySelector('script[src*="i18n.js"]')) {
     var i18nJs = document.createElement("script");
-    i18nJs.src = ORIGIN + BASE + "i18n.js?v=3";
+    i18nJs.src = ORIGIN + BASE + "i18n.js?v=4";
     (document.head || document.documentElement).appendChild(i18nJs);
   }
 

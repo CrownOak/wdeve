@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=3"></script>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=4"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>BONK &middot; Member Portal</title>
@@ -448,6 +448,27 @@
   .station .stcl-n{ color:var(--silver-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .station .stcl-a{ color:var(--ore); flex:0 0 auto; }
   .station .stcl-more{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; }
+  /* compact wall teaser on the home strip (replaces the inline donor list) */
+  .station .stwall{ display:block; width:calc(100% - 30px); margin:2px 15px 0; padding:10px 13px; text-align:left;
+    background:var(--steel-2); border:1px solid var(--line-soft); color:var(--silver-dim); cursor:pointer;
+    font-family:var(--mono); font-size:12px; line-height:1.5; transition:border-color .15s, color .15s; }
+  .station .stwall:hover{ border-color:var(--ore); color:var(--silver); }
+  .station .stwall b{ color:var(--ore); }
+  .station .stwall .stwall-go{ color:var(--ore); white-space:nowrap; }
+  /* the builders wall modal (roll of honor) */
+  .bw-sum{ margin:0 0 4px; }
+  .bw-sum .pl{ font-family:var(--mono); font-size:12px; color:var(--ore); margin-bottom:5px; }
+  .bw-count{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:7px; }
+  .bw-list{ margin:14px 0 4px; max-height:44vh; overflow:auto; border:1px solid var(--line-soft); }
+  .bw-row{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:8px 12px;
+    border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:13px; }
+  .bw-row:first-child{ border-top:0; }
+  .bw-big{ background:rgba(70,255,94,.05); }
+  .bw-n{ color:var(--silver); min-width:0; overflow-wrap:anywhere; }
+  .bw-a{ color:var(--ore); flex:0 0 auto; }
+  .bw-mark, .bw-ally{ margin-left:6px; font-size:12px; vertical-align:baseline; }
+  .bw-empty{ font-family:var(--mono); font-size:12px; color:var(--muted); padding:18px 4px; text-align:center; }
+  .bw-foot{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; }
   .station .stanchor{ margin:0 15px; padding:9px 12px; background:var(--black); border:1px solid var(--line-soft);
     border-left:3px solid var(--amber); font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
   .station .stanchor b{ color:var(--amber); }
@@ -568,6 +589,10 @@
 <!-- contract modal -->
 <div class="overlay" id="contractOverlay">
   <div class="mcard" id="contractCard"></div>
+</div>
+
+<div class="overlay" id="wallOverlay">
+  <div class="mcard" id="wallCard"></div>
 </div>
 
 <div id="toast"></div>
@@ -1123,15 +1148,23 @@ function renderCorpStrip(){
       ? '<div class="styou">You have put <b>' + fmtIsk(Number(syou.contributed)||0) + '</b> into the rock'
         + (Number(syou.pending) > 0 ? ' &middot; ' + fmtIsk(Number(syou.pending)) + ' pending approval' : '') + '</div>'
       : '';
+    // Compact teaser only: the names live on the wall (a modal), so the home
+    // strip stays small. Shows the count + the three earliest builders, opens
+    // the full roll of honor on tap. S.builders feeds openBuildersWall().
     var contribs = station.contributors || [];
+    S.builders = contribs;
     var contribHtml = '';
     if (contribs.length){
-      var crows = contribs.slice(0, 15).map(function(c, i){
-        var medal = i===0?'&#129351; ':(i===1?'&#129352; ':(i===2?'&#129353; ':''));
-        return '<div class="stcl-row"><span class="stcl-n">' + medal + esc(c.ign) + '</span><span class="stcl-a">' + fmtIsk(Number(c.total)||0) + '</span></div>';
-      }).join('');
-      var cmore = contribs.length > 15 ? '<div class="stcl-more">and ' + (contribs.length - 15) + ' more goblins on the wall</div>' : '';
-      contribHtml = '<div class="stcl"><div class="stcl-h">Goblins who built the rock</div>' + crows + cmore + '</div>';
+      var early = contribs.slice().sort(function(a,b){
+        return String(a.first_at||"").localeCompare(String(b.first_at||"")); }).slice(0,3)
+        .map(function(c){ return esc(c.ign); }).join(', ');
+      var nB = contribs.length;
+      // fixed phrases sit in their own text nodes so the RU overlay can swap
+      // them; the count and the names (IGNs) stay dynamic / untranslated.
+      contribHtml = '<button class="stwall" id="stWallBtn">' +
+        '&#129521; <b>' + nB + '</b> <span>' + (nB===1?'goblin built the rock':'goblins built the rock') + '</span>' +
+        '<span class="bw-early" data-i18n-skip>' + (early ? ' &middot; ' + early + (nB>3?' &amp; more':'') : '') + '</span>' +
+        ' &middot; <span class="stwall-go">see the wall &rarr;</span></button>';
     }
     html += '<div class="station"><div class="sthead">' +
       '<img class="stpic" src="/portal/athanor.jpg" alt="Athanor refinery" loading="lazy">' +
@@ -1181,6 +1214,8 @@ function renderCorpStrip(){
     html += '<div class="tline">The corp has paid <b>' + fmtIsk(treasury) + ' ISK</b> to goblins, all time.</div>';
   }
   el.innerHTML = html;
+  var swb = $("stWallBtn");
+  if (swb) swb.onclick = openBuildersWall;
   var scb = $("stContribBtn");
   if (scb) scb.onclick = function(){ var c = $("stContrib"); if (c) c.style.display = c.style.display === "none" ? "" : "none"; var a=$("stcAmt"); if(a && c && c.style.display!=="none") a.focus(); };
   var scs = $("stcSend");
@@ -1434,6 +1469,45 @@ async function loadHauls(){
   }
   safeRender(renderHauls, $("panelHauls"));
 }
+
+/* ============ the builders wall (station roll of honor) ============ */
+/* A donor wall, not a leaderboard: everyone who put ISK into the rock, ordered
+   by WHEN they first chipped in (not by amount), so nobody is ranked against a
+   peer. A quiet 🗿 marks the big builders (1B+) as an honor to rise into, and
+   🤝 marks the allies. The achievement is the station; these are its names. */
+var WALL_HONOR = 1e9; // 1B+ earns the 🗿 mark (adjustable)
+function openBuildersWall(){
+  var list = (S.builders || []).slice().sort(function(a,b){
+    return String(a.first_at||"").localeCompare(String(b.first_at||"")); // earliest shovel first
+  });
+  var st = (S.me && S.me.station) || {};
+  var raised = Number(st.raised)||0, target = Number(st.target)||0;
+  var pct = target>0 ? Math.min(100, Math.round(1000*raised/target)/10) : 0;
+  var rows = list.map(function(c){
+    var big = (Number(c.total)||0) >= WALL_HONOR;
+    var ally = c.role === "ally";
+    var mark = (big ? '<span class="bw-mark" title="a big builder of the rock">&#128511;</span>' : '')
+             + (ally ? '<span class="bw-ally" title="a friend of the rock">&#129309;</span>' : '');
+    return '<div class="bw-row' + (big?' bw-big':'') + '">' +
+      '<span class="bw-n">' + esc(c.ign) + mark + '</span>' +
+      '<span class="bw-a">' + fmtIsk(Number(c.total)||0) + '</span></div>';
+  }).join('');
+  var n = list.length;
+  $("wallCard").innerHTML =
+    '<h2>&#129521; Who Built The Rock</h2>' +
+    '<div class="mhint">Every goblin who reached into their own wallet for our Athanor. Not a scoreboard, a plaque. Listed in the order they picked up a shovel. The rock remembers all of them.</div>' +
+    '<div class="bw-sum"><div class="pl">' + fmtIsk(raised) + ' / ' + fmtIsk(target) + ' ISK &middot; ' + pct + '%</div>' +
+      '<div class="pbar stbar"><i style="width:' + Math.min(100,pct) + '%"></i></div>' +
+      '<div class="bw-count"><b>' + n + '</b> ' + (n===1?'goblin has built this so far':'goblins have built this so far') + '</div></div>' +
+    (rows ? '<div class="bw-list">' + rows + '</div>'
+          : '<div class="bw-empty">No names on the wall yet. Be the first to put ISK into the rock.</div>') +
+    '<div class="bw-foot">&#129704; Every hand on the rock counts. The ore must flow. The goblins must eat.</div>' +
+    '<div class="mbtns"><button class="mini" id="wallClose">Close the wall</button></div>';
+  $("wallOverlay").classList.add("show");
+  $("wallClose").addEventListener("click", closeWall);
+}
+function closeWall(){ $("wallOverlay").classList.remove("show"); }
+$("wallOverlay").addEventListener("click", function(ev){ if (ev.target === this) closeWall(); });
 
 /* ============ add contract modal ============ */
 function openContractModal(){

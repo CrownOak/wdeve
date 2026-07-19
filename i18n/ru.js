@@ -1523,5 +1523,21 @@ window.BONK_RU = {
 "The ore flows fine without you. It barely noticed either.": "Руда прекрасно течёт без тебя. Она тоже почти не заметила.",
 "back to the cold, empty belt →": "назад в холодный пустой белт →",
 
+/* ---------------- builders wall (station roll of honor) ---------------- */
+"goblins built the rock": "гоблинов построили камень",
+"goblin built the rock": "гоблин построил камень",
+"see the wall →": "смотреть стену →",
+"🧱 Who Built The Rock": "🧱 Кто построил камень",
+"Who Built The Rock": "Кто построил камень",
+"Every goblin who reached into their own wallet for our Athanor. Not a scoreboard, a plaque. Listed in the order they picked up a shovel. The rock remembers all of them.": "Каждый гоблин, залезший в собственный кошелёк ради нашего Athanor. Не таблица очков, а мемориальная доска. В порядке, в котором они взяли лопату. Камень помнит их всех.",
+"goblins have built this so far": "гоблинов уже построили это",
+"goblin has built this so far": "гоблин уже построил это",
+"No names on the wall yet. Be the first to put ISK into the rock.": "На стене пока нет имён. Будь первым, кто вложит ISK в камень.",
+"🪨 Every hand on the rock counts. The ore must flow. The goblins must eat.": "🪨 Каждая рука на камне на счету. Руда должна течь. Гоблины должны есть.",
+"Every hand on the rock counts. The ore must flow. The goblins must eat.": "Каждая рука на камне на счету. Руда должна течь. Гоблины должны есть.",
+"Close the wall": "Закрыть стену",
+"a big builder of the rock": "большой строитель камня",
+"a friend of the rock": "друг камня",
+
 "@end": 1
 };
