@@ -208,6 +208,7 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .dsec .sb{ font-size:14px; color:var(--silver-dim); line-height:1.6; white-space:pre-line; }
 .grade{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--muted); border:1px solid var(--line); padding:1px 6px; margin-left:8px; vertical-align:2px; }
 .gaptag{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--amberw); border:1px solid rgba(233,196,106,.4); padding:1px 6px; margin-left:8px; vertical-align:2px; }
+.doctype{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#04140a; background:var(--ice); display:inline-block; padding:3px 10px; margin:6px 0 4px; font-weight:700; }
 .dsec-gap .sh{ color:var(--ice-dim); }
 .sb-empty{ color:var(--muted); font-style:italic; font-size:12.5px; }
 .sealed{ border:1px solid rgba(240,129,122,.35); background:rgba(240,129,122,.05); padding:12px 16px; margin:14px 0; font-family:var(--mono); font-size:11px; color:var(--hostile); letter-spacing:.08em; text-transform:uppercase; }
@@ -694,7 +695,8 @@ function openEntity(id){
     var meta='<span><b>type</b> '+esc(e.eve_type)+'</span><span><b>class</b> '+ci.l+'</span><span><b>threat</b> '+e.threat_level+'/5</span><span><b>standing</b> '+esc(e.bonk_standing)+'</span><span><b>reviewed</b> '+ago(e.verified_at)+'</span>';
     var doss=(e.dossiers||[]).map(function(ds){
       if(ds.sealed) return '<div class="sealed">Sealed file &middot; lead only &middot; '+esc(ds.doc_type)+'</div>';
-      var kq=ds.key_question?'<div class="kq"><div class="lab">Standing question</div><div class="q">'+esc(ds.key_question)+'</div></div>':'';
+      var dt=(ds.doc_type&&ds.doc_type!=="dossier")?'<div class="doctype">'+esc(ds.doc_type.replace(/_/g," "))+'</div>':'';
+      var kq=ds.key_question?'<div class="kq"><div class="lab">'+(ds.doc_type==="strategy"?"Governing question":"Standing question")+'</div><div class="q">'+esc(ds.key_question)+'</div></div>':'';
       var vd=ds.verdict?'<div class="verdict"><div class="lab">Verdict</div><div class="v">'+esc(ds.verdict)+'</div></div>':'';
       var secs=(ds.sections||[]).map(function(s){
         var raw=(s.body||"");
@@ -707,7 +709,7 @@ function openEntity(id){
         var bodyHtml=body?'<div class="sb">'+esc(body)+'</div>':'<div class="sb sb-empty">awaiting analyst</div>';
         return '<div class="dsec'+(hadGap?' dsec-gap':'')+'"><div class="sh">'+esc(s.h||"")+g+tag+'</div>'+bodyHtml+'</div>';
       }).join("");
-      return kq+vd+secs;
+      return dt+kq+vd+secs;
     }).join("")||'<div class="foot-line">no written file yet</div>';
     var rels=(e.relationships||[]).length?('<div class="dblock"><div class="lab">Relationships</div><div class="rels">'+e.relationships.map(function(r){ return '<span class="rel"><b>'+esc(r.rel_type.replace(/_/g," "))+'</b> '+esc(r.to||"")+'</span>'; }).join("")+'</div></div>'):'';
     var live="";
