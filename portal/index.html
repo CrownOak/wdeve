@@ -469,6 +469,19 @@
   .bw-mark, .bw-ally{ margin-left:6px; font-size:12px; vertical-align:baseline; }
   .bw-empty{ font-family:var(--mono); font-size:12px; color:var(--muted); padding:18px 4px; text-align:center; }
   .bw-foot{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  /* the success hero: a launched structure, up and proud */
+  .stup{ display:flex; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
+    box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
+  .stup-pic{ width:132px; align-self:stretch; object-fit:cover; flex:0 0 auto; border-right:1px solid var(--ore); }
+  @media(max-width:440px){ .stup-pic{ width:96px; } }
+  .stup-info{ padding:13px 15px; flex:1 1 auto; min-width:0; }
+  .stup-badge{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#04140a; background:var(--ore); padding:2px 9px; }
+  .stup-name{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:18px; color:var(--silver); margin-top:8px; }
+  .stup-sub{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin:4px 0 6px; line-height:1.5; }
+  .stup-meta{ font-family:var(--mono); font-size:11px; color:var(--muted); }
+  .stup-meta b{ color:var(--ore); }
+  .stup-wall{ margin-top:9px; background:transparent; border:1px solid var(--line); color:var(--ore); font-family:var(--mono); font-size:11px; padding:5px 11px; cursor:pointer; }
+  .stup-wall:hover{ border-color:var(--ore); filter:brightness(1.1); }
   /* the trophy shelf: launched campaigns, archived but honored */
   .stlaunched{ margin:0 0 12px; }
   .stlaunched .stl-h{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin:0 2px 7px; }
@@ -1188,6 +1201,9 @@ function renderCorpStrip(){
     var stDoes  = station.does ? esc(station.does) : "A home to dock and store, and our buyback ore refined in house at higher yield so 100% stays in the corp, plus on site compression.";
     var stWhere = station.where ? esc(station.where) : "The hull, the Quantum Core, the rig fit, months of fuel, and a war chest to rebuild if anyone ever pops it.";
     var isAthanor = station.slug === "athanor"; // the anchor countdown only belongs to the Den
+    // the newest launched campaign flies UP top as the success hero
+    S.launched = station.launched || [];
+    html += renderStationUp(S.launched[0]);
     html += '<div class="station"><div class="sthead">' +
       '<img class="stpic" src="' + esc(stPhoto) + '" alt="' + esc(station.structure || "our station") + '" loading="lazy">' +
       '<div class="stinfo">' +
@@ -1212,12 +1228,12 @@ function renderCorpStrip(){
         '<div class="stcnote" id="stcNote"></div>' +
       '</div>' +
       '</div>';
-    // The trophy shelf: every campaign we already finished, roll preserved.
-    // Scales to N campaigns, newest launch first. Each opens its own wall.
-    S.launched = station.launched || [];
-    if (S.launched.length){
-      html += '<div class="stlaunched"><div class="stl-h">&#127942; Launched</div>' +
-        S.launched.map(function(c, i){
+    // The trophy shelf: OLDER launched campaigns (the newest one is the hero
+    // banner above). Scales to N campaigns; each opens its own preserved wall.
+    if (S.launched.length > 1){
+      html += '<div class="stlaunched"><div class="stl-h">&#127942; Also launched</div>' +
+        S.launched.slice(1).map(function(c, si){
+          var i = si + 1;
           var n = (c.contributors || []).length;
           return '<button class="stl-row" data-lidx="' + i + '">' +
             '<img class="stl-pic" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="" loading="lazy">' +
@@ -1254,8 +1270,8 @@ function renderCorpStrip(){
   el.innerHTML = html;
   var swb = $("stWallBtn");
   if (swb) swb.onclick = function(){ openBuildersWall(); };
-  // each launched campaign opens its own preserved roll
-  var lrows = document.querySelectorAll(".stl-row");
+  // each launched campaign (hero banner + shelf rows) opens its preserved roll
+  var lrows = document.querySelectorAll("[data-lidx]");
   for (var li=0; li<lrows.length; li++){
     lrows[li].onclick = function(){
       var c = (S.launched || [])[Number(this.getAttribute("data-lidx"))];
@@ -1524,6 +1540,22 @@ async function loadHauls(){
    peer. A quiet 🗿 marks the big builders (1B+) as an honor to rise into, and
    🤝 marks the allies. The achievement is the station; these are its names. */
 var WALL_HONOR = 1e9; // 1B+ earns the 🗿 mark (adjustable)
+/* The success hero: the newest launched campaign, shown UP and proud at the top
+   of the station section, not buried in an archive row. */
+function renderStationUp(c){
+  if (!c) return '';
+  var n = (c.contributors || []).length;
+  var since = c.completed_at ? String(c.completed_at).slice(0,10) : '';
+  return '<div class="stup">' +
+    '<img class="stup-pic" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="' + esc(c.structure||"") + '" loading="lazy">' +
+    '<div class="stup-info">' +
+      '<div class="stup-badge">&#127968; Anchored &amp; online</div>' +
+      '<div class="stup-name">' + esc(c.name) + '</div>' +
+      '<div class="stup-sub">' + esc(c.blurb || (c.structure ? c.structure + ", standing." : "Standing.")) + '</div>' +
+      '<div class="stup-meta">' + fmtIsk(Number(c.raised_final)||0) + ' raised by <b>' + n + '</b> ' + (n===1?'goblin':'goblins') + (since?' &middot; launched ' + since:'') + '</div>' +
+      '<button class="stup-wall" data-lidx="0">See who built it &rarr;</button>' +
+    '</div></div>';
+}
 function openBuildersWall(rollArg, meta){
   var isArchived = !!meta;
   var list = ((isArchived ? meta.contributors : S.builders) || []).slice().sort(function(a,b){
