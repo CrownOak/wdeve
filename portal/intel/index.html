@@ -145,6 +145,34 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .pbadge{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; border:1px solid rgba(233,196,106,.4); color:var(--amberw); padding:1px 6px; }
 .gradechip{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; border:1px solid var(--line); color:var(--ice); padding:1px 6px; }
 .pcard .tell{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
+.trajchip{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border:1px solid currentColor; }
+.trajchip.t-rising{ color:var(--selfg); } .trajchip.t-steady{ color:var(--ice); }
+.trajchip.t-quiet{ color:var(--amberw); } .trajchip.t-at_risk{ color:var(--hostile); } .trajchip.t-departed{ color:var(--muted); }
+/* pilot profile block, the assessment layer */
+.pp{ margin-top:6px; }
+.pp .ppwall{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--hostile); text-transform:uppercase; margin-bottom:10px; opacity:.75; }
+.pp .pprow{ display:flex; flex-wrap:wrap; gap:8px 14px; font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); line-height:1.7; }
+.pp .pprow b{ color:var(--ice-dim); }
+.pp .contrib{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+@media(max-width:640px){ .pp .contrib{ grid-template-columns:1fr; } }
+.pp .cbox{ border:1px solid var(--line); padding:10px 12px; }
+.pp .cbox.ver{ border-left:3px solid var(--selfg); }
+.pp .cbox.clm{ border-left:3px solid var(--muted); background:rgba(20,23,26,.3); }
+.pp .cbox .cl2{ font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:5px; }
+.pp .cbox.ver .cl2{ color:var(--selfg); } .pp .cbox.clm .cl2{ color:var(--muted); }
+.pp .cbox .cv{ font-size:13px; color:var(--silver); line-height:1.5; }
+.pp .claim{ font-family:var(--mono); font-size:11px; color:var(--muted); padding:4px 0; border-top:1px solid var(--line-soft); }
+.pp .claim:first-of-type{ border-top:0; }
+.pp .claim .st{ font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; border:1px solid currentColor; padding:1px 5px; margin-left:6px; }
+.pp .alt{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); padding:3px 0; }
+.pp .alt .cf{ color:var(--amberw); font-size:9px; text-transform:uppercase; letter-spacing:.05em; }
+.ppedit label{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ice-dim); margin:11px 0 4px; }
+.ppedit input, .ppedit select, .ppedit textarea{ width:100%; background:#06070a; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12px; padding:7px 9px; box-sizing:border-box; }
+.ppedit textarea{ min-height:44px; resize:vertical; }
+.ppedit .three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+.ppedit .two{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+@media(max-width:640px){ .ppedit .three, .ppedit .two{ grid-template-columns:1fr; } }
+.ppedit .save{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:9px 16px; background:var(--ice); color:#04140a; border:0; cursor:pointer; margin-top:14px; }
 .pcard .pact{ display:flex; gap:8px; margin-top:10px; }
 .pcard .pact button{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border:1px solid var(--line); background:transparent; color:var(--silver-dim); cursor:pointer; }
 .pcard .pact button:hover{ border-color:var(--ice); color:var(--ice); }
@@ -609,14 +637,20 @@ function loadPersons(){
     document.getElementById("pgrid").innerHTML=PERSONS.map(function(p){
       var ci=clsInfo(p.classification);
       var tell=p.combat_tell?("killboard: "+fmtIsk(p.combat_tell.isk_destroyed)+" destroyed vs "+fmtIsk(p.combat_tell.isk_lost)+" lost, danger "+(p.combat_tell.danger_ratio||0)+"%"):"no killboard read";
+      var traj = p.trajectory ? '<span class="trajchip t-'+esc(p.trajectory)+'">'+esc(p.trajectory.replace(/_/g," "))+(p.trajectory_stale?' (stale)':'')+'</span>' : (p.trajectory_stale?'<span class="trajchip t-at_risk">quiet, check in</span>':'');
+      var track = (p.officer_track && p.officer_track!=="none") ? '<span class="pbadge" style="color:var(--selfg);border-color:rgba(70,255,94,.4)">officer '+esc(p.officer_track)+'</span>' : '';
+      var ic = p.internal_class ? '<span class="org">'+esc(p.internal_class.replace(/_/g," "))+'</span>' : (p.role?'<span class="org">'+esc(p.role)+'</span>':'');
+      var altb = p.is_internal_alt ? '<span class="pbadge" style="color:var(--selfg);border-color:rgba(70,255,94,.4)">our alt</span>' : '';
+      var claimb = p.claims_count ? '<span class="pbadge">'+p.claims_count+' unverified claim'+(p.claims_count>1?'s':'')+'</span>' : '';
       return '<div class="pcard"><span class="bar" style="background:'+ci.c+'"></span>'+
         '<div class="top"><span class="en" onclick="openEntity('+p.id+')">'+esc(p.name)+'</span>'+
-        (p.role?'<span class="org">'+esc(p.role)+'</span>':'')+
-        (p.org?'<span class="org">'+esc(p.org)+'</span>':'')+
+        ic+altb+track+traj+
         (p.sealed_file?'<span class="pbadge">sealed file</span>':'')+
         (p.source_grade?'<span class="gradechip">source '+esc(p.source_grade)+'</span>':'')+
+        claimb+
         '<span class="cl" style="color:'+ci.c+'">'+ci.l+'</span></div>'+
         renderTimeline(p.corp_history)+
+        (p.verified_contribution?'<div class="tell" style="color:var(--ice-dim)"><b style="color:var(--selfg)">verified</b> '+esc(p.verified_contribution)+'</div>':'')+
         '<div class="tell">'+esc(tell)+'</div>'+
         '<div class="pact"><button onclick="openEntity('+p.id+')">open the file</button>'+
         '<button onclick="openDebrief('+p.id+')">'+(p.debriefs&&p.debriefs.count?'debriefs ('+p.debriefs.count+')':'run the debrief')+'</button>'+
@@ -711,7 +745,7 @@ function openEntity(id){
     var roster="";
     if(isChannel){
       var rrows=(e.roster||[]).map(function(m){
-        var badges=(m.ours?'<span class="dbadge fp">ours</span>':'')+
+        var badges=(m.internal_alt?'<span class="dbadge fp">our alt</span>':(m.ours?'<span class="dbadge fp">ours</span>':''))+
           (m.filed_id?'<span class="dbadge" style="color:var(--amberw);border-color:rgba(233,196,106,.4);cursor:pointer" onclick="openEntity('+m.filed_id+')">filed</span>':'');
         var also=(m.also||[]).map(function(a){ return '<span class="dbadge" style="color:var(--ice)">also '+esc(a)+'</span>'; }).join("");
         var mnote=m.note?'<span class="dbadge" style="color:var(--silver-dim);text-transform:none;letter-spacing:.02em">'+esc(m.note)+'</span>':'';
@@ -728,12 +762,40 @@ function openEntity(id){
     var person="";
     if(e.eve_type==="pilot"){
       var p=e.person||{};
-      var pparts=[];
-      if(p.role) pparts.push("<b>role</b> "+esc(p.role));
-      if(p.org) pparts.push("<b>org</b> "+esc(p.org));
-      if(p.source_grade) pparts.push("<b>source grade</b> "+esc(p.source_grade));
-      if(p.next_review) pparts.push("<b>next review</b> "+esc(p.next_review));
-      if(p.watch) pparts.push("<b>watch</b> "+esc(p.watch));
+      var internal = p.internal_class || p.is_internal_alt;
+      var chips=[];
+      if(p.internal_class) chips.push('<span class="dbadge">'+esc(p.internal_class.replace(/_/g," "))+'</span>');
+      if(p.is_internal_alt) chips.push('<span class="dbadge fp">our command alt</span>');
+      if(p.officer_track&&p.officer_track!=="none") chips.push('<span class="dbadge" style="color:var(--selfg);border-color:rgba(70,255,94,.4)">officer track '+esc(p.officer_track)+'</span>');
+      if(p.trajectory) chips.push('<span class="trajchip t-'+esc(p.trajectory)+'">'+esc(p.trajectory.replace(/_/g," "))+(p.trajectory_stale?' (stale)':'')+'</span>');
+      else if(p.trajectory_stale) chips.push('<span class="trajchip t-at_risk">quiet, check in</span>');
+      var rows=[];
+      if(p.role) rows.push("<span><b>role</b> "+esc(p.role)+"</span>");
+      if(p.org) rows.push("<span><b>org</b> "+esc(p.org)+"</span>");
+      if(p.specialties&&p.specialties.length) rows.push("<span><b>specialties</b> "+p.specialties.map(esc).join(", ")+"</span>");
+      if(p.flies&&p.flies.length) rows.push("<span><b>flies</b> "+p.flies.map(esc).join(", ")+"</span>");
+      if(p.training_toward) rows.push("<span><b>training</b> "+esc(p.training_toward)+"</span>");
+      if(p.last_active) rows.push("<span><b>last active</b> "+ago(p.last_active)+"</span>");
+      if(p.ops_commanded) rows.push("<span><b>ops commanded</b> "+p.ops_commanded+"</span>");
+      if(p.source_grade) rows.push("<span><b>source grade</b> "+esc(p.source_grade)+"</span>");
+      if(p.next_review) rows.push("<span><b>next review</b> "+esc(p.next_review)+"</span>");
+      // lead-only counterintel layer (server returns null unless lead)
+      if(p.trust_level) rows.push("<span><b>trust</b> "+esc(p.trust_level)+"</span>");
+      if(p.access_level) rows.push("<span><b>access</b> "+esc(p.access_level)+"</span>");
+      if(p.watch) rows.push('<span style="color:var(--amberw)"><b>watch</b> '+esc(p.watch)+"</span>");
+      // the verified vs claimed split (the Aegis lesson)
+      var contrib="";
+      if(p.verified_contribution||(p.claims&&p.claims.length)){
+        contrib='<div class="contrib">'+
+          '<div class="cbox ver"><div class="cl2">Verified, standing</div><div class="cv">'+(p.verified_contribution?esc(p.verified_contribution):'<span style="color:var(--muted)">nothing logged yet</span>')+'</div></div>'+
+          '<div class="cbox clm"><div class="cl2">Claimed, unverified</div>'+((p.claims&&p.claims.length)?p.claims.map(function(c){ return '<div class="claim">'+esc(c.what)+'<span class="st" style="color:var(--muted)">'+esc(c.status||"unverified")+(c.grade?" "+esc(c.grade):"")+'</span></div>'; }).join(""):'<div class="cv" style="color:var(--muted)">no claims on file</div>')+'</div>'+
+          '</div>';
+      }
+      var alts="";
+      if(p.known_alts&&p.known_alts.length){
+        alts='<div style="margin-top:12px"><div class="cl2" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ice-dim);margin-bottom:4px">Inferred alts, not fact</div>'+
+          p.known_alts.map(function(a){ return '<div class="alt">'+esc(a.name)+(a.confidence?' <span class="cf">'+esc(a.confidence)+' confidence</span>':'')+(a.basis?' <span style="color:var(--muted)">'+esc(a.basis)+'</span>':'')+'</div>'; }).join("")+'</div>';
+      }
       var dbrs=(e.debriefs||[]).map(function(db){
         return '<div class="dbrow"><b>debrief '+esc(String(db.conducted_at).slice(0,10))+'</b> by '+esc(db.conducted_by||"?")+
           (db.motivation_read?' &middot; reads <b>'+esc(db.motivation_read)+'</b>':'')+
@@ -742,10 +804,14 @@ function openEntity(id){
           (db.motivation?'<br>motivation: '+esc(db.motivation):'')+
           (db.intel?'<br>volunteered: '+esc(db.intel):'')+'</div>';
       }).join("");
-      person='<div class="dblock"><div class="lab">Person</div>'+
-        (pparts.length?'<div class="live">'+pparts.join(" &middot; ")+'</div>':'<div class="live" style="color:var(--muted)">no person meta yet</div>')+
-        dbrs+
-        '<div style="margin-top:10px"><button class="dclose" style="position:static" onclick="openDebrief('+e.id+')">run the debrief</button></div></div>';
+      var pnotes=p.notes?'<div class="live" style="margin-top:10px;color:var(--silver-dim)">'+esc(p.notes)+'</div>':'';
+      person='<div class="dblock"><div class="lab">Pilot Profile '+(internal?'&middot; know us':'')+'</div>'+
+        '<div class="pp"><div class="ppwall">Assessment layer &middot; leadership only &middot; never member visible</div>'+
+        (chips.length?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+chips.join("")+'</div>':'')+
+        (rows.length?'<div class="pprow">'+rows.join("")+'</div>':'<div class="live" style="color:var(--muted)">no profile yet</div>')+
+        contrib+alts+pnotes+dbrs+
+        '<div style="margin-top:12px"><button class="dclose" style="position:static" onclick="openProfileEdit('+e.id+')">edit profile</button> '+
+        '<button class="dclose" style="position:static" onclick="openDebrief('+e.id+')">run the debrief</button></div></div></div>';
     }
     var rules=hostile?('<div class="dblock"><div class="lab">GSS Field Rules</div><div class="rules">'+FIELD_RULES.map(function(r,i){ return '<div class="rule"><span class="rn">'+(i+1)+'</span><span class="rt"><b>'+esc(r[0])+'</b> '+esc(r[1])+'</span></div>'; }).join("")+'</div></div>'):'';
     document.getElementById("dwrap").innerHTML=
@@ -861,6 +927,66 @@ function fileDebrief(id){
     if(!d||!d.ok){ document.getElementById("db_err").textContent=(d&&d.error)||"the file did not take"; return; }
     loadPersons(); loadBoard();
     openEntity(id);
+  });
+}
+
+/* ---------- pilot profile editor (the know us assessment) ---------- */
+function openProfileEdit(id){
+  api("/gss/entity/"+id).then(function(d){
+    if(!d||!d.ok) return;
+    var e=d.entity, p=e.person||{};
+    function opt(list,cur){ return ['<option value=""></option>'].concat(list.map(function(v){ return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+v.replace(/_/g," ")+'</option>'; })).join(""); }
+    var claimsText=(p.claims||[]).map(function(c){ return c.what+" :: "+(c.grade||"D4")+" :: "+(c.status||"unverified"); }).join("\n");
+    var altsText=(p.known_alts||[]).map(function(a){ return a.name+" :: "+(a.confidence||"low")+" :: "+(a.basis||""); }).join("\n");
+    document.getElementById("dwrap").innerHTML=
+      '<button class="dclose" onclick="closeDetail()">close</button>'+
+      '<div class="dhead"><div class="dn" style="border-left:3px solid var(--ice);padding-left:12px">Pilot Profile &middot; '+esc(e.name)+'</div>'+
+      '<div class="dmeta"><span>The assessment. In game behavior only, never real world. Cold in the file. This is never shown to the member.</span></div></div>'+
+      '<div class="ppedit">'+
+      '<div class="three"><div><label>internal class</label><select id="pp_ic">'+opt(["member","recruit","prospect","ally_guest","patron","command_alt"],p.internal_class)+'</select></div>'+
+      '<div><label>role</label><select id="pp_role">'+opt(["member","fc","officer","recruit","diplomat","poi","hunter","leader"],p.role)+'</select></div>'+
+      '<div><label>officer track</label><select id="pp_track">'+opt(["none","candidate","active"],p.officer_track)+'</select></div></div>'+
+      '<div class="three"><div><label>trajectory</label><select id="pp_traj">'+opt(["rising","steady","quiet","at_risk","departed"],p.trajectory)+'</select></div>'+
+      '<div><label>trust (lead)</label><select id="pp_trust">'+opt(["trusted","provisional","gated","unvetted"],p.trust_level)+'</select></div>'+
+      '<div><label>our command alt</label><select id="pp_alt"><option value="0"'+(!p.is_internal_alt?" selected":"")+'>no</option><option value="1"'+(p.is_internal_alt?" selected":"")+'>yes</option></select></div></div>'+
+      '<label>specialties (comma separated, observed)</label><input id="pp_spec" value="'+esc((p.specialties||[]).join(", "))+'">'+
+      '<label>hulls flown (comma separated, seen in fleet)</label><input id="pp_flies" value="'+esc((p.flies||[]).join(", "))+'">'+
+      '<div class="two"><div><label>training toward</label><input id="pp_train" value="'+esc(p.training_toward||"")+'"></div>'+
+      '<div><label>access held (lead)</label><input id="pp_access" value="'+esc(p.access_level||"")+'"></div></div>'+
+      '<label>VERIFIED contribution (ledger or observed, the standing figure)</label><textarea id="pp_ver">'+esc(p.verified_contribution||"")+'</textarea>'+
+      '<label>CLAIMED, unverified (one per line: what :: grade :: status). The member\'s own account, never promoted to the standing figure.</label><textarea id="pp_claims" placeholder="billions in stashes :: D4 :: unverified">'+esc(claimsText)+'</textarea>'+
+      '<label>inferred alts, NOT fact (one per line: name :: confidence :: basis)</label><textarea id="pp_alts" placeholder="SomeToon :: low :: shared fleet + timezone">'+esc(altsText)+'</textarea>'+
+      '<div class="three"><div><label>last active</label><input id="pp_last" type="date" value="'+esc((p.last_active||"").slice(0,10))+'"></div>'+
+      '<div><label>ops commanded</label><input id="pp_opsc" type="number" min="0" value="'+(p.ops_commanded||0)+'"></div>'+
+      '<div><label>source grade</label><input id="pp_grade" value="'+esc(p.source_grade||"")+'"></div></div>'+
+      '<label>watch (lead only, counterintel not accusation)</label><textarea id="pp_watch">'+esc(p.watch||"")+'</textarea>'+
+      '<label>next review</label><input id="pp_review" type="date" value="'+esc(p.next_review||"")+'">'+
+      '<label>notes (fair assessment, graded, never a naked claim)</label><textarea id="pp_notes">'+esc(p.notes||"")+'</textarea>'+
+      '<button class="save" id="pp_save">Save the profile</button><span class="err" id="pp_err" style="margin-left:10px"></span>'+
+      '</div>';
+    document.getElementById("pp_save").addEventListener("click",function(){ saveProfile(id); });
+    document.getElementById("detail").style.display="block"; document.body.style.overflow="hidden";
+  });
+}
+function parseLines(txt){ return (txt||"").split(/\n/).map(function(l){ return l.trim(); }).filter(Boolean); }
+function saveProfile(id){
+  var v=function(x){ return (document.getElementById(x).value||"").trim(); };
+  var claims=parseLines(v("pp_claims")).map(function(l){ var pp=l.split("::").map(function(s){return s.trim();}); return { what:pp[0]||"", grade:pp[1]||"D4", status:pp[2]||"unverified" }; }).filter(function(c){return c.what;});
+  var alts=parseLines(v("pp_alts")).map(function(l){ var pp=l.split("::").map(function(s){return s.trim();}); return { name:pp[0]||"", confidence:pp[1]||"low", basis:pp[2]||"" }; }).filter(function(a){return a.name;});
+  var csv=function(x){ return v(x)?v(x).split(",").map(function(s){return s.trim();}).filter(Boolean):[]; };
+  var body={
+    internal_class:v("pp_ic"), role:v("pp_role"), officer_track:v("pp_track")||"none", trajectory:v("pp_traj"),
+    trust_level:v("pp_trust"), is_internal_alt:v("pp_alt")==="1",
+    specialties:csv("pp_spec"), flies:csv("pp_flies"), training_toward:v("pp_train"), access_level:v("pp_access"),
+    verified_contribution:v("pp_ver"), claims:claims, known_alts:alts,
+    last_active:v("pp_last"), ops_commanded:parseInt(v("pp_opsc"),10)||0,
+    source_grade:v("pp_grade"), watch:v("pp_watch"), next_review:v("pp_review"), notes:v("pp_notes")
+  };
+  var btn=document.getElementById("pp_save"); btn.disabled=true;
+  api("/gss/person/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(d){
+    btn.disabled=false;
+    if(!d||!d.ok){ document.getElementById("pp_err").textContent=(d&&d.error)||"the profile did not save"; return; }
+    loadPersons(); loadGraph(); openEntity(id);
   });
 }
 
