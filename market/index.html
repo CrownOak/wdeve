@@ -58,8 +58,10 @@
   robust price), each column totals its hub, and the cheapest hub is highlighted. <b>to buy</b> prices
   from sell orders using the robust cheapest 5% (so one mispriced order cannot fake a deal); <b>to sell</b>
   prices into the best buy orders. An item with no order on that side at a hub shows <b>n/a</b> and is left
-  out of that hub total only. Names we cannot find stay in the list, struck, and count for nothing. This is
-  order book data, not a promise: prices move, and the gank on the way home is still your problem.</footer>
+  out of that hub total only. Names we cannot find stay in the list, struck, and count for nothing. The
+  <b>M3</b> column is packaged volume times quantity straight from ESI, and the cargo chip totals it, so
+  you know what the haul displaces before you undock. This is order book data, not a promise: prices move,
+  and the gank on the way home is still your problem.</footer>
 <script src="/nav.js?v=15"></script>
 <script>
 (function(){
@@ -116,6 +118,22 @@
   function robustSell(s){ if(!s) return null; var p=num(s.percentile); if(p>0) return p; var mn=num(s.min); return mn>0?mn:null; }
   function robustBuy(b){ if(!b) return null; var p=num(b.percentile); if(p>0) return p; var mx=num(b.max); return mx>0?mx:null; }
 
+  // ---- per-type packaged volume (m3), from ESI type sheets. Static data, cached forever. ----
+  var VOL_LS="bonk_typevol_v1", volCache={};
+  try{ volCache=JSON.parse(localStorage.getItem(VOL_LS)||"{}"); }catch(e){}
+  function volFmt(v){ if(v==null) return null; var a=Math.abs(v);
+    if(a>=1e6) return (v/1e6).toFixed(2)+"M"; if(a>=1e3) return (v/1e3).toFixed(1)+"k";
+    if(a>=10) return String(Math.round(v)); return String(Math.round(v*100)/100); }
+  function fetchVols(ids){
+    var need=ids.filter(function(id){ return volCache[id]==null; });
+    return Promise.all(need.map(function(id){
+      return fetch(ESI+"/universe/types/"+id+"/?datasource=tranquility",{headers:{"Accept":"application/json"}})
+        .then(function(r){ return r.ok?r.json():null; })
+        .then(function(t){ if(t){ var v=num(t.packaged_volume)||num(t.volume); if(v>0) volCache[id]=v; } })
+        .catch(function(){});
+    })).then(function(){ try{ localStorage.setItem(VOL_LS, JSON.stringify(volCache)); }catch(e){} });
+  }
+
   function run(){
     var items=parsePaste(paste.value);
     if(!items.length){ out.innerHTML="<div class='empty2'>Paste a multibuy and hit Price it.</div>"; last=null; return; }
@@ -126,7 +144,7 @@
       items.forEach(function(it){ var r=byLower[it.name.toLowerCase()]; if(r){ it.id=r.id; it.cname=r.name; ids.push(r.id); } else { it.notFound=true; } });
       var uids=ids.filter(function(v,i,a){ return a.indexOf(v)===i; });
       if(!uids.length){ last={items:items, byRegion:{}}; render(); go.disabled=false; return; }
-      return fetchAll(uids).then(function(byRegion){ last={items:items, byRegion:byRegion}; render(); go.disabled=false; });
+      return Promise.all([fetchAll(uids), fetchVols(uids)]).then(function(rr){ last={items:items, byRegion:rr[0]}; render(); go.disabled=false; });
     }).catch(function(e){ out.innerHTML="<div class='verr'>Lookup failed ("+esc(String(e))+"). Give it a moment and try again.</div>"; go.disabled=false; });
   }
 
@@ -148,9 +166,11 @@
   function render(){
     if(!last){ return; }
     var items=last.items, byRegion=last.byRegion;
-    var totals={}; HUBS.forEach(function(h){ totals[h[1]]=0; });
+    var totals={}, totVol=0; HUBS.forEach(function(h){ totals[h[1]]=0; });
     items.forEach(function(it){
-      it.lines={}; if(it.notFound) return;
+      it.lines={}; it.vol=null; if(it.notFound) return;
+      var uv=volCache[it.id];
+      if(uv!=null){ it.vol=uv*it.qty; totVol+=it.vol; }
       HUBS.forEach(function(h){
         var agg=(byRegion[h[1]]||{})[it.id];
         var unit = mode==="buy" ? robustSell(agg&&agg.sell) : robustBuy(agg&&agg.buy);
@@ -163,16 +183,20 @@
 
     var h="<div class='mchips'>";
     HUBS.forEach(function(hh){ h+="<span class='mchip"+(hh[1]===cheap?" cheap":"")+"'>"+hh[0]+" <b>"+isk(totals[hh[1]])+"</b></span>"; });
-    h+="</div><table class='mtbl'><thead><tr><th class='who'>ITEM</th><th class='num'>QTY</th>";
+    if(totVol>0) h+="<span class='mchip'>cargo <b>"+volFmt(totVol)+" m3</b></span>";
+    h+="</div><table class='mtbl'><thead><tr><th class='who'>ITEM</th><th class='num'>QTY</th>"
+      +"<th class='num' data-tip='Packaged volume times quantity, from ESI. What the line displaces in your hold.'>M3</th>";
     HUBS.forEach(function(hh){ h+="<th class='num"+(hh[1]===cheap?" cheaphdr":"")+"'>"+hh[0]+"</th>"; });
     h+="</tr></thead><tbody>";
     items.forEach(function(it){
-      if(it.notFound){ h+="<tr class='struck'><td class='who'>"+esc(it.name)+"</td><td class='num'>"+it.qty+"</td><td class='num nf' colspan='5'>not found, check spelling</td></tr>"; return; }
-      h+="<tr><td class='who'>"+esc(it.cname||it.name)+"</td><td class='num'>"+it.qty+"</td>";
+      if(it.notFound){ h+="<tr class='struck'><td class='who'>"+esc(it.name)+"</td><td class='num'>"+it.qty+"</td><td class='num nf' colspan='6'>not found, check spelling</td></tr>"; return; }
+      h+="<tr><td class='who'>"+esc(it.cname||it.name)+"</td><td class='num'>"+it.qty+"</td>"
+        +"<td class='num'>"+(it.vol==null?"<span class='na'>n/a</span>":volFmt(it.vol))+"</td>";
       HUBS.forEach(function(hh){ var l=it.lines[hh[1]]; h+="<td class='num"+(hh[1]===cheap?" cheapcol":"")+"'>"+(l==null?"<span class='na'>n/a</span>":isk(l))+"</td>"; });
       h+="</tr>";
     });
-    h+="<tr class='mtot'><td class='who strong'>TOTAL</td><td class='num'></td>";
+    h+="<tr class='mtot'><td class='who strong'>TOTAL</td><td class='num'></td>"
+      +"<td class='num strong'>"+(totVol>0?volFmt(totVol):"")+"</td>";
     HUBS.forEach(function(hh){ h+="<td class='num strong"+(hh[1]===cheap?" cheapcol":"")+"'>"+isk(totals[hh[1]])+"</td>"; });
     h+="</tr></tbody></table>";
     if(cheap){ var cn=HUBS.filter(function(x){ return x[1]===cheap; })[0][0];
