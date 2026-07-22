@@ -469,6 +469,31 @@
   .bw-mark, .bw-ally{ margin-left:6px; font-size:12px; vertical-align:baseline; }
   .bw-empty{ font-family:var(--mono); font-size:12px; color:var(--muted); padding:18px 4px; text-align:center; }
   .bw-foot{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  /* THE WORKS — build queue board */
+  .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
+  .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
+  .wkcols{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media(max-width:520px){ .wkcols{ grid-template-columns:1fr; gap:14px; } }
+  .wkcol-h{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:7px; border-bottom:1px solid var(--line-soft); padding-bottom:5px; }
+  .wk-row{ padding:6px 0; border-bottom:1px solid rgba(255,255,255,.03); }
+  .wk-row:last-child{ border-bottom:0; }
+  .wk-line{ display:flex; align-items:center; gap:8px; }
+  .wk-item{ flex:1 1 auto; min-width:0; font-size:13px; color:var(--silver-dim); }
+  .wk-q{ font-family:var(--mono); font-size:11px; color:var(--ore); }
+  .wk-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.45; }
+  .wk-st{ font-family:var(--mono); font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border:1px solid currentColor; flex:0 0 auto; }
+  .wk-queued{ color:var(--muted); } .wk-active{ color:var(--ore); }
+  .wk-done{ color:var(--silver-dim); opacity:.6; } .wk-sourced{ color:var(--silver-dim); opacity:.7; }
+  .wk-row-done .wk-item, .wk-need-sourced .wk-item{ text-decoration:line-through; opacity:.55; }
+  .wk-ctl{ display:flex; gap:3px; flex:0 0 auto; }
+  .wk-b{ background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:12px; line-height:1; padding:2px 7px; cursor:pointer; }
+  .wk-b:hover{ border-color:var(--ore); color:var(--ore); }
+  .wk-empty{ font-family:var(--mono); font-size:11px; color:var(--muted); padding:6px 0; }
+  .wk-add{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
+  .wk-add select, .wk-add input{ background:#0b0d0e; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12px; padding:6px 8px; }
+  .wk-add input:first-of-type{ flex:1 1 150px; min-width:120px; }
+  .wk-addbtn{ background:var(--ore); color:#04140a; border:0; font-weight:700; font-family:var(--mono); font-size:12px; padding:6px 13px; cursor:pointer; }
+  .wk-err{ font-family:var(--mono); font-size:11px; color:var(--red, #f0817a); align-self:center; }
   /* the success hero: a launched structure, up and proud */
   .stup{ display:flex; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
     box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
@@ -786,8 +811,13 @@ async function refreshMe(){
   try {
     var j = await api("me");
     S.me = j;
+    try { S.works = await api("works"); } catch(e){ /* the works card fails alone */ }
     renderAll();
   } catch(e){ if (!isOut(e)) toast(e.message); }
+}
+async function reloadWorks(){
+  try { S.works = await api("works"); } catch(e){ return; }
+  safeRender(renderCorpStrip, $("corpStripWrap"));
 }
 
 /* every panel fails alone (C8) */
@@ -1159,6 +1189,49 @@ async function loadSay(){
   safeRender(renderSay, $("panelSay"));
 }
 
+function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return r==='officer'||r==='admin'; }
+function renderWorks(){
+  var w = S.works;
+  var off = isOfficer();
+  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return '';
+  function bchip(st){ return '<span class="wk-st wk-'+esc(st)+'">'+esc(st)+'</span>'; }
+  function ctl(r, adv){ return off ? '<span class="wk-ctl"><button class="wk-b" onclick="worksAdvance('+r.id+')" title="'+adv+'">'+(adv==='mark sourced'?'&#10003;':'&#8250;')+'</button><button class="wk-b" onclick="worksRemove('+r.id+')" title="remove">&times;</button></span>' : ''; }
+  function brow(r){
+    var q = r.qty!=null ? ' <span class="wk-q">x'+r.qty+'</span>' : '';
+    return '<div class="wk-row wk-row-'+esc(r.status)+'"><div class="wk-line"><span class="wk-item">'+esc(r.item)+q+'</span>'+bchip(r.status)+ctl(r,'advance')+'</div>'+
+      (r.note?'<div class="wk-note">'+esc(r.note)+'</div>':'')+'</div>';
+  }
+  function nrow(r){
+    var q = r.qty!=null ? ' <span class="wk-q">'+Number(r.qty).toLocaleString()+'</span>' : '';
+    var srcd = r.status==='sourced' ? '<span class="wk-st wk-sourced">sourced</span>' : '';
+    return '<div class="wk-row wk-need-'+esc(r.status)+'"><div class="wk-line"><span class="wk-item">'+esc(r.item)+q+'</span>'+srcd+ctl(r,'mark sourced')+'</div>'+
+      (r.note?'<div class="wk-note">'+esc(r.note)+'</div>':'')+'</div>';
+  }
+  var buildRows = (w.building||[]).map(brow).join('') || '<div class="wk-empty">nothing on the line right now</div>';
+  var needRows = (w.need||[]).map(nrow).join('') || '<div class="wk-empty">we have what we need</div>';
+  var addForm = off ? (
+    '<div class="wk-add"><select id="wkSec"><option value="building">Building</option><option value="need">Need</option></select>' +
+    '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
+    '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>'
+  ) : '';
+  return '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
+    '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
+    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + addForm + '</div>';
+}
+async function worksAct(body){
+  try { S.works = await api("admin/works", body); safeRender(renderCorpStrip, $("corpStripWrap")); }
+  catch(e){ if(!isOut(e)) { var er=$("wkErr"); if(er) er.textContent=e.message; else toast(e.message); } }
+}
+function worksAdvance(id){
+  var w=S.works||{}, all=(w.building||[]).concat(w.need||[]), r=all.filter(function(x){return x.id===id;})[0]; if(!r) return;
+  var next = r.section==='building' ? {queued:'active',active:'done',done:'queued'}[r.status] : {open:'sourced',sourced:'open'}[r.status];
+  worksAct({action:'update', id:id, status:next});
+}
+function worksRemove(id){ worksAct({action:'remove', id:id}); }
+function worksAdd(){
+  var item=($("wkItem").value||'').trim(); if(!item){ $("wkErr").textContent='name it'; return; }
+  worksAct({action:'add', section:$("wkSec").value, item:item, qty:($("wkQty").value||'').trim()||null, note:($("wkNote").value||'').trim()});
+}
 function renderCorpStrip(){
   var el = $("corpStripWrap");
   var corp = S.me.corp;
@@ -1245,6 +1318,7 @@ function renderCorpStrip(){
         }).join('') + '</div>';
     }
   }
+  html += renderWorks();
   if (goal){
     var goalLabels = { fleet_isk: "ISK through buyback this month",
                        fleet_m3:  "m³ hauled this month",
