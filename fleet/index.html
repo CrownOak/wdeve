@@ -553,8 +553,9 @@ tr.haulrow{ cursor:pointer; }
   // ---------- valuation (AMEND-6): refine calcFwd order, exactly, as a pure function ----------
   /*VALUE-FN-START*/
   var EFF=0.70; // AMEND-3: refine's shipped default efficiency; fixed, not UI-exposed
-  // price of one mineral at the op's chosen market. Rens is the corp delivery
-  // hub (default); where a mineral has no Rens order (r=0, a few exotic moon
+  // price of one mineral at the op's chosen market. Jita is the default basis
+  // (matches the worker's fresh-round default since 2026-07-12); an op may pick
+  // Rens, and where a mineral has no Rens order (r=0, a few exotic moon
   // minerals) it falls back to Jita so real ore never values to zero.
   function priceOf(DATA, mid, basis){
     var p=DATA.prices[mid]; if(!p) return 0;
@@ -562,7 +563,7 @@ tr.haulrow{ cursor:pointer; }
     return p.r || p.j || 0; // rens, falling back to jita on a thin market
   }
   function valueLines(lines, DATA, VOL, basis){
-    basis = basis==="jita" ? "jita" : "rens";
+    basis = basis==="rens" ? "rens" : "jita";
     // FRACTIONAL valuation (v3.2). Refine floors to 100-unit reprocessing batches —
     // physically right for refining YOUR OWN paste, but a ledger credits pro-rata:
     // the fleet pools everyone's ore and the pooled total refines fully, so a
