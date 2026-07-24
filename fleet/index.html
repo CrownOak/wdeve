@@ -724,6 +724,16 @@ tr.haulrow{ cursor:pointer; }
     if(!Array.isArray(a)) a=[]; a=a.filter(function(x){ return typeof x==="string" && x; });
     if(who && a.indexOf(who)<0) a.unshift(who); return a; }
   function setPilots(a){ lsSet(LS_PILOTS, JSON.stringify(a.filter(function(x,i){ return x && a.indexOf(x)===i; }))); }
+  // The crown is a PLAYER claim, but the switcher changes which CHARACTER drops
+  // log under — so lead-gated command (finish, payout, kick) matches the lead
+  // against every pilot this browser owns, not just the active dropper. A lead
+  // who switched to an alt used to hit a dead Finish button ("can't finish the
+  // fleet", 2026-07-24). Tips stay per-character on purpose: an alt is its own
+  // tipping identity, so the tip control keeps the exact-name check.
+  function isMine(name){ if(!name) return false; var L=String(name).toLowerCase();
+    if(String(who||"").toLowerCase()===L) return true;
+    return getPilots().some(function(n){ return String(n).toLowerCase()===L; }); }
+  function amLead(){ return !!(P && P.lead && isMine(P.lead)); }
   function isMine(w){ return getPilots().indexOf(w)>-1; }
   function renderPilots(){
     var box=el("pilots"); if(!box) return;
@@ -1205,13 +1215,13 @@ tr.haulrow{ cursor:pointer; }
     // never wipe a half-typed system name on the 5s poll re-render
     var a=document.activeElement; if(a && a.id==="sysin") return;
     box.style.display="";
-    var isLead = P.lead && P.lead===who;
+    var isLead = amLead();
     var basis=basisNow(), mktLocked=((P.entries||[]).length>0);
     // row 1: the verbs. Finish is the FC's end-of-op action; Announce opens the
     // composer on demand (it fires once per op, it does not rent a whole bar);
     // the system box is the quiet mid-op "we moved" update. Reset hides behind
     // "more" — destructive wants one extra click (U2).
-    var h="<button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead can finish'")+">Finish Fleet</button>";
+    var h="<button id='cFinish' class='gobtn'"+(isLead?"":" disabled title='only the fleet lead ("+esc(P.lead||"nobody yet — claim the crown in the roster")+") can finish'")+">Finish Fleet</button>";
     if(P.finished) h+="<button id='cPayout' class='gobtn'>Payout screen</button>";
     h+="<button id='cAnnounce' class='gobtn"+(anOpen?"":" ")+"' title='open the op announcement composer (pings @everyone when sent)'>&#128226; Announce"+(anOpen?" &#9662;":"")+"</button>";
     h+="<span class='rateset'>system <input id='sysin' class='sysin' maxlength='60' placeholder='where we are'"
@@ -1425,7 +1435,7 @@ tr.haulrow{ cursor:pointer; }
       return (b.tab||0)-(a.tab||0); });
     if(!ms.length){ box.innerHTML="<div class='empty' style='padding:18px'>Nobody here yet.</div>"; }
     else{
-      var isLead = role==="op" && P.lead && P.lead===who; // the crowned fleet lead
+      var isLead = role==="op" && amLead(); // the crowned fleet lead (any of my pilots)
       var h="";
       ms.forEach(function(m,i){
         var g = m.lead ? "<span class='glyph crown' title='fleet lead'>♛</span>"
@@ -1438,7 +1448,7 @@ tr.haulrow{ cursor:pointer; }
                     ally:["ally","Friend of the Rock (allied corp)"], member:["member","corp goblin"] };
         var rt = pr ? (RTAGS[pr.role] || RTAGS.member) : null;
         var allyG = rt ? "<span class='rtag "+rt[0]+"' title='"+rt[1]+"'>"+rt[0].toUpperCase()+"</span>" : "";
-        var kick = (isLead && m.who!==who) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
+        var kick = (isLead && !isMine(m.who)) ? "<button class='rkick' data-kick='"+esc(m.who)+"' title='kick from this op'>kick</button>" : "";
         var tipG = (m.tip||0)>0 ? "<span class='rtip' title='tips the fleet boss'>tip "+isk(m.tip)+"</span>" : "";
         var beltG = (m.beltMs||0)>=60000 ? "<span class='rbelt' title='time on the belt this op (idle time does not count)'>"+hrs(m.beltMs)+"</span>" : "";
         // two decks: name line (dot, glyphs, name, badges, kick) + money line under
@@ -2124,7 +2134,7 @@ tr.haulrow{ cursor:pointer; }
     // Non-lead operators see the numbers but the controls are lead-only,
     // same idiom as the Finish button (worker trusts any op; the UI keeps
     // one pair of hands on the payout so two ops don't double-log).
-    var isLead=!!(P.lead && P.lead===who);
+    var isLead=amLead();
     var r=rate(), pays=P.payouts||{}, whoJita={};
     (P.entries||[]).forEach(function(e){
       whoJita[e.who]=(whoJita[e.who]||0)+((P.entriesTrue||{})[e.id]||0); });
