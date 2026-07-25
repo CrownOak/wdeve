@@ -1289,7 +1289,7 @@ function renderCorpStrip(){
     var contribHtml = '';
     if (contribs.length){
       var early = contribs.slice().sort(function(a,b){
-        return String(a.first_at||"").localeCompare(String(b.first_at||"")); }).slice(0,3)
+        return (Number(b.total)||0) - (Number(a.total)||0); }).slice(0,3)  // top shovels, matching the wall order
         .map(function(c){ return esc(c.ign); }).join(', ');
       var nB = contribs.length;
       // fixed phrases sit in their own text nodes so the RU overlay can swap
@@ -1667,7 +1667,8 @@ function renderStationUp(c){
 function openBuildersWall(rollArg, meta){
   var isArchived = !!meta;
   var list = ((isArchived ? meta.contributors : S.builders) || []).slice().sort(function(a,b){
-    return String(a.first_at||"").localeCompare(String(b.first_at||"")); // earliest shovel first
+    // biggest shovel first (Kyle 2026-07-25); earliest hand breaks the tie
+    return (Number(b.total)||0) - (Number(a.total)||0) || String(a.first_at||"").localeCompare(String(b.first_at||""));
   });
   var st = (S.me && S.me.station) || {};
   var raised = isArchived ? (Number(meta.raised_final)||0) : (Number(st.raised)||0);
@@ -1685,8 +1686,8 @@ function openBuildersWall(rollArg, meta){
   var n = list.length;
   var wallTitle = isArchived ? ('&#127942; Who Built ' + esc(meta.name)) : '&#129521; Who Built The Rock';
   var wallHint = isArchived
-    ? ('Every goblin who built the ' + esc(meta.structure || meta.name) + '. Launched and standing. Listed in the order they picked up a shovel. The rock remembers all of them.')
-    : 'Every goblin who reached into their own wallet for this one. Not a scoreboard, a plaque. Listed in the order they picked up a shovel. The rock remembers all of them.';
+    ? ('Every goblin who built the ' + esc(meta.structure || meta.name) + '. Launched and standing. Biggest shovels first. The rock remembers all of them.')
+    : 'Every goblin who reached into their own wallet for this one. Biggest shovels first, every hand on the plaque. The rock remembers all of them.';
   var wallCount = isArchived
     ? ((n===1?'goblin built it':'goblins built it'))
     : ((n===1?'goblin has built this so far':'goblins have built this so far'));
