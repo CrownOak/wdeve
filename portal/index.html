@@ -469,6 +469,15 @@
   .bw-mark, .bw-ally{ margin-left:6px; font-size:12px; vertical-align:baseline; }
   .bw-empty{ font-family:var(--mono); font-size:12px; color:var(--muted); padding:18px 4px; text-align:center; }
   .bw-foot{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px; line-height:1.5; }
+  /* THE GOAL STRIP — the dictated corp goal above the Works board */
+  .goalstrip{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
+  .goalstrip.gs-complete{ border-color:var(--ore); box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
+  .gs-badge{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#04140a; background:var(--ore); padding:2px 9px; }
+  .gs-name{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:18px; color:var(--silver); margin-top:8px; display:flex; align-items:center; gap:8px; }
+  .gs-ctl{ display:inline-flex; gap:3px; margin-left:auto; }
+  .gs-blurb{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:4px; line-height:1.5; }
+  .gs-nums{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:8px 0 5px; }
+  .gs-nums b{ color:var(--ore); font-size:13px; }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -1190,10 +1199,35 @@ async function loadSay(){
 }
 
 function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return r==='officer'||r==='admin'; }
+/* THE GOAL STRIP — the one dictated corp goal, a bar every goblin watches move.
+   Progress comes counted from the worker (industry_contributions of the goal
+   item since the dictate); nothing is computed client-side but the percent. */
+function renderGoal(){
+  var g = S.works && S.works.goal; if (!g) return '';
+  var off = isOfficer();
+  var built = Number(g.built)||0, target = Math.max(1, Number(g.target)||1);
+  var pct = Math.max(0, Math.min(100, Math.round(built*100/target)));
+  var complete = g.status==='done' || built >= target;
+  var ctl = off ? '<span class="gs-ctl">'
+    + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
+    + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
+  return '<div class="goalstrip'+(complete?' gs-complete':'')+'">' +
+    '<div class="gs-badge">'+(complete?'&#9876; COMPLETE':'&#9874; CURRENT OP')+'</div>' +
+    '<div class="gs-name"><span data-i18n-skip>'+esc(g.name)+'</span>'+ctl+'</div>' +
+    (g.blurb?'<div class="gs-blurb">'+esc(g.blurb)+'</div>':'') +
+    '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+' '+esc(g.item)+'</span> <span>built</span> &middot; '+pct+'%'
+      + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
+      + '</div>' +
+    '<div class="pbar gsbar"><i style="width:'+pct+'%"></i></div>' +
+    '</div>';
+}
+function goalDone(){ worksAct({action:'goal-done'}); }
+function goalArchive(){ if (confirm('Archive the current op goal? The strip disappears until a new goal is dictated.')) worksAct({action:'goal-archive'}); }
 function renderWorks(){
   var w = S.works;
   var off = isOfficer();
-  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return '';
+  var goalHtml = renderGoal();
+  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return goalHtml;
   function bchip(st){ return '<span class="wk-st wk-'+esc(st)+'">'+esc(st)+'</span>'; }
   function ctl(r, adv){ return off ? '<span class="wk-ctl"><button class="wk-b" onclick="worksAdvance('+r.id+')" title="'+adv+'">'+(adv==='mark sourced'?'&#10003;':'&#8250;')+'</button><button class="wk-b" onclick="worksRemove('+r.id+')" title="remove">&times;</button></span>' : ''; }
   function brow(r){
@@ -1214,7 +1248,7 @@ function renderWorks(){
     '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
     '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>'
   ) : '';
-  return '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
+  return goalHtml + '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
     '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
     '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + addForm + '</div>';
 }
