@@ -614,6 +614,7 @@
     <div class="sub">your goblin career, in numbers. watch it climb.</div></header>
   <div class="wrap">
     <div id="banners"></div>
+    <div id="goalStripWrap"></div>
     <div class="panel" id="panelIdentity"></div>
     <div class="panel" id="panelInbox" style="display:none"></div>
     <div class="panel" id="profileDrawer"></div>
@@ -826,6 +827,7 @@ async function refreshMe(){
 }
 async function reloadWorks(){
   try { S.works = await api("works"); } catch(e){ return; }
+  safeRender(renderGoalStrip, $("goalStripWrap"));
   safeRender(renderCorpStrip, $("corpStripWrap"));
 }
 
@@ -850,6 +852,7 @@ function renderAll(){
   safeRender(renderAcademy,  $("panelAcademy"));
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderSay,      $("panelSay"));
+  safeRender(renderGoalStrip,$("goalStripWrap"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
   safeRender(renderFoot,     $("footActs"));
 }
@@ -1223,11 +1226,13 @@ function renderGoal(){
 }
 function goalDone(){ worksAct({action:'goal-done'}); }
 function goalArchive(){ if (confirm('Archive the current op goal? The strip disappears until a new goal is dictated.')) worksAct({action:'goal-archive'}); }
+/* The dictate flies at the TOP of the dashboard (goalStripWrap, first thing under
+   the header) — a corp goal nobody scrolls to is not dictated (Kyle 2026-07-25). */
+function renderGoalStrip(){ var el=$("goalStripWrap"); if (el) el.innerHTML = renderGoal(); }
 function renderWorks(){
   var w = S.works;
   var off = isOfficer();
-  var goalHtml = renderGoal();
-  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return goalHtml;
+  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return '';
   function bchip(st){ return '<span class="wk-st wk-'+esc(st)+'">'+esc(st)+'</span>'; }
   function ctl(r, adv){ return off ? '<span class="wk-ctl"><button class="wk-b" onclick="worksAdvance('+r.id+')" title="'+adv+'">'+(adv==='mark sourced'?'&#10003;':'&#8250;')+'</button><button class="wk-b" onclick="worksRemove('+r.id+')" title="remove">&times;</button></span>' : ''; }
   function brow(r){
@@ -1248,12 +1253,12 @@ function renderWorks(){
     '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
     '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>'
   ) : '';
-  return goalHtml + '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
+  return '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
     '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
     '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + addForm + '</div>';
 }
 async function worksAct(body){
-  try { S.works = await api("admin/works", body); safeRender(renderCorpStrip, $("corpStripWrap")); }
+  try { S.works = await api("admin/works", body); safeRender(renderGoalStrip, $("goalStripWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
   catch(e){ if(!isOut(e)) { var er=$("wkErr"); if(er) er.textContent=e.message; else toast(e.message); } }
 }
 function worksAdvance(id){
