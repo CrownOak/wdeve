@@ -501,6 +501,20 @@
   .gs-c-amber{ color:#e0c05a; border-color:rgba(224,192,90,.55); }
   .gs-c-buy{ color:var(--muted); border-style:dashed; }
   .gs-stocklbl{ font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-left:2px; }
+  .gs-segs{ display:flex; gap:3px; margin:2px 0 6px; }
+  .gs-seg{ flex:1 1 0; height:12px; border:1px solid var(--line); background:transparent; }
+  .gs-seg-need{ border-color:rgba(240,129,122,.55); background:rgba(240,129,122,.10); }
+  .gs-seg-researching{ border-color:rgba(224,192,90,.6); background:rgba(224,192,90,.20); }
+  .gs-seg-ready{ border-color:rgba(255,255,255,.4); background:rgba(255,255,255,.10); }
+  .gs-seg-running{ border-color:var(--ore); background:var(--ore); box-shadow:0 0 8px -2px rgba(224,168,90,.9); }
+  .gs-segsum{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+  .gs-segsum b{ color:var(--silver); }
+  .gs-lnk{ color:var(--ore); text-decoration:none; border-bottom:1px dotted rgba(224,168,90,.5); }
+  .gs-lnk:hover{ filter:brightness(1.15); }
+  .gs-verbs{ display:flex; flex-direction:column; gap:4px; }
+  .gs-verb{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+  .gs-verb b{ color:var(--ore); letter-spacing:.06em; margin-right:4px; }
+  .wk-lines{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -1237,47 +1251,60 @@ function renderGoal(){
   var ctl = off ? '<span class="gs-ctl">'
     + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
     + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
-  var bar = '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span data-i18n-skip>'+esc(g.item)+'</span> <span>built</span> &middot; '+pct+'%'
+  var bar = '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span>built</span> &middot; '+pct+'%'
       + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
       + '</div><div class="pbar gsbar"><i style="width:'+pct+'%"></i></div>';
-  // THE ORES WE MINE: the standing doctrine, priority glowing
-  var ores = '';
+  // IN: what the machine eats — the ore doctrine + the fuel gauge
+  var inSec = '';
   var co = S.works.coreOres;
   if (co && co.length){
-    ores = '<div class="gs-sec"><div class="gs-k">&#9935; THE ORES WE MINE</div><div class="gs-orerow">'
+    var chips = '';
+    if (g.stock && g.stock.length){
+      var SHORT = {Tritanium:'Trit',Pyerite:'Pyer',Mexallon:'Mex',Isogen:'Iso',Nocxium:'Nocx'};
+      var agoTxt = '';
+      if (g.stockAt){ var hAgo = Math.max(0, Math.round((Date.now()-Date.parse(g.stockAt))/3600000));
+        agoTxt = hAgo < 1 ? 'hangar counted just now' : 'hangar counted '+(hAgo>=48? Math.round(hAgo/24)+'d' : hAgo+'h')+' ago'; }
+      chips = '<div class="gs-stock">' + g.stock.map(function(c){
+        var d = c.d==null? null : Number(c.d);
+        var cls = (d!=null && d<10 ? ' gs-c-red' : d!=null && d<30 ? ' gs-c-amber' : '') + (c.buy?' gs-c-buy':'');
+        return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(SHORT[c.m]||c.m)+' '+(d!=null?d+'d':'&mdash;')+(c.buy?' BUY':'')+'</span>';
+      }).join('') + '<span class="gs-stocklbl">days of minerals &middot; '+agoTxt+'</span></div>';
+    }
+    inSec = '<div class="gs-sec"><div class="gs-k">&#9935; IN &middot; WHAT THE MACHINE EATS</div><div class="gs-orerow">'
       + co.map(function(o){ var pri = o.role==='priority';
         return '<span class="gs-ore'+(pri?' gs-ore-pri':'')+'" data-i18n-skip>'+esc(String(o.ore||'').toUpperCase())
           + ' <i>&rarr; '+esc(o.min||'')+'</i>'+(pri?' <b>PRIORITY</b>':(o.role&&o.role!=='staple'?' <u>'+esc(o.role)+'</u>':''))+'</span>'; }).join('')
-      + '</div>' + (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + '</div>';
+      + '</div>' + (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + chips + '</div>';
   }
-  // THE LINES: the standing blueprint program, status at a glance
-  var lines = '';
+  // OUT: what the machine makes — one unnamed segment per line, lighting up as
+  // the program matures. The full NAMED list lives on the Works board below.
+  var outSec = '';
   var L = S.works.lines;
   if (L && L.length){
-    lines = '<div class="gs-sec"><div class="gs-k">&#128296; THE LINES &middot; '+L.length+' blueprints</div><div class="gs-linegrid">'
-      + L.map(function(r){
-        return '<span class="gs-line gs-l-'+esc(r.status)+'"'+(r.note?' title="'+esc(r.note)+'"':'')+' data-i18n-skip>'+esc(r.item)
-          + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
-      + '</div></div>';
+    var counts = {need:0, researching:0, ready:0, running:0};
+    var segs = L.map(function(r){ counts[r.status] = (counts[r.status]||0)+1;
+      return '<i class="gs-seg gs-seg-'+esc(r.status)+'" title="'+esc(r.item)+' &middot; '+esc(r.status)+'"></i>'; }).join('');
+    var sum = [];
+    if (counts.running) sum.push('<b data-i18n-skip>'+counts.running+'</b> <span>running</span>');
+    if (counts.ready) sum.push('<b data-i18n-skip>'+counts.ready+'</b> <span>ready</span>');
+    if (counts.researching) sum.push('<b data-i18n-skip>'+counts.researching+'</b> <span>in the lab</span>');
+    if (counts.need) sum.push('<b data-i18n-skip>'+counts.need+'</b> <span>to buy</span>');
+    outSec = '<div class="gs-sec"><div class="gs-k">&#127981; OUT &middot; WHAT THE MACHINE MAKES</div>'
+      + '<div class="gs-segs">'+segs+'</div>'
+      + '<div class="gs-segsum"><span data-i18n-skip>'+L.length+'</span> <span>module lines</span> &middot; '+sum.join(' &middot; ')
+      + ' &middot; <a class="gs-lnk" href="#worksboard">full list &darr;</a></div></div>';
   }
-  // stock chips: computed server-side (hangar snapshot / burn rates), never hand-fed
-  var chips = '';
-  if (g.stock && g.stock.length){
-    var SHORT = {Tritanium:'Trit',Pyerite:'Pyer',Mexallon:'Mex',Isogen:'Iso',Nocxium:'Nocx'};
-    var agoTxt = '';
-    if (g.stockAt){ var hAgo = Math.max(0, Math.round((Date.now()-Date.parse(g.stockAt))/3600000));
-      agoTxt = hAgo < 1 ? 'hangar counted just now' : 'hangar counted '+(hAgo>=48? Math.round(hAgo/24)+'d' : hAgo+'h')+' ago'; }
-    chips = '<div class="gs-stock">' + g.stock.map(function(c){
-      var d = c.d==null? null : Number(c.d);
-      var cls = (d!=null && d<10 ? ' gs-c-red' : d!=null && d<30 ? ' gs-c-amber' : '') + (c.buy?' gs-c-buy':'');
-      return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(SHORT[c.m]||c.m)+' '+(d!=null?d+'d':'&mdash;')+(c.buy?' BUY':'')+'</span>';
-    }).join('') + '<span class="gs-stocklbl">days of minerals &middot; '+agoTxt+'</span></div>';
-  }
+  // YOUR PART: the three verbs, permanent, links included
+  var verbs = '<div class="gs-sec"><div class="gs-k">&#129680; YOUR PART, ON THE WHOLE</div><div class="gs-verbs">'
+    + '<div class="gs-verb"><b>MINE</b><span> the priority ore, log every drop &middot; </span><a class="gs-lnk" href="/fleet/">open FLEET</a></div>'
+    + '<div class="gs-verb"><b>HAUL</b><span> it home to the Den &middot; buyback pays like always</span></div>'
+    + '<div class="gs-verb"><b>BUILD</b><span> from the board if you have slots &middot; jobs count themselves &middot; </span><a class="gs-lnk" href="#worksboard">THE WORKS</a></div>'
+    + '</div></div>';
   return '<div class="goalstrip'+(complete?' gs-complete':'')+'">' +
     '<div class="gs-badge">'+(complete?'&#9876; COMPLETE':'&#9874; CURRENT OP')+'</div>' +
     '<div class="gs-name"><span data-i18n-skip>'+esc(g.name)+'</span>'+ctl+'</div>' +
     (g.blurb?'<div class="gs-blurb">'+esc(g.blurb)+'</div>':'') +
-    bar + ores + lines + chips + '</div>';
+    bar + inSec + outSec + verbs + '</div>';
 }
 function goalDone(){ worksAct({action:'goal-done'}); }
 function goalArchive(){ if (confirm('Archive the current op goal? The strip disappears until a new goal is dictated.')) worksAct({action:'goal-archive'}); }
@@ -1308,9 +1335,17 @@ function renderWorks(){
     '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
     '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>'
   ) : '';
-  return '<div class="works"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
+  var linesGrid = '';
+  if (w && w.lines && w.lines.length){
+    linesGrid = '<div class="wk-lines"><div class="wkcol-h">The lines &middot; blueprint program</div><div class="gs-linegrid">'
+      + w.lines.map(function(r){
+        return '<span class="gs-line gs-l-'+esc(r.status)+'"'+(r.note?' title="'+esc(r.note)+'"':'')+' data-i18n-skip>'+esc(r.item)
+          + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
+      + '</div></div>';
+  }
+  return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
     '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
-    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + addForm + '</div>';
+    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + linesGrid + addForm + '</div>';
 }
 async function worksAct(body){
   try { S.works = await api("admin/works", body); safeRender(renderGoalStrip, $("goalStripWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
