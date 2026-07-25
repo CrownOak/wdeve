@@ -2658,8 +2658,14 @@ function renderFoot(){
     }
   } catch(e){}
   try {
+    // works rides along in parallel and fails alone — boot never blocks on it.
+    // (It was NOT fetched at boot at all before 2026-07-25, so the Works card +
+    // GOAL strip only appeared after an action that called refreshMe. The board
+    // was invisible on every fresh load since it shipped.)
+    var worksP = api("works").catch(function(){ return null; });
     var j = await api("me");
     S.me = j;
+    S.works = (await worksP) || null;
     showApp();
     renderAll();
     loadContracts();
