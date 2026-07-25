@@ -478,14 +478,23 @@
   .gs-blurb{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:4px; line-height:1.5; }
   .gs-nums{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:8px 0 5px; }
   .gs-nums b{ color:var(--ore); font-size:13px; }
-  .gs-decks{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:11px; }
-  @media(max-width:560px){ .gs-decks{ grid-template-columns:1fr; gap:12px; } }
-  .gs-deck{ min-width:0; border-top:1px solid var(--line-soft); padding-top:9px; }
-  .gs-k{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
-  .gs-v{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em; font-size:16px; color:var(--ore); }
-  .gs-why{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:4px; }
-  .gs-why b{ color:var(--silver); }
-  .gs-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:4px; line-height:1.5; }
+  .gs-sec{ border-top:1px solid var(--line-soft); margin-top:11px; padding-top:9px; }
+  .gs-k{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .gs-orerow{ display:flex; flex-wrap:wrap; gap:6px; }
+  .gs-ore{ font-family:var(--mono); font-size:11px; padding:3px 9px; border:1px solid var(--line); color:var(--silver-dim); }
+  .gs-ore i{ font-style:normal; color:var(--muted); }
+  .gs-ore u{ text-decoration:none; font-size:9px; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-left:4px; }
+  .gs-ore-pri{ border-color:var(--ore); color:var(--ore); box-shadow:0 0 10px -4px rgba(224,168,90,.8); }
+  .gs-ore-pri i{ color:var(--silver-dim); }
+  .gs-ore-pri b{ font-size:9px; letter-spacing:.1em; background:var(--ore); color:#04140a; padding:1px 5px; margin-left:4px; }
+  .gs-linegrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:6px; }
+  .gs-line{ font-family:var(--mono); font-size:10.5px; padding:5px 8px; border:1px solid var(--line); color:var(--silver-dim); display:flex; justify-content:space-between; align-items:center; gap:8px; min-width:0; }
+  .gs-line i{ font-style:normal; font-size:9px; letter-spacing:.08em; text-transform:uppercase; flex:0 0 auto; }
+  .gs-l-need{ opacity:.78; } .gs-l-need i{ color:var(--red,#f0817a); }
+  .gs-l-researching i{ color:#e0c05a; }
+  .gs-l-ready i{ color:var(--silver); }
+  .gs-l-running{ border-color:var(--ore); } .gs-l-running i{ color:var(--ore); }
+  .gs-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
   .gs-stock{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft); }
   .gs-c{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:2px 8px; border:1px solid var(--line); color:var(--silver-dim); }
   .gs-c-red{ color:var(--red,#f0817a); border-color:var(--red,#f0817a); }
@@ -1228,37 +1237,47 @@ function renderGoal(){
   var ctl = off ? '<span class="gs-ctl">'
     + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
     + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
-  // MINE deck: the ore in lights + which mineral it feeds. Only when the goal
-  // carries a directive (ore_name); a pure build goal renders build-only.
-  var mine = '';
-  if (g.ore){
-    mine = '<div class="gs-deck"><div class="gs-k">&#9935; MINE</div>' +
-      '<div class="gs-v" data-i18n-skip>'+esc(String(g.ore).toUpperCase())+'</div>' +
-      (g.oreReason?'<div class="gs-why"><span>for</span> <b data-i18n-skip>'+esc(String(g.oreReason).toUpperCase())+'</b><span>, the mineral we are short</span></div>':'') +
-      (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + '</div>';
-  }
-  var build = '<div class="gs-deck"><div class="gs-k">&#127981; BUILD</div>' +
-    '<div class="gs-v" data-i18n-skip>'+esc(g.item)+'</div>' +
-    '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span>built</span> &middot; '+pct+'%'
+  var bar = '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span data-i18n-skip>'+esc(g.item)+'</span> <span>built</span> &middot; '+pct+'%'
       + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
-      + '</div>' +
-    '<div class="pbar gsbar"><i style="width:'+pct+'%"></i></div></div>';
-  // STOCK chips: days-of-stock per mineral. Red under 10 days, amber under 30.
-  // A chip with buy:1 is bought at Amarr, never mined (Nocxium).
+      + '</div><div class="pbar gsbar"><i style="width:'+pct+'%"></i></div>';
+  // THE ORES WE MINE: the standing doctrine, priority glowing
+  var ores = '';
+  var co = S.works.coreOres;
+  if (co && co.length){
+    ores = '<div class="gs-sec"><div class="gs-k">&#9935; THE ORES WE MINE</div><div class="gs-orerow">'
+      + co.map(function(o){ var pri = o.role==='priority';
+        return '<span class="gs-ore'+(pri?' gs-ore-pri':'')+'" data-i18n-skip>'+esc(String(o.ore||'').toUpperCase())
+          + ' <i>&rarr; '+esc(o.min||'')+'</i>'+(pri?' <b>PRIORITY</b>':(o.role&&o.role!=='staple'?' <u>'+esc(o.role)+'</u>':''))+'</span>'; }).join('')
+      + '</div>' + (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + '</div>';
+  }
+  // THE LINES: the standing blueprint program, status at a glance
+  var lines = '';
+  var L = S.works.lines;
+  if (L && L.length){
+    lines = '<div class="gs-sec"><div class="gs-k">&#128296; THE LINES &middot; '+L.length+' blueprints</div><div class="gs-linegrid">'
+      + L.map(function(r){
+        return '<span class="gs-line gs-l-'+esc(r.status)+'"'+(r.note?' title="'+esc(r.note)+'"':'')+' data-i18n-skip>'+esc(r.item)
+          + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
+      + '</div></div>';
+  }
+  // stock chips: computed server-side (hangar snapshot / burn rates), never hand-fed
   var chips = '';
   if (g.stock && g.stock.length){
+    var SHORT = {Tritanium:'Trit',Pyerite:'Pyer',Mexallon:'Mex',Isogen:'Iso',Nocxium:'Nocx'};
+    var agoTxt = '';
+    if (g.stockAt){ var hAgo = Math.max(0, Math.round((Date.now()-Date.parse(g.stockAt))/3600000));
+      agoTxt = hAgo < 1 ? 'hangar counted just now' : 'hangar counted '+(hAgo>=48? Math.round(hAgo/24)+'d' : hAgo+'h')+' ago'; }
     chips = '<div class="gs-stock">' + g.stock.map(function(c){
-      var d = Number(c.d), cls = c.buy ? ' gs-c-buy' : d < 10 ? ' gs-c-red' : d < 30 ? ' gs-c-amber' : '';
-      return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(c.m)+' '+(c.buy?'BUY':(isFinite(d)?d+'d':'?'))+'</span>';
-    }).join('') + '<span class="gs-stocklbl">days of minerals in the hangar</span></div>';
+      var d = c.d==null? null : Number(c.d);
+      var cls = (d!=null && d<10 ? ' gs-c-red' : d!=null && d<30 ? ' gs-c-amber' : '') + (c.buy?' gs-c-buy':'');
+      return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(SHORT[c.m]||c.m)+' '+(d!=null?d+'d':'&mdash;')+(c.buy?' BUY':'')+'</span>';
+    }).join('') + '<span class="gs-stocklbl">days of minerals &middot; '+agoTxt+'</span></div>';
   }
   return '<div class="goalstrip'+(complete?' gs-complete':'')+'">' +
     '<div class="gs-badge">'+(complete?'&#9876; COMPLETE':'&#9874; CURRENT OP')+'</div>' +
     '<div class="gs-name"><span data-i18n-skip>'+esc(g.name)+'</span>'+ctl+'</div>' +
     (g.blurb?'<div class="gs-blurb">'+esc(g.blurb)+'</div>':'') +
-    '<div class="gs-decks">'+mine+build+'</div>' +
-    chips +
-    '</div>';
+    bar + ores + lines + chips + '</div>';
 }
 function goalDone(){ worksAct({action:'goal-done'}); }
 function goalArchive(){ if (confirm('Archive the current op goal? The strip disappears until a new goal is dictated.')) worksAct({action:'goal-archive'}); }
