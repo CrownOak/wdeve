@@ -89,6 +89,18 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .svwiz-step{ display:flex; gap:10px; font-family:var(--mono); font-size:12px; color:var(--silver-dim); line-height:1.6; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.04); }
 .svwiz-n{ flex:0 0 auto; width:22px; height:22px; border:1px solid var(--ore); color:var(--ore); display:flex; align-items:center; justify-content:center; font-weight:700; }
 .svwiz-amt{ font-family:var(--display); font-size:22px; color:var(--ore); letter-spacing:.03em; margin:10px 0; }
+.svstrip{ border-left:3px solid var(--ore); }
+#svTiles{ margin:0 0 12px; display:flex; }
+#svChips{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px; }
+.svchip{ display:flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--steel); padding:5px 8px; }
+.svchip .n{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+.svchip input{ width:84px; background:#0b0d0e; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:11.5px; padding:3px 6px; }
+.svchip button{ background:var(--ore); color:#04140a; border:0; font-family:var(--mono); font-size:10.5px; font-weight:700; padding:4px 9px; cursor:pointer; }
+#svFeed{ margin:8px 0 4px; }
+.svfeedline{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); padding:3px 0; border-bottom:1px solid rgba(255,255,255,.03); }
+.svfeedline .t{ color:var(--muted); margin-right:8px; }
+.svfeedline .est{ color:var(--ore); }
+.svman-h{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-top:12px; border-bottom:1px solid var(--line-soft); padding-bottom:4px; }
 .fgrid{ display:grid; grid-template-columns:280px 1fr 260px; gap:18px; align-items:start; }
 .scol{ position:sticky; top:12px; align-self:start; max-height:calc(100vh - 24px); overflow-y:auto; }
 @media(max-width:1150px){ /* medium: scout drops to a full-width row under the ledger */
@@ -453,19 +465,23 @@ tr.haulrow{ cursor:pointer; }
 
       <div id="soloView" style="display:none">
         <div class="svhead">&#129333; SOLO FLEET <button id="svBack" class="link">&larr; back to fleets</button></div>
-        <div class="svnote">Mine alone, log ore as you go, settle ONE contract at the end. The corp pays the standing
-          solo buyback rate on acceptance. Nobody sees your session but you.</div>
+        <div id="svStatus" class="thin svstrip"></div>
+        <div id="svTiles" class="totline"></div>
         <div id="svForm">
           <textarea id="sdrop" placeholder="paste ore from your hold (Name&#9;Qty per line, straight from the EVE client)"></textarea>
           <div class="svrow"><button id="sdropbtn" class="gobtn">LOG ORE</button><span id="sverr" class="err"></span></div>
+          <div id="svChips"></div>
+          <div id="svFeed"></div>
+          <div class="svman-h" id="svManH"></div>
           <div id="svList"></div>
-          <div class="svtotals" id="svTotals"></div>
           <div class="svrow">
             <button id="svSettle" class="gobtn">SETTLE UP &middot; CONTRACT TO THE CORP</button>
             <button id="svDiscard" class="link">discard session</button>
           </div>
         </div>
         <div id="svWiz" style="display:none"></div>
+        <div class="svnote">Nobody sees your session but you. Settle turns the whole list into ONE corp contract
+          at the standing solo rate, with the in game steps walked out for you.</div>
       </div>
 
       <div id="fleetTab">
@@ -786,42 +802,79 @@ tr.haulrow{ cursor:pointer; }
       +(mine?'<div class="fbc-mine">&#9733; you have drops here</div>':'')
       +'</div>';
     var c1=el("fbcorp1"); if(c1) c1.onclick=function(){ showView("ledger"); }; }
-  /* ---- solo session ---- */
+  /* ---- solo session (cockpit treatment, Kyle 2026-07-25) ---- */
   function soloEnter(){
     var ss=soloGet();
-    if(!ss){ ss={ startedAt:Date.now(), lines:[] }; soloSet(ss); }
+    if(!ss){ ss={ startedAt:Date.now(), lines:[], feed:[] }; soloSet(ss); }
+    if(!ss.feed) { ss.feed=[]; soloSet(ss); }
     el("svWiz").style.display="none"; el("svForm").style.display="";
     fetchWorks(renderSolo); renderSolo(); }
+  function soloAddLines(lines){
+    var ss=soloGet(); if(!ss){ ss={startedAt:Date.now(),lines:[],feed:[]}; }
+    if(!ss.feed) ss.feed=[];
+    lines.forEach(function(l){
+      var k=l.name.toLowerCase();
+      var hit=ss.lines.filter(function(x){ return x.name.toLowerCase()===k; })[0];
+      if(hit) hit.qty+=l.qty; else ss.lines.push({name:l.name, qty:l.qty});
+      ss.feed.unshift({ at:Date.now(), name:l.name, qty:l.qty }); });
+    ss.feed = ss.feed.slice(0,40);
+    soloSet(ss); renderSolo(); }
   function soloLog(){
     var t=el("sdrop").value||""; el("sverr").textContent="";
     var lines=parse(t);
     if(!lines.length){ el("sverr").textContent="nothing parseable in that paste"; return; }
-    var ss=soloGet(); if(!ss){ ss={startedAt:Date.now(),lines:[]}; }
-    lines.forEach(function(l){
-      var k=l.name.toLowerCase();
-      var hit=ss.lines.filter(function(x){ return x.name.toLowerCase()===k; })[0];
-      if(hit) hit.qty+=l.qty; else ss.lines.push({name:l.name, qty:l.qty}); });
-    soloSet(ss); el("sdrop").value=""; renderSolo(); }
+    soloAddLines(lines); el("sdrop").value=""; }
   function soloRemove(i){ var ss=soloGet(); if(!ss)return; ss.lines.splice(i,1); soloSet(ss); renderSolo(); }
+  function soloLineEst(l){
+    if(!DATA) return 0;
+    var v=valueLines([l], DATA, ORE_VOL, "jita");
+    return (WORKS_INFO&&WORKS_INFO.rate) ? Math.round(v.jita*WORKS_INFO.rate) : 0; }
   function renderSolo(){
-    var ss=soloGet(), list=el("svList"), tot=el("svTotals");
-    var L=(ss&&ss.lines)||[];
+    var ss=soloGet(), list=el("svList"), tot=el("svTiles");
+    var L=(ss&&ss.lines)||[], F=(ss&&ss.feed)||[];
+    // status strip: the one ore-accent line, same idiom as the op strip
+    var ago = ss ? hrs(Date.now()-(ss.startedAt||Date.now())) : "0";
+    el("svStatus").innerHTML = '&#9935; solo session &middot; running '+(ago==="0"?"just started":ago)
+      +' &middot; '+L.length+(L.length===1?' stack':' stacks')+' logged &middot; settles as ONE corp contract';
+    // tiles: your numbers, ledger-style
+    var units=0, m3=0, est=0, unmatched=0;
+    if(L.length && DATA){
+      var v=valueLines(L, DATA, ORE_VOL, "jita");
+      units=v.units; m3=v.m3; unmatched=v.unmatched;
+      est=(WORKS_INFO&&WORKS_INFO.rate)?Math.round(v.jita*WORKS_INFO.rate):0;
+    }
+    tot.innerHTML =
+      "<div><div class='k'>Corp pays about</div><div class='v good hero'>"+(est?isk(est):"&mdash;")+"</div></div>"
+      +"<div><div class='k'>Ore logged</div><div class='v'>"+units.toLocaleString()+"</div></div>"
+      +"<div><div class='k'>Volume</div><div class='v'>"+m3fmt(m3)+"</div></div>"
+      +(unmatched?"<div><div class='k'>Unpriced lines</div><div class='v warn'>"+unmatched+"</div></div>":"");
+    // quick-log chips: one per distinct ore, dial a number and hit LOG
+    var chips=el("svChips");
+    chips.innerHTML = L.slice(0,8).map(function(l,i){
+      return '<span class="svchip"><span class="n" data-i18n-skip>'+esc(l.name)+'</span>'
+        +'<input inputmode="numeric" id="svcq'+i+'" placeholder="qty">'
+        +'<button data-svchip="'+i+'">LOG</button></span>'; }).join('');
+    Array.prototype.forEach.call(chips.querySelectorAll("[data-svchip]"),function(bt){
+      bt.onclick=function(){
+        var i=Number(bt.getAttribute("data-svchip"));
+        var q=parseInt((el("svcq"+i).value||"").replace(/[,\s]/g,""),10);
+        if(!(q>0)){ toast("dial a number first, goblin"); return; }
+        soloAddLines([{name:L[i].name, qty:q}]); }; });
+    // feed: the last logs, timestamped, ledger-feed style
+    el("svFeed").innerHTML = F.slice(0,12).map(function(f){
+      var e=soloLineEst({name:f.name, qty:f.qty});
+      return '<div class="svfeedline"><span class="t">'+hhmm(f.at)+'</span><span data-i18n-skip>'
+        +esc(f.name)+' &times; '+Number(f.qty).toLocaleString()+'</span>'
+        +(e?' <span class="est">~'+isk(e)+'</span>':'')+'</div>'; }).join('');
+    // manifest: the merged stacks that settle
+    el("svManH").textContent = L.length ? ("manifest · "+L.length+(L.length===1?" stack":" stacks")) : "";
     list.innerHTML = L.length ? L.map(function(l,i){
       return '<div class="svline"><span class="n" data-i18n-skip>'+esc(l.name)+'</span>'
         +'<span class="q" data-i18n-skip>'+Number(l.qty).toLocaleString()+'</span>'
         +'<button class="x" data-svx="'+i+'" title="remove">&times;</button></div>'; }).join('')
-      : '<div class="fbempty">nothing logged yet. paste ore above as you mine.</div>';
+      : '<div class="fbempty">nothing logged yet. paste ore above as you mine, chips appear for repeat drops.</div>';
     Array.prototype.forEach.call(list.querySelectorAll("[data-svx]"),function(bt){
       bt.onclick=function(){ soloRemove(Number(bt.getAttribute("data-svx"))); }; });
-    var est="";
-    if(L.length && DATA){
-      var v=valueLines(L, DATA, ORE_VOL, "jita");
-      est = v.units.toLocaleString()+" units &middot; "+m3fmt(v.m3)+" m3";
-      if(WORKS_INFO&&WORKS_INFO.rate) est += ' &middot; corp pays about <b data-i18n-skip>'+isk(Math.round(v.jita*WORKS_INFO.rate))+'</b> ISK on acceptance';
-      else est += " &middot; corp price computed at settle";
-      if(v.unmatched) est += ' &middot; <span class="err">'+v.unmatched+' line'+(v.unmatched>1?'s':'')+' the table cannot price</span>';
-    }
-    tot.innerHTML=est;
     el("svSettle").disabled=!L.length; }
   function soloSettle(){
     var ss=soloGet(); if(!ss||!ss.lines.length) return;
