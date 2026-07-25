@@ -56,6 +56,39 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .pgrow .gobtn{ padding:9px 16px; }
 /* three columns (Kyle 2026-07-19): scout | ledger | roster+comms. The scout
    column is sticky so the bubble stays glanceable while the feed scrolls. */
+/* THE FLEET BOARD + SOLO FLEET */
+.fbhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:17px; color:var(--silver); margin:4px 0 12px; }
+.fbbtns{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.fbjoin{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+.fbcard{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); padding:12px 14px; margin-bottom:10px; cursor:pointer; max-width:560px; }
+.fbcard:hover{ border-color:var(--ore); }
+.fbc-top{ display:flex; align-items:center; gap:8px; }
+.fbc-dot{ width:8px; height:8px; border-radius:50%; background:var(--line); flex:0 0 auto; }
+.fbc-dot.on{ background:var(--ore); box-shadow:0 0 8px rgba(224,168,90,.9); animation:syspulse 2.6s infinite; }
+.fbc-name{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); flex:1 1 auto; min-width:0; }
+.fbc-basis{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; color:var(--ore); flex:0 0 auto; }
+.fbc-sub,.fbc-sub2{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:5px; }
+.fbc-sub2{ color:var(--muted); }
+.fbc-mine{ font-family:var(--mono); font-size:10.5px; color:var(--ore); margin-top:5px; }
+.fbempty{ font-family:var(--mono); font-size:11.5px; color:var(--muted); padding:8px 0; }
+.fbpri{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:12px; }
+.fbpri b{ color:var(--ore); }
+.fbback{ margin:0 0 8px; }
+.svhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:16px; color:var(--silver); margin:4px 0 8px; display:flex; align-items:center; gap:12px; }
+.svnote{ font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.55; max-width:560px; margin-bottom:12px; }
+#soloView{ max-width:620px; }
+#sdrop{ width:100%; min-height:90px; background:#0b0d0e; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12px; padding:9px; box-sizing:border-box; }
+.svrow{ display:flex; align-items:center; gap:12px; margin:9px 0; flex-wrap:wrap; }
+#svList{ margin-top:6px; }
+.svline{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; color:var(--silver-dim); padding:4px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.svline .n{ flex:1 1 auto; min-width:0; }
+.svline .q{ color:var(--ore); }
+.svline .x{ background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); cursor:pointer; padding:1px 7px; }
+.svtotals{ font-family:var(--mono); font-size:12px; color:var(--silver); margin:10px 0 2px; }
+.svtotals b{ color:var(--ore); font-size:14px; }
+.svwiz-step{ display:flex; gap:10px; font-family:var(--mono); font-size:12px; color:var(--silver-dim); line-height:1.6; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.svwiz-n{ flex:0 0 auto; width:22px; height:22px; border:1px solid var(--ore); color:var(--ore); display:flex; align-items:center; justify-content:center; font-weight:700; }
+.svwiz-amt{ font-family:var(--display); font-size:22px; color:var(--ore); letter-spacing:.03em; margin:10px 0; }
 .fgrid{ display:grid; grid-template-columns:280px 1fr 260px; gap:18px; align-items:start; }
 .scol{ position:sticky; top:12px; align-self:start; max-height:calc(100vh - 24px); overflow-y:auto; }
 @media(max-width:1150px){ /* medium: scout drops to a full-width row under the ledger */
@@ -404,7 +437,39 @@ tr.haulrow{ cursor:pointer; }
         <button id="rswx" class="link">cancel</button><span id="rswerr" class="err"></span></div>
       </div>
 
+      <!-- THE FLEET BOARD: the front door (spec BONK-FLEET-BOARD-SPEC.md).
+           v1: one corp card (multi-op substrate lands next); solo = client-side
+           session settled through the portal contracts pipeline. -->
+      <div id="fleetBoard" style="display:none">
+        <div class="fbhead">&#9935; PICK YOUR FLEET</div>
+        <div class="fbbtns">
+          <button id="fbCorp" class="gobtn">+ START CORP FLEET</button>
+          <button id="fbSolo" class="gobtn">+ START SOLO FLEET</button>
+        </div>
+        <div class="fbjoin">JOIN A FLEET IN SPACE</div>
+        <div id="fbCards"></div>
+        <div id="fbPriority" class="fbpri" style="display:none"></div>
+      </div>
+
+      <div id="soloView" style="display:none">
+        <div class="svhead">&#129333; SOLO FLEET <button id="svBack" class="link">&larr; back to fleets</button></div>
+        <div class="svnote">Mine alone, log ore as you go, settle ONE contract at the end. The corp pays the standing
+          solo buyback rate on acceptance. Nobody sees your session but you.</div>
+        <div id="svForm">
+          <textarea id="sdrop" placeholder="paste ore from your hold (Name&#9;Qty per line, straight from the EVE client)"></textarea>
+          <div class="svrow"><button id="sdropbtn" class="gobtn">LOG ORE</button><span id="sverr" class="err"></span></div>
+          <div id="svList"></div>
+          <div class="svtotals" id="svTotals"></div>
+          <div class="svrow">
+            <button id="svSettle" class="gobtn">SETTLE UP &middot; CONTRACT TO THE CORP</button>
+            <button id="svDiscard" class="link">discard session</button>
+          </div>
+        </div>
+        <div id="svWiz" style="display:none"></div>
+      </div>
+
       <div id="fleetTab">
+        <div class="fbback"><button id="toBoard" class="link">&#9935; fleets</button></div>
         <div class="fgrid">
           <!-- scout column (Kyle: at a glance, left of the paste box). Static DOM
                per DR-FLEET-12: only #scout / #scfrom / #scfoot / #sckillwrap
@@ -654,14 +719,14 @@ tr.haulrow{ cursor:pointer; }
       if(!(d&&d.ok)) throw "bad";
       unlocked=true; role=d.role||""; lsSet(LS_TOK,pw);
       P=d; lsSet(LS_CACHE, JSON.stringify(d));
-      showGate(false); offline(false); renderRoleChip(); renderAll();
+      showGate(false); offline(false); renderRoleChip(); renderAll(); initViews();
       if(!who) showNamebox(true);
       bump(); schedule();
     }).catch(function(err){
       if(err==="unauthorized"){ token=""; lsDel(LS_TOK); gerr("Wrong password."); showGate(true); }
       else{
         var c=null; try{ c=JSON.parse(lsGet(LS_CACHE)||"null"); }catch(e){}
-        if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderRoleChip(); renderAll(); bump(); schedule(); }
+        if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderRoleChip(); renderAll(); initViews(); bump(); schedule(); }
         else gerr("Cannot reach the fleet store, try again.");
       }
     });
@@ -670,6 +735,145 @@ tr.haulrow{ cursor:pointer; }
     var p=el("fpw"); if(p) p.value=""; gerr(""); rswShow(false); showGate(true); }
   el("funlock").onclick=function(){ var pw=(el("fpw").value||"").trim(); if(pw) unlock(pw); };
   el("fpw").addEventListener("keydown",function(e){ if(e.key==="Enter") el("funlock").click(); });
+
+  /* ================= THE FLEET BOARD + SOLO FLEET (spec BONK-FLEET-BOARD-SPEC.md) =================
+     v1: board fronts the ONE corp op (multi-op substrate is the next worker build);
+     solo fleets are client-side sessions settled through the portal contracts
+     pipeline (same-origin session cookie), so the corp money DO is never touched. */
+  var LS_VIEW="bonk_fleet_view", SOLO_LS="bonk_solo_v1", curView="ledger", WORKS_INFO=null;
+  function soloGet(){ try{ return JSON.parse(lsGet(SOLO_LS)||"null"); }catch(e){ return null; } }
+  function soloSet(s){ lsSet(SOLO_LS, JSON.stringify(s)); }
+  function showView(v){ curView=v; lsSet(LS_VIEW,v);
+    el("fleetTab").style.display = v==="ledger"?"":"none";
+    el("fleetBoard").style.display = v==="board"?"":"none";
+    el("soloView").style.display = v==="solo"?"":"none";
+    if(v==="board"){ fetchWorks(); renderBoard(); }
+    if(v==="solo"){ soloEnter(); }
+    if(v==="ledger"){ bump(); } }
+  function initViews(){
+    var ss=soloGet();
+    el("fbSolo").textContent = (ss&&ss.lines&&ss.lines.length) ? "RESUME SOLO FLEET" : "+ START SOLO FLEET";
+    var v=lsGet(LS_VIEW);
+    if(v==="ledger") showView("ledger");
+    else if(v==="solo"&&ss) showView("solo");
+    else showView("board"); }
+  function fetchWorks(cb){
+    if(WORKS_INFO){ if(cb)cb(); return; }
+    fetch("/api/works",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; }).then(function(w){
+      if(w&&w.ok){ WORKS_INFO={ rate:(typeof w.contractRate==="number"?w.contractRate:null),
+        ore:(w.goal&&w.goal.ore)||null, why:(w.goal&&w.goal.oreReason)||null };
+        var fp=el("fbPriority");
+        if(fp&&WORKS_INFO.ore){ fp.style.display="";
+          fp.innerHTML='corp priority ore: <b data-i18n-skip>'+esc(String(WORKS_INFO.ore).toUpperCase())+'</b>'
+            +(WORKS_INFO.why?' (for '+esc(WORKS_INFO.why)+')':''); } }
+      if(cb)cb();
+    }).catch(function(){ if(cb)cb(); }); }
+  function renderBoard(){
+    var b=el("fleetBoard"); if(!b||b.style.display==="none") return;
+    var cards=el("fbCards");
+    if(!P){ cards.innerHTML='<div class="fbempty">no fleet data yet, goblin. one breath.</div>'; return; }
+    var ms=P.members||[], orcas=0, online=0, i;
+    for(i=0;i<ms.length;i++){ if(ms[i].orca)orcas++; if(ms[i].online)online++; }
+    var mine=(P.entries||[]).some(function(e){ return isMine(e.who); });
+    var live=online>0, sys=P.system&&P.system.name;
+    cards.innerHTML = '<div class="fbcard" id="fbcorp1">'
+      +'<div class="fbc-top"><span class="fbc-dot'+(live?' on':'')+'"></span>'
+      +'<span class="fbc-name" data-i18n-skip>'+esc((P.lead||"CORP").toUpperCase()+"'S FLEET")+'</span>'
+      +'<span class="fbc-basis">'+(live?'LIVE &middot; ':'')+esc(basisLabel())+'</span></div>'
+      +'<div class="fbc-sub" data-i18n-skip>&#128081; '+esc(P.lead||"crown unclaimed")+(sys?' &middot; &#128205; '+esc(sys):'')
+      +' &middot; '+ms.length+(ms.length===1?' goblin':' goblins')+(orcas?' &middot; &#128011; '+orcas:'')+'</div>'
+      +'<div class="fbc-sub2">'+isk(P.fleetDisplay||0)+' ISK buyback so far'+(P.finished?' &middot; FINISHING':'')+'</div>'
+      +(mine?'<div class="fbc-mine">&#9733; you have drops here</div>':'')
+      +'</div>';
+    var c1=el("fbcorp1"); if(c1) c1.onclick=function(){ showView("ledger"); }; }
+  /* ---- solo session ---- */
+  function soloEnter(){
+    var ss=soloGet();
+    if(!ss){ ss={ startedAt:Date.now(), lines:[] }; soloSet(ss); }
+    el("svWiz").style.display="none"; el("svForm").style.display="";
+    fetchWorks(renderSolo); renderSolo(); }
+  function soloLog(){
+    var t=el("sdrop").value||""; el("sverr").textContent="";
+    var lines=parse(t);
+    if(!lines.length){ el("sverr").textContent="nothing parseable in that paste"; return; }
+    var ss=soloGet(); if(!ss){ ss={startedAt:Date.now(),lines:[]}; }
+    lines.forEach(function(l){
+      var k=l.name.toLowerCase();
+      var hit=ss.lines.filter(function(x){ return x.name.toLowerCase()===k; })[0];
+      if(hit) hit.qty+=l.qty; else ss.lines.push({name:l.name, qty:l.qty}); });
+    soloSet(ss); el("sdrop").value=""; renderSolo(); }
+  function soloRemove(i){ var ss=soloGet(); if(!ss)return; ss.lines.splice(i,1); soloSet(ss); renderSolo(); }
+  function renderSolo(){
+    var ss=soloGet(), list=el("svList"), tot=el("svTotals");
+    var L=(ss&&ss.lines)||[];
+    list.innerHTML = L.length ? L.map(function(l,i){
+      return '<div class="svline"><span class="n" data-i18n-skip>'+esc(l.name)+'</span>'
+        +'<span class="q" data-i18n-skip>'+Number(l.qty).toLocaleString()+'</span>'
+        +'<button class="x" data-svx="'+i+'" title="remove">&times;</button></div>'; }).join('')
+      : '<div class="fbempty">nothing logged yet. paste ore above as you mine.</div>';
+    Array.prototype.forEach.call(list.querySelectorAll("[data-svx]"),function(bt){
+      bt.onclick=function(){ soloRemove(Number(bt.getAttribute("data-svx"))); }; });
+    var est="";
+    if(L.length && DATA){
+      var v=valueLines(L, DATA, ORE_VOL, "jita");
+      est = v.units.toLocaleString()+" units &middot; "+m3fmt(v.m3)+" m3";
+      if(WORKS_INFO&&WORKS_INFO.rate) est += ' &middot; corp pays about <b data-i18n-skip>'+isk(Math.round(v.jita*WORKS_INFO.rate))+'</b> ISK on acceptance';
+      else est += " &middot; corp price computed at settle";
+      if(v.unmatched) est += ' &middot; <span class="err">'+v.unmatched+' line'+(v.unmatched>1?'s':'')+' the table cannot price</span>';
+    }
+    tot.innerHTML=est;
+    el("svSettle").disabled=!L.length; }
+  function soloSettle(){
+    var ss=soloGet(); if(!ss||!ss.lines.length) return;
+    var btn=el("svSettle"); btn.disabled=true; btn.textContent="SETTLING...";
+    var raw=ss.lines.map(function(l){ return l.name+"\t"+l.qty; }).join("\n");
+    fetch("/api/contracts/add",{ method:"POST", credentials:"same-origin",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ raw: raw, note: "SOLO FLEET session" }) })
+    .then(function(r){ return r.json().then(function(j){ return {st:r.status, j:j}; }); })
+    .then(function(x){
+      btn.disabled=false; btn.textContent="SETTLE UP \u00b7 CONTRACT TO THE CORP";
+      if(!(x.j&&x.j.ok)){
+        if(x.st===401) toast("Your portal session is gone. Log into the portal, then settle again. Your ore list is safe here.");
+        else toast(String((x.j&&x.j.error)||"settle failed, try again"));
+        return; }
+      var c=x.j.contract||{};
+      lsDel(SOLO_LS); initViews();
+      soloWizard(c); })
+    .catch(function(){ btn.disabled=false; btn.textContent="SETTLE UP \u00b7 CONTRACT TO THE CORP";
+      toast("Cannot reach the portal, still offline? Your ore list is safe here."); }); }
+  function soloWizard(c){
+    var amt=Number(c.payout)||0;
+    el("svForm").style.display="none";
+    var w=el("svWiz"); w.style.display="";
+    w.innerHTML =
+      '<div class="svtotals">Logged with the corp, pending review. Now make the in game contract:</div>'
+      +'<div class="svwiz-amt" data-i18n-skip>'+amt.toLocaleString()+' ISK <button class="wk-b" id="wizCopy" title="copy the number">copy</button></div>'
+      +'<div class="svwiz-step"><span class="svwiz-n">1</span><span>In EVE, open your <b>Item Hangar</b> at THE GOBLIN DEN and select the exact ore stacks you logged (Ctrl+click each).</span></div>'
+      +'<div class="svwiz-step"><span class="svwiz-n">2</span><span>Right click &rarr; <b>Create Contract</b>. Type: <b>Item Exchange</b>. Availability: <b>Private</b> &rarr; to <b>Wealthy Dropouts</b> (the corp, exact name).</span></div>'
+      +'<div class="svwiz-step"><span class="svwiz-n">3</span><span>In <b>I Will Receive</b>, enter the number above: <b data-i18n-skip>'+amt.toLocaleString()+' ISK</b>. That is the corp price for this haul.</span></div>'
+      +'<div class="svwiz-step"><span class="svwiz-n">4</span><span>Expiration <b>3 days</b>, no collateral, create it.</span></div>'
+      +'<div class="svwiz-step"><span class="svwiz-n">5</span><span>Done. An officer accepts both sides, the ISK lands, your career page climbs. The ore must flow.</span></div>'
+      +'<div class="svrow"><button id="wizDone" class="gobtn">BACK TO FLEETS</button></div>';
+    var cp=el("wizCopy"); if(cp) cp.onclick=function(){
+      try{ navigator.clipboard.writeText(String(amt)); toast("Amount copied."); }catch(e){ toast(String(amt)); } };
+    var dn=el("wizDone"); if(dn) dn.onclick=function(){ showView("board"); }; }
+  function soloDiscard(){
+    if(!confirm("Discard this solo session? The logged list is gone (your ore in game is obviously fine).")) return;
+    lsDel(SOLO_LS); initViews(); showView("board"); }
+  el("fbSolo").onclick=function(){
+    fetch("/api/whoami",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; }).then(function(wd){
+      if(!(wd&&wd.loggedIn)){ toast("Solo fleets settle through your goblin account. Log into the portal first, then come back."); return; }
+      showView("solo");
+    }).catch(function(){ toast("Cannot reach the portal right now."); }); };
+  el("fbCorp").onclick=function(){
+    if(opKeys()){ showView("ledger"); toast("You hold command. The ledger is yours; Reset starts a fresh op."); }
+    else toast("Corp fleets are opened by fleet command. Join the one in space, or go solo."); };
+  el("svBack").onclick=function(){ showView("board"); };
+  el("sdropbtn").onclick=soloLog;
+  el("svSettle").onclick=soloSettle;
+  el("svDiscard").onclick=soloDiscard;
+  var tbb=el("toBoard"); if(tbb) tbb.onclick=function(){ showView("board"); };
   el("flock").onclick=lock;
 
   // ---------- role chip + live password switch ----------
@@ -848,6 +1052,8 @@ tr.haulrow{ cursor:pointer; }
       : (Date.now()-lastActive>600000 ? 30000 : 5000)); }
   function tick(){
     if(!unlocked) return;
+    // solo sessions never touch the corp op: no presence lurking on the roster
+    if(curView==="solo"){ schedule(); return; }
     var hidden = document.visibilityState!=="visible";
     flushOutbox();
     // prices: recover if we never got them, and track refine's hourly rebake on long ops
@@ -1087,6 +1293,7 @@ tr.haulrow{ cursor:pointer; }
   function basisLabel(b){ return (b||basisNow())==="jita" ? "Jita" : "Rens"; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
   function renderAll(){ if(!P) return;
+    if (typeof renderBoard==="function") renderBoard(); // board card stays live
     renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
     renderScoutOrigin();
     // ambient bubble needs the map + kills even while the card is collapsed;
