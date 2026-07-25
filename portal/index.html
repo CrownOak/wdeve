@@ -478,6 +478,20 @@
   .gs-blurb{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:4px; line-height:1.5; }
   .gs-nums{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:8px 0 5px; }
   .gs-nums b{ color:var(--ore); font-size:13px; }
+  .gs-decks{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:11px; }
+  @media(max-width:560px){ .gs-decks{ grid-template-columns:1fr; gap:12px; } }
+  .gs-deck{ min-width:0; border-top:1px solid var(--line-soft); padding-top:9px; }
+  .gs-k{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+  .gs-v{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em; font-size:16px; color:var(--ore); }
+  .gs-why{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:4px; }
+  .gs-why b{ color:var(--silver); }
+  .gs-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:4px; line-height:1.5; }
+  .gs-stock{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft); }
+  .gs-c{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:2px 8px; border:1px solid var(--line); color:var(--silver-dim); }
+  .gs-c-red{ color:var(--red,#f0817a); border-color:var(--red,#f0817a); }
+  .gs-c-amber{ color:#e0c05a; border-color:rgba(224,192,90,.55); }
+  .gs-c-buy{ color:var(--muted); border-style:dashed; }
+  .gs-stocklbl{ font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-left:2px; }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -1214,14 +1228,36 @@ function renderGoal(){
   var ctl = off ? '<span class="gs-ctl">'
     + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
     + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
+  // MINE deck: the ore in lights + which mineral it feeds. Only when the goal
+  // carries a directive (ore_name); a pure build goal renders build-only.
+  var mine = '';
+  if (g.ore){
+    mine = '<div class="gs-deck"><div class="gs-k">&#9935; MINE</div>' +
+      '<div class="gs-v" data-i18n-skip>'+esc(String(g.ore).toUpperCase())+'</div>' +
+      (g.oreReason?'<div class="gs-why"><span>for</span> <b data-i18n-skip>'+esc(String(g.oreReason).toUpperCase())+'</b><span>, the mineral we are short</span></div>':'') +
+      (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + '</div>';
+  }
+  var build = '<div class="gs-deck"><div class="gs-k">&#127981; BUILD</div>' +
+    '<div class="gs-v" data-i18n-skip>'+esc(g.item)+'</div>' +
+    '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span>built</span> &middot; '+pct+'%'
+      + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
+      + '</div>' +
+    '<div class="pbar gsbar"><i style="width:'+pct+'%"></i></div></div>';
+  // STOCK chips: days-of-stock per mineral. Red under 10 days, amber under 30.
+  // A chip with buy:1 is bought at Amarr, never mined (Nocxium).
+  var chips = '';
+  if (g.stock && g.stock.length){
+    chips = '<div class="gs-stock">' + g.stock.map(function(c){
+      var d = Number(c.d), cls = c.buy ? ' gs-c-buy' : d < 10 ? ' gs-c-red' : d < 30 ? ' gs-c-amber' : '';
+      return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(c.m)+' '+(c.buy?'BUY':(isFinite(d)?d+'d':'?'))+'</span>';
+    }).join('') + '<span class="gs-stocklbl">days of minerals in the hangar</span></div>';
+  }
   return '<div class="goalstrip'+(complete?' gs-complete':'')+'">' +
     '<div class="gs-badge">'+(complete?'&#9876; COMPLETE':'&#9874; CURRENT OP')+'</div>' +
     '<div class="gs-name"><span data-i18n-skip>'+esc(g.name)+'</span>'+ctl+'</div>' +
     (g.blurb?'<div class="gs-blurb">'+esc(g.blurb)+'</div>':'') +
-    '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+' '+esc(g.item)+'</span> <span>built</span> &middot; '+pct+'%'
-      + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
-      + '</div>' +
-    '<div class="pbar gsbar"><i style="width:'+pct+'%"></i></div>' +
+    '<div class="gs-decks">'+mine+build+'</div>' +
+    chips +
     '</div>';
 }
 function goalDone(){ worksAct({action:'goal-done'}); }
