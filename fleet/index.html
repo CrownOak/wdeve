@@ -636,9 +636,18 @@ tr.haulrow{ cursor:pointer; }
   // Basis by ore family (Kyle 2026-07-26). MUST match ore-calc/ore_page.py and
   // bonk-portal/src/valuation.js or the ledger and the calculator pay differently
   // for the same rock. Empire rock values lower; the headline rate is unchanged.
-  var EFF_NULL=0.70, EFF_EMPIRE=0.56;
+  var EFF_NULL=0.70, EFF_EMPIRE=0.56, BASIS_ON=true;
   var NULL_ORE={"Arkonor":1,"Bistot":1,"Spodumain":1,"Mercoxit":1,"Crokite":1};
-  function effFor(g){ return NULL_ORE[g] ? EFF_NULL : EFF_EMPIRE; }
+  function effFor(g){ if(!BASIS_ON) return EFF_NULL; return NULL_ORE[g] ? EFF_NULL : EFF_EMPIRE; }
+  // Live override from the portal (same source the calculator reads) so the ledger
+  // can never drift from /refine. Values above are the offline fallback.
+  (function(){ try{ fetch("/api/basis").then(function(r){ return r.json(); }).then(function(b){
+    if(!b||!b.ok) return;
+    if(typeof b.empire==="number") EFF_EMPIRE=b.empire;
+    if(typeof b.null==="number") EFF_NULL=b.null;
+    BASIS_ON = b.on !== false;
+    if(Array.isArray(b.nullGroups)){ NULL_ORE={}; b.nullGroups.forEach(function(g){ NULL_ORE[g]=1; }); }
+  }).catch(function(){}); }catch(e){} })();
   // price of one mineral at the op's chosen market. Jita is the default basis
   // (matches the worker's fresh-round default since 2026-07-12); an op may pick
   // Rens, and where a mineral has no Rens order (r=0, a few exotic moon
