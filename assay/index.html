@@ -26,7 +26,7 @@
     cursor:pointer; white-space:nowrap; user-select:none; }
   table.as th:hover{ color:var(--ore); }
   table.as th.num, table.as td.num{ text-align:right; }
-  table.as td{ padding:6px 9px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  table.as td{ padding:6px 9px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); text-align:left; }
   table.as td.num{ font-family:var(--mono); color:var(--silver); white-space:nowrap; }
   table.as tr:hover td{ background:rgba(70,255,94,.04); }
   table.as tr.top td{ color:var(--silver); }
@@ -58,10 +58,11 @@
   /* THE CHAIN */
   .chain{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 16px; margin:0 0 14px; }
   .chain h3{ margin:0 0 4px; font-family:var(--display); font-size:15px; color:var(--silver); font-weight:700; }
-  td.mt{ font-family:var(--mono); font-size:12px; color:var(--muted); text-align:center; padding:26px 12px; }
+  /* outranks "table.as td" above, which is more specific than a bare td.mt */
+  table.as td.mt{ font-family:var(--mono); font-size:12px; color:var(--muted); text-align:center; padding:26px 12px; }
   .chain .sub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:10px; }
   .chain table{ width:100%; border-collapse:collapse; font-size:12.5px; }
-  .chain td{ padding:4px 8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  .chain td{ padding:4px 8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); text-align:left; }
   .chain td.q{ font-family:var(--mono); text-align:right; color:var(--silver); white-space:nowrap; }
   .chain td.cov{ font-family:var(--mono); text-align:right; white-space:nowrap; }
   .chain .ok{ color:var(--ore); } .chain .warn{ color:var(--amber,#f0c674); } .chain .bad{ color:var(--red,#f0817a); }
@@ -223,13 +224,22 @@ function render(){
   var q=S.q.toLowerCase();
   if(q) rows=rows.filter(function(r){ return ((r.ore||r.name||"")+" "+(r.family||"")).toLowerCase().indexOf(q)>=0; });
   var key=S.sort[tab], dir=S.sort.dir;
-  rows.sort(function(a,b){ var x=a[key],y=b[key];
-    if(typeof x==="string") return dir*String(x).localeCompare(String(y));
-    return dir*((y||0)-(x||0))*-1*-1; });
-  if(typeof rows[0]!=="undefined" && typeof rows[0][key]!=="string") rows.sort(function(a,b){return dir*((b[key]||0)-(a[key]||0));});
+  // dir -1 means the header shows a down arrow, which has to mean biggest first.
+  // The old form reduced to (a-b) at dir -1, so every numeric column ranked backwards
+  // and the .top highlight landed on the WORST row while TONIGHT named the best one.
+  rows.sort(function(a,b){
+    var x=a[key], y=b[key];
+    if(typeof x==="string"||typeof y==="string")
+      return dir<0 ? String(y).localeCompare(String(x)) : String(x).localeCompare(String(y));
+    return dir<0 ? ((y||0)-(x||0)) : ((x||0)-(y||0));
+  });
   $("th").innerHTML="<tr>"+COLS[tab].map(function(c){
     return '<th class="'+(c[2]?"num":"")+'" data-k="'+c[0]+'">'+c[1]+(S.sort[tab]===c[0]?(dir<0?" ▾":" ▴"):"")+"</th>";
   }).join("")+"</tr>";
+  // the row the TONIGHT band names, so the highlight and the verb always agree
+  var recIdx = -1;
+  if(tab==="ore"){ for(var ri=0;ri<rows.length;ri++){ if(!RESTRICTED[rows[ri].family]){ recIdx=ri; break; } } }
+  else recIdx = rows.length?0:-1;
   $("tb").innerHTML=rows.map(function(r,i){
     if(tab==="ore"){
       var fl="";
@@ -237,11 +247,11 @@ function render(){
       if(r.ice) fl+='<span class="fl">ice</span>';
       if(r.thin) fl+='<span class="fl">thin</span>';
       if(r.broken) fl+='<span class="fl ev">broken market</span>';
-      return '<tr class="'+(i===0?"top ":"")+(RESTRICTED[r.family]?"rest":"")+'"><td>'+esc(r.ore)+'</td>'
+      return '<tr class="'+(i===recIdx?"top ":"")+(RESTRICTED[r.family]?"rest":"")+'"><td>'+esc(r.ore)+'</td>'
         +'<td class="num">'+n(r.corp_per_m3)+'</td><td class="num">'+n(r.pays_per_m3)+'</td>'
         +'<td class="num">'+(r.basis||0).toFixed(2)+'</td><td>'+fl+'</td></tr>';
     }
-    return '<tr class="'+(i===0?"top":"")+'"><td>'+esc(r.name)+'</td>'
+    return '<tr class="'+(i===recIdx?"top":"")+'"><td>'+esc(r.name)+'</td>'
       +'<td class="num">'+m(r.daily_profit)+'</td><td class="num">'+n(r.margin)+'%</td>'
       +'<td class="num">'+n(r.ourore)+'%</td><td class="num">'+n(r.absorbs)+'</td>'
       +'<td class="num">'+m(r.slot_hour)+'</td></tr>';
