@@ -32,6 +32,7 @@
   table.as tr:hover td{ background:rgba(70,255,94,.04); }
   table.as tr.top td{ color:var(--silver); }
   table.as tr.top td.num{ color:var(--ore); font-weight:700; }
+  table.as tr.unreach td{ opacity:.5; }
   table.as tr.rest td:first-child::after{ content:" officers only"; font-family:var(--mono);
     font-size:9px; letter-spacing:.06em; color:var(--amber,#f0c674); margin-left:6px; }
   .fl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.05em; color:var(--muted); margin-left:5px; }
@@ -100,6 +101,7 @@
       <div class="tools">
         <input id="q" placeholder="filter&hellip;" autocomplete="off" spellcheck="false">
         <span class="hint" id="hint"></span>
+        <label class="hint" style="cursor:pointer"><input type="checkbox" id="showAll"> show rock we cannot mine</label>
       </div>
       <div class="wrapx"><table class="as" id="tbl"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
       <div id="fits" style="display:none"></div>
@@ -110,7 +112,7 @@
 /* THE ASSAY. Reads the same officer-gated endpoint the portal panels read, so there is
    exactly one set of numbers behind every surface. No economics are computed here; this
    page only sorts and explains what the nightly run produced. */
-var S={ore:[],lines:[],stock:null,pick:null,tab:"ore",sort:{ore:"corp_per_m3",lines:"daily_profit",dir:-1},q:""};
+var S={ore:[],lines:[],stock:null,pick:null,tab:"ore",showAll:false,sort:{ore:"corp_per_m3",lines:"daily_profit",dir:-1},q:""};
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function n(v){return (v||0).toLocaleString();}
@@ -118,7 +120,7 @@ function m(v){return ((v||0)/1e6).toFixed(1)+"M";}
 
 var COLS={
   ore:[["ore","Ore",0],["corp_per_m3","ISK / raw m3",1],["pays_per_m3","pays miner",1],
-       ["basis","basis",1],["flags","",0]],
+       ["basis","basis",1],["source","from",0],["flags","",0]],
   lines:[["name","Module",0],["daily_profit","profit/day",1],["margin","margin",1],
          ["ourore","our ore",1],["absorbs","absorbs/day",1],["slot_hour","ISK/slot-hr",1]]
 };
@@ -184,7 +186,9 @@ function renderChain(){
 /* ---- v2: TONIGHT. Three verbs, four seconds. ---- */
 function renderTonight(){
   var el=$("tonight"); if(!el) return;
-  var SAFE = S.ore.filter(function(r){ return !RESTRICTED[r.family]; });
+  // reachable first: the board once led with Shining Monazite, an R64 moon ore that
+  // only comes out of a drill on an Athanor we have not built.
+  var SAFE = S.ore.filter(function(r){ return r.reachable!==false && !RESTRICTED[r.family]; });
   var best = bestPerFamily(SAFE).sort(function(a,b){return b.corp_per_m3-a.corp_per_m3;})[0];
   var line = S.lines.slice().sort(function(a,b){return b.daily_profit-a.daily_profit;})[0];
   // binding constraint: the thinnest mineral any top line depends on
@@ -199,7 +203,9 @@ function renderTonight(){
   }
   var html='<div class="tonight">';
   if(best) html+='<div class="tn-row"><span class="tn-verb">MINE</span><span class="tn-what">'+esc(best.ore)
-    +'</span><span class="tn-sub">'+n(best.corp_per_m3)+' ISK per raw m3 &middot; highsec &middot; Hulk with Modulated Strip Miner II</span></div>';
+    +'</span><span class="tn-sub">'+n(best.corp_per_m3)+' ISK per raw m3 &middot; '
+    +(best.source==="ice" ? 'ice belt &middot; Mackinaw or Hulk with Ice Harvester II'
+                          : 'asteroid belt &middot; Hulk with Modulated Strip Miner II')+'</span></div>';
   if(line) html+='<div class="tn-row"><span class="tn-verb">BUILD</span><span class="tn-what">'+esc(line.name)
     +'</span><span class="tn-sub">'+n(Math.round(line.build_day))+'/day &middot; '+m(line.daily_profit)+' a day &middot; '+n(line.ourore)+'% our own ore</span></div>';
   if(worst) html+='<div class="tn-row tn-block"><span class="tn-verb">BLOCKED</span><span class="tn-what">'+esc(worst.m)
@@ -221,7 +227,8 @@ function render(){
   $("tbl").style.display  = tab==="fits"?"none":"";
   $("q").style.display    = tab==="fits"?"none":"";
   if(tab==="fits"){ renderFits(); return; }
-  var rows = tab==="ore" ? bestPerFamily(S.ore) : S.lines.slice();
+  var pool = tab==="ore" ? (S.showAll ? S.ore : S.ore.filter(function(r){return r.reachable!==false;})) : null;
+  var rows = tab==="ore" ? bestPerFamily(pool) : S.lines.slice();
   var q=S.q.toLowerCase();
   if(q) rows=rows.filter(function(r){ return ((r.ore||r.name||"")+" "+(r.family||"")).toLowerCase().indexOf(q)>=0; });
   var key=S.sort[tab], dir=S.sort.dir;
@@ -248,9 +255,12 @@ function render(){
       if(r.ice) fl+='<span class="fl">ice</span>';
       if(r.thin) fl+='<span class="fl">thin</span>';
       if(r.broken) fl+='<span class="fl ev">broken market</span>';
-      return '<tr class="'+(i===recIdx?"top ":"")+(RESTRICTED[r.family]?"rest":"")+'"><td>'+esc(r.ore)+'</td>'
+      var srcTxt = r.source==="moon" ? '<span class="fl ev">moon drill</span>'
+                 : r.source==="pochven" ? '<span class="fl ev">pochven</span>'
+                 : (r.source==="ice" ? '<span class="fl">ice belt</span>' : '<span class="fl">belt</span>');
+      return '<tr class="'+(i===recIdx?"top ":"")+(RESTRICTED[r.family]?"rest ":"")+(r.reachable===false?"unreach":"")+'"><td>'+esc(r.ore)+'</td>'
         +'<td class="num">'+n(r.corp_per_m3)+'</td><td class="num">'+n(r.pays_per_m3)+'</td>'
-        +'<td class="num">'+(r.basis||0).toFixed(2)+'</td><td>'+fl+'</td></tr>';
+        +'<td class="num">'+(r.basis||0).toFixed(2)+'</td><td>'+srcTxt+'</td><td>'+fl+'</td></tr>';
     }
     return '<tr class="'+(i===recIdx?"top":"")+'"><td>'+esc(r.name)+'</td>'
       +'<td class="num">'+m(r.daily_profit)+'</td><td class="num">'+n(r.margin)+'%</td>'
@@ -270,7 +280,9 @@ function render(){
   $("note").innerHTML = tab==="ore"
     ? "Ranked on ISK per RAW m&sup3;, which is what the mining laser produces, so it needs no calibration. "
       +"<b>pays miner</b> is the buyback at the current basis. Rows marked <i>officers only</i> are lowsec or null "
-      +"and are withheld from the member board on purpose."
+      +"and are withheld from the member board on purpose. <b>from</b> is where the rock physically "
+      +"comes from: moon rock needs a drill on a structure we have not built and pochven rock needs "
+      +"Pochven, so both are hidden unless you ask for them."
     : "Capped at 30% of what Amarr, Rens and Hek absorb in a day. <b>our ore</b> is the share of the bill from rock "
       +"we mined ourselves, and it predicts margin better than anything else we measured. Every margin assumes ME10; "
       +"an unresearched blueprint costs about 14% more materials.";
@@ -322,6 +334,7 @@ Array.prototype.forEach.call(document.querySelectorAll(".tabs button"),function(
     b.classList.add("on"); S.tab=b.getAttribute("data-t"); render(); };
 });
 $("q").oninput=function(){ S.q=$("q").value; render(); };
+if($("showAll")) $("showAll").onchange=function(){ S.showAll=$("showAll").checked; render(); };
 
 fetch("/api/assay",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
   if(!d||!d.ok){ $("gate").style.display=""; return; }
