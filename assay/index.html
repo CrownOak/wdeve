@@ -45,6 +45,29 @@
   .fitcard .row b{ color:var(--silver); }
   .fitcard .net{ color:var(--ore); font-weight:700; }
   .wrapx{ overflow-x:auto; }
+  /* TONIGHT: three verbs, readable in four seconds. */
+  .tonight{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+    padding:14px 16px; margin:0 0 14px; }
+  .tn-row{ display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; padding:5px 0; }
+  .tn-verb{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; color:var(--ore);
+    width:74px; flex:0 0 74px; }
+  .tn-what{ font-family:var(--display); font-size:16px; font-weight:700; color:var(--silver); }
+  .tn-sub{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); }
+  .tn-block .tn-verb{ color:var(--red,#f0817a); }
+  .tn-block .tn-what{ color:var(--red,#f0817a); }
+  /* THE CHAIN */
+  .chain{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 16px; margin:0 0 14px; }
+  .chain h3{ margin:0 0 4px; font-family:var(--display); font-size:15px; color:var(--silver); font-weight:700; }
+  .chain .sub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:10px; }
+  .chain table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .chain td{ padding:4px 8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  .chain td.q{ font-family:var(--mono); text-align:right; color:var(--silver); white-space:nowrap; }
+  .chain td.cov{ font-family:var(--mono); text-align:right; white-space:nowrap; }
+  .chain .ok{ color:var(--ore); } .chain .warn{ color:var(--amber,#f0c674); } .chain .bad{ color:var(--red,#f0817a); }
+  .chain .tot{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:9px; }
+  .chain .tot b{ color:var(--ore); }
+  .chain .gap{ font-family:var(--mono); font-size:11.5px; color:var(--amber,#f0c674); margin-top:8px; line-height:1.6; }
+  tr.pick td{ background:rgba(70,255,94,.07); }
 </style></head>
 <body>
   <header>
@@ -60,6 +83,8 @@
     </div>
 
     <div id="app" style="display:none">
+      <div id="tonight"></div>
+      <div id="chain"></div>
       <div class="bar">
         <span class="st" id="basisSt">&hellip;</span>
         <span class="st" id="ageSt"></span>
@@ -82,7 +107,7 @@
 /* THE ASSAY. Reads the same officer-gated endpoint the portal panels read, so there is
    exactly one set of numbers behind every surface. No economics are computed here; this
    page only sorts and explains what the nightly run produced. */
-var S={ore:[],lines:[],tab:"ore",sort:{ore:"corp_per_m3",lines:"daily_profit",dir:-1},q:""};
+var S={ore:[],lines:[],stock:null,pick:null,tab:"ore",sort:{ore:"corp_per_m3",lines:"daily_profit",dir:-1},q:""};
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function n(v){return (v||0).toLocaleString();}
@@ -103,6 +128,76 @@ function bestPerFamily(rows){
   var b={};
   rows.forEach(function(r){ if(!b[r.family]||r.corp_per_m3>b[r.family].corp_per_m3) b[r.family]=r; });
   return Object.keys(b).map(function(k){return b[k];});
+}
+
+/* ---- v2: THE CHAIN, walked backwards ----
+   "I want to build X. What minerals? Do we have them? If not, what do I mine?"
+   That question is the reason this tool exists and v1 could not answer it. */
+function daysCover(mineral, perDay){
+  var st = S.stock && S.stock.minerals ? (S.stock.minerals[mineral]||0) : null;
+  if (st === null) return null;
+  var burn = (S.stock.burn && S.stock.burn[mineral]) || perDay || 0;
+  return burn > 0 ? st/burn : Infinity;
+}
+function renderChain(){
+  var el=$("chain"); if(!el) return;
+  var mod = S.pick || (S.lines.slice().sort(function(a,b){return b.daily_profit-a.daily_profit;})[0]);
+  if(!mod || !mod.bill || !mod.bill.length){ el.innerHTML=""; return; }
+  var rate = mod.build_day || 0;
+  var rows = mod.bill.map(function(b){
+    var need = b.qty * rate;                        // per DAY at the planned build rate
+    var st   = S.stock && S.stock.minerals ? S.stock.minerals[b.m] : null;
+    var days = (st!=null && need>0) ? st/need : null;
+    var cls  = days==null ? "" : (days<3 ? "bad" : (days<14 ? "warn" : "ok"));
+    var cov  = b.src==="buy" ? '<span class="warn">buy order</span>'
+             : (days==null ? "&mdash;" : (days>999?"plenty":Math.round(days)+"d"));
+    return '<tr><td class="q">'+n(Math.round(b.qty))+'</td><td>'+esc(b.m)+'</td>'
+      + '<td class="q">'+(st==null?"&mdash;":n(Math.round(st)))+'</td>'
+      + '<td class="cov '+cls+'">'+cov+'</td>'
+      + '<td>'+(b.src==="mine"?"we mine it":"we buy it")+'</td></tr>';
+  }).join("");
+  // the gap: what we would actually have to go mine to sustain this line
+  var gaps = mod.bill.filter(function(b){
+    if(b.src!=="mine") return false;
+    var need=b.qty*rate, st=(S.stock&&S.stock.minerals)?S.stock.minerals[b.m]:null;
+    return st!=null && need>0 && st/need < 14;
+  }).map(function(b){
+    var need=b.qty*rate, st=S.stock.minerals[b.m];
+    return b.m+" ("+Math.round(st/need)+"d left, "+n(Math.round(need))+"/day)";
+  });
+  el.innerHTML='<div class="chain"><h3>'+esc(mod.name)+'</h3>'
+    +'<div class="sub">per unit, at ME10, and what '+n(Math.round(rate))+'/day would consume &middot; click any line in the table below to change this</div>'
+    +'<table><tbody>'+rows+'</tbody></table>'
+    +'<div class="tot">costs us <b>'+n(mod.unit_cost)+'</b> &middot; sells <b>'+n(mod.sell)+'</b> &middot; margin <b>'
+      +n(mod.margin)+'%</b> &middot; <b>'+n(mod.ourore)+'%</b> from our own ore</div>'
+    +(gaps.length?'<div class="gap">&#9888; thin at this rate: '+gaps.join(", ")+'. That is what tonight should mine.</div>':'')
+    +'</div>';
+}
+/* ---- v2: TONIGHT. Three verbs, four seconds. ---- */
+function renderTonight(){
+  var el=$("tonight"); if(!el) return;
+  var SAFE = S.ore.filter(function(r){ return !RESTRICTED[r.family]; });
+  var best = bestPerFamily(SAFE).sort(function(a,b){return b.corp_per_m3-a.corp_per_m3;})[0];
+  var line = S.lines.slice().sort(function(a,b){return b.daily_profit-a.daily_profit;})[0];
+  // binding constraint: the thinnest mineral any top line depends on
+  var worst=null;
+  if(line && line.bill && S.stock && S.stock.minerals){
+    line.bill.forEach(function(b){
+      if(b.src!=="mine") return;
+      var need=b.qty*(line.build_day||0), st=S.stock.minerals[b.m];
+      if(st==null||!need) return;
+      var d=st/need; if(!worst||d<worst.d) worst={m:b.m,d:d};
+    });
+  }
+  var html='<div class="tonight">';
+  if(best) html+='<div class="tn-row"><span class="tn-verb">MINE</span><span class="tn-what">'+esc(best.ore)
+    +'</span><span class="tn-sub">'+n(best.corp_per_m3)+' ISK per raw m3 &middot; highsec &middot; Hulk with Modulated Strip Miner II</span></div>';
+  if(line) html+='<div class="tn-row"><span class="tn-verb">BUILD</span><span class="tn-what">'+esc(line.name)
+    +'</span><span class="tn-sub">'+n(Math.round(line.build_day))+'/day &middot; '+m(line.daily_profit)+' a day &middot; '+n(line.ourore)+'% our own ore</span></div>';
+  if(worst) html+='<div class="tn-row tn-block"><span class="tn-verb">BLOCKED</span><span class="tn-what">'+esc(worst.m)
+    +'</span><span class="tn-sub">'+(worst.d>999?"plenty":Math.round(worst.d)+" days left")+' at that build rate &middot; the binding constraint</span></div>';
+  html+='</div>';
+  el.innerHTML=html;
 }
 function render(){
   var tab=S.tab;
@@ -137,6 +232,7 @@ function render(){
       +'<td class="num">'+n(r.ourore)+'%</td><td class="num">'+n(r.absorbs)+'</td>'
       +'<td class="num">'+m(r.slot_hour)+'</td></tr>';
   }).join("");
+  if(tab==="lines"){ Array.prototype.forEach.call(document.querySelectorAll("#tb tr"),function(tr,i){ tr.style.cursor="pointer"; tr.onclick=function(){ S.pick=rows[i]; renderChain(); }; }); }
   $("hint").textContent=rows.length+" rows"+(tab==="ore"?" (best variant per family)":"");
   $("note").innerHTML = tab==="ore"
     ? "Ranked on ISK per RAW m&sup3;, which is what the mining laser produces, so it needs no calibration. "
@@ -197,13 +293,13 @@ $("q").oninput=function(){ S.q=$("q").value; render(); };
 fetch("/api/assay",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
   if(!d||!d.ok){ $("gate").style.display=""; return; }
   $("app").style.display="";
-  S.ore=(d.ore&&d.ore.rows)||[]; S.lines=(d.build&&d.build.rows)||[];
+  S.ore=(d.ore&&d.ore.rows)||[]; S.lines=(d.build&&d.build.rows)||[]; S.stock=d.stock||null;
   var b=d.ore||d.build||{};
   $("basisSt").innerHTML = "basis <b>"+(b.basis_live?"live":"FELL BACK")+"</b>"+(b.basis_live?"":" &mdash; the portal was unreachable when this was computed");
   if(!b.basis_live) $("basisSt").className="st warn";
   var h=b.stale_hours;
   $("ageSt").textContent = h==null?"":("data "+(h<24?h+"h":Math.round(h/24)+"d")+" old"+(h>36?" — the nightly run may not have fired":""));
-  render();
+  renderTonight(); renderChain(); render();
 }).catch(function(){ $("gate").style.display=""; });
 </script>
 <script src="/nav.js?v=16"></script>
