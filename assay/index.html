@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BONK - The Assay</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+  .gate{ max-width:520px; margin:80px auto; text-align:center; }
+  .gate h2{ font-family:var(--display); font-size:20px; color:var(--silver); margin:0 0 10px; }
+  .gate p{ color:var(--muted); font-family:var(--mono); font-size:12.5px; line-height:1.6; }
+  .bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 14px;
+    padding:9px 12px; background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); }
+  .bar .st{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+  .bar .st b{ color:var(--ore); }
+  .bar .warn{ color:var(--amber,#f0c674); }
+  .tabs{ display:flex; gap:0; margin:0 0 14px; flex-wrap:wrap; }
+  .tabs button{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    padding:7px 15px; background:transparent; border:1px solid var(--line); color:var(--muted); cursor:pointer; }
+  .tabs button.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+  .tools{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 12px; }
+  .tools input{ padding:7px 10px; background:var(--black); border:1px solid var(--line);
+    color:var(--silver); font-family:var(--mono); font-size:12.5px; min-width:190px; }
+  .tools .hint{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+  table.as{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.as th{ font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); text-align:left; padding:7px 9px; border-bottom:1px solid var(--line);
+    cursor:pointer; white-space:nowrap; user-select:none; }
+  table.as th:hover{ color:var(--ore); }
+  table.as th.num, table.as td.num{ text-align:right; }
+  table.as td{ padding:6px 9px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  table.as td.num{ font-family:var(--mono); color:var(--silver); white-space:nowrap; }
+  table.as tr:hover td{ background:rgba(70,255,94,.04); }
+  table.as tr.top td{ color:var(--silver); }
+  table.as tr.top td.num{ color:var(--ore); font-weight:700; }
+  table.as tr.rest td:first-child::after{ content:" officers only"; font-family:var(--mono);
+    font-size:9px; letter-spacing:.06em; color:var(--amber,#f0c674); margin-left:6px; }
+  .fl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.05em; color:var(--muted); margin-left:5px; }
+  .fl.ev{ color:var(--amber,#f0c674); }
+  .note{ font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.6; margin:10px 0 0; max-width:900px; }
+  .fitgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-top:6px; }
+  .fitcard{ background:var(--steel); border:1px solid var(--line-soft); padding:12px 14px; }
+  .fitcard.best{ border-left:3px solid var(--ore); }
+  .fitcard h4{ margin:0 0 8px; font-family:var(--display); font-size:14px; color:var(--silver); font-weight:700; }
+  .fitcard .row{ display:flex; justify-content:space-between; font-family:var(--mono); font-size:12px;
+    color:var(--silver-dim); padding:2px 0; }
+  .fitcard .row b{ color:var(--silver); }
+  .fitcard .net{ color:var(--ore); font-weight:700; }
+  .wrapx{ overflow-x:auto; }
+</style></head>
+<body>
+  <header>
+    <h1>BIG ROCK ENERGY [BONK] &middot; THE ASSAY</h1>
+    <div class="sub">what to mine, what to build, and what to fly &middot; officers and GSS while we test</div>
+  </header>
+  <div class="wrap">
+    <div id="gate" class="gate" style="display:none">
+      <h2>Not your clearance</h2>
+      <p>The Assay carries corp economics: margins, the buyback basis, and rocks we have not
+      told the fleet about. Officers, admins and cleared GSS only while we test.<br><br>
+      <a href="/portal/">Log in at the portal</a> and come back.</p>
+    </div>
+
+    <div id="app" style="display:none">
+      <div class="bar">
+        <span class="st" id="basisSt">&hellip;</span>
+        <span class="st" id="ageSt"></span>
+      </div>
+      <div class="tabs">
+        <button data-t="ore" class="on">Ore</button>
+        <button data-t="lines">Lines</button>
+        <button data-t="fits">Fits</button>
+      </div>
+      <div class="tools">
+        <input id="q" placeholder="filter&hellip;" autocomplete="off" spellcheck="false">
+        <span class="hint" id="hint"></span>
+      </div>
+      <div class="wrapx"><table class="as" id="tbl"><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+      <div id="fits" style="display:none"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+<script>
+/* THE ASSAY. Reads the same officer-gated endpoint the portal panels read, so there is
+   exactly one set of numbers behind every surface. No economics are computed here; this
+   page only sorts and explains what the nightly run produced. */
+var S={ore:[],lines:[],tab:"ore",sort:{ore:"corp_per_m3",lines:"daily_profit",dir:-1},q:""};
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function n(v){return (v||0).toLocaleString();}
+function m(v){return ((v||0)/1e6).toFixed(1)+"M";}
+
+var COLS={
+  ore:[["ore","Ore",0],["corp_per_m3","ISK / raw m3",1],["pays_per_m3","pays miner",1],
+       ["basis","basis",1],["flags","",0]],
+  lines:[["name","Module",0],["daily_profit","profit/day",1],["margin","margin",1],
+         ["ourore","our ore",1],["absorbs","absorbs/day",1],["slot_hour","ISK/slot-hr",1]]
+};
+/* Lowsec and null families the member board must never publish. Shown here, marked, because
+   an officer deciding where to send a fleet needs to see them. */
+var RESTRICTED={Ytirium:1,Eifyrium:1,Ducinium:1,Kylixium:1,Bezdnacine:1,Rakovene:1,Talassonite:1,
+  Arkonor:1,Bistot:1,Spodumain:1,Mercoxit:1,Crokite:1,Gneiss:1,"Dark Ochre":1};
+
+function bestPerFamily(rows){
+  var b={};
+  rows.forEach(function(r){ if(!b[r.family]||r.corp_per_m3>b[r.family].corp_per_m3) b[r.family]=r; });
+  return Object.keys(b).map(function(k){return b[k];});
+}
+function render(){
+  var tab=S.tab;
+  $("fits").style.display = tab==="fits"?"":"none";
+  $("tbl").style.display  = tab==="fits"?"none":"";
+  $("q").style.display    = tab==="fits"?"none":"";
+  if(tab==="fits"){ renderFits(); return; }
+  var rows = tab==="ore" ? bestPerFamily(S.ore) : S.lines.slice();
+  var q=S.q.toLowerCase();
+  if(q) rows=rows.filter(function(r){ return ((r.ore||r.name||"")+" "+(r.family||"")).toLowerCase().indexOf(q)>=0; });
+  var key=S.sort[tab], dir=S.sort.dir;
+  rows.sort(function(a,b){ var x=a[key],y=b[key];
+    if(typeof x==="string") return dir*String(x).localeCompare(String(y));
+    return dir*((y||0)-(x||0))*-1*-1; });
+  if(typeof rows[0]!=="undefined" && typeof rows[0][key]!=="string") rows.sort(function(a,b){return dir*((b[key]||0)-(a[key]||0));});
+  $("th").innerHTML="<tr>"+COLS[tab].map(function(c){
+    return '<th class="'+(c[2]?"num":"")+'" data-k="'+c[0]+'">'+c[1]+(S.sort[tab]===c[0]?(dir<0?" ▾":" ▴"):"")+"</th>";
+  }).join("")+"</tr>";
+  $("tb").innerHTML=rows.map(function(r,i){
+    if(tab==="ore"){
+      var fl="";
+      if(r.event) fl+='<span class="fl ev">event</span>';
+      if(r.ice) fl+='<span class="fl">ice</span>';
+      if(r.thin) fl+='<span class="fl">thin</span>';
+      if(r.broken) fl+='<span class="fl ev">broken market</span>';
+      return '<tr class="'+(i===0?"top ":"")+(RESTRICTED[r.family]?"rest":"")+'"><td>'+esc(r.ore)+'</td>'
+        +'<td class="num">'+n(r.corp_per_m3)+'</td><td class="num">'+n(r.pays_per_m3)+'</td>'
+        +'<td class="num">'+(r.basis||0).toFixed(2)+'</td><td>'+fl+'</td></tr>';
+    }
+    return '<tr class="'+(i===0?"top":"")+'"><td>'+esc(r.name)+'</td>'
+      +'<td class="num">'+m(r.daily_profit)+'</td><td class="num">'+n(r.margin)+'%</td>'
+      +'<td class="num">'+n(r.ourore)+'%</td><td class="num">'+n(r.absorbs)+'</td>'
+      +'<td class="num">'+m(r.slot_hour)+'</td></tr>';
+  }).join("");
+  $("hint").textContent=rows.length+" rows"+(tab==="ore"?" (best variant per family)":"");
+  $("note").innerHTML = tab==="ore"
+    ? "Ranked on ISK per RAW m&sup3;, which is what the mining laser produces, so it needs no calibration. "
+      +"<b>pays miner</b> is the buyback at the current basis. Rows marked <i>officers only</i> are lowsec or null "
+      +"and are withheld from the member board on purpose."
+    : "Capped at 30% of what Amarr, Rens and Hek absorb in a day. <b>our ore</b> is the share of the bill from rock "
+      +"we mined ourselves, and it predicts margin better than anything else we measured. Every margin assumes ME10; "
+      +"an unresearched blueprint costs about 14% more materials.";
+  Array.prototype.forEach.call(document.querySelectorAll("#th th"),function(h){
+    h.onclick=function(){ var k=h.getAttribute("data-k"); if(!k) return;
+      if(S.sort[S.tab]===k) S.sort.dir=-S.sort.dir; else { S.sort[S.tab]=k; S.sort.dir=-1; }
+      render(); };
+  });
+}
+/* The fit calculator. Same numbers as `python -m assay fits`, run against whichever ore
+   is selected, because the ore decision and the hull decision are one decision. */
+var HULLS={Hulk:[209100000,1.799,12000],Covetor:[40010000,1.333,8000],
+           Skiff:[221800000,1.100,19000],Procurer:[43200000,1.000,17000]};
+var STRIPS={"ORE Strip Miner":[191100000,1.10],"Modulated Strip Miner II":[5772000,1.00],"Strip Miner I":[3395000,0.85]};
+var OTHER=50000000, BASE=100000, PLOSS=0.08;
+function renderFits(){
+  var rows=bestPerFamily(S.ore).sort(function(a,b){return b.corp_per_m3-a.corp_per_m3;});
+  var opts=rows.map(function(r){return '<option value="'+r.corp_per_m3+'">'+esc(r.ore)+" ("+n(r.corp_per_m3)+" ISK/m3)</option>";}).join("");
+  var cur=window.__fitOre||(rows[0]&&rows[0].corp_per_m3)||0;
+  var danger=window.__fitDanger!==false;
+  var out=[];
+  Object.keys(HULLS).forEach(function(h){ Object.keys(STRIPS).forEach(function(s){
+    var fitted=HULLS[h][0]+2*STRIPS[s][0]+OTHER;
+    var rate=BASE*HULLS[h][1]*STRIPS[s][1];
+    var gross=cur*rate, risk=(danger?PLOSS:0)*fitted;
+    out.push({label:h+" + 2x "+s,fitted:fitted,rate:rate,gross:gross,risk:risk,net:gross-risk});
+  });});
+  out.sort(function(a,b){return b.net-a.net;});
+  $("fits").innerHTML =
+    '<div class="tools"><select id="fitOre" style="padding:7px 10px;background:var(--black);border:1px solid var(--line);color:var(--silver);font-family:var(--mono);font-size:12.5px">'+opts+'</select>'
+    +'<label class="hint"><input type="checkbox" id="fitDanger" '+(danger?"checked":"")+'> dangerous space (charge the loss rate)</label></div>'
+    +'<div class="fitgrid">'+out.slice(0,6).map(function(o,i){
+      return '<div class="fitcard '+(i===0?"best":"")+'"><h4>'+esc(o.label)+'</h4>'
+        +'<div class="row"><span>fitted</span><b>'+m(o.fitted)+'</b></div>'
+        +'<div class="row"><span>m3 / hour</span><b>'+n(Math.round(o.rate))+'</b></div>'
+        +'<div class="row"><span>gross / hour</span><b>'+m(o.gross)+'</b></div>'
+        +'<div class="row"><span>risk / hour</span><b>'+m(o.risk)+'</b></div>'
+        +'<div class="row"><span>net / hour</span><span class="net">'+m(o.net)+'</span></div></div>';
+    }).join("")+'</div>';
+  $("note").innerHTML="Risk is <b>0.08 losses per pilot-hour</b> in dangerous space, charged on the <b>fitted</b> value, "
+    +"measured from seven days of our own killmails. That is why the module matters more than the hull: an ORE Strip Miner "
+    +"is 191M against 5.8M for a Modulated Strip Miner II, and two of them turn a 271M ship into a 641M target.";
+  var so=$("fitOre"); so.value=String(cur);
+  so.onchange=function(){ window.__fitOre=parseFloat(so.value); renderFits(); };
+  $("fitDanger").onchange=function(){ window.__fitDanger=$("fitDanger").checked; renderFits(); };
+}
+Array.prototype.forEach.call(document.querySelectorAll(".tabs button"),function(b){
+  b.onclick=function(){ document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on"); S.tab=b.getAttribute("data-t"); render(); };
+});
+$("q").oninput=function(){ S.q=$("q").value; render(); };
+
+fetch("/api/assay",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(d){
+  if(!d||!d.ok){ $("gate").style.display=""; return; }
+  $("app").style.display="";
+  S.ore=(d.ore&&d.ore.rows)||[]; S.lines=(d.build&&d.build.rows)||[];
+  var b=d.ore||d.build||{};
+  $("basisSt").innerHTML = "basis <b>"+(b.basis_live?"live":"FELL BACK")+"</b>"+(b.basis_live?"":" &mdash; the portal was unreachable when this was computed");
+  if(!b.basis_live) $("basisSt").className="st warn";
+  var h=b.stale_hours;
+  $("ageSt").textContent = h==null?"":("data "+(h<24?h+"h":Math.round(h/24)+"d")+" old"+(h>36?" — the nightly run may not have fired":""));
+  render();
+}).catch(function(){ $("gate").style.display=""; });
+</script>
+<script src="/nav.js?v=16"></script>
+</body></html>
