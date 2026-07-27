@@ -4,9 +4,10 @@
 <title>BONK - The Assay</title>
 <link rel="stylesheet" href="/common.css?v=3">
 <style>
-  .gate{ max-width:520px; margin:80px auto; text-align:center; }
-  .gate h2{ font-family:var(--display); font-size:20px; color:var(--silver); margin:0 0 10px; }
-  .gate p{ color:var(--muted); font-family:var(--mono); font-size:12.5px; line-height:1.6; }
+  /* NOT .gate: common.css owns that for the password lock and it is display:flex */
+  .denied{ max-width:520px; margin:80px auto; text-align:center; }
+  .denied h2{ font-family:var(--display); font-size:20px; color:var(--silver); margin:0 0 10px; }
+  .denied p{ color:var(--muted); font-family:var(--mono); font-size:12.5px; line-height:1.6; }
   .bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 14px;
     padding:9px 12px; background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); }
   .bar .st{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
@@ -77,7 +78,7 @@
     <div class="sub">what to mine, what to build, and what to fly &middot; officers and GSS while we test</div>
   </header>
   <div class="wrap">
-    <div id="gate" class="gate" style="display:none">
+    <div id="gate" class="denied" style="display:none">
       <h2 id="gateHead">Not your clearance</h2>
       <p id="gateBody">The Assay carries corp economics: margins, the buyback basis, and rocks we have not
       told the fleet about. Officers, admins and cleared GSS only while we test.<br><br>
