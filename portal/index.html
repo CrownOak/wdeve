@@ -527,6 +527,9 @@
   .asy-fl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--muted); }
   .asy-fl.ev{ color:var(--amber); } .asy-fl.ice{ color:var(--silver-dim); }
   .asy-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:9px; line-height:1.5; }
+  .asy-run{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ore); border:1px solid var(--ore); padding:0 4px; margin-left:6px; }
+  .asy-off{ color:var(--red); }
   .asy-test{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--amber); border:1px solid var(--amber); padding:1px 6px; margin-left:8px; }
   /* THE WORKS — build queue board */
@@ -882,7 +885,7 @@ async function reloadWorks(){
   try { S.works = await api("works"); } catch(e){ return; }
   try { S.assay = await api("assay"); } catch(e){ /* fails alone */ }
   safeRender(renderGoalStrip, $("goalStripWrap"));
-  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap"));
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap"));
   safeRender(renderCorpStrip, $("corpStripWrap"));
 }
 
@@ -908,7 +911,7 @@ function renderAll(){
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderSay,      $("panelSay"));
   safeRender(renderGoalStrip,$("goalStripWrap"));
-  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap"));
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
   safeRender(renderFoot,     $("footActs"));
 }
@@ -1369,6 +1372,43 @@ function renderWorks(){
 /* THE ASSAY ore board. Officer/GSS only while we test — the endpoint enforces it too,
    this just avoids rendering an empty card for members. When it opens to everyone the
    payload already carries member-safe fields only; nothing here needs redesigning. */
+/* THE WORKS, RANKED BY WHAT IT ACTUALLY EARNS. The hand-seeded catalog put our best
+   earner nowhere and left 3 of 5 running lines outside the top 10; this derives the order
+   from the nightly build assay instead. `ourore` is the column that predicts margin:
+   98% own-ore returned 341%, 21% returned 13%. */
+function renderAssayBuild(){
+  if (!isOfficer()) return '';
+  var a = S.assay && S.assay.build;
+  if (!a || !a.rows || !a.rows.length) return '';
+  var running = {};
+  ((S.works && S.works.lines) || []).forEach(function(l){
+    if (l && l.status === 'running') running[String(l.item).toLowerCase()] = 1;
+  });
+  var rows = a.rows.slice().sort(function(x,y){ return y.daily_profit - x.daily_profit; }).slice(0,10);
+  var outside = 0;
+  Object.keys(running).forEach(function(k){
+    if (!rows.some(function(r){ return String(r.name).toLowerCase() === k; })) outside++;
+  });
+  var body = rows.map(function(r,i){
+    var run = running[String(r.name).toLowerCase()] ? '<span class="asy-run">running</span>' : '';
+    return '<tr class="'+(i===0?'top':'')+'"><td>'+esc(r.name)+run+'</td>'
+      + '<td class="n">'+(r.daily_profit/1e6).toFixed(1)+'M</td>'
+      + '<td class="n">'+r.margin.toLocaleString()+'%</td>'
+      + '<td class="n">'+r.ourore+'%</td>'
+      + '<td class="n">'+r.absorbs.toLocaleString()+'</td></tr>';
+  }).join('');
+  var age = (a.stale_hours==null) ? '' : (a.stale_hours<24 ? a.stale_hours+'h old' : Math.round(a.stale_hours/24)+'d old');
+  var warn = outside ? '<div class="asy-note asy-off">&#9888; '+outside+' running line'+(outside===1?'':'s')
+    +' outside the top 10. Every margin here assumes ME10 &mdash; an unresearched blueprint costs ~14% more materials.</div>' : '';
+  return '<div class="works" id="assaybuild"><div class="wkhead">&#128295; The Lines &middot; ranked by what they earn'
+    + '<span class="asy-test">testing &middot; officers</span></div>'
+    + '<table class="asy-t"><thead><tr><th>Module</th><th style="text-align:right">profit/day</th>'
+    + '<th style="text-align:right">margin</th><th style="text-align:right">our ore</th>'
+    + '<th style="text-align:right">absorbs/day</th></tr></thead><tbody>'+body+'</tbody></table>'
+    + warn
+    + '<div class="asy-note">Capped at 30% of what Amarr, Rens and Hek absorb. <b>Our ore</b> is the share of '
+    + 'the bill from rock we mined &mdash; it predicts margin better than anything else. '+(age?('Data '+age+'.'):'')+'</div></div>';
+}
 function renderAssay(){
   if (!isOfficer()) return '';
   var a = S.assay && S.assay.ore;
@@ -1406,7 +1446,7 @@ function renderAssay(){
 }
 async function worksAct(body){
   try { S.works = await api("admin/works", body); safeRender(renderGoalStrip, $("goalStripWrap"));
-  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
   catch(e){ if(!isOut(e)) { var er=$("wkErr"); if(er) er.textContent=e.message; else toast(e.message); } }
 }
 function worksAdvance(id){
