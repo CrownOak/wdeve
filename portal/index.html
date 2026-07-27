@@ -515,6 +515,20 @@
   .gs-verb{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
   .gs-verb b{ color:var(--ore); letter-spacing:.06em; margin-right:4px; }
   .wk-lines{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
+  /* THE ASSAY — ore board (officers/GSS while testing). Reuses the .works shell. */
+  .asy-t{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .asy-t th{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); text-align:left; padding:5px 8px 6px; border-bottom:1px solid var(--line-soft); font-weight:400; }
+  .asy-t td{ padding:5px 8px; border-bottom:1px solid rgba(255,255,255,.03); color:var(--silver-dim); }
+  .asy-t tr:last-child td{ border-bottom:0; }
+  .asy-t td.n{ font-family:var(--mono); text-align:right; color:var(--silver); white-space:nowrap; }
+  .asy-t tr.top td{ color:var(--silver); }
+  .asy-t tr.top td.n{ color:var(--ore); font-weight:700; }
+  .asy-fl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--muted); }
+  .asy-fl.ev{ color:var(--amber); } .asy-fl.ice{ color:var(--silver-dim); }
+  .asy-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:9px; line-height:1.5; }
+  .asy-test{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--amber); border:1px solid var(--amber); padding:1px 6px; margin-left:8px; }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -652,6 +666,7 @@
   <div class="wrap">
     <div id="banners"></div>
     <div id="goalStripWrap"></div>
+    <div id="assayWrap"></div>
     <div class="panel" id="panelIdentity"></div>
     <div class="panel" id="panelInbox" style="display:none"></div>
     <div class="panel" id="profileDrawer"></div>
@@ -859,12 +874,15 @@ async function refreshMe(){
     var j = await api("me");
     S.me = j;
     try { S.works = await api("works"); } catch(e){ /* the works card fails alone */ }
+    try { S.assay = await api("assay"); } catch(e){ /* officers only; members simply have none */ }
     renderAll();
   } catch(e){ if (!isOut(e)) toast(e.message); }
 }
 async function reloadWorks(){
   try { S.works = await api("works"); } catch(e){ return; }
+  try { S.assay = await api("assay"); } catch(e){ /* fails alone */ }
   safeRender(renderGoalStrip, $("goalStripWrap"));
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap"));
   safeRender(renderCorpStrip, $("corpStripWrap"));
 }
 
@@ -890,6 +908,7 @@ function renderAll(){
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderSay,      $("panelSay"));
   safeRender(renderGoalStrip,$("goalStripWrap"));
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
   safeRender(renderFoot,     $("footActs"));
 }
@@ -1347,8 +1366,47 @@ function renderWorks(){
     '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
     '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + linesGrid + addForm + '</div>';
 }
+/* THE ASSAY ore board. Officer/GSS only while we test — the endpoint enforces it too,
+   this just avoids rendering an empty card for members. When it opens to everyone the
+   payload already carries member-safe fields only; nothing here needs redesigning. */
+function renderAssay(){
+  if (!isOfficer()) return '';
+  var a = S.assay && S.assay.ore;
+  if (!a || !a.rows || !a.rows.length) return '';
+  var MINE = {Veldspar:1,Omber:1,Scordite:1,Kernite:1,Pyroxeres:1,Plagioclase:1,Raspite:1,
+    Kangite:1,Ytirium:1,Mordunium:1,Kylixium:1,Ducinium:1,Eifyrium:1,"Glacial Mass":1,
+    Polycrase:1,Moissanite:1};
+  var best={};
+  a.rows.forEach(function(r){
+    if(!MINE[r.family]) return;
+    if(!best[r.family] || r.corp_per_m3 > best[r.family].corp_per_m3) best[r.family]=r;
+  });
+  var rows = Object.keys(best).map(function(k){return best[k];})
+    .sort(function(x,y){return y.corp_per_m3 - x.corp_per_m3;}).slice(0,10);
+  if(!rows.length) return '';
+  var body = rows.map(function(r,i){
+    var fl=[];
+    if(r.event) fl.push('<span class="asy-fl ev">event</span>');
+    if(r.ice) fl.push('<span class="asy-fl ice">ice</span>');
+    if(r.thin) fl.push('<span class="asy-fl">thin</span>');
+    return '<tr class="'+(i===0?'top':'')+'"><td>'+esc(r.ore)+'</td>'
+      + '<td class="n">'+Math.round(r.corp_per_m3).toLocaleString()+'</td>'
+      + '<td class="n">'+Math.round(r.pays_per_m3).toLocaleString()+'</td>'
+      + '<td>'+fl.join(' ')+'</td></tr>';
+  }).join('');
+  var age = (a.stale_hours==null) ? '' : (a.stale_hours<24 ? a.stale_hours+'h old' : Math.round(a.stale_hours/24)+'d old');
+  return '<div class="works" id="assayboard"><div class="wkhead">&#9935; The Assay &middot; what to mine'
+    + '<span class="asy-test">testing &middot; officers</span></div>'
+    + '<table class="asy-t"><thead><tr><th>Ore</th><th style="text-align:right">ISK / raw m&sup3;</th>'
+    + '<th style="text-align:right">pays miner</th><th>&nbsp;</th></tr></thead><tbody>'+body+'</tbody></table>'
+    + '<div class="asy-note">Best variant per family, of what we actually reach. Ranked on ISK per RAW m&sup3; '
+    + '&mdash; what the laser produces. ' + (age?('Data '+age+'. '):'')
+    + (a.basis_live?'Basis live from the portal.':'Basis FELL BACK &mdash; portal was unreachable at compute time.')
+    + '</div></div>';
+}
 async function worksAct(body){
-  try { S.works = await api("admin/works", body); safeRender(renderGoalStrip, $("goalStripWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
+  try { S.works = await api("admin/works", body); safeRender(renderGoalStrip, $("goalStripWrap"));
+  safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay(); }, $("assayWrap")); safeRender(renderCorpStrip, $("corpStripWrap")); }
   catch(e){ if(!isOut(e)) { var er=$("wkErr"); if(er) er.textContent=e.message; else toast(e.message); } }
 }
 function worksAdvance(id){
