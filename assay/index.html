@@ -58,6 +58,7 @@
   /* THE CHAIN */
   .chain{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 16px; margin:0 0 14px; }
   .chain h3{ margin:0 0 4px; font-family:var(--display); font-size:15px; color:var(--silver); font-weight:700; }
+  td.mt{ font-family:var(--mono); font-size:12px; color:var(--muted); text-align:center; padding:26px 12px; }
   .chain .sub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:10px; }
   .chain table{ width:100%; border-collapse:collapse; font-size:12.5px; }
   .chain td{ padding:4px 8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
@@ -76,8 +77,8 @@
   </header>
   <div class="wrap">
     <div id="gate" class="gate" style="display:none">
-      <h2>Not your clearance</h2>
-      <p>The Assay carries corp economics: margins, the buyback basis, and rocks we have not
+      <h2 id="gateHead">Not your clearance</h2>
+      <p id="gateBody">The Assay carries corp economics: margins, the buyback basis, and rocks we have not
       told the fleet about. Officers, admins and cleared GSS only while we test.<br><br>
       <a href="/portal/">Log in at the portal</a> and come back.</p>
     </div>
@@ -142,7 +143,12 @@ function daysCover(mineral, perDay){
 function renderChain(){
   var el=$("chain"); if(!el) return;
   var mod = S.pick || (S.lines.slice().sort(function(a,b){return b.daily_profit-a.daily_profit;})[0]);
-  if(!mod || !mod.bill || !mod.bill.length){ el.innerHTML=""; return; }
+  if(!mod || !mod.bill || !mod.bill.length){
+    el.innerHTML = S.lines.length
+      ? '<div class="chain"><h3>No bill of materials</h3><div class="sub">This line ranked but shipped without its parts list, so the chain cannot be walked. Rerun assay-build.</div></div>'
+      : "";
+    return;
+  }
   var rate = mod.build_day || 0;
   var rows = mod.bill.map(function(b){
     var need = b.qty * rate;                        // per DAY at the planned build rate
@@ -196,6 +202,14 @@ function renderTonight(){
     +'</span><span class="tn-sub">'+n(Math.round(line.build_day))+'/day &middot; '+m(line.daily_profit)+' a day &middot; '+n(line.ourore)+'% our own ore</span></div>';
   if(worst) html+='<div class="tn-row tn-block"><span class="tn-verb">BLOCKED</span><span class="tn-what">'+esc(worst.m)
     +'</span><span class="tn-sub">'+(worst.d>999?"plenty":Math.round(worst.d)+" days left")+' at that build rate &middot; the binding constraint</span></div>';
+  if(!best && !line){
+    html='<div class="tonight"><div class="tn-row"><span class="tn-verb">NOTHING</span>'
+      +'<span class="tn-what">The assays have not reported</span>'
+      +'<span class="tn-sub">Nobody has pushed ore or build numbers. Run wake-generators.ps1 -Cadence daily.</span></div></div>';
+    el.innerHTML=html; return;
+  }
+  if(!worst && line) html+='<div class="tn-row"><span class="tn-verb">STOCK</span><span class="tn-what">Unknown</span>'
+    +'<span class="tn-sub">No hangar snapshot, so nothing can be called blocked. Paste one in the portal to get the binding constraint.</span></div>';
   html+='</div>';
   el.innerHTML=html;
 }
@@ -233,7 +247,15 @@ function render(){
       +'<td class="num">'+m(r.slot_hour)+'</td></tr>';
   }).join("");
   if(tab==="lines"){ Array.prototype.forEach.call(document.querySelectorAll("#tb tr"),function(tr,i){ tr.style.cursor="pointer"; tr.onclick=function(){ S.pick=rows[i]; renderChain(); }; }); }
-  $("hint").textContent=rows.length+" rows"+(tab==="ore"?" (best variant per family)":"");
+  if(!rows.length){
+    var src = tab==="ore" ? S.ore.length : S.lines.length;
+    $("tb").innerHTML='<tr><td colspan="'+COLS[tab].length+'" class="mt">'
+      + (src ? 'Nothing matches "'+esc(S.q)+'". Clear the filter to see all '+src+'.'
+             : (tab==="ore" ? 'The ore assay has not reported. Run wake-generators.ps1 -Cadence daily, then reload.'
+                            : 'The build assay has not reported. Run wake-generators.ps1 -Cadence daily, then reload.'))
+      + '</td></tr>';
+  }
+  $("hint").textContent=rows.length+" rows"+(tab==="ore"&&rows.length?" (best variant per family)":"");
   $("note").innerHTML = tab==="ore"
     ? "Ranked on ISK per RAW m&sup3;, which is what the mining laser produces, so it needs no calibration. "
       +"<b>pays miner</b> is the buyback at the current basis. Rows marked <i>officers only</i> are lowsec or null "
@@ -295,12 +317,19 @@ fetch("/api/assay",{credentials:"same-origin"}).then(function(r){return r.json()
   $("app").style.display="";
   S.ore=(d.ore&&d.ore.rows)||[]; S.lines=(d.build&&d.build.rows)||[]; S.stock=d.stock||null;
   var b=d.ore||d.build||{};
-  $("basisSt").innerHTML = "basis <b>"+(b.basis_live?"live":"FELL BACK")+"</b>"+(b.basis_live?"":" &mdash; the portal was unreachable when this was computed");
+  $("basisSt").innerHTML = "basis <b>"+(b.basis_live?"live":"FELL BACK")+"</b>"+(b.basis_live?"":". The portal was unreachable when this ran, so these are last-known numbers.");
   if(!b.basis_live) $("basisSt").className="st warn";
   var h=b.stale_hours;
-  $("ageSt").textContent = h==null?"":("data "+(h<24?h+"h":Math.round(h/24)+"d")+" old"+(h>36?" — the nightly run may not have fired":""));
+  $("ageSt").textContent = h==null?"":("data "+(h<24?h+"h":Math.round(h/24)+"d")+" old"+(h>36?". The nightly run may not have fired.":""));
   renderTonight(); renderChain(); render();
-}).catch(function(){ $("gate").style.display=""; });
+}).catch(function(){
+  // A dead fetch is not a denied one. Saying "not your clearance" to an officer
+  // whose wifi blinked sends them to ask for access they already have.
+  $("gate").style.display="";
+  var t=$("gateBody"); if(t) t.innerHTML="The Assay did not answer. That is the page failing, not your access. "
+    +"Reload; if it keeps happening the portal worker is down and GSS wants to know.";
+  var h=$("gateHead"); if(h) h.textContent="Could not reach The Assay";
+});
 </script>
 <script src="/nav.js?v=16"></script>
 </body></html>
