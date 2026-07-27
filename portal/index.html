@@ -495,7 +495,11 @@
   .gs-l-ready i{ color:var(--silver); }
   .gs-l-running{ border-color:var(--ore); } .gs-l-running i{ color:var(--ore); }
   .gs-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
-  .gs-stock{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft); }
+  .gs-mine{margin-top:8px;padding:8px 10px;border-left:3px solid var(--ore);background:rgba(255,255,255,.02);font-family:var(--mono,monospace);font-size:12px;color:var(--silver-dim);}
+.gs-mine b{color:var(--ore);letter-spacing:.08em;margin-right:8px;}
+.gs-mine span{color:var(--silver);font-weight:700;}
+.gs-mine i{display:block;font-style:normal;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5;}
+.gs-stock{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft); }
   .gs-c{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:2px 8px; border:1px solid var(--line); color:var(--silver-dim); }
   .gs-c-red{ color:var(--red,#f0817a); border-color:var(--red,#f0817a); }
   .gs-c-amber{ color:#e0c05a; border-color:rgba(224,192,90,.55); }
@@ -1280,17 +1284,19 @@ function renderGoal(){
   var inSec = '';
   var co = S.works.coreOres;
   if (co && co.length){
+    // ONE instruction, and it cannot go stale. The old per mineral day counts came off a
+    // hand pasted hangar snapshot nobody could keep current, so they published precise
+    // numbers that silently drifted wrong. The PRIORITY tag already says what we are
+    // short of, so this states it plainly instead of counting it badly.
     var chips = '';
-    if (g.stock && g.stock.length){
-      var SHORT = {Tritanium:'Trit',Pyerite:'Pyer',Mexallon:'Mex',Isogen:'Iso',Nocxium:'Nocx'};
-      var agoTxt = '';
-      if (g.stockAt){ var hAgo = Math.max(0, Math.round((Date.now()-Date.parse(g.stockAt))/3600000));
-        agoTxt = hAgo < 1 ? 'hangar counted just now' : 'hangar counted '+(hAgo>=48? Math.round(hAgo/24)+'d' : hAgo+'h')+' ago'; }
-      chips = '<div class="gs-stock">' + g.stock.map(function(c){
-        var d = c.d==null? null : Number(c.d);
-        var cls = (d!=null && d<10 ? ' gs-c-red' : d!=null && d<30 ? ' gs-c-amber' : '') + (c.buy?' gs-c-buy':'');
-        return '<span class="gs-c'+cls+'" data-i18n-skip>'+esc(SHORT[c.m]||c.m)+' '+(d!=null?d+'d':'&mdash;')+(c.buy?' BUY':'')+'</span>';
-      }).join('') + '<span class="gs-stocklbl">days of minerals &middot; '+agoTxt+'</span></div>';
+    var pri = co.filter(function(o){ return o.role==='priority'; });
+    var names = pri.map(function(o){ return String(o.ore||'').toUpperCase(); });
+    if (!names.length) names = co.slice(0,1).map(function(o){ return String(o.ore||'').toUpperCase(); });
+    if (names.length){
+      var what = names.join(' or ');
+      var why  = pri.length && pri[0].min ? ' It becomes ' + esc(pri[0].min) + ', which is the one we run out of first.' : '';
+      chips = '<div class="gs-mine"><b>MINE THIS</b> <span data-i18n-skip>'+esc(what)+'</span>'
+            + '<i>'+why+' Everything else is nice. This is the assignment.</i></div>';
     }
     inSec = '<div class="gs-sec"><div class="gs-k">&#9935; IN &middot; WHAT THE MACHINE EATS</div><div class="gs-orerow">'
       + co.map(function(o){ var pri = o.role==='priority';
