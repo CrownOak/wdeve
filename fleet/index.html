@@ -73,7 +73,12 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .fbempty{ font-family:var(--mono); font-size:11.5px; color:var(--muted); padding:8px 0; }
 .fbpri{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:12px; }
 .fbpri b{ color:var(--ore); }
-.fbback{ margin:0 0 8px; }
+.fbback{ margin:0 0 10px; }
+/* the way back to the fleet board has to read as a BUTTON, not a stray glyph
+   (Kyle 2026-07-28: "i want there to be a back button in fleet command") */
+.fbbackbtn{ font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--silver); background:transparent; border:1px solid var(--line); padding:7px 14px; cursor:pointer; }
+.fbbackbtn:hover{ color:var(--ore); border-color:var(--ore); }
 .svhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em; font-size:16px; color:var(--silver); margin:4px 0 8px; display:flex; align-items:center; gap:12px; }
 .svnote{ font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.55; max-width:560px; margin-bottom:12px; }
 #soloView{ max-width:620px; }
@@ -485,7 +490,7 @@ tr.haulrow{ cursor:pointer; }
       </div>
 
       <div id="fleetTab">
-        <div class="fbback"><button id="toBoard" class="link">&#9935; fleets</button></div>
+        <div class="fbback"><button id="toBoard" class="fbbackbtn">&larr; FLEET SELECT</button></div>
         <div class="fgrid">
           <!-- scout column (Kyle: at a glance, left of the paste box). Static DOM
                per DR-FLEET-12: only #scout / #scfrom / #scfoot / #sckillwrap
