@@ -58,7 +58,41 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .card h3 .sub{ float:right; color:var(--muted); letter-spacing:.06em; text-transform:none; }
 .rail{ display:flex; flex-direction:column; gap:16px; }
 
-/* the neighborhood graph */
+
+/* ---- THE BOARD. Ranked triage, built to ICD 203 (bottom line first, confidence stated
+   separately from any likelihood) and the Admiralty Code (source letter + credibility
+   number on every assessment). Grey is the default because most files are background. ---- */
+.bluf{ font-size:14px; line-height:1.55; color:var(--silver); border-left:3px solid var(--ore);
+  padding:10px 12px; background:rgba(255,255,255,.02); margin:0 0 10px; }
+.bluf .conf{ display:block; margin-top:6px; font-family:var(--mono); font-size:10.5px;
+  color:var(--muted); letter-spacing:.04em; }
+.bfilters{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 10px; }
+.bfilters button{ font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+  padding:5px 10px; background:transparent; border:1px solid var(--line); color:var(--muted); cursor:pointer; }
+.bfilters button.on{ border-color:var(--ore); color:var(--ore); }
+.brow{ display:grid; grid-template-columns:14px 1fr auto; gap:10px; align-items:baseline;
+  padding:9px 4px; border-bottom:1px solid var(--line-soft); cursor:pointer; }
+.brow:hover{ background:rgba(255,255,255,.025); }
+.brow .bdot{ width:8px; height:8px; border-radius:50%; margin-top:5px; }
+.brow .bname{ font-family:var(--display); font-size:14px; color:var(--silver); font-weight:700; }
+.brow .btick{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-left:6px; }
+.brow .bsum{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); line-height:1.5; margin-top:3px; }
+.brow .bmeta{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
+.brow .bright{ text-align:right; font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap; }
+/* Admiralty grade. A1 is authoritative and confirmed; D3/F6 is somebody typed it. The
+   board must never make those look the same. */
+.grade{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em;
+  padding:1px 5px; border:1px solid; }
+.grade.g-a{ color:#46ff5e; border-color:rgba(70,255,94,.45); }
+.grade.g-b{ color:#9fd8a6; border-color:rgba(159,216,166,.35); }
+.grade.g-d{ color:var(--amber,#e9c46a); border-color:rgba(233,196,106,.35); }
+.grade.g-f{ color:var(--red,#f0817a); border-color:rgba(240,129,122,.35); }
+.onground{ color:#f0817a; font-weight:700; }
+.stale{ color:var(--amber,#e9c46a); }
+.bkey{ font-family:var(--mono); font-size:10px; color:var(--muted); line-height:1.7; margin-top:12px;
+  border-top:1px solid var(--line-soft); padding-top:9px; }
+
+/* the neighborhood graph (removed) */
 #gcard{ padding-bottom:8px; }
 #gsvg{ width:100%; height:430px; display:block; }
 #gsvg .edge{ stroke:rgba(159,178,188,.22); stroke-width:1; }
@@ -281,10 +315,12 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 
     <div class="wb">
       <div class="main-col">
-        <div class="card" id="gcard">
-          <h3>The Neighborhood <span class="sub" id="gsub">who ties to whom</span></h3>
-          <svg id="gsvg" role="img" aria-label="relationship graph"></svg>
-          <div class="gsel" id="gsel"></div>
+        <div class="card" id="bcard">
+          <h3>Who should I worry about today <span class="sub" id="bsub"></span></h3>
+          <div class="bluf" id="bluf"></div>
+          <div class="bfilters" id="bfilters"></div>
+          <div class="btable" id="btable"></div>
+          <div class="bkey" id="bkey"></div>
         </div>
 
         <div class="sec-h"><span class="ix">The Cabinet</span></div>
@@ -393,7 +429,7 @@ function init(){
     if(w && w.loggedIn && w.gss){
       document.getElementById("gate").style.display="none";
       document.getElementById("app").style.display="block";
-      loadBoard(); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
+      loadBoard(); loadBoard2(); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
       setInterval(loadDanger, 300000);
       return;
     }
@@ -439,9 +475,81 @@ function loadEntities(cls){
   });
 }
 
+
+/* ---------- THE BOARD: ranked triage ----------
+   Replaces the relationship blob. Two standards do the work here:
+   ADMIRALTY CODE (NATO AJP-2.1): letter = source reliability, number = information
+   credibility. A1 is ESI-confirmed; D3 is somebody typed it and nothing checked.
+   ICD 203: bottom line first, and CONFIDENCE (about our sourcing) is stated separately
+   from any likelihood claim, never blended into one hedged sentence. */
+var BOARD=null, BFILT="threats";
+function gradeCls(g){ var c=(g||"F")[0]; return c==="A"?"g-a":c==="B"?"g-b":c==="D"?"g-d":"g-f"; }
+function loadBoard2(){
+  api("/gss/board2").then(function(d){
+    if(!d||!d.ok) return;
+    BOARD=d;
+    document.getElementById("bluf").innerHTML =
+      esc(d.bluf) +
+      '<span class="conf">confidence in this picture: <b>'+esc(d.confidence)+'</b> &middot; '+esc(d.confidence_basis)+'</span>';
+    document.getElementById("bsub").textContent = d.total+" files &middot; "+d.on_ground+" on our ground";
+    document.getElementById("bsub").innerHTML = d.total+" files &middot; "+d.on_ground+" on our ground";
+    renderBoard();
+    document.getElementById("bkey").innerHTML =
+      "<b>Grade</b> is Admiralty (NATO AJP-2.1): letter = source reliability, number = information credibility. "
+      + "<b>A1</b> ESI identity plus combat corroboration. <b>B2</b> killboard only, identity unconfirmed. "
+      + "<b>D3</b> hand entered, nothing has checked it. <b>F6</b> no basis to judge.<br>"
+      + "Ranked by priority, not by threat alone: standing on our ground outweighs raw capability, "
+      + "because a nine man crew on our gate matters more than a supercap alliance forty jumps away.";
+  });
+}
+function renderBoard(){
+  if(!BOARD) return;
+  var rows=BOARD.rows.filter(function(r){
+    if(r.classification==="self") return false;
+    if(BFILT==="threats") return ["hostile","hostile_priority","watch"].indexOf(r.classification)>=0;
+    if(BFILT==="ground")  return r.overlap && r.overlap.length;
+    if(BFILT==="stale")   return r.stale_days!=null && r.stale_days>21;
+    if(BFILT==="weak")    return r.grade && (r.grade[0]==="D"||r.grade[0]==="F");
+    return true;
+  });
+  var fl=[["threats","threats"],["ground","on our ground"],["stale","going stale"],["weak","thin sourcing"],["all","all files"]];
+  document.getElementById("bfilters").innerHTML=fl.map(function(f){
+    return '<button class="'+(BFILT===f[0]?"on":"")+'" data-bf="'+f[0]+'">'+esc(f[1])+'</button>'; }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-bf]"),function(b){
+    b.onclick=function(){ BFILT=b.getAttribute("data-bf"); renderBoard(); }; });
+
+  if(!rows.length){
+    document.getElementById("btable").innerHTML='<div class="foot-line">Nothing in this cut. '
+      +(BFILT==="threats"?"Either it is quiet or we have stopped looking.":"Try another filter.")+'</div>';
+    return;
+  }
+  document.getElementById("btable").innerHTML=rows.map(function(r){
+    var ci=clsInfo(r.classification);
+    var bits=[];
+    if(r.size) bits.push(Number(r.size).toLocaleString()+(r.active_pvp?(" ("+r.active_pvp+" active)"):"")+" pilots");
+    if(r.danger!=null) bits.push("danger "+r.danger);
+    if(r.where&&r.where.length) bits.push(r.where.map(function(w){
+      return (r.overlap.indexOf(w)>=0)?('<span class="onground">'+esc(w)+'</span>'):esc(w); }).join(", "));
+    var age = r.stale_days==null ? "never verified"
+            : r.stale_days===0 ? "today"
+            : r.stale_days+"d ago";
+    return '<div class="brow" data-eid="'+r.id+'">'
+      + '<span class="bdot" style="background:'+ci.c+'"></span>'
+      + '<span><span class="bname">'+esc(r.name)+'</span><span class="btick">'+esc(r.ticker||"")+'</span>'
+      +   (r.summary?'<div class="bsum">'+esc(String(r.summary).slice(0,150))+'</div>':'')
+      +   '<div class="bmeta">'+bits.join(" &middot; ")+'</div></span>'
+      + '<span class="bright"><span class="grade '+gradeCls(r.grade)+'" title="'+esc(r.grade_basis||"")+'">'+esc(r.grade)+'</span>'
+      +   '<br>T'+(r.threat_level||0)
+      +   '<br><span class="'+(r.stale_days!=null&&r.stale_days>30?"stale":"")+'">'+esc(age)+'</span></span>'
+      + '</div>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-eid]"),function(el){
+    el.onclick=function(){ openEntity(el.getAttribute("data-eid")); }; });
+}
+
 /* ---------- the neighborhood graph ---------- */
 function loadGraph(){
-  api("/gss/graph").then(function(d){
+  if(false) api("/gss/graph").then(function(d){
     if(!d||!d.ok) return;
     GRAPH=d;
     renderGraph();
@@ -482,6 +590,8 @@ function layoutGraph(nodes, edges, W, H){
   return pos;
 }
 function renderGraph(){
+  return; // the blob is gone: 44 nodes positioned by force equilibrium encoded nothing
+  /* eslint-disable no-unreachable */
   if(!GRAPH) return;
   var svg=document.getElementById("gsvg");
   var W=svg.clientWidth||800, H=430;
@@ -595,7 +705,7 @@ function showTip(key,ev){
   t.style.top=(ev.clientY+12)+"px";
 }
 function hideTip(){ document.getElementById("gtip").style.display="none"; }
-var rsz; window.addEventListener("resize",function(){ clearTimeout(rsz); rsz=setTimeout(renderGraph,220); });
+var rsz; window.addEventListener("resize",function(){ clearTimeout(rsz); rsz=setTimeout(renderBoard,220); });
 
 /* ---------- Derelik danger HUD ---------- */
 function loadDanger(){
@@ -838,11 +948,11 @@ function submitPaste(id){
   if(!v){ document.getElementById("rperr").textContent="nothing pasted"; return; }
   api("/gss/channel/"+id+"/roster",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paste:v})}).then(function(d){
     if(!d||!d.ok){ document.getElementById("rperr").textContent=(d&&d.error)||"the merge did not take"; return; }
-    openEntity(id); loadGraph(); loadBoard();
+    openEntity(id); loadGraph(); loadBoard(); loadBoard2();
   });
 }
 function enrich(id){ api("/gss/entity/"+id+"/enrich",{method:"POST"}).then(function(d){ openEntity(id); loadEntities(curClass); loadPersons(); }); }
-function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadEntities(curClass); }); }
+function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadBoard2(); loadEntities(curClass); }); }
 
 /* ---------- the debrief module ---------- */
 function personById(id){ return PERSONS.filter(function(p){return p.id===id;})[0]; }
@@ -927,7 +1037,7 @@ function fileDebrief(id){
   api("/gss/person/"+id+"/debrief",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(d){
     btn.disabled=false;
     if(!d||!d.ok){ document.getElementById("db_err").textContent=(d&&d.error)||"the file did not take"; return; }
-    loadPersons(); loadBoard();
+    loadPersons(); loadBoard(); loadBoard2();
     openEntity(id);
   });
 }
@@ -1006,7 +1116,7 @@ document.getElementById("f_go").addEventListener("click",function(){
     if(!d||!d.ok){ document.getElementById("f_err").textContent=(d&&d.error)||"could not file it"; return; }
     document.getElementById("f_name").value=""; document.getElementById("f_summary").value="";
     document.getElementById("addForm").classList.remove("show");
-    loadBoard(); loadEntities(curClass); loadGraph(); loadPersons();
+    loadBoard(); loadBoard2(); loadEntities(curClass); loadGraph(); loadPersons();
   });
 });
 
