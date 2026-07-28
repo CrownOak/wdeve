@@ -2,16 +2,15 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>THE HAUL BRIEF — Wilson Logistics</title>
+<title>GSS DERELIK BRIEF</title>
 <link rel="stylesheet" href="/common.css?v=6">
 <style>
-  /* THE HAUL BRIEF: a GSS product written FOR the people who move the freight.
-     Partner-facing, so it carries threat and ground truth and nothing about our
-     internal economics. Member-gated: WILOG logs in like anybody else. */
+  /* THE DERELIK BRIEF: a GSS product written for a partner who moves freight through
+     our region. Threat, terrain and road rules. No internal economics, ever. */
   :root{ --gs:#ff4757; --gsdim:rgba(255,71,87,.34); }
-  .hb{ max-width:900px; margin:0 auto; padding:18px 18px 72px; }
+  .hb{ max-width:920px; margin:0 auto; padding:18px 18px 72px; }
   .gate{ min-height:52vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-         text-align:center; padding:28px; font-family:var(--mono); font-size:13px; color:var(--silver-dim); }
+         text-align:center; padding:28px; font-family:var(--mono); font-size:13px; color:var(--silver-dim); line-height:1.9; }
   .gate a{ color:var(--ore); }
 
   .lede{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
@@ -19,28 +18,42 @@
   .lede .for{ font-family:var(--mono); font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
   .lede p{ margin:8px 0 0; font-size:15px; line-height:1.65; color:var(--silver); }
   .stamp{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-          color:var(--muted); text-align:right; margin:6px 0 22px; }
+          color:var(--muted); text-align:right; margin:6px 0 20px; }
+
+  .toc{ display:flex; flex-wrap:wrap; gap:7px; margin:0 0 8px; }
+  .toc a{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+          color:var(--muted); border:1px solid var(--line); padding:5px 10px; text-decoration:none; }
+  .toc a:hover{ color:var(--ore); border-color:var(--ore); }
 
   h2.sec{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.1em;
-          font-size:13px; color:var(--ore); margin:34px 0 4px; }
+          font-size:13px; color:var(--ore); margin:36px 0 4px; scroll-margin-top:14px; }
   h2.sec .n{ color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-right:8px; }
   .subhead{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:12px; }
   p.body{ font-size:14.5px; line-height:1.72; color:var(--silver-dim); margin:0 0 12px; }
   p.body b{ color:var(--silver); font-weight:600; }
   .pull{ border-left:3px solid var(--gs); background:rgba(255,71,87,.05); padding:12px 15px; margin:14px 0;
          font-size:14.5px; line-height:1.65; color:var(--silver); }
+  .pull.ore{ border-left-color:var(--ore); background:rgba(70,255,94,.045); }
 
   table{ width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:13px; }
   th{ text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
       color:var(--muted); border-bottom:1px solid var(--line); padding:7px 8px; font-weight:400; }
   td{ padding:8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); vertical-align:top; }
   td.k{ color:var(--silver); font-family:var(--mono); font-size:12px; white-space:nowrap; }
-  td.isk{ font-family:var(--mono); text-align:right; white-space:nowrap; color:var(--silver); }
+  td.num{ font-family:var(--mono); text-align:right; white-space:nowrap; color:var(--silver); }
   tr.bad td{ background:rgba(255,71,87,.055); }
+  tr.us td{ background:rgba(70,255,94,.045); }
   .tag{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
         border:1px solid var(--line); padding:2px 7px; color:var(--muted); white-space:nowrap; }
   .tag.red{ color:var(--gs); border-color:var(--gsdim); }
   .tag.amb{ color:var(--amber); border-color:rgba(255,159,10,.4); }
+  .tag.ore{ color:var(--ore); border-color:rgba(70,255,94,.4); }
+
+  .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(122px,1fr)); gap:9px; margin:12px 0; }
+  .stat{ background:var(--black); border:1px solid var(--line-soft); padding:11px 12px; }
+  .stat .v{ font-family:var(--display); font-weight:700; font-size:21px; color:var(--silver); }
+  .stat .l{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+            color:var(--muted); margin-top:3px; line-height:1.4; }
 
   .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,268px),1fr)); gap:11px; margin-top:10px; }
   .card{ background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--gs); padding:13px 14px; }
@@ -61,148 +74,251 @@
   ol.rules li b{ color:var(--silver); font-weight:600; }
 
   .live{ background:var(--steel-2); border:1px solid var(--line); padding:12px 14px; margin:10px 0 0;
-         font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+         font-family:var(--mono); font-size:12px; color:var(--silver-dim); line-height:1.6; }
   .live b{ color:var(--ore); }
   .foot{ margin-top:46px; border-top:1px solid var(--line-soft); padding-top:16px;
-         font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); line-height:1.8; }
-  @media(max-width:620px){ td.k{ white-space:normal; } }
+         font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); line-height:1.9; }
+  @media(max-width:620px){ td.k{ white-space:normal; } .stat .v{ font-size:18px; } }
 </style></head>
 <body>
 <script src="/nav.js?v=16"></script>
 
 <header class="bnhead">
   <div class="bnover">Goblin State Security</div>
-  <h1>THE HAUL BRIEF</h1>
-  <div class="sub">prepared for Wilson Logistics [WILOG] &middot; who is hunting freight on our roads, and what to do about it</div>
+  <h1>THE DERELIK BRIEF</h1>
+  <div class="sub">the ground we work, who works it with us, and what it costs to cross it</div>
 </header>
 
 <div class="hb">
   <div id="gate" class="gate" style="display:none">
-    This brief is for the people who move the freight.<br>
-    <a href="/portal/">Log in</a> and it opens. If you need an account, ask Fear.
+    This brief is for goblins and the people who haul for them.<br>
+    <a href="/portal/">Log in</a> and it opens.<br>
+    Need an account? Ask Fear.
   </div>
 
   <div id="doc" style="display:none">
     <div class="lede">
-      <div class="for">For: Wilson Logistics &middot; From: GSS &middot; Classification: partner</div>
+      <div class="for">Prepared for Wilson Logistics [WILOG] &middot; From GSS &middot; Partner document</div>
       <p>Nobody has declared war on us, and that is not the good news it sounds like. The people
-      working our roads do not need a war to take your freight, and in the last three days they
-      have taken ours twice. This is everything we know, written for haulers.</p>
+      working this region do not need a war to take your freight, and in the last three days they
+      have taken ours twice. Here is the whole ground: what Derelik actually is, who hunts on it,
+      where they do it, and the rules that keep a hauler alive.</p>
     </div>
-    <div class="stamp">Compiled 2026-07-28 &middot; sources: ESI, zKillboard, GSS files, corridor tripwire</div>
+    <div class="stamp">Compiled 2026-07-28 &middot; ESI, zKillboard, GSS files, corridor tripwire</div>
 
-    <h2 class="sec"><span class="n">01</span> THE HEADLINE</h2>
+    <div class="toc">
+      <a href="#s1">01 Headline</a><a href="#s2">02 Terrain</a><a href="#s3">03 Who works it</a>
+      <a href="#s4">04 Hotspots</a><a href="#s5">05 Cautionary tale</a><a href="#s6">06 Hunting us</a>
+      <a href="#s7">07 Your record</a><a href="#s8">08 The road</a><a href="#s9">09 Blind spot</a>
+      <a href="#s10">10 The deal</a>
+    </div>
+
+    <h2 class="sec" id="s1"><span class="n">01</span> THE HEADLINE</h2>
     <div class="subhead">PHEW is at war with nobody. It has not slowed them down at all.</div>
     <p class="body">We scanned six thousand war declarations, covering December 2025 to this week,
-    against <b>PURPLE HELMETED WARRIORS [PHEW]</b> and all eighteen of their member corps.
-    They currently hold <b>no active wars</b>. Four in the last seven months, all closed by 13 July:</p>
+    against <b>PURPLE HELMETED WARRIORS [PHEW]</b> and all eighteen of their member corps. They hold
+    <b>no active wars</b>. Four in seven months, every one closed by 13 July:</p>
     <table>
       <thead><tr><th>War</th><th>Window</th><th>Outcome</th></tr></thead>
       <tbody>
         <tr><td class="k">Honkai Star Rail &rarr; PHEW</td><td class="k">2&ndash;6 Jul</td><td>Zero kills. Declared, achieved nothing, dropped it.</td></tr>
-        <tr><td class="k">AlcoSquad &rarr; PHEW</td><td class="k">3&ndash;11 Jul</td><td>Zero kills. Same.</td></tr>
+        <tr><td class="k">AlcoSquad &rarr; PHEW</td><td class="k">3&ndash;11 Jul</td><td>Zero kills. Same story.</td></tr>
         <tr><td class="k">PHEW &rarr; Curatores Veritatis Aux.</td><td class="k">6&ndash;8 Jul</td><td>5 kills, 0.58B. Their best showing.</td></tr>
         <tr><td class="k">PHEW &rarr; Aurelion Frame</td><td class="k">6&ndash;13 Jul</td><td>Zero kills.</td></tr>
       </tbody>
     </table>
-    <p class="body">For an alliance with <b>224,000 lifetime kills and 723 members</b>, that war record is
-    close to noise. The conclusion is not that they are harmless. It is that <b>highsec war is not
-    the tool they use</b>, so watching the war list tells you nothing about your actual risk.</p>
-
-    <div class="pull"><b>What they do instead:</b> on 28 July, at 07:31 and 07:34, one pilot from a PHEW
+    <p class="body">For an alliance with <b>224,000 lifetime kills and 723 members</b>, that is close to
+    noise. The conclusion is not that they are harmless. It is that <b>highsec war is not the tool they
+    use</b>, so the war list tells you nothing about your real risk.</p>
+    <div class="pull"><b>What they do instead:</b> on 28 July at 07:31 and 07:34, one pilot from a PHEW
     member corp killed two of our mining ships three minutes apart, solo, in a wormhole. No war, no
-    CONCORD, no consequences. Roughly <b>556 million ISK</b> in three minutes.</div>
+    CONCORD, no consequences. About <b>556 million ISK in three minutes</b>.</div>
 
-    <h2 class="sec"><span class="n">02</span> WHO IS ACTUALLY HUNTING</h2>
-    <div class="subhead">Filed, named, and seen on our ground in the last week</div>
+    <h2 class="sec" id="s2"><span class="n">02</span> THE TERRAIN</h2>
+    <div class="subhead">Derelik, measured rather than remembered</div>
+    <div class="stats">
+      <div class="stat"><div class="v">117</div><div class="l">systems</div></div>
+      <div class="stat"><div class="v">16</div><div class="l">constellations</div></div>
+      <div class="stat"><div class="v">64</div><div class="l">highsec</div></div>
+      <div class="stat"><div class="v">51</div><div class="l">lowsec</div></div>
+      <div class="stat"><div class="v">0</div><div class="l">nullsec</div></div>
+    </div>
+    <p class="body">The number that matters is the last one. <b>Derelik has no nullsec at all</b>, and
+    it is <b>44% lowsec</b>. This is not a safe region with a rough edge; it is a region that is nearly
+    half rough, with a highsec pocket we happen to live in. That single fact explains the corridor,
+    the escorts, and most of this document.</p>
+    <p class="body">We work three constellations. Everything else in Derelik is somebody else's problem:</p>
+    <table>
+      <thead><tr><th>Constellation</th><th>What it is to us</th><th>Systems that matter</th></tr></thead>
+      <tbody>
+        <tr class="us"><td class="k">Hevaka <span class="tag ore">home</span></td>
+          <td>Where we live. Mohas at <b>0.68</b> is the anchor.</td>
+          <td class="k">Mohas, Nimambal, Uplingur, Hasiari, Radima, Alkez, Yishinoon</td></tr>
+        <tr><td class="k">Joas <span class="tag red">the door</span></td>
+          <td>The lowsec mouth. Both corridor legs sit here.</td>
+          <td class="k">Ubtes (0.34), Khabi (0.25)</td></tr>
+        <tr><td class="k">Mekashtad</td>
+          <td>Neighbour ground. <b>Sharir is lowsec at 0.4</b>, which surprises people.</td>
+          <td class="k">Sharir</td></tr>
+      </tbody>
+    </table>
+    <p class="body">Past Khabi you leave Derelik entirely. <b>7Q-8Z2, SUR-F7, OK-6XN and U3K-4A are
+    Great Wildlands nullsec</b>, and JPL-RA with them. Nothing out there is patrolled by anyone but us.</p>
+
+    <h2 class="sec" id="s3"><span class="n">03</span> WHO WORKS THIS GROUND</h2>
+    <div class="subhead">Every group on a Derelik killmail in the last day, ranked by how often they appear</div>
+    <table>
+      <thead><tr><th>Group</th><th>Appearances</th><th>Read</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="k">okay-buddy <span class="tag red">dominant</span></td><td class="num">114</td>
+          <td>A <b>20 man independent corp</b> outkilling everyone else in the region combined. Danger 80, gang 98, so they move as a group and rarely alone.</td></tr>
+        <tr><td class="k">Goonswarm Federation</td><td class="num">45</td>
+          <td>A nullsec bloc passing through our region. Not resident, not interested in us, still 45 guns.</td></tr>
+        <tr><td class="k">Curatores Veritatis Alliance</td><td class="num">22</td>
+          <td>The Providence crowd, working the lowsec edges.</td></tr>
+        <tr><td class="k">Curatores Veritatis Auxiliary</td><td class="num">13</td>
+          <td>CVA's second wing. PHEW decced them earlier this month and got five kills.</td></tr>
+        <tr><td class="k">Reduced Connections</td><td class="num">11</td><td>Small independent corp, 20 members.</td></tr>
+        <tr><td class="k">Absolute Will</td><td class="num">6</td><td>Occasional.</td></tr>
+        <tr><td class="k">Desolate.</td><td class="num">5</td><td>Already on file with us.</td></tr>
+        <tr><td class="k">PURPLE HELMETED WARRIORS</td><td class="num">3</td>
+          <td><b>Only three.</b> PHEW is barely present in Derelik itself, which is exactly why section 01 matters: they hit us somewhere else entirely.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sec" id="s4"><span class="n">04</span> THE HOTSPOTS</h2>
+    <div class="subhead">Where people actually died today, and where the traffic is</div>
+    <table>
+      <thead><tr><th>System</th><th>Kills sampled</th><th>What is going on</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="k">Abha</td><td class="num">9</td>
+          <td>The killing field. One corp farming another, see section 05.</td></tr>
+        <tr class="bad"><td class="k">Uplingur <span class="tag amb">home constellation</span></td><td class="num">5</td>
+          <td><b>This is in Hevaka, with Mohas.</b> Second deadliest system in the region today and it is on our doorstep.</td></tr>
+        <tr><td class="k">Chidah</td><td class="num">5</td><td>Steady.</td></tr>
+        <tr><td class="k">Majamar</td><td class="num">3</td><td>Steady.</td></tr>
+        <tr><td class="k">Uanzin</td><td class="num">2</td><td>Known camp ground. We lost an Iteron here on 26 July.</td></tr>
+        <tr><td class="k">Sosa</td><td class="num">2</td><td>Occasional.</td></tr>
+      </tbody>
+    </table>
+    <p class="body">Traffic is a different map from danger, and worth knowing when you plan a run. The
+    busiest Derelik systems in the last hour were <b>Sasta (392 ship jumps), Jark (284), Lashesih (221)
+    and Tanoo (182)</b>. Our own ground is quiet by comparison: Khabi moved 37 ships, Mohas 18. Quiet is
+    good for us and it is also why a hostile in Khabi is immediately obvious.</p>
+    <div class="live" id="live">Reading the corridor&hellip;</div>
+
+    <h2 class="sec" id="s5"><span class="n">05</span> THE CAUTIONARY TALE</h2>
+    <div class="subhead">Golden Duck Company, and what happens to a corp that cannot shoot back</div>
+    <p class="body">Almost every kill in Abha today is the same fight: <b>okay-buddy</b>, twenty
+    pilots, hunting <b>Golden Duck Company</b>, fourteen pilots. Eight of the sampled victims were
+    <b>Ravens</b>, the same hull dying again and again, plus a Metenox moon drill for good measure.</p>
+    <div class="stats">
+      <div class="stat"><div class="v">83</div><div class="l">Golden Duck kills</div></div>
+      <div class="stat"><div class="v">649</div><div class="l">Golden Duck losses</div></div>
+      <div class="stat"><div class="v">9</div><div class="l">danger rating</div></div>
+      <div class="stat"><div class="v">225</div><div class="l">okay-buddy kills</div></div>
+      <div class="stat"><div class="v">80</div><div class="l">their danger</div></div>
+    </div>
+    <p class="body">Six hundred and forty nine losses against eighty three kills. That is not bad luck
+    across a bad week, that is a corp being <b>farmed as a food source</b>, in highsec, by a group a
+    third smaller than a mining fleet. Nobody is coming to help them, so it continues.</p>
+    <div class="pull">This is the entire argument for GOBSEC in one killboard. The difference between
+    Golden Duck and us is not ship quality or ISK. It is whether anyone undocks when your Raven
+    starts taking damage. That is the whole product.</div>
+
+    <h2 class="sec" id="s6"><span class="n">06</span> WHO IS HUNTING US SPECIFICALLY</h2>
+    <div class="subhead">Named, filed, and seen on our ground inside the last week</div>
     <div class="cards">
       <div class="card">
         <div class="t">0rford</div><div class="m">Dominion Guild &middot; PHEW member corp</div>
         <div class="d">Killed a Covetor (458M) and a Procurer (98M) three minutes apart on 28 July,
           <b>solo in a Kikimora</b>, inside wormhole J144004. Also took an Iteron in Uanzin on 26 July.</div>
-        <div class="do">Three of our losses in three days. Assume he is hunting, not passing through.</div>
+        <div class="do">Three of our losses in three days. He is hunting, not passing through.</div>
       </div>
       <div class="card">
         <div class="t">Kriomnimus</div><div class="m">JPL Citizenry &middot; resident camper</div>
-        <div class="d">6,343 kills, 1,702 solo, danger 89. Sits a bubble in <b>JPL-RA</b>, in a corp
-          named after the system. This is his home and he does not leave it.</div>
-        <div class="do">Do not route JPL-RA. There is no clever timing that beats living there.</div>
+        <div class="d">6,343 kills, 1,702 solo, danger 89. Sits a bubble in <b>JPL-RA</b> in a corp
+          named after the system. It is his home and he does not leave it. 23 ships moved through
+          there in the last hour and one of them died.</div>
+        <div class="do">Do not route JPL-RA. No clever timing beats a man who lives there.</div>
       </div>
       <div class="card">
         <div class="t">Wildlands Tactical Response</div><div class="m">WILDU &middot; corridor</div>
-        <div class="d">Took a Hulk in 7Q-8Z2 on 26 July. Works the null end of our mining corridor.</div>
-        <div class="do">7Q is the null mouth. Nothing slow goes through it unescorted.</div>
+        <div class="d">Took a Hulk in 7Q-8Z2 on 26 July. Works the null end of the mining corridor.</div>
+        <div class="do">7Q is the null mouth. Nothing slow crosses it unescorted.</div>
       </div>
       <div class="card">
         <div class="t">The Burning Skull</div><div class="m">TBS &middot; gank camp</div>
         <div class="d">Took a Stabber in Ubtes on 26 July. Ubtes is leg one, the lowsec doorway.</div>
-        <div class="do">If Ubtes is hot, the run has not started yet. Turn around.</div>
+        <div class="do">If Ubtes is hot the run has not started yet. Turn around.</div>
       </div>
     </div>
 
-    <h2 class="sec"><span class="n">03</span> YOUR OWN RECORD</h2>
+    <h2 class="sec" id="s7"><span class="n">07</span> YOUR OWN RECORD</h2>
     <div class="subhead">Seven losses on the WILOG board. One of them is the whole lesson.</div>
     <table>
       <thead><tr><th>When</th><th>Where</th><th>Hull</th><th>Value</th><th>Killed by</th></tr></thead>
       <tbody>
-        <tr class="bad"><td class="k">2025-10-26</td><td class="k">Uedama <span class="tag red">choke</span></td><td class="k">Obelisk</td><td class="isk">4,067M</td><td>Painter Freight Services &middot; <b>59 attackers</b></td></tr>
-        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Deluge</td><td class="isk">210M</td><td>Red Lizzie's Pirate Crew &middot; 2</td></tr>
-        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Capsule</td><td class="isk">15M</td><td>Red Lizzie's Pirate Crew</td></tr>
-        <tr><td class="k">2025-10-09</td><td class="k">Perimeter</td><td class="k">Capsule</td><td class="isk">76M</td><td>Triglavian response</td></tr>
-        <tr><td class="k">2025-09-06</td><td class="k">Athounon</td><td class="k">Shuttle + pod</td><td class="isk">0M</td><td>Know-Nothings</td></tr>
-        <tr><td class="k">2025-06-30</td><td class="k">3KNK-A</td><td class="k">Loki</td><td class="isk">524M</td><td>Nocturnal Romance &middot; 8</td></tr>
+        <tr class="bad"><td class="k">2025-10-26</td><td class="k">Uedama <span class="tag red">choke</span></td><td class="k">Obelisk</td><td class="num">4,067M</td><td>Painter Freight Services &middot; <b>59 attackers</b></td></tr>
+        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Deluge</td><td class="num">210M</td><td>Red Lizzie's Pirate Crew &middot; 2</td></tr>
+        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Capsule</td><td class="num">15M</td><td>Red Lizzie's Pirate Crew</td></tr>
+        <tr><td class="k">2025-10-09</td><td class="k">Perimeter</td><td class="k">Capsule</td><td class="num">76M</td><td>Triglavian response</td></tr>
+        <tr><td class="k">2025-09-06</td><td class="k">Athounon</td><td class="k">Shuttle + pod</td><td class="num">0M</td><td>Know-Nothings</td></tr>
+        <tr><td class="k">2025-06-30</td><td class="k">3KNK-A</td><td class="k">Loki</td><td class="num">524M</td><td>Nocturnal Romance &middot; 8</td></tr>
       </tbody>
     </table>
-    <p class="body">The Obelisk is the one worth sitting with. <b>Fifty-nine attackers in Uedama</b>
-    is not bad luck and it is not something a better pilot survives. That is an industry with a
-    shift schedule, and the only defences that work against it are the ones you apply before
-    undocking: cargo value, timing, and route.</p>
-    <p class="body">Everything else on your board is small, which is the actual compliment here.
-    Your crew does not lose freight often. When you do, it is at a famous chokepoint or deep in
-    null, and both of those are route decisions rather than piloting ones.</p>
+    <p class="body">The Obelisk is the one worth sitting with. <b>Fifty-nine attackers in Uedama</b> is
+    not bad luck and it is not something a better pilot survives. That is an industry with a shift
+    schedule, and the only defences that work are applied before undock: cargo value, timing, route.</p>
+    <p class="body">Everything else on your board is small, which is the real compliment. Your crew does
+    not lose freight often. When you do it is at a famous chokepoint or deep in null, and both of those
+    are route decisions rather than piloting ones.</p>
 
-    <h2 class="sec"><span class="n">04</span> THE GROUND</h2>
+    <h2 class="sec" id="s8"><span class="n">08</span> THE ROAD</h2>
     <div class="subhead">Named systems, standing rules, no guessing</div>
     <table>
       <thead><tr><th>System</th><th>What it is</th><th>Rule</th></tr></thead>
       <tbody>
         <tr><td class="k">Uedama <span class="tag red">choke</span></td><td>The freighter graveyard. Ganking here is a scheduled business.</td><td>Anything expensive waits for a quiet hour or goes around.</td></tr>
-        <tr><td class="k">Ahbazon <span class="tag red">choke</span></td><td>The Genesis funnel. Permanent camp economy. We lost a Tayra here on 27 July.</td><td>Never the default route for value.</td></tr>
+        <tr><td class="k">Ahbazon <span class="tag red">choke</span></td><td>The Genesis funnel, permanent camp economy. We lost a Tayra here on 27 July.</td><td>Never the default route for value.</td></tr>
         <tr><td class="k">Sivala <span class="tag amb">choke</span></td><td>Uedama's little brother on the Caldari pipe.</td><td>Same business, fewer headlines, same dead freighters.</td></tr>
-        <tr><td class="k">Khabi <span class="tag red">the door</span></td><td>Lowsec mouth into the Wildlands. Leg two of our corridor.</td><td>Eyes here first, always. If Khabi is hot, the run is off. No debate.</td></tr>
+        <tr><td class="k">Khabi <span class="tag red">the door</span></td><td>Lowsec mouth into the Wildlands, corridor leg two.</td><td>Eyes here first, always. If Khabi is hot the run is off. No debate.</td></tr>
         <tr><td class="k">7Q-8Z2 <span class="tag red">null mouth</span></td><td>First truesec system. Pods die here at camps.</td><td>Two pods in an hour and you wait or you go home.</td></tr>
-        <tr><td class="k">JPL-RA <span class="tag red">occupied</span></td><td>Bubbled chokepoint with a resident who lives there.</td><td>Route around unless you brought people who shoot back.</td></tr>
+        <tr><td class="k">JPL-RA <span class="tag red">occupied</span></td><td>Bubbled chokepoint with a resident.</td><td>Route around unless you brought people who shoot back.</td></tr>
+        <tr><td class="k">Uplingur <span class="tag amb">watch</span></td><td>Home constellation, and second deadliest system in Derelik today.</td><td>New on this list. Treat it as live until it goes quiet again.</td></tr>
         <tr><td class="k">SUR-F7</td><td>Deep run. No stations, no friends, no reason to linger.</td><td>Pass through. Do not park.</td></tr>
       </tbody>
     </table>
-    <div class="live" id="live">Reading the corridor&hellip;</div>
 
-    <h2 class="sec"><span class="n">05</span> THE BLIND SPOT, STATED PLAINLY</h2>
-    <p class="body">Our tripwire watches the corridor and three regions, and it is good at that. It did
-    <b>not</b> catch this morning's two kills, because they happened in a wormhole, and a wormhole is
-    in none of those lists. Nobody got a warning. We are telling you that rather than quietly
-    fixing it, because you route through places our sensors do not cover and you should know exactly
-    where the edge of our vision is.</p>
+    <h2 class="sec" id="s9"><span class="n">09</span> THE BLIND SPOT, STATED PLAINLY</h2>
+    <p class="body">Our tripwire watches the corridor and three regions and it is good at that. It did
+    <b>not</b> catch this morning's two kills, because they happened in a wormhole, and a wormhole is in
+    none of those lists. Nobody got a warning. We are telling you rather than quietly fixing it,
+    because you route through places our sensors do not cover and you should know exactly where the
+    edge of our vision sits.</p>
     <div class="pull">Silence from us is not the same as safety. It means nothing died where we were
-    looking. We are moving to alerting on <b>any</b> alliance loss anywhere, not just inside the
+    looking. We are moving to alerting on <b>any</b> alliance loss anywhere, not only inside the
     watched systems.</div>
 
-    <h2 class="sec"><span class="n">06</span> WHAT WE ASK, AND WHAT YOU GET</h2>
+    <h2 class="sec" id="s10"><span class="n">10</span> THE DEAL</h2>
     <ol class="rules">
       <li><b>Tell us before the expensive runs.</b> Not permission, warning. An escort that knows the
         route exists is worth more than one scrambled after a gate goes red.</li>
       <li><b>Post your losses, even the embarrassing ones.</b> Every hull on the board becomes a file,
         and a file is what stops the second one.</li>
-      <li><b>Use the road rules above.</b> Most of what killed freight this year was a route choice
-        made before undock.</li>
+      <li><b>Use the road rules.</b> Most of what killed freight this year was a route choice made
+        before undock.</li>
       <li><b>What you get back:</b> corridor danger read live on the map, named files on everyone
         working this ground, an escort wing standing up now, and a straight answer whenever you ask
         whether the road is clear. If we do not know, we will say we do not know.</li>
     </ol>
+    <div class="pull ore">Golden Duck Company is what happens without the fourth item. That is the
+    only sales pitch in this document and we would rather you never need it.</div>
 
     <div class="foot">
-      GOBLIN STATE SECURITY &middot; prepared for Wilson Logistics &middot; 2026-07-28<br>
-      Partner document. Threat picture and road rules only, no internal figures.<br>
+      GOBLIN STATE SECURITY &middot; THE DERELIK BRIEF &middot; prepared for Wilson Logistics &middot; 2026-07-28<br>
+      Partner document. Threat picture, terrain and road rules only, no internal figures.<br>
+      Region and war data from ESI; kill sampling from zKillboard over the last day; corridor state live.<br>
       Corrections and new sightings: send them and the file changes.<br>
       <b>Assume nothing. There is always a file.</b>
     </div>
@@ -215,16 +331,18 @@
   try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
   if(!who||!who.loggedIn){ document.getElementById("gate").style.display="flex"; return; }
   document.getElementById("doc").style.display="block";
-  // one live read so the brief is not purely a snapshot: the same corridor wire the map uses
   try{
     var r=await fetch("https://bonk-tripwire.kyle-dd7.workers.dev/region");
     var d=await r.json(); if(!Array.isArray(d)) d=[];
     var since=Date.now()-86400000, recent=d.filter(function(k){return (k.ts||0)>since;});
     var isk=recent.reduce(function(a,k){return a+(k.isk||0);},0);
+    var byReg={}; recent.forEach(function(k){ byReg[k.region||"?"]=(byReg[k.region||"?"]||0)+1; });
+    var parts=Object.keys(byReg).map(function(x){ return x+" "+byReg[x]; }).join(" &middot; ");
     document.getElementById("live").innerHTML = recent.length
-      ? "Last 24 hours across Derelik, Devoid and the Great Wildlands: <b>"+recent.length+
-        "</b> ships destroyed, <b>"+(isk/1e9).toFixed(1)+"B ISK</b>. That is the traffic your route sits inside."
-      : "Last 24 hours across our three regions: nothing on the wire. Quiet, for now.";
+      ? "LIVE &middot; last 24 hours across Derelik, Devoid and the Great Wildlands: <b>"+recent.length+
+        "</b> ships destroyed, <b>"+(isk/1e9).toFixed(1)+"B ISK</b>.<br>"+parts+
+        ". That is the traffic your route sits inside."
+      : "LIVE &middot; last 24 hours across our three regions: nothing on the wire. Quiet, for now.";
   }catch(e){
     document.getElementById("live").textContent="Live corridor read unavailable right now. The road rules above still stand.";
   }
