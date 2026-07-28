@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>THE HAUL BRIEF — Wilson Logistics</title>
+<link rel="stylesheet" href="/common.css?v=6">
+<style>
+  /* THE HAUL BRIEF: a GSS product written FOR the people who move the freight.
+     Partner-facing, so it carries threat and ground truth and nothing about our
+     internal economics. Member-gated: WILOG logs in like anybody else. */
+  :root{ --gs:#ff4757; --gsdim:rgba(255,71,87,.34); }
+  .hb{ max-width:900px; margin:0 auto; padding:18px 18px 72px; }
+  .gate{ min-height:52vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+         text-align:center; padding:28px; font-family:var(--mono); font-size:13px; color:var(--silver-dim); }
+  .gate a{ color:var(--ore); }
+
+  .lede{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+         padding:16px 18px; margin:16px 0 6px; }
+  .lede .for{ font-family:var(--mono); font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
+  .lede p{ margin:8px 0 0; font-size:15px; line-height:1.65; color:var(--silver); }
+  .stamp{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+          color:var(--muted); text-align:right; margin:6px 0 22px; }
+
+  h2.sec{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+          font-size:13px; color:var(--ore); margin:34px 0 4px; }
+  h2.sec .n{ color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-right:8px; }
+  .subhead{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:12px; }
+  p.body{ font-size:14.5px; line-height:1.72; color:var(--silver-dim); margin:0 0 12px; }
+  p.body b{ color:var(--silver); font-weight:600; }
+  .pull{ border-left:3px solid var(--gs); background:rgba(255,71,87,.05); padding:12px 15px; margin:14px 0;
+         font-size:14.5px; line-height:1.65; color:var(--silver); }
+
+  table{ width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:13px; }
+  th{ text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+      color:var(--muted); border-bottom:1px solid var(--line); padding:7px 8px; font-weight:400; }
+  td{ padding:8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); vertical-align:top; }
+  td.k{ color:var(--silver); font-family:var(--mono); font-size:12px; white-space:nowrap; }
+  td.isk{ font-family:var(--mono); text-align:right; white-space:nowrap; color:var(--silver); }
+  tr.bad td{ background:rgba(255,71,87,.055); }
+  .tag{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+        border:1px solid var(--line); padding:2px 7px; color:var(--muted); white-space:nowrap; }
+  .tag.red{ color:var(--gs); border-color:var(--gsdim); }
+  .tag.amb{ color:var(--amber); border-color:rgba(255,159,10,.4); }
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,268px),1fr)); gap:11px; margin-top:10px; }
+  .card{ background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--gs); padding:13px 14px; }
+  .card .t{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+            font-size:13.5px; color:var(--silver); }
+  .card .m{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+            color:var(--gs); margin-top:3px; }
+  .card .d{ font-size:12.5px; color:var(--silver-dim); line-height:1.55; margin-top:8px; }
+  .card .do{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:8px;
+             border-top:1px solid var(--line-soft); padding-top:7px; }
+
+  ol.rules{ counter-reset:r; list-style:none; padding:0; margin:10px 0 0; }
+  ol.rules li{ counter-increment:r; position:relative; padding-left:34px; margin:0 0 12px;
+               font-size:14.5px; line-height:1.65; color:var(--silver-dim); }
+  ol.rules li::before{ content:counter(r); position:absolute; left:0; top:1px; width:22px; height:22px;
+    border:1px solid var(--gsdim); color:var(--gs); font-family:var(--mono); font-size:11px;
+    display:flex; align-items:center; justify-content:center; }
+  ol.rules li b{ color:var(--silver); font-weight:600; }
+
+  .live{ background:var(--steel-2); border:1px solid var(--line); padding:12px 14px; margin:10px 0 0;
+         font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+  .live b{ color:var(--ore); }
+  .foot{ margin-top:46px; border-top:1px solid var(--line-soft); padding-top:16px;
+         font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); line-height:1.8; }
+  @media(max-width:620px){ td.k{ white-space:normal; } }
+</style></head>
+<body>
+<script src="/nav.js?v=16"></script>
+
+<header class="bnhead">
+  <div class="bnover">Goblin State Security</div>
+  <h1>THE HAUL BRIEF</h1>
+  <div class="sub">prepared for Wilson Logistics [WILOG] &middot; who is hunting freight on our roads, and what to do about it</div>
+</header>
+
+<div class="hb">
+  <div id="gate" class="gate" style="display:none">
+    This brief is for the people who move the freight.<br>
+    <a href="/portal/">Log in</a> and it opens. If you need an account, ask Fear.
+  </div>
+
+  <div id="doc" style="display:none">
+    <div class="lede">
+      <div class="for">For: Wilson Logistics &middot; From: GSS &middot; Classification: partner</div>
+      <p>Nobody has declared war on us, and that is not the good news it sounds like. The people
+      working our roads do not need a war to take your freight, and in the last three days they
+      have taken ours twice. This is everything we know, written for haulers.</p>
+    </div>
+    <div class="stamp">Compiled 2026-07-28 &middot; sources: ESI, zKillboard, GSS files, corridor tripwire</div>
+
+    <h2 class="sec"><span class="n">01</span> THE HEADLINE</h2>
+    <div class="subhead">PHEW is at war with nobody. It has not slowed them down at all.</div>
+    <p class="body">We scanned six thousand war declarations, covering December 2025 to this week,
+    against <b>PURPLE HELMETED WARRIORS [PHEW]</b> and all eighteen of their member corps.
+    They currently hold <b>no active wars</b>. Four in the last seven months, all closed by 13 July:</p>
+    <table>
+      <thead><tr><th>War</th><th>Window</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Honkai Star Rail &rarr; PHEW</td><td class="k">2&ndash;6 Jul</td><td>Zero kills. Declared, achieved nothing, dropped it.</td></tr>
+        <tr><td class="k">AlcoSquad &rarr; PHEW</td><td class="k">3&ndash;11 Jul</td><td>Zero kills. Same.</td></tr>
+        <tr><td class="k">PHEW &rarr; Curatores Veritatis Aux.</td><td class="k">6&ndash;8 Jul</td><td>5 kills, 0.58B. Their best showing.</td></tr>
+        <tr><td class="k">PHEW &rarr; Aurelion Frame</td><td class="k">6&ndash;13 Jul</td><td>Zero kills.</td></tr>
+      </tbody>
+    </table>
+    <p class="body">For an alliance with <b>224,000 lifetime kills and 723 members</b>, that war record is
+    close to noise. The conclusion is not that they are harmless. It is that <b>highsec war is not
+    the tool they use</b>, so watching the war list tells you nothing about your actual risk.</p>
+
+    <div class="pull"><b>What they do instead:</b> on 28 July, at 07:31 and 07:34, one pilot from a PHEW
+    member corp killed two of our mining ships three minutes apart, solo, in a wormhole. No war, no
+    CONCORD, no consequences. Roughly <b>556 million ISK</b> in three minutes.</div>
+
+    <h2 class="sec"><span class="n">02</span> WHO IS ACTUALLY HUNTING</h2>
+    <div class="subhead">Filed, named, and seen on our ground in the last week</div>
+    <div class="cards">
+      <div class="card">
+        <div class="t">0rford</div><div class="m">Dominion Guild &middot; PHEW member corp</div>
+        <div class="d">Killed a Covetor (458M) and a Procurer (98M) three minutes apart on 28 July,
+          <b>solo in a Kikimora</b>, inside wormhole J144004. Also took an Iteron in Uanzin on 26 July.</div>
+        <div class="do">Three of our losses in three days. Assume he is hunting, not passing through.</div>
+      </div>
+      <div class="card">
+        <div class="t">Kriomnimus</div><div class="m">JPL Citizenry &middot; resident camper</div>
+        <div class="d">6,343 kills, 1,702 solo, danger 89. Sits a bubble in <b>JPL-RA</b>, in a corp
+          named after the system. This is his home and he does not leave it.</div>
+        <div class="do">Do not route JPL-RA. There is no clever timing that beats living there.</div>
+      </div>
+      <div class="card">
+        <div class="t">Wildlands Tactical Response</div><div class="m">WILDU &middot; corridor</div>
+        <div class="d">Took a Hulk in 7Q-8Z2 on 26 July. Works the null end of our mining corridor.</div>
+        <div class="do">7Q is the null mouth. Nothing slow goes through it unescorted.</div>
+      </div>
+      <div class="card">
+        <div class="t">The Burning Skull</div><div class="m">TBS &middot; gank camp</div>
+        <div class="d">Took a Stabber in Ubtes on 26 July. Ubtes is leg one, the lowsec doorway.</div>
+        <div class="do">If Ubtes is hot, the run has not started yet. Turn around.</div>
+      </div>
+    </div>
+
+    <h2 class="sec"><span class="n">03</span> YOUR OWN RECORD</h2>
+    <div class="subhead">Seven losses on the WILOG board. One of them is the whole lesson.</div>
+    <table>
+      <thead><tr><th>When</th><th>Where</th><th>Hull</th><th>Value</th><th>Killed by</th></tr></thead>
+      <tbody>
+        <tr class="bad"><td class="k">2025-10-26</td><td class="k">Uedama <span class="tag red">choke</span></td><td class="k">Obelisk</td><td class="isk">4,067M</td><td>Painter Freight Services &middot; <b>59 attackers</b></td></tr>
+        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Deluge</td><td class="isk">210M</td><td>Red Lizzie's Pirate Crew &middot; 2</td></tr>
+        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Capsule</td><td class="isk">15M</td><td>Red Lizzie's Pirate Crew</td></tr>
+        <tr><td class="k">2025-10-09</td><td class="k">Perimeter</td><td class="k">Capsule</td><td class="isk">76M</td><td>Triglavian response</td></tr>
+        <tr><td class="k">2025-09-06</td><td class="k">Athounon</td><td class="k">Shuttle + pod</td><td class="isk">0M</td><td>Know-Nothings</td></tr>
+        <tr><td class="k">2025-06-30</td><td class="k">3KNK-A</td><td class="k">Loki</td><td class="isk">524M</td><td>Nocturnal Romance &middot; 8</td></tr>
+      </tbody>
+    </table>
+    <p class="body">The Obelisk is the one worth sitting with. <b>Fifty-nine attackers in Uedama</b>
+    is not bad luck and it is not something a better pilot survives. That is an industry with a
+    shift schedule, and the only defences that work against it are the ones you apply before
+    undocking: cargo value, timing, and route.</p>
+    <p class="body">Everything else on your board is small, which is the actual compliment here.
+    Your crew does not lose freight often. When you do, it is at a famous chokepoint or deep in
+    null, and both of those are route decisions rather than piloting ones.</p>
+
+    <h2 class="sec"><span class="n">04</span> THE GROUND</h2>
+    <div class="subhead">Named systems, standing rules, no guessing</div>
+    <table>
+      <thead><tr><th>System</th><th>What it is</th><th>Rule</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Uedama <span class="tag red">choke</span></td><td>The freighter graveyard. Ganking here is a scheduled business.</td><td>Anything expensive waits for a quiet hour or goes around.</td></tr>
+        <tr><td class="k">Ahbazon <span class="tag red">choke</span></td><td>The Genesis funnel. Permanent camp economy. We lost a Tayra here on 27 July.</td><td>Never the default route for value.</td></tr>
+        <tr><td class="k">Sivala <span class="tag amb">choke</span></td><td>Uedama's little brother on the Caldari pipe.</td><td>Same business, fewer headlines, same dead freighters.</td></tr>
+        <tr><td class="k">Khabi <span class="tag red">the door</span></td><td>Lowsec mouth into the Wildlands. Leg two of our corridor.</td><td>Eyes here first, always. If Khabi is hot, the run is off. No debate.</td></tr>
+        <tr><td class="k">7Q-8Z2 <span class="tag red">null mouth</span></td><td>First truesec system. Pods die here at camps.</td><td>Two pods in an hour and you wait or you go home.</td></tr>
+        <tr><td class="k">JPL-RA <span class="tag red">occupied</span></td><td>Bubbled chokepoint with a resident who lives there.</td><td>Route around unless you brought people who shoot back.</td></tr>
+        <tr><td class="k">SUR-F7</td><td>Deep run. No stations, no friends, no reason to linger.</td><td>Pass through. Do not park.</td></tr>
+      </tbody>
+    </table>
+    <div class="live" id="live">Reading the corridor&hellip;</div>
+
+    <h2 class="sec"><span class="n">05</span> THE BLIND SPOT, STATED PLAINLY</h2>
+    <p class="body">Our tripwire watches the corridor and three regions, and it is good at that. It did
+    <b>not</b> catch this morning's two kills, because they happened in a wormhole, and a wormhole is
+    in none of those lists. Nobody got a warning. We are telling you that rather than quietly
+    fixing it, because you route through places our sensors do not cover and you should know exactly
+    where the edge of our vision is.</p>
+    <div class="pull">Silence from us is not the same as safety. It means nothing died where we were
+    looking. We are moving to alerting on <b>any</b> alliance loss anywhere, not just inside the
+    watched systems.</div>
+
+    <h2 class="sec"><span class="n">06</span> WHAT WE ASK, AND WHAT YOU GET</h2>
+    <ol class="rules">
+      <li><b>Tell us before the expensive runs.</b> Not permission, warning. An escort that knows the
+        route exists is worth more than one scrambled after a gate goes red.</li>
+      <li><b>Post your losses, even the embarrassing ones.</b> Every hull on the board becomes a file,
+        and a file is what stops the second one.</li>
+      <li><b>Use the road rules above.</b> Most of what killed freight this year was a route choice
+        made before undock.</li>
+      <li><b>What you get back:</b> corridor danger read live on the map, named files on everyone
+        working this ground, an escort wing standing up now, and a straight answer whenever you ask
+        whether the road is clear. If we do not know, we will say we do not know.</li>
+    </ol>
+
+    <div class="foot">
+      GOBLIN STATE SECURITY &middot; prepared for Wilson Logistics &middot; 2026-07-28<br>
+      Partner document. Threat picture and road rules only, no internal figures.<br>
+      Corrections and new sightings: send them and the file changes.<br>
+      <b>Assume nothing. There is always a file.</b>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  var who=null;
+  try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
+  if(!who||!who.loggedIn){ document.getElementById("gate").style.display="flex"; return; }
+  document.getElementById("doc").style.display="block";
+  // one live read so the brief is not purely a snapshot: the same corridor wire the map uses
+  try{
+    var r=await fetch("https://bonk-tripwire.kyle-dd7.workers.dev/region");
+    var d=await r.json(); if(!Array.isArray(d)) d=[];
+    var since=Date.now()-86400000, recent=d.filter(function(k){return (k.ts||0)>since;});
+    var isk=recent.reduce(function(a,k){return a+(k.isk||0);},0);
+    document.getElementById("live").innerHTML = recent.length
+      ? "Last 24 hours across Derelik, Devoid and the Great Wildlands: <b>"+recent.length+
+        "</b> ships destroyed, <b>"+(isk/1e9).toFixed(1)+"B ISK</b>. That is the traffic your route sits inside."
+      : "Last 24 hours across our three regions: nothing on the wire. Quiet, for now.";
+  }catch(e){
+    document.getElementById("live").textContent="Live corridor read unavailable right now. The road rules above still stand.";
+  }
+})();
+</script>
+</body></html>
