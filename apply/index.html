@@ -164,7 +164,8 @@
     </div>
     <div class="signoff" id="pgSignoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
   </div>
-  <footer><span id="pgFoot">Applications go straight to the recruiting goblins.</span> Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
+  <footer><span id="pgFoot">Applications go straight to the recruiting goblins.</span>
+    New to EVE? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">Start with a million free skillpoints</a>. Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
 
 <script>
 (function(){
@@ -616,6 +617,15 @@
       trackWrap.appendChild(c);
     });
     answer.appendChild(trackWrap);
+    // the sideways door: a GOBSEC arrival who decides combat is not for them should land
+    // somewhere useful rather than bouncing off the site
+    if (gobMode()){
+      var alt = el("div", "coverSub");
+      alt.style.cssText = "font-family:var(--mono);font-size:11px;color:var(--muted);margin:2px 0 12px;line-height:1.6";
+      alt.innerHTML = 'Not a shooter? We are mostly a mining corp and there is a seat there too. '
+        + '<a href="/apply/" style="color:var(--ore)">Apply to mine instead</a>.';
+      answer.appendChild(alt);
+    }
     var go = el("button", "gobtn", gobMode() ? "Get on with it" : "Talk to the goblin"); go.type = "button";
     go.addEventListener("click", function(){ show(1); });
     answer.appendChild(go);
