@@ -278,3 +278,42 @@ header.bnhead::after{ content:""; display:block; width:34px; height:1px; margin:
   header.bnhead h1{ font-size:15px; letter-spacing:.22em; padding-left:.22em; }
   .bnover{ letter-spacing:.3em; padding-left:.3em; }
 }
+
+/* ---------------------------------------------------------------- GOBSEC THEME
+   The security corp runs the same design language in another key: hot crimson where the
+   mining side is fluorescent green, and one step darker. Opt in with <body class="t-gobsec">.
+
+   TWO RULES THAT KEEP IT FROM BECOMING AN ALARM:
+   1. --gob is STRUCTURAL and brand only: borders, rules, titles, buttons. It never means
+      "something is wrong".
+   2. --red stays SEMANTIC: errors, danger, risk bands. If a surface needs both, the error
+      wins and the brand recedes. They are far enough apart in saturation to read as
+      different intents, but only if that discipline holds.
+   Subtle means: glow on hover and titles only, blur 12 to 18px, alpha <= .30, NO red fills.
+   Red is an edge and a word. */
+:root{
+  --gob:#ff4757; --gob-deep:#c4133a; --gob-pale:#ffb3ba;
+  --gob-glow:rgba(255,71,87,.30);
+  --gob-bg:#08090a; --gob-panel:#101214;
+}
+body.t-gobsec{
+  --ore:var(--gob); --ore-deep:var(--gob-deep); --laser:var(--gob-pale);
+  background:var(--gob-bg);
+}
+body.t-gobsec .panel,
+body.t-gobsec .card{ background:var(--gob-panel); }
+/* glow lives on titles and hover, nowhere else */
+body.t-gobsec h1,
+body.t-gobsec .whead{ text-shadow:0 0 14px var(--gob-glow); }
+body.t-gobsec .gobtn:hover,
+body.t-gobsec .btn:hover,
+body.t-gobsec button.on{ box-shadow:0 0 18px var(--gob-glow); }
+/* controls are outlines, never slabs: inheriting --ore turns every solid green control into
+   a solid red one, which is the loudest possible reading of "subtle" */
+body.t-gobsec .gobtn,
+body.t-gobsec .btn-ore{ background:transparent; color:var(--gob); border:1px solid var(--gob); }
+body.t-gobsec .gobtn:hover,
+body.t-gobsec .btn-ore:hover{ background:var(--gob); color:#12060a; }
+/* the GOBSEC door, usable on any page without the body class */
+.btn-gob{ border:1px solid var(--gob); color:var(--gob); background:transparent; }
+.btn-gob:hover{ background:var(--gob); color:#12060a; box-shadow:0 0 18px var(--gob-glow); }
