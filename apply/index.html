@@ -177,6 +177,10 @@
   // Ally track can arrive by link (?track=ally) from the gate/tools ally CTAs.
   if (/[?&]track=ally/.test(location.search)) ans.track = "ally";
   if (/[?&]track=gobsec/.test(location.search)) ans.track = "gobsec";
+  // Referral link (?r=TOKEN): opaque, resolved server side. We carry it, we never
+  // decode it, and the roster is never fetched to this public page.
+  var REFM = location.search.match(/[?&]r=([A-Za-z0-9]{4,32})/);
+  var REF = REFM ? REFM[1] : "";
   function gobMode(){ return ans.track === "gobsec"; }
   function paintTrack(){
     document.body.classList.toggle("t-gobsec", gobMode());
@@ -552,6 +556,18 @@
         + "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
     sub.style.marginBottom = "10px";
     answer.appendChild(sub);
+    /* Referred-by badge. Resolving a NAME from the token is safe in a way a roster
+       search never is: the token is unguessable, so holding one means a goblin handed
+       it to you. Best effort and silent on failure; the token still rides the form. */
+    if (REF) {
+      var vb = el("div", "coverSub", "Referred by a goblin. Nice.");
+      vb.style.cssText = "margin:0 0 12px;color:var(--ore);font-family:var(--mono);font-size:12.5px";
+      answer.appendChild(vb);
+      fetch("/api/referral/who?r=" + encodeURIComponent(REF))
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d && d.ign) vb.textContent = "Referred by " + d.ign + ". Nice."; })
+        .catch(function(){});
+    }
     // Language check (Kyle): the pick flips the interview live, rides the
     // application, and becomes the member's default portal language at claim.
     var lq = el("div", "coverSub", "Language · Язык");
@@ -701,6 +717,7 @@
     var contact = ans.contact.trim().slice(0, LIM.contact); if (contact) p.contact = contact;
     var notes = ans.notes.trim().slice(0, LIM.notes); if (notes) p.notes = notes;
     p.lang = ans.lang === "ru" ? "ru" : "en";
+    if (REF) p.ref = REF;
     return p;
   }
   function payload(){
@@ -718,6 +735,7 @@
     if (contact) p.contact = contact;
     var notes = ans.notes.trim().slice(0, LIM.notes);
     if (notes) p.notes = notes;
+    if (REF) p.ref = REF;
     if (ans.track === "ally") p.applying_for = "ally";
     p.lang = ans.lang === "ru" ? "ru" : "en";
     return p;

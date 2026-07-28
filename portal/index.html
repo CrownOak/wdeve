@@ -200,6 +200,33 @@
   .kfr:hover .kfw{ color:var(--ore); }
   .kfnote{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
 
+  /* ---------- referral link (Certified Goblin Dealer) ---------- */
+  .refcard{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 15px; margin:0 0 12px; }
+  .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+                font-size:13px; color:var(--ore); }
+  .refcard .rs{ font-size:12px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
+  .reflink{ display:flex; gap:6px; margin-top:10px; }
+  .reflink input{ flex:1; min-width:0; background:var(--black); border:1px solid var(--line); color:var(--silver);
+                  font-family:var(--mono); font-size:11px; padding:7px 8px; }
+  .refbtn{ background:var(--ore); color:#04140a; border:0; font-family:var(--mono); font-size:10px;
+           font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:7px 11px; cursor:pointer; }
+  .refbtn:hover{ background:var(--laser); }
+  .refstat{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:9px; }
+  .refstat b{ color:var(--ore); }
+  .refrot{ background:none; border:0; color:var(--muted); font-family:var(--mono); font-size:10px;
+           text-decoration:underline; cursor:pointer; padding:0; margin-top:8px; }
+  .refrot:hover{ color:var(--red); }
+  /* vouch prompt: a referral that nobody stands behind is just a stranger with your link */
+  .vouch{ background:var(--steel-2); border:1px solid var(--amber); border-left-width:3px; padding:12px 14px; margin:0 0 10px; }
+  .vouch .vh{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+              font-size:12.5px; color:var(--amber); }
+  .vouch .vb{ font-size:13px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
+  .vouch .va{ display:flex; gap:8px; margin-top:10px; }
+  .vouch .va button{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase;
+                     padding:7px 14px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--silver); }
+  .vouch .va .yes{ border-color:var(--ore); color:var(--ore); }
+  .vouch .va .no{ border-color:var(--red); color:var(--red); }
+
   /* ---------- ESI mining ledger panel ---------- */
   .esidisc{ background:var(--black); border:1px solid rgba(70,255,94,.25); border-left:3px solid var(--ore);
     padding:12px 15px; margin:0 0 16px; font-size:13px; line-height:1.6; color:#a9b2a8; }
@@ -754,6 +781,7 @@
     <!-- banners stay full width above the grid: the live op banner is the one thing on this
          page that is worth less every minute it goes unread, so it never moves to the rail. -->
     <div id="banners"></div>
+    <div id="vouchWrap"></div>
     <div class="pgrid">
       <div class="pmain">
         <div class="panel" id="profileDrawer"></div>
@@ -776,6 +804,7 @@
       <aside class="prail">
         <div id="goalStripWrap"></div>
         <div id="railEventsWrap"></div>
+        <div id="referralWrap"></div>
         <div id="corpStripWrap"></div>
       </aside>
     </div>
@@ -1833,6 +1862,69 @@ async function loadKillFeed(){
   catch(e){ if (isOut(e)) return; S.kf = { kills: [] }; }
   safeRender(renderKillFeed, $("panelKills"));
 }
+/* ============ referral link + vouch (Certified Goblin Dealer) ============
+   One button, one link, attribution handled. The token is opaque: it identifies
+   the member without exposing an id anyone could guess or forge. */
+function renderReferral(){
+  var el = $("referralWrap"); if (!el) return;
+  var r = S.ref;
+  if (!r || !r.url || isAlly()){ el.innerHTML = ""; return; }
+  el.innerHTML = '<div class="refcard">' +
+    '<div class="rt">&#129689; Bring us goblins</div>' +
+    '<div class="rs">Your link. Anyone who applies through it is counted as yours, ' +
+      'no names to type, no arguing about who brought who.</div>' +
+    '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
+      '<button class="refbtn" id="refCopy">copy</button></div>' +
+    '<div class="refstat"><b>' + (r.referred || 0) + '</b> referred &middot; <b>' + (r.joined || 0) + '</b> in the door</div>' +
+    '<button class="refrot" id="refRot">get a fresh link</button>' +
+  '</div>';
+  var c = $("refCopy");
+  if (c) c.onclick = function(){
+    var i = $("refUrl"); i.select();
+    try { navigator.clipboard.writeText(r.url); } catch(e){ document.execCommand("copy"); }
+    toast("Link copied. Go find some goblins.");
+  };
+  var rot = $("refRot");
+  if (rot) rot.onclick = async function(){
+    if (!confirm("Get a fresh link? The old one stops counting for you immediately.")) return;
+    try { var n = await api("referral/rotate", {}); S.ref.url = n.url; S.ref.token = n.token;
+      safeRender(renderReferral, $("referralWrap")); toast("New link minted."); }
+    catch(e){ toast("Could not mint a new link."); }
+  };
+}
+function renderVouches(){
+  var el = $("vouchWrap"); if (!el) return;
+  var p = (S.vouches || []);
+  el.innerHTML = p.map(function(v){
+    return '<div class="vouch" data-v="' + esc(String(v.id)) + '" data-k="' + esc(v.kind) + '">' +
+      '<div class="vh">Do you vouch for this pilot?</div>' +
+      '<div class="vb"><b data-i18n-skip>' + esc(v.ign) + '</b> applied through your link' +
+        (v.kind === "gobsec" ? ' (GOBSEC)' : '') + '. Saying no does not get them rejected, ' +
+        'it just tells us you did not personally put them forward.</div>' +
+      '<div class="va"><button class="yes">I vouch</button><button class="no">Not mine</button></div>' +
+    '</div>';
+  }).join("");
+  Array.prototype.forEach.call(el.querySelectorAll(".vouch"), function(box){
+    var id = box.getAttribute("data-v"), kind = box.getAttribute("data-k");
+    box.querySelector(".yes").onclick = function(){ sendVouch(id, kind, "yes", box); };
+    box.querySelector(".no").onclick  = function(){ sendVouch(id, kind, "no", box); };
+  });
+}
+async function sendVouch(id, kind, v, box){
+  try { await api("referral/vouch", { application_id: Number(id), kind: kind, vouch: v });
+    box.style.display = "none";
+    S.vouches = (S.vouches || []).filter(function(x){ return String(x.id) !== String(id) || x.kind !== kind; });
+    toast(v === "yes" ? "Vouched. That counts for something." : "Noted. Thanks for the honesty.");
+  } catch(e){ toast("Could not record that."); }
+}
+async function loadReferral(){
+  try { S.ref = await api("referral"); } catch(e){ if (isOut(e)) return; S.ref = null; }
+  safeRender(renderReferral, $("referralWrap"));
+  try { var p = await api("referral/pending"); S.vouches = p.pending || []; }
+  catch(e){ S.vouches = []; }
+  safeRender(renderVouches, $("vouchWrap"));
+}
+
 async function loadGround(){
   try {
     var r = await fetch(TRIPWIRE + "/region");
@@ -3060,6 +3152,7 @@ function renderFoot(){
     loadContracts();
     loadBanners();
     loadKillFeed();
+    loadReferral();
   } catch(e){
     if (isOut(e)) return; /* gate already shown */
     /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
