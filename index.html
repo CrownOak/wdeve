@@ -195,6 +195,12 @@
   .disc-loading{padding:22px 20px}
   .disc-foot{padding:11px 20px 15px;border-top:1px solid var(--line-soft)}
   .disc-list::-webkit-scrollbar{width:8px}.disc-list::-webkit-scrollbar-thumb{background:var(--steel-3)}
+
+  /* GOBSEC door. Red is an edge and a word, never a fill. Glow on hover only. */
+  .btn-gob{ border:1px solid #ff4757; color:#ff4757; background:transparent; }
+  .btn-gob:hover{ background:#ff4757; color:#12060a; box-shadow:0 0 18px rgba(255,71,87,.30); }
+  .gob-sub{ font-family:var(--mono,monospace); font-size:11.5px; color:var(--muted);
+            margin-top:8px; line-height:1.6; }
 </style>
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><link rel="apple-touch-icon" href="favicon-180.png"></head>
 <body>
@@ -207,6 +213,7 @@
       <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
       <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a><a href="tools/">Tools</a><a href="portal/">Portal</a>
       <a class="btn-mini" href="apply/">Apply</a>
+       <a class="btn-mini btn-gob" href="apply/?track=gobsec">GOBSEC</a>
        <a class="btn-mini" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
     </nav>
   </div>
@@ -343,6 +350,8 @@
     </div>
     <div class="cta-row" style="margin-top:24px">
       <a class="btn btn-ore" href="apply/">Apply to join &#9656;</a>
+        <a class="btn btn-gob" href="apply/?track=gobsec">GOBSEC is hiring &#9656;</a>
+        <div class="gob-sub">The part of the corp that shoots back. We don't pay you. We do put you back in a ship.</div>
       <a class="btn btn-ghost" href="portal/">Member portal &rarr;</a>
     </div>
   </div>

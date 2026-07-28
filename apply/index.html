@@ -117,11 +117,24 @@
     .answer{ min-height:150px; }
     .revRow .rl{ flex-basis:84px; }
   }
+
+  /* ---- GOBSEC track: same components, another key. See GOBSEC-PORTAL-SPEC.md section 9. ---- */
+  body.t-gobsec{ --ore:#ff4757; --ore-deep:#c4133a; --laser:#ffb3ba; background:#08090a; }
+  body.t-gobsec .bubble{ border-left-color:#ff4757; }
+  body.t-gobsec .gobtn{ background:transparent; color:#ff4757; border:1px solid #ff4757;
+    box-shadow:none; }
+  body.t-gobsec .gobtn:hover{ background:#ff4757; color:#12060a; }
+  body.t-gobsec .chip.onpick{ background:transparent; color:#ff4757; border-color:#ff4757; }
+  body.t-gobsec .sub{ color:#8c9196; }
+  body.t-gobsec .gobtn:hover{ box-shadow:0 0 18px rgba(255,71,87,.30); }
+  body.t-gobsec .chip.onpick{ box-shadow:0 0 10px rgba(255,71,87,.22); }
+  body.t-gobsec .seg.on{ box-shadow:0 0 10px rgba(255,71,87,.28); }
+  body.t-gobsec .brandline b{ text-shadow:0 0 12px rgba(255,71,87,.30); }
 </style></head>
 <body>
   <header>
-    <h1>&#129704; JOIN THE GOBLINS &#129704;</h1>
-    <div class="sub">the official BONK application. no panel, no essay. one nosy goblin.</div>
+    <h1 id="pgTitle">&#129704; JOIN THE GOBLINS &#129704;</h1>
+    <div class="sub" id="pgSub">the official BONK application. no panel, no essay. one nosy goblin.</div>
   </header>
   <div class="wrap">
     <div class="stage" id="stage">
@@ -141,9 +154,9 @@
       <div class="hintRow" id="hintRow"></div>
       <div class="err" id="slideErr" role="alert"></div>
     </div>
-    <div class="signoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
+    <div class="signoff" id="pgSignoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
   </div>
-  <footer>Applications go straight to the recruiting goblins. Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
+  <footer><span id="pgFoot">Applications go straight to the recruiting goblins.</span> Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
 
 <script>
 (function(){
@@ -158,9 +171,28 @@
 
   var ans = { ign:"", timezone:"", experience:"", activities:[], ships:[], shipsOther:"",
               looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp",
+              killboard:"", fliesNow:[], fliesOther:"", wants:[], wantsOther:"", scale:"", fc:"",
+              disclosure:"",
               lang: (window.BONKLANG && window.BONKLANG.lang) || "en" };
   // Ally track can arrive by link (?track=ally) from the gate/tools ally CTAs.
   if (/[?&]track=ally/.test(location.search)) ans.track = "ally";
+  if (/[?&]track=gobsec/.test(location.search)) ans.track = "gobsec";
+  function gobMode(){ return ans.track === "gobsec"; }
+  function paintTrack(){
+    document.body.classList.toggle("t-gobsec", gobMode());
+    var t = document.getElementById("pgTitle"), u = document.getElementById("pgSub");
+    if (t) t.innerHTML = gobMode() ? "&#128737; GOBSEC" : "&#129704; JOIN THE GOBLINS &#129704;";
+    if (u) u.textContent = gobMode()
+      ? "the part of the corp that shoots back. no panel, no essay, one nosy goblin with a killboard open."
+      : "the official BONK application. no panel, no essay. one nosy goblin.";
+    var so = document.getElementById("pgSignoff"), fo = document.getElementById("pgFoot");
+    if (so) so.innerHTML = gobMode() ? "<b>Miners dock up. We don't.</b>"
+                                     : "<b>The ore must flow. The goblins must eat. &#129704;&#129482;</b>";
+    if (fo) fo.textContent = gobMode()
+      ? "This goes to GOBSEC. Somebody will read it, then read your killboard."
+      : "Applications go straight to the recruiting goblins.";
+    if (gobMode()) document.title = "GOBSEC · apply";
+  }
   var idx = 0, editReturn = false, sending = false;
 
   /* ---------- slide table ---------- */
@@ -207,15 +239,75 @@
     { t:"send", pose:"hype" }
   ];
 
+
+  /* ---------- GOBSEC slide table: combat intake, its own questions and its own mouth ---------- */
+  var GOB_SLIDES = [
+    { t:"cover", pose:"ask" },
+    { t:"text", n:1, pose:"ask", f:"ign", req:true, max:LIM.ign, ph:"Your pilot name",
+      q:function(){ return "What do we put on the killmail?"; },
+      reqErr:"We need a name. Preferably the one on the killmails." },
+    { t:"text", n:2, pose:"ledger", f:"killboard", max:200, ph:"zkillboard link, or just your name",
+      skipHint:"Skipping is also information.",
+      q:function(){ return "Killboard. We're going to look you up either way, so you may as well control the framing."; } },
+    { t:"multi", n:3, pose:"work", f:"fliesNow", other:"fliesOther", otherPh:"name it",
+      opts:[ ["Frigates","Frigates"], ["Destroyers","Destroyers"], ["Cruisers","Cruisers"],
+             ["Battlecruisers","Battlecruisers"], ["Logi","Logi"], ["EWAR","EWAR"],
+             ["Interceptors or tackle","Interceptors or tackle"], ["Nothing yet","Nothing yet"] ],
+      q:function(){ return "What do you actually undock? Not what's in the hangar. What you undock."; } },
+    { t:"multi", n:4, pose:"greed", f:"wants", other:"wantsOther", otherPh:"dream bigger",
+      opts:[ ["Tackle","Tackle"], ["EWAR and jams","EWAR and jams"], ["Logi","Logi"],
+             ["Command and boosts","Command and boosts"], ["Recon","Recon"],
+             ["Whatever you need","Whatever you need"] ],
+      q:function(){ return "And what are you training toward? Be ambitious. It's free to say."; } },
+    { t:"cards", n:5, pose:"work", f:"scale",
+      opts:[ ["solo","Alone","Nobody to blame, nobody to blame you."],
+             ["gang","Small gang","Five people, one bad idea, excellent outcomes."],
+             ["fleet","Fleets","You like a plan and somebody yelling it."],
+             ["unsure","No idea","Honest. We'll sort it out."] ],
+      q:function(){ return "How do you prefer to ruin somebody's evening?"; } },
+    { t:"cards", n:6, pose:"ledger", f:"fc",
+      opts:[ ["yes","Yes, regularly","Then we should talk quite soon."],
+             ["some","A few times","Counts. It really counts."],
+             ["want_to","Never, but I'd try","This is the correct answer."],
+             ["no","No, and no thanks","Perfectly fine. Somebody has to shoot."] ],
+      q:function(){ return "Ever run a fleet? We're short of people who'll talk on comms, and we notice about ten minutes in if you were exaggerating."; } },
+    { t:"single", n:7, pose:"ledger", f:"timezone",
+      opts:["US East","US Central","US West","South America","EU","Russia","Middle East",
+            "Africa","India","Asia","AU / NZ","Other"],
+      q:function(){ return "When are you awake? Somebody has to cover four in the morning and it's currently me."; } },
+    { t:"textarea", n:8, pose:"ask", f:"disclosure", max:1000, ph:"Now's the time.",
+      skipHint:"Skipping this is a choice and we'll respect it right up until we find out.",
+      q:function(){ return "Anything we should know before we look you up? GSS runs everyone. This is your chance to get ahead of it."; } },
+    { t:"single", n:9, pose:"ledger", f:"found", other:"foundOther", otherPh:"how?",
+      opts:["You mailed me","Killboard","A friend","Reddit","Discord","Local chat","A vision"],
+      q:function(){ return "How'd you find us?"; } },
+    { t:"text", n:10, pose:"ask", f:"contact", max:LIM.contact, ph:"yourhandle", discord:true,
+      skipHint:"Then we can't reach you, which rather defeats it.",
+      q:function(){ return "Discord handle. The @username, not your server nickname. We're not detectives."; } },
+    { t:"textarea", n:11, pose:"greed", f:"notes", max:LIM.notes, ph:"Floor's yours.",
+      q:function(){ return "Last one. Anything else for the record? Keep it short, we've got rocks to protect."; } },
+    { t:"review", pose:"ledger",
+      q:function(){ return "Reading that back before GSS does."; } },
+    { t:"send", pose:"hype" }
+  ];
+
   /* ---------- dom + helpers ---------- */
+  function SL(){ return gobMode() ? GOB_SLIDES : SLIDES; }
   var $ = function(id){ return document.getElementById(id); };
   var bubble = $("bubbleText"), answer = $("answer"), hintRow = $("hintRow"),
       slideErr = $("slideErr"), backBtn = $("backBtn"), qcount = $("qcount"),
       segsBox = $("segs"), prog = $("prog"), gobA = $("gobA"), gobB = $("gobB");
   var gobOn = gobA, gobOff = gobB, curPose = "";
 
-  for (var i = 0; i < 9; i++) { var sg = document.createElement("div"); sg.className = "seg"; segsBox.appendChild(sg); }
-  var segs = segsBox.children;
+  var segs;
+  function rebuildSegs(){
+    segsBox.innerHTML = "";
+    var nq = gobMode() ? 11 : 9;
+    for (var i = 0; i < nq; i++) { var sg = document.createElement("div"); sg.className = "seg"; segsBox.appendChild(sg); }
+    segs = segsBox.children;
+  }
+  rebuildSegs();
+  paintTrack();
 
   function el(tag, cls, text){
     var e = document.createElement(tag);
@@ -259,7 +351,7 @@
     slideErr.textContent = "";
     var swap = function(){
       idx = next;
-      var s = SLIDES[idx];
+      var s = SL()[idx];
       setPose(s.pose);
       renderSlide(s);
       renderChrome(s);
@@ -280,11 +372,12 @@
     else {
       prog.style.visibility = "visible";
       var done = (s.t === "review" || s.t === "send") ? 9 : qn - 1;
-      for (var i = 0; i < 9; i++) {
+      var NQ = gobMode() ? 11 : 9;
+      for (var i = 0; i < NQ; i++) {
         segs[i].className = "seg" + (i < done ? " fill" : (i === done && qn ? " cur" : ""));
       }
       prog.setAttribute("aria-valuenow", String(done));
-      qcount.textContent = s.t === "review" ? "review" : s.t === "send" ? "" : "Q " + qn + " / 9";
+      qcount.textContent = s.t === "review" ? "review" : s.t === "send" ? "" : "Q " + qn + " / " + (gobMode() ? 11 : 9);
     }
     backBtn.hidden = (s.t === "cover" || s.t === "send");
   }
@@ -448,10 +541,15 @@
       return;
     }
     bubble.textContent = "";
-    bubble.appendChild(document.createTextNode("Well well. A pilot at my door. Sit down, the interview already started."));
-    var sub = el("div", "coverSub",
-      "Nine quick questions, about a minute, and only your name is required. " +
-      "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
+    bubble.appendChild(document.createTextNode(gobMode()
+      ? "So you shoot people. Good. Sit down, this won't take long."
+      : "Well well. A pilot at my door. Sit down, the interview already started."));
+    var sub = el("div", "coverSub", gobMode()
+      ? "Eleven questions, most of them short, and only your name is required. We fly cheap, "
+        + "we build our own fittings, and we do not pay you. What we've got is people worth "
+        + "undocking for and a very specific list of pilots who owe us."
+      : "Nine quick questions, about a minute, and only your name is required. "
+        + "Full fleets, real boosts, a fair buyback, 0% tax vibes. The table always has room for one more.");
     sub.style.marginBottom = "10px";
     answer.appendChild(sub);
     // Language check (Kyle): the pick flips the interview live, rides the
@@ -477,22 +575,41 @@
     tq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
     answer.appendChild(tq);
     var trackWrap = el("div", "chips"); trackWrap.style.marginBottom = "14px";
-    [["corp","Join Wealthy Dropouts"],["ally","My corp wants to mine with you"]].forEach(function(o){
+    [["corp","Join Wealthy Dropouts"],["gobsec","I want to shoot people"],["ally","My corp wants to mine with you"]].forEach(function(o){
       var c = el("button", "chip" + (ans.track === o[0] ? " onpick" : ""), o[1]); c.type = "button";
       c.addEventListener("click", function(){
         ans.track = o[0]; saveDraft();
         Array.prototype.forEach.call(trackWrap.children, function(x){ x.classList.remove("onpick"); });
         c.classList.add("onpick");
+        paintTrack();            // the page turns red the moment they pick combat
+        rebuildSegs();           // GOBSEC asks 11, the mining track asks 9
       });
       trackWrap.appendChild(c);
     });
     answer.appendChild(trackWrap);
-    var go = el("button", "gobtn", "Talk to the goblin"); go.type = "button";
+    var go = el("button", "gobtn", gobMode() ? "Get on with it" : "Talk to the goblin"); go.type = "button";
     go.addEventListener("click", function(){ show(1); });
     answer.appendChild(go);
     hint("enter ↵ to start", false);
   }
 
+  var GOB_REVIEW_ROWS = [
+    ["Name", 1, function(){ return ans.ign; }],
+    ["Killboard", 2, function(){ return ans.killboard; }],
+    ["Undocks", 3, function(){ return joined(ans.fliesNow, ans.fliesOther, 300); }],
+    ["Training toward", 4, function(){ return joined(ans.wants, ans.wantsOther, 300); }],
+    ["Prefers", 5, function(){
+      var m = { solo:"Alone", gang:"Small gang", fleet:"Fleets", unsure:"No idea yet" };
+      return m[ans.scale] || ""; }],
+    ["Has FC'd", 6, function(){
+      var m = { yes:"Yes, regularly", some:"A few times", want_to:"Never, but would try", no:"No" };
+      return m[ans.fc] || ""; }],
+    ["Awake", 7, function(){ return ans.timezone; }],
+    ["Declared", 8, function(){ return ans.disclosure; }],
+    ["Found us", 9, function(){ return foundValue(); }],
+    ["Discord", 10, function(){ return ans.contact; }],
+    ["The record", 11, function(){ return ans.notes; }]
+  ];
   var REVIEW_ROWS = [
     ["Name", 1, function(){ return ans.ign; }],
     ["Timezone", 2, function(){ return ans.timezone; }],
@@ -512,7 +629,7 @@
   function renderReview(s){
     bubble.textContent = s.q();
     var box = el("div", "rev");
-    REVIEW_ROWS.forEach(function(r){
+    (gobMode() ? GOB_REVIEW_ROWS : REVIEW_ROWS).forEach(function(r){
       var row = el("div", "revRow");
       row.appendChild(el("div", "rl", r[0]));
       var v = (r[2]() || "").trim();
@@ -532,7 +649,7 @@
   /* ---------- flow ---------- */
   function advance(skipped){
     if (sending) return;
-    var s = SLIDES[idx];
+    var s = SL()[idx];
     if (s.t === "send") return;
     if (s.t === "cover") { show(1); return; }
     if (s.t === "review") { submit(); return; }
@@ -548,7 +665,7 @@
   }
   function goBack(){
     if (sending) return;
-    var s = SLIDES[idx];
+    var s = SL()[idx];
     if (s.t === "cover" || s.t === "send") return;
     if (editReturn) { editReturn = false; show(10); return; }
     show(idx - 1);
@@ -556,7 +673,7 @@
   backBtn.addEventListener("click", goBack);
 
   document.addEventListener("keydown", function(e){
-    var s = SLIDES[idx];
+    var s = SL()[idx];
     if (e.key === "Enter") {
       var tg = e.target;
       if (tg && tg.tagName === "TEXTAREA" && e.shiftKey) return;      /* newline */
@@ -571,6 +688,21 @@
   });
 
   /* ---------- submit ---------- */
+  function gobPayload(){
+    var p = { ign: ans.ign.trim().slice(0, LIM.ign) };
+    var kb = (ans.killboard||"").trim().slice(0,200); if (kb) p.killboard = kb;
+    if (ans.timezone) p.timezone = ans.timezone;
+    var fn = joined(ans.fliesNow, ans.fliesOther, 300); if (fn) p.flies_now = fn;
+    var wt = joined(ans.wants, ans.wantsOther, 300); if (wt) p.wants_to_fly = wt;
+    if (ans.scale) p.scale = ans.scale;
+    if (ans.fc) p.fc = ans.fc;
+    var dc = (ans.disclosure||"").trim().slice(0,1000); if (dc) p.disclosure = dc;
+    var found = foundValue(); if (found) p.found_us = found;
+    var contact = ans.contact.trim().slice(0, LIM.contact); if (contact) p.contact = contact;
+    var notes = ans.notes.trim().slice(0, LIM.notes); if (notes) p.notes = notes;
+    p.lang = ans.lang === "ru" ? "ru" : "en";
+    return p;
+  }
   function payload(){
     var p = { ign: ans.ign.trim().slice(0, LIM.ign) };
     if (ans.timezone && ans.timezone !== "__other") p.timezone = ans.timezone;
@@ -599,10 +731,10 @@
     hint("", false);
     /* start the wire AFTER the slide swap so a fast response cannot be wiped by it */
     setTimeout(function(){
-      fetch("/api/apply", {
+      fetch(gobMode() ? "/api/apply/gobsec" : "/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload())
+        body: JSON.stringify(gobMode() ? gobPayload() : payload())
       }).then(function(res){
         return res.json().then(function(data){ return data; }).catch(function(){ return null; });
       }).then(function(data){
