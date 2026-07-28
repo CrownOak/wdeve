@@ -3,29 +3,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>GOBSEC — Goblin State Security</title>
-<link rel="stylesheet" href="/common.css?v=3">
+<link rel="stylesheet" href="/common.css?v=6">
 <style>
   /* GOBSEC cover: the door for killers. Monochrome, seal-dominant, one red accent.
      Deliberately NOT the goblin-interview look; the interview is one click below. */
   :root{ --gsred: rgba(255,71,87,.72); --gsred-dim: rgba(255,71,87,.38); }
-  .gsWrap{ max-width:600px; margin:0 auto; padding:34px 22px 60px; text-align:center; }
-  .gsSeal{ width:min(360px,76vw); height:auto; display:block; margin:10px auto 26px;
+  .gsWrap{ max-width:660px; margin:0 auto; padding:34px 22px 64px; }
+  .gsSeal{ width:min(320px,70vw); height:auto; display:block; margin:10px auto 24px;
            filter:drop-shadow(0 14px 44px rgba(0,0,0,.65)); }
+  .gsHead{ text-align:center; }
+  .gsMark{ font-family:var(--mono); font-size:10.5px; letter-spacing:.34em; text-transform:uppercase;
+           color:#ff4757; }
   .gsName{ font-family:var(--display); font-weight:700; text-transform:uppercase;
-           letter-spacing:.22em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); }
+           letter-spacing:.22em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); margin-top:9px; }
   .gsTick{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
            color:var(--muted); margin-top:8px; }
   .gsRule{ width:46px; height:1px; background:var(--gsred); margin:24px auto; }
-  .gsLine{ font-size:15.5px; color:var(--silver-dim); letter-spacing:.02em; }
-  .gsRows{ margin:34px auto 0; max-width:520px; text-align:left;
-           border-top:1px solid var(--line-soft); }
-  .gsRow{ display:flex; gap:16px; padding:13px 4px; border-bottom:1px solid var(--line-soft);
-          align-items:baseline; }
-  .gsK{ font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
-        color:var(--gsred); flex:0 0 74px; }
-  .gsV{ flex:1; font-size:13.5px; line-height:1.55; color:var(--silver-dim); }
-  .gsV b{ color:var(--silver); font-weight:600; }
-  .gsBegin{ display:inline-block; margin:38px auto 0; padding:13px 46px;
+  .gsLede{ font-size:15.5px; color:var(--silver); line-height:1.65; text-align:center; }
+  .gsBody{ font-size:14.5px; color:var(--silver-dim); line-height:1.7; margin-top:16px; }
+  .gsBody b{ color:var(--silver); font-weight:600; }
+
+  .blk{ margin-top:30px; border-top:1px solid var(--line-soft); padding-top:16px; }
+  .blk h2{ font-family:var(--mono); font-size:10.5px; letter-spacing:.3em; text-transform:uppercase;
+           color:#ff4757; margin:0 0 12px; }
+  .blk ul{ list-style:none; margin:0; padding:0; }
+  .blk li{ position:relative; padding-left:20px; margin:0 0 9px; font-size:14px;
+           color:var(--silver-dim); line-height:1.6; }
+  .blk li::before{ content:"\25B8"; position:absolute; left:2px; top:0; color:var(--gsred-dim); font-size:11px; }
+  .blk li b{ color:var(--silver); font-weight:600; }
+
+  .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
+  .gsClose .quiet{ color:var(--muted); font-size:13.5px; }
+  .gsActs{ text-align:center; margin-top:28px; }
+  .gsBegin{ display:inline-block; padding:13px 46px;
             font-family:var(--mono); font-size:12px; letter-spacing:.3em; text-transform:uppercase;
             color:var(--silver); border:1px solid var(--line); text-decoration:none;
             transition:border-color .2s, color .2s, letter-spacing .2s; }
@@ -34,36 +44,78 @@
           color:var(--muted); }
   .gsAlt a{ color:var(--silver-dim); text-decoration:none; border-bottom:1px solid var(--line); }
   .gsAlt a:hover{ color:#ff4757; border-color:var(--gsred-dim); }
-  .gsFoot{ margin-top:56px; font-family:var(--mono); font-size:10.5px; letter-spacing:.3em;
-           text-transform:uppercase; color:var(--muted); }
+  .gsFoot{ margin-top:52px; font-family:var(--mono); font-size:10.5px; letter-spacing:.3em;
+           text-transform:uppercase; color:var(--muted); text-align:center; }
   .gsFoot .dockline{ display:block; margin-top:10px; letter-spacing:.06em; text-transform:none;
                      color:var(--silver-dim); }
-  @media(max-width:480px){ .gsK{ flex-basis:62px; } .gsBegin{ padding:12px 30px; } }
+  @media(max-width:480px){ .gsBegin{ padding:12px 30px; letter-spacing:.22em; } }
 </style></head>
 <body>
 <script src="/nav.js?v=16"></script>
 <div class="gsWrap" data-i18n-skip>
   <img class="gsSeal" src="gss.png" alt="Goblin State Security seal" width="520" height="520">
-  <div class="gsName">Goblin State Security</div>
-  <div class="gsTick">GOBSEC &middot; [GOBSC] &middot; Big Rock Energy</div>
+  <div class="gsHead">
+    <div class="gsMark">&#128308; GOBSEC is open</div>
+    <div class="gsName">Goblin State Security</div>
+    <div class="gsTick">GOBSEC &middot; [GOBSC] &middot; Big Rock Energy</div>
+  </div>
   <div class="gsRule"></div>
-  <div class="gsLine">Violence, but as a public service.</div>
 
-  <div class="gsRows">
-    <div class="gsRow"><span class="gsK">the job</span>
-      <span class="gsV"><b>Protect the miners.</b> Everything out here preys on them. We prey back.</span></div>
-    <div class="gsRow"><span class="gsK">the list</span>
-      <span class="gsV">Short, built name by name. <b>Invites are scarce on purpose.</b></span></div>
-    <div class="gsRow"><span class="gsK">the bar</span>
-      <span class="gsV">The nastiest killers in EVE, assembled into <b>one fleet.</b></span></div>
-    <div class="gsRow"><span class="gsK">the ground</span>
-      <span class="gsV">Highsec is home. The work runs into lowsec and null, and we don't send people alone.</span></div>
+  <div class="gsLede">Somebody has to hunt the people preying on honest pilots.<br>
+    We are very good at it.</div>
+
+  <div class="gsBody">Out here the strong farm the weak because nobody stops them. <b>We stop them.</b>
+    Not for ISK, not for a green board, because someone should. GOBSEC hunts the predators and ends them.</div>
+
+  <div class="blk">
+    <h2>The job</h2>
+    <ul>
+      <li>Find the gankers, pirates, and parasites who farm people who cannot fight back.</li>
+      <li>Point the skill they use on the defenseless <b>back at them</b>.</li>
+      <li>Protect our own, and make preying on the weak the last mistake you make.</li>
+    </ul>
   </div>
 
-  <a class="gsBegin" href="/apply/?track=gobsec">Begin</a>
-  <div class="gsAlt">or come argue with us first: <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
+  <div class="blk">
+    <h2>The list</h2>
+    <ul>
+      <li>GSS keeps files on everyone working our space. <b>We do not guess.</b></li>
+      <li>We know their names, corps, and habits before they undock.</li>
+      <li>We do not wander into fights. <b>We arrive at them.</b></li>
+    </ul>
+  </div>
+
+  <div class="blk">
+    <h2>The bar</h2>
+    <ul>
+      <li><b>Elite unit. We mean it.</b> Specialists only: logi, EWAR, tackle, recon, real FCs.</li>
+      <li>A board that speaks for itself, or the raw talent to build one.</li>
+      <li>Discipline over ego. No passengers. We do not lose twice to the same man.</li>
+      <li><b>Invites are earned.</b> If you get one, you are one of the best out here. Most never will be.</li>
+    </ul>
+  </div>
+
+  <div class="blk">
+    <h2>The ground</h2>
+    <ul>
+      <li>Home is highsec. The work runs into lowsec and null.</li>
+      <li>We escort our own, hold the grid, and hunt the hunters.</li>
+      <li>We fly cheap, build our own gear, and win for a reason.</li>
+    </ul>
+  </div>
+
+  <div class="gsClose">
+    We are here to be the best, not the biggest.<br>
+    <span class="quiet">If you are good enough, you already know.</span>
+  </div>
+
+  <div class="gsActs">
+    <a class="gsBegin" href="/apply/?track=gobsec">Begin</a>
+    <div class="gsAlt">or come argue with us first:
+      <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
+  </div>
 
   <div class="gsFoot">Assume Nothing
-    <span class="dockline">Miners dock up. We don't.</span></div>
+    <span class="dockline">GOBSEC. Violence, but make it a public service.</span></div>
 </div>
 </body></html>
