@@ -610,6 +610,20 @@
     .chacts{ width:100%; }
     .cwhen{ flex-basis:auto; }
   }
+
+/* ---- THE RAIL. Corp context right, the member left. See BONK-PORTAL-LAYOUT-SPEC.md.
+   Rule: the rail is for things you READ, the main column is for things you DO. ---- */
+.pgrid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
+.pmain{ min-width:0; }
+.prail{ min-width:0; position:sticky; top:70px; }
+/* the rail is peripheral vision by design: quieter type, no accent fills */
+.prail .goalstrip, .prail .corpstrip{ font-size:.95em; }
+@media(max-width:980px){
+  .pgrid{ grid-template-columns:1fr; }
+  /* rail is AFTER main in the DOM, so on a phone the member reads themselves first.
+     Stacking it above would put us straight back where we started. */
+  .prail{ position:static; }
+}
 </style></head>
 <body>
 
@@ -671,22 +685,32 @@
   <header><h1>&#9935; MEMBER PORTAL</h1>
     <div class="sub">your goblin career, in numbers. watch it climb.</div></header>
   <div class="wrap">
+    <!-- banners stay full width above the grid: the live op banner is the one thing on this
+         page that is worth less every minute it goes unread, so it never moves to the rail. -->
     <div id="banners"></div>
-    <div id="goalStripWrap"></div>
-    <div id="assayWrap"></div>
-    <div class="panel" id="panelIdentity"></div>
-    <div class="panel" id="panelInbox" style="display:none"></div>
-    <div class="panel" id="profileDrawer"></div>
-    <div class="panel" id="panelStats"></div>
-    <div class="panel" id="panelHauls"></div>
-    <div class="panel" id="panelContracts"></div>
-    <div class="panel" id="panelIndustry"></div>
-    <div class="panel" id="panelChars"></div>
-    <div class="panel" id="panelESI"></div>
-    <div class="panel" id="panelAcademy"></div>
-    <div class="panel" id="panelTrophies"></div>
-    <div class="panel" id="panelSay"></div>
-    <div id="corpStripWrap"></div>
+    <div class="pgrid">
+      <div class="pmain">
+        <div class="panel" id="profileDrawer"></div>
+        <div class="panel" id="panelIdentity"></div>
+        <div class="panel" id="panelInbox" style="display:none"></div>
+        <div id="assayWrap"></div>
+        <div class="panel" id="panelStats"></div>
+        <div class="panel" id="panelHauls"></div>
+        <div class="panel" id="panelContracts"></div>
+        <div class="panel" id="panelIndustry"></div>
+        <div class="panel" id="panelChars"></div>
+        <div class="panel" id="panelESI"></div>
+        <div class="panel" id="panelAcademy"></div>
+        <div class="panel" id="panelTrophies"></div>
+        <div class="panel" id="panelSay"></div>
+      </div>
+      <!-- rail comes AFTER main in the DOM so the mobile stack order is right by default,
+           with no order: override for somebody to break later -->
+      <aside class="prail">
+        <div id="goalStripWrap"></div>
+        <div id="corpStripWrap"></div>
+      </aside>
+    </div>
     <div class="arsenal">
       <h3>&#128225; The Arsenal</h3>
       <div class="asub">your tools. one login opens them all, no password typing.</div>
