@@ -1,351 +1,62 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
 <title>GSS DERELIK BRIEF</title>
-<link rel="stylesheet" href="/common.css?v=6">
-<style>
-  /* THE DERELIK BRIEF: a GSS product written for a partner who moves freight through
-     our region. Threat, terrain and road rules. No internal economics, ever. */
-  :root{ --gs:#ff4757; --gsdim:rgba(255,71,87,.34); }
-  .hb{ max-width:920px; margin:0 auto; padding:18px 18px 72px; }
-  .gate{ min-height:52vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-         text-align:center; padding:28px; font-family:var(--mono); font-size:13px; color:var(--silver-dim); line-height:1.9; }
-  .gate a{ color:var(--ore); }
-
-  .lede{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
-         padding:16px 18px; margin:16px 0 6px; }
-  .lede .for{ font-family:var(--mono); font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--muted); }
-  .lede p{ margin:8px 0 0; font-size:15px; line-height:1.65; color:var(--silver); }
-  .stamp{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-          color:var(--muted); text-align:right; margin:6px 0 20px; }
-
-  .toc{ display:flex; flex-wrap:wrap; gap:7px; margin:0 0 8px; }
-  .toc a{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-          color:var(--muted); border:1px solid var(--line); padding:5px 10px; text-decoration:none; }
-  .toc a:hover{ color:var(--ore); border-color:var(--ore); }
-
-  h2.sec{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.1em;
-          font-size:13px; color:var(--ore); margin:36px 0 4px; scroll-margin-top:14px; }
-  h2.sec .n{ color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-right:8px; }
-  .subhead{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:12px; }
-  p.body{ font-size:14.5px; line-height:1.72; color:var(--silver-dim); margin:0 0 12px; }
-  p.body b{ color:var(--silver); font-weight:600; }
-  .pull{ border-left:3px solid var(--gs); background:rgba(255,71,87,.05); padding:12px 15px; margin:14px 0;
-         font-size:14.5px; line-height:1.65; color:var(--silver); }
-  .pull.ore{ border-left-color:var(--ore); background:rgba(70,255,94,.045); }
-
-  table{ width:100%; border-collapse:collapse; margin:10px 0 6px; font-size:13px; }
-  th{ text-align:left; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
-      color:var(--muted); border-bottom:1px solid var(--line); padding:7px 8px; font-weight:400; }
-  td{ padding:8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); vertical-align:top; }
-  td.k{ color:var(--silver); font-family:var(--mono); font-size:12px; white-space:nowrap; }
-  td.num{ font-family:var(--mono); text-align:right; white-space:nowrap; color:var(--silver); }
-  tr.bad td{ background:rgba(255,71,87,.055); }
-  tr.us td{ background:rgba(70,255,94,.045); }
-  .tag{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
-        border:1px solid var(--line); padding:2px 7px; color:var(--muted); white-space:nowrap; }
-  .tag.red{ color:var(--gs); border-color:var(--gsdim); }
-  .tag.amb{ color:var(--amber); border-color:rgba(255,159,10,.4); }
-  .tag.ore{ color:var(--ore); border-color:rgba(70,255,94,.4); }
-
-  .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(122px,1fr)); gap:9px; margin:12px 0; }
-  .stat{ background:var(--black); border:1px solid var(--line-soft); padding:11px 12px; }
-  .stat .v{ font-family:var(--display); font-weight:700; font-size:21px; color:var(--silver); }
-  .stat .l{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
-            color:var(--muted); margin-top:3px; line-height:1.4; }
-
-  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,268px),1fr)); gap:11px; margin-top:10px; }
-  .card{ background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--gs); padding:13px 14px; }
-  .card .t{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
-            font-size:13.5px; color:var(--silver); }
-  .card .m{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
-            color:var(--gs); margin-top:3px; }
-  .card .d{ font-size:12.5px; color:var(--silver-dim); line-height:1.55; margin-top:8px; }
-  .card .do{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:8px;
-             border-top:1px solid var(--line-soft); padding-top:7px; }
-
-  ol.rules{ counter-reset:r; list-style:none; padding:0; margin:10px 0 0; }
-  ol.rules li{ counter-increment:r; position:relative; padding-left:34px; margin:0 0 12px;
-               font-size:14.5px; line-height:1.65; color:var(--silver-dim); }
-  ol.rules li::before{ content:counter(r); position:absolute; left:0; top:1px; width:22px; height:22px;
-    border:1px solid var(--gsdim); color:var(--gs); font-family:var(--mono); font-size:11px;
-    display:flex; align-items:center; justify-content:center; }
-  ol.rules li b{ color:var(--silver); font-weight:600; }
-
-  .live{ background:var(--steel-2); border:1px solid var(--line); padding:12px 14px; margin:10px 0 0;
-         font-family:var(--mono); font-size:12px; color:var(--silver-dim); line-height:1.6; }
-  .live b{ color:var(--ore); }
-  .foot{ margin-top:46px; border-top:1px solid var(--line-soft); padding-top:16px;
-         font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); line-height:1.9; }
-  @media(max-width:620px){ td.k{ white-space:normal; } .stat .v{ font-size:18px; } }
-</style></head>
+<link rel="stylesheet" href="/common.css"></head>
 <body>
-<script src="/nav.js?v=16"></script>
-
-<header class="bnhead">
-  <div class="bnover">Goblin State Security</div>
-  <h1>THE DERELIK BRIEF</h1>
-  <div class="sub">the ground we work, who works it with us, and what it costs to cross it</div>
-</header>
-
-<div class="hb">
-  <div id="gate" class="gate" style="display:none">
-    This brief is for goblins and the people who haul for them.<br>
-    <a href="/portal/">Log in</a> and it opens.<br>
-    Need an account? Ask Fear.
-  </div>
-
-  <div id="doc" style="display:none">
-    <div class="lede">
-      <div class="for">Prepared for Wilson Logistics [WILOG] &middot; From GSS &middot; Partner document</div>
-      <p>Nobody has declared war on us, and that is not the good news it sounds like. The people
-      working this region do not need a war to take your freight, and in the last three days they
-      have taken ours twice. Here is the whole ground: what Derelik actually is, who hunts on it,
-      where they do it, and the rules that keep a hauler alive.</p>
-    </div>
-    <div class="stamp">Compiled 2026-07-28 &middot; ESI, zKillboard, GSS files, corridor tripwire</div>
-
-    <div class="toc">
-      <a href="#s1">01 Headline</a><a href="#s2">02 Terrain</a><a href="#s3">03 Who works it</a>
-      <a href="#s4">04 Hotspots</a><a href="#s5">05 Cautionary tale</a><a href="#s6">06 Hunting us</a>
-      <a href="#s7">07 Your record</a><a href="#s8">08 The road</a><a href="#s9">09 Blind spot</a>
-      <a href="#s10">10 The deal</a>
-    </div>
-
-    <h2 class="sec" id="s1"><span class="n">01</span> THE HEADLINE</h2>
-    <div class="subhead">PHEW is at war with nobody. It has not slowed them down at all.</div>
-    <p class="body">We scanned six thousand war declarations, covering December 2025 to this week,
-    against <b>PURPLE HELMETED WARRIORS [PHEW]</b> and all eighteen of their member corps. They hold
-    <b>no active wars</b>. Four in seven months, every one closed by 13 July:</p>
-    <table>
-      <thead><tr><th>War</th><th>Window</th><th>Outcome</th></tr></thead>
-      <tbody>
-        <tr><td class="k">Honkai Star Rail &rarr; PHEW</td><td class="k">2&ndash;6 Jul</td><td>Zero kills. Declared, achieved nothing, dropped it.</td></tr>
-        <tr><td class="k">AlcoSquad &rarr; PHEW</td><td class="k">3&ndash;11 Jul</td><td>Zero kills. Same story.</td></tr>
-        <tr><td class="k">PHEW &rarr; Curatores Veritatis Aux.</td><td class="k">6&ndash;8 Jul</td><td>5 kills, 0.58B. Their best showing.</td></tr>
-        <tr><td class="k">PHEW &rarr; Aurelion Frame</td><td class="k">6&ndash;13 Jul</td><td>Zero kills.</td></tr>
-      </tbody>
-    </table>
-    <p class="body">For an alliance with <b>224,000 lifetime kills and 723 members</b>, that is close to
-    noise. The conclusion is not that they are harmless. It is that <b>highsec war is not the tool they
-    use</b>, so the war list tells you nothing about your real risk.</p>
-    <div class="pull"><b>What they do instead:</b> on 28 July at 07:31 and 07:34, one pilot from a PHEW
-    member corp killed two of our mining ships three minutes apart, solo, in a wormhole. No war, no
-    CONCORD, no consequences. About <b>556 million ISK in three minutes</b>.</div>
-
-    <h2 class="sec" id="s2"><span class="n">02</span> THE TERRAIN</h2>
-    <div class="subhead">Derelik, measured rather than remembered</div>
-    <div class="stats">
-      <div class="stat"><div class="v">117</div><div class="l">systems</div></div>
-      <div class="stat"><div class="v">16</div><div class="l">constellations</div></div>
-      <div class="stat"><div class="v">64</div><div class="l">highsec</div></div>
-      <div class="stat"><div class="v">51</div><div class="l">lowsec</div></div>
-      <div class="stat"><div class="v">0</div><div class="l">nullsec</div></div>
-    </div>
-    <p class="body">The number that matters is the last one. <b>Derelik has no nullsec at all</b>, and
-    it is <b>44% lowsec</b>. This is not a safe region with a rough edge; it is a region that is nearly
-    half rough, with a highsec pocket we happen to live in. That single fact explains the corridor,
-    the escorts, and most of this document.</p>
-    <p class="body">We work three constellations. Everything else in Derelik is somebody else's problem:</p>
-    <table>
-      <thead><tr><th>Constellation</th><th>What it is to us</th><th>Systems that matter</th></tr></thead>
-      <tbody>
-        <tr class="us"><td class="k">Hevaka <span class="tag ore">home</span></td>
-          <td>Where we live. Mohas at <b>0.68</b> is the anchor.</td>
-          <td class="k">Mohas, Nimambal, Uplingur, Hasiari, Radima, Alkez, Yishinoon</td></tr>
-        <tr><td class="k">Joas <span class="tag red">the door</span></td>
-          <td>The lowsec mouth. Both corridor legs sit here.</td>
-          <td class="k">Ubtes (0.34), Khabi (0.25)</td></tr>
-        <tr><td class="k">Mekashtad</td>
-          <td>Neighbour ground. <b>Sharir is lowsec at 0.4</b>, which surprises people.</td>
-          <td class="k">Sharir</td></tr>
-      </tbody>
-    </table>
-    <p class="body">Past Khabi you leave Derelik entirely. <b>7Q-8Z2, SUR-F7, OK-6XN and U3K-4A are
-    Great Wildlands nullsec</b>, and JPL-RA with them. Nothing out there is patrolled by anyone but us.</p>
-
-    <h2 class="sec" id="s3"><span class="n">03</span> WHO WORKS THIS GROUND</h2>
-    <div class="subhead">Every group on a Derelik killmail in the last day, ranked by how often they appear</div>
-    <table>
-      <thead><tr><th>Group</th><th>Appearances</th><th>Read</th></tr></thead>
-      <tbody>
-        <tr class="bad"><td class="k">okay-buddy <span class="tag red">dominant</span></td><td class="num">114</td>
-          <td>A <b>20 man independent corp</b> outkilling everyone else in the region combined. Danger 80, gang 98, so they move as a group and rarely alone.</td></tr>
-        <tr><td class="k">Goonswarm Federation</td><td class="num">45</td>
-          <td>A nullsec bloc passing through our region. Not resident, not interested in us, still 45 guns.</td></tr>
-        <tr><td class="k">Curatores Veritatis Alliance</td><td class="num">22</td>
-          <td>The Providence crowd, working the lowsec edges.</td></tr>
-        <tr><td class="k">Curatores Veritatis Auxiliary</td><td class="num">13</td>
-          <td>CVA's second wing. PHEW decced them earlier this month and got five kills.</td></tr>
-        <tr><td class="k">Reduced Connections</td><td class="num">11</td><td>Small independent corp, 20 members.</td></tr>
-        <tr><td class="k">Absolute Will</td><td class="num">6</td><td>Occasional.</td></tr>
-        <tr><td class="k">Desolate.</td><td class="num">5</td><td>Already on file with us.</td></tr>
-        <tr><td class="k">PURPLE HELMETED WARRIORS</td><td class="num">3</td>
-          <td><b>Only three.</b> PHEW is barely present in Derelik itself, which is exactly why section 01 matters: they hit us somewhere else entirely.</td></tr>
-      </tbody>
-    </table>
-
-    <h2 class="sec" id="s4"><span class="n">04</span> THE HOTSPOTS</h2>
-    <div class="subhead">Where people actually died today, and where the traffic is</div>
-    <table>
-      <thead><tr><th>System</th><th>Kills sampled</th><th>What is going on</th></tr></thead>
-      <tbody>
-        <tr class="bad"><td class="k">Abha</td><td class="num">9</td>
-          <td>The killing field. One corp farming another, see section 05.</td></tr>
-        <tr class="bad"><td class="k">Uplingur <span class="tag amb">home constellation</span></td><td class="num">5</td>
-          <td><b>This is in Hevaka, with Mohas.</b> Second deadliest system in the region today and it is on our doorstep.</td></tr>
-        <tr><td class="k">Chidah</td><td class="num">5</td><td>Steady.</td></tr>
-        <tr><td class="k">Majamar</td><td class="num">3</td><td>Steady.</td></tr>
-        <tr><td class="k">Uanzin</td><td class="num">2</td><td>Known camp ground. We lost an Iteron here on 26 July.</td></tr>
-        <tr><td class="k">Sosa</td><td class="num">2</td><td>Occasional.</td></tr>
-      </tbody>
-    </table>
-    <p class="body">Traffic is a different map from danger, and worth knowing when you plan a run. The
-    busiest Derelik systems in the last hour were <b>Sasta (392 ship jumps), Jark (284), Lashesih (221)
-    and Tanoo (182)</b>. Our own ground is quiet by comparison: Khabi moved 37 ships, Mohas 18. Quiet is
-    good for us and it is also why a hostile in Khabi is immediately obvious.</p>
-    <div class="live" id="live">Reading the corridor&hellip;</div>
-
-    <h2 class="sec" id="s5"><span class="n">05</span> THE CAUTIONARY TALE</h2>
-    <div class="subhead">Golden Duck Company, and what happens to a corp that cannot shoot back</div>
-    <p class="body">Almost every kill in Abha today is the same fight: <b>okay-buddy</b>, twenty
-    pilots, hunting <b>Golden Duck Company</b>, fourteen pilots. Eight of the sampled victims were
-    <b>Ravens</b>, the same hull dying again and again, plus a Metenox moon drill for good measure.</p>
-    <div class="stats">
-      <div class="stat"><div class="v">83</div><div class="l">Golden Duck kills</div></div>
-      <div class="stat"><div class="v">649</div><div class="l">Golden Duck losses</div></div>
-      <div class="stat"><div class="v">9</div><div class="l">danger rating</div></div>
-      <div class="stat"><div class="v">225</div><div class="l">okay-buddy kills</div></div>
-      <div class="stat"><div class="v">80</div><div class="l">their danger</div></div>
-    </div>
-    <p class="body">Six hundred and forty nine losses against eighty three kills. That is not bad luck
-    across a bad week, that is a corp being <b>farmed as a food source</b>, in highsec, by a group a
-    third smaller than a mining fleet. Nobody is coming to help them, so it continues.</p>
-    <div class="pull">This is the entire argument for GOBSEC in one killboard. The difference between
-    Golden Duck and us is not ship quality or ISK. It is whether anyone undocks when your Raven
-    starts taking damage. That is the whole product.</div>
-
-    <h2 class="sec" id="s6"><span class="n">06</span> WHO IS HUNTING US SPECIFICALLY</h2>
-    <div class="subhead">Named, filed, and seen on our ground inside the last week</div>
-    <div class="cards">
-      <div class="card">
-        <div class="t">0rford</div><div class="m">Dominion Guild &middot; PHEW member corp</div>
-        <div class="d">Killed a Covetor (458M) and a Procurer (98M) three minutes apart on 28 July,
-          <b>solo in a Kikimora</b>, inside wormhole J144004. Also took an Iteron in Uanzin on 26 July.</div>
-        <div class="do">Three of our losses in three days. He is hunting, not passing through.</div>
-      </div>
-      <div class="card">
-        <div class="t">Kriomnimus</div><div class="m">JPL Citizenry &middot; resident camper</div>
-        <div class="d">6,343 kills, 1,702 solo, danger 89. Sits a bubble in <b>JPL-RA</b> in a corp
-          named after the system. It is his home and he does not leave it. 23 ships moved through
-          there in the last hour and one of them died.</div>
-        <div class="do">Do not route JPL-RA. No clever timing beats a man who lives there.</div>
-      </div>
-      <div class="card">
-        <div class="t">Wildlands Tactical Response</div><div class="m">WILDU &middot; corridor</div>
-        <div class="d">Took a Hulk in 7Q-8Z2 on 26 July. Works the null end of the mining corridor.</div>
-        <div class="do">7Q is the null mouth. Nothing slow crosses it unescorted.</div>
-      </div>
-      <div class="card">
-        <div class="t">The Burning Skull</div><div class="m">TBS &middot; gank camp</div>
-        <div class="d">Took a Stabber in Ubtes on 26 July. Ubtes is leg one, the lowsec doorway.</div>
-        <div class="do">If Ubtes is hot the run has not started yet. Turn around.</div>
-      </div>
-    </div>
-
-    <h2 class="sec" id="s7"><span class="n">07</span> YOUR OWN RECORD</h2>
-    <div class="subhead">Seven losses on the WILOG board. One of them is the whole lesson.</div>
-    <table>
-      <thead><tr><th>When</th><th>Where</th><th>Hull</th><th>Value</th><th>Killed by</th></tr></thead>
-      <tbody>
-        <tr class="bad"><td class="k">2025-10-26</td><td class="k">Uedama <span class="tag red">choke</span></td><td class="k">Obelisk</td><td class="num">4,067M</td><td>Painter Freight Services &middot; <b>59 attackers</b></td></tr>
-        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Deluge</td><td class="num">210M</td><td>Red Lizzie's Pirate Crew &middot; 2</td></tr>
-        <tr><td class="k">2026-06-27</td><td class="k">8V-SJJ</td><td class="k">Capsule</td><td class="num">15M</td><td>Red Lizzie's Pirate Crew</td></tr>
-        <tr><td class="k">2025-10-09</td><td class="k">Perimeter</td><td class="k">Capsule</td><td class="num">76M</td><td>Triglavian response</td></tr>
-        <tr><td class="k">2025-09-06</td><td class="k">Athounon</td><td class="k">Shuttle + pod</td><td class="num">0M</td><td>Know-Nothings</td></tr>
-        <tr><td class="k">2025-06-30</td><td class="k">3KNK-A</td><td class="k">Loki</td><td class="num">524M</td><td>Nocturnal Romance &middot; 8</td></tr>
-      </tbody>
-    </table>
-    <p class="body">The Obelisk is the one worth sitting with. <b>Fifty-nine attackers in Uedama</b> is
-    not bad luck and it is not something a better pilot survives. That is an industry with a shift
-    schedule, and the only defences that work are applied before undock: cargo value, timing, route.</p>
-    <p class="body">Everything else on your board is small, which is the real compliment. Your crew does
-    not lose freight often. When you do it is at a famous chokepoint or deep in null, and both of those
-    are route decisions rather than piloting ones.</p>
-
-    <h2 class="sec" id="s8"><span class="n">08</span> THE ROAD</h2>
-    <div class="subhead">Named systems, standing rules, no guessing</div>
-    <table>
-      <thead><tr><th>System</th><th>What it is</th><th>Rule</th></tr></thead>
-      <tbody>
-        <tr><td class="k">Uedama <span class="tag red">choke</span></td><td>The freighter graveyard. Ganking here is a scheduled business.</td><td>Anything expensive waits for a quiet hour or goes around.</td></tr>
-        <tr><td class="k">Ahbazon <span class="tag red">choke</span></td><td>The Genesis funnel, permanent camp economy. We lost a Tayra here on 27 July.</td><td>Never the default route for value.</td></tr>
-        <tr><td class="k">Sivala <span class="tag amb">choke</span></td><td>Uedama's little brother on the Caldari pipe.</td><td>Same business, fewer headlines, same dead freighters.</td></tr>
-        <tr><td class="k">Khabi <span class="tag red">the door</span></td><td>Lowsec mouth into the Wildlands, corridor leg two.</td><td>Eyes here first, always. If Khabi is hot the run is off. No debate.</td></tr>
-        <tr><td class="k">7Q-8Z2 <span class="tag red">null mouth</span></td><td>First truesec system. Pods die here at camps.</td><td>Two pods in an hour and you wait or you go home.</td></tr>
-        <tr><td class="k">JPL-RA <span class="tag red">occupied</span></td><td>Bubbled chokepoint with a resident.</td><td>Route around unless you brought people who shoot back.</td></tr>
-        <tr><td class="k">Uplingur <span class="tag amb">watch</span></td><td>Home constellation, and second deadliest system in Derelik today.</td><td>New on this list. Treat it as live until it goes quiet again.</td></tr>
-        <tr><td class="k">SUR-F7</td><td>Deep run. No stations, no friends, no reason to linger.</td><td>Pass through. Do not park.</td></tr>
-      </tbody>
-    </table>
-
-    <h2 class="sec" id="s9"><span class="n">09</span> THE BLIND SPOT, STATED PLAINLY</h2>
-    <p class="body">Our tripwire watches the corridor and three regions and it is good at that. It did
-    <b>not</b> catch this morning's two kills, because they happened in a wormhole, and a wormhole is in
-    none of those lists. Nobody got a warning. We are telling you rather than quietly fixing it,
-    because you route through places our sensors do not cover and you should know exactly where the
-    edge of our vision sits.</p>
-    <div class="pull">Silence from us is not the same as safety. It means nothing died where we were
-    looking. We are moving to alerting on <b>any</b> alliance loss anywhere, not only inside the
-    watched systems.</div>
-
-    <h2 class="sec" id="s10"><span class="n">10</span> THE DEAL</h2>
-    <ol class="rules">
-      <li><b>Tell us before the expensive runs.</b> Not permission, warning. An escort that knows the
-        route exists is worth more than one scrambled after a gate goes red.</li>
-      <li><b>Post your losses, even the embarrassing ones.</b> Every hull on the board becomes a file,
-        and a file is what stops the second one.</li>
-      <li><b>Use the road rules.</b> Most of what killed freight this year was a route choice made
-        before undock.</li>
-      <li><b>What you get back:</b> corridor danger read live on the map, named files on everyone
-        working this ground, an escort wing standing up now, and a straight answer whenever you ask
-        whether the road is clear. If we do not know, we will say we do not know.</li>
-    </ol>
-    <div class="pull ore">Golden Duck Company is what happens without the fourth item. That is the
-    only sales pitch in this document and we would rather you never need it.</div>
-
-    <div class="foot">
-      GOBLIN STATE SECURITY &middot; THE DERELIK BRIEF &middot; prepared for Wilson Logistics &middot; 2026-07-28<br>
-      Partner document. Threat picture, terrain and road rules only, no internal figures.<br>
-      Region and war data from ESI; kill sampling from zKillboard over the last day; corridor state live.<br>
-      Corrections and new sightings: send them and the file changes.<br>
-      <b>Assume nothing. There is always a file.</b>
-    </div>
-  </div>
-</div>
-
+<div class="gate"><div class="card">
+  <h1>GSS DERELIK BRIEF</h1>
+  <p>Protected. Enter the password, or log in to the portal and it opens itself.</p>
+  <input id="pw" type="password" autofocus autocomplete="current-password" placeholder="password">
+  <button id="go">Unlock</button>
+  <div class="err" id="err"></div>
+</div></div>
+<!-- Nav on the gate so a locked page is never a dead end: navigate away, or see
+     your login state (a logged-in goblin gets auto-unlocked below anyway). The
+     nav is wiped when the page unlocks and document.write loads the inner page. -->
+<script src="/nav.js?v=14"></script>
 <script>
-(async function(){
-  var who=null;
-  try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
-  if(!who||!who.loggedIn){ document.getElementById("gate").style.display="flex"; return; }
-  document.getElementById("doc").style.display="block";
-  try{
-    var r=await fetch("https://bonk-tripwire.kyle-dd7.workers.dev/region");
-    var d=await r.json(); if(!Array.isArray(d)) d=[];
-    var since=Date.now()-86400000, recent=d.filter(function(k){return (k.ts||0)>since;});
-    var isk=recent.reduce(function(a,k){return a+(k.isk||0);},0);
-    var byReg={}; recent.forEach(function(k){ byReg[k.region||"?"]=(byReg[k.region||"?"]||0)+1; });
-    var parts=Object.keys(byReg).map(function(x){ return x+" "+byReg[x]; }).join(" &middot; ");
-    document.getElementById("live").innerHTML = recent.length
-      ? "LIVE &middot; last 24 hours across Derelik, Devoid and the Great Wildlands: <b>"+recent.length+
-        "</b> ships destroyed, <b>"+(isk/1e9).toFixed(1)+"B ISK</b>.<br>"+parts+
-        ". That is the traffic your route sits inside."
-      : "LIVE &middot; last 24 hours across our three regions: nothing on the wire. Quiet, for now.";
-  }catch(e){
-    document.getElementById("live").textContent="Live corridor read unavailable right now. The road rules above still stand.";
+const B = {"s": "uK5qxpJ5NR+nxn1EBLBfyw==", "iv": "gSK8pldjrITxMEFk", "ct": "q/z9yhbH2L62Hbyq9VGQ6kFAn3r8D8iXfHLyJvbgifGoPr+2QEIPYbOk6mXN55Yir8wD3gIEmGz/Qtvba4Is7+6Rax/rAnHpzoJ8hQrg7opHa6sNzs6GYwVdJnU4W7Thscl1SSLAs3Vl+3xHyl3pTpVGaJz7NKQ2bMWngyFcv+gXdX/3EpGaazaNTm1/F4GQODFWeUWPD2db2966qGHgP4wXP1lLzKzQYr3jlQdnGWY3SXAdUUjMWYO4e5ZzvVMc9SDffNjxyA4TWKEmCSfKpW0ZACzZ/of7WFztZfhubnTRbi6uZvpxMpVcvuw6CRtpkFaHlo26Vk1rFRF64oLKJ8NUdot4+IHw9ZLk7w3hxzoDOB3Bcqn7VumPMOvFjsjKGkIjUG/VNC6ujpN8vg7tKQTcUsYIw17yCpGpVUHzeIHGLxjC2p0iQqh7dNzUpOcXWfIlI3oTOTYSeHjbNKTGqTQLtO/A1MFGp1wbn0cGrvGU0w/oK/LMbKIcumrseJ81utwWe0dpH+JA1My+NMgrNPjZPBGQkpzp/DyVcqZf4jwzg7vUXIw2hqikWSgB2USyauyiUYQg91mcJQzzHhQ2A1z11tJHOzncwmPxxH6aH+Z0wNt1Vjnp+qDlJRpKRZpmdYcd1DY8iYZmGiKsvDWX323hypisg3pi2ng6+FlEh9Ep8CDB2V7x8Se/SNuxDlZrA8CkwNSSUmsqstBufHS6m8HZRN7dqETZjguwRK1Lt2oTXBCt3LIPhJIsDDvtpndS+w1RhJCrPWyNQYSAKzAi1kctcmW5dTmJck9sBchuabVKIGzq/04tFogsL+xICx77COksSJnfdmBMnhf1ZoMVP1Jksn53UCQycGxTNMA6gjyPc019nw093uNOE7j8U2/8slq5F13PwAoejh2apMLoQz3wkumcdl/WVXoun3QZX/sj991OJyWhCeXhMkn0y9FdSO/BBds2pcj50HDDgQI3JyxgcEMiUgsrh/PliqMY76zYgS4ACl1hGje3Szg62al7vW4Wq601D7RhNzdoRdXqBgF9MZg8e3lC2zCxdHLRcTg2auScaoq8Vja/VzokbpOex/5WbTwqlpYxQPaI0Mi6hcUWB3svbUdvVaE3dcC2ebyDSS5wtUCQQLUYzrC/f+Vh6rYmSthZstwbJzY4BpA13OSHE0dkwSxeGo7Eli6VtdspEK8NgWRMnbaQ+rNq7ff005SPEmfm/mzPb9mE6EiC69ngK4oeHCCNb/MKUyMb16V1Y7k2Q9mwmVE0gXkajHf3WKsvOFDBRSaq5aaGdBDGhiJNTVOOBA32gPs8WjhfiVYCPvay/nIy+bUrUt6IOhD+rUX9LbHU2rAfvOkiDhusvtI80mcazqi1BEp3LFGl6U1gWqAnK12Vdct6PbBAONntmNvCx/iDP9CSgNxU5vv2HTKmn0nAQdPkeerX3jiUcIXyZlNUtI0ldz9x5TnCtNLmg+Qi5tUOQAGt5+jMlnQLOKrnF4RPIgpHBgqtxjdm2Z8gSoDjRygH1Es71+EFUP2VxdIESGUvjGFsG//q/GFSVfJ6MtDkfuch7VPtFjHrLCw4Q677cBDM12jF8ROAic3OlnjDQW2HqEjenoTyZlOcfSeNSnAHlxURrn6wKcdGrRw3S4V+ckfu7onNswn0iVckdhq44TrN33CIQl1mEOaQINzdfRMvF59b7hUVL9/wXPrUgnRBeP/GTyRitCEWm5scamlDmWVm6V5tfTxtmQ1hYmOQ5X4AITqkRS/bhKAqIQy0A2dfXUwEe3bmQOtUIuYvpQHvIfkEEpOax+tdOGgpfAXByYTlTFh07m0X3R1BwWseYSd3K2GP8/tiYfujc5zq8aBuRbZ1k/O1WGuhfVcMwY5JMSFTXljWRJWJIEcIiynYXVa/TMt8FbAv41WrYYod+FBdN0TsbXOgCbz3d0wOt2S80HVcUbsOoKZcZa8Zrh+tX2hXvG9mgbwDvuzErNT6FAKEOQltNOEVHU2a14QXOQKPHwxSDexDaAXXq2ZIJjuWQjwGXv19lgJDia5XYm+AiVUG7behXlooV2tkOsI6YCctnrFUthPKGAy8AIbG3+oVAwgWETSlEY/JChAcgaMxi0WImk59x91fqABgqzeTnyAGwskaHoefCFtvKQ92qd8hzLrLEHzCX4W8ZzYEkLZ9EDTRpCo0HPBJhxckQXs89wCTqqe1BSuDh0xNyNACslM3OHGsxARpKNhi6Y+a+duJebNWfF13Hwf3FUiScBZmLqxox8pMRPg+LgIhBHxmuj7wsjctN7mLCRHs+45zESGKZ+LKGOsTHWDKzSXSNRgJcE7deGtiTGf2pCvlLAu/V4M+aTEcCIxpBtkPJYSRb+EdQqTHBu5YFXtrXtSbYc1xiQUK1WYqcXdyr9quD/xnRNMy/Yqq/T6aVVa2qLX9fmtl+Y9C/UcSCyMQoYoSJD70UjJ/4wTDj4RiEST5Mf7U1iEHG/fKJ48Ihm/qH/M1WS2EtQYtHhrzXZm7m8+Gy7vX2z3RWJ4cqOg2PdwHgnwSmh3N4y9il9S141rM3b46sYhHYByhsLVz0LBTLmAo2SRctUEqM3M+bteBKHkwcBDJAEdAjlCDcwpgk9CVrszVtYU5FjMoayAbETpM0MeXaRDuF+01J7zso23zCL9cN00JZ/tt9+7rWv6PiKN4VTzmJ2z0r9RmzgYogjIAyo1IYXHqsXzOH3GhhGgFMt35junRvGCgNm+oCKbhZAd52qn0cnZoUktOsO0oOBJ08DKANUHHJX2Ks7sCITG/3p1Xwz3EmoIgMVd2yicS9ypZs8yQddAwXake0P6jaAVWFAz/1ozyo2bkmBwPIqiJv3JgNwHYqO0FzO8CNWnX6jryNd1fypATLm7ePfruegkjYOaJ7ihjAzZUtHWzUqL2GHlCmL0eulz+CnUFMPfI3hxNrQ2Z1sOis2oTtlrhNJSkcKSnha8PfpPCKHKktONYWys3Q1Ce+U7B+N/7MZ5EenLWWagOVMigGDJ8lqK2t5FFt8rDw8A4FJu0iIErE20qFYVUDXK9vmR/Jus1mT78oJs6jooSosaEVEFifVC4xE+KALhN/YhwFGpDQJtHsua2MXTFQKWHddvxX2Ae7R9uqve3C9iCa8ZbcSi9Gjhw2PI77bGwHk4gTWK99+yBhPKdFZYyZwN+z5viy+/VHWFFRCla0zS1gZbMCr4v3RBJgbpORxDSXbLjqRZc/yT6JOEtKYAE9eu9dtFggKnDkb6z52ENCZtOS6Q/DJWGh87rHSHA+d3TNpBB+vTlHIG2BhrguUbMYCW6lXIYpt+Q9gJg4Kd2d0sB+j1IJnd0XuGDc4QLv3Qmo8qEFIT83QDM+BlSPxMj4MqsKYgdafNdS3pi1Bx+tE6Yi42ng4pvhoYvBfWyh8kvvaxl19XlDsHx0KtcV3AwSrGKnmfShr2cuIEJ/Iff/JlFZpkO2EF3i5g2xWUiLr0iMWV6KBdv8T1cW6MMg7nAH7lTsDahiTIDtWAr/e6GhdoWP879p+L8OSAbXE+TmMqTVWROcAKPaUJs46pkkPNbJgyulHZkPRLP5uNdDuEPyEvWz1jBIvgYCtfuGzy/rDSDQb2ecP852S1j2q/zU6XzLgPbaMTtwBsfs0RVFWCTYpO1a+5vn5nr+wBi2TZBlDykGTB9XKwA6Osaa2lYKfwQM7XM6+lssUDizOZqRzrh6lzDvEAGU1ZtQLCJV0s3/vYBdjxl1TkpYWDJmnHgYuQeAJWe1XTIjyETCXxcVea9hLOsqXIbUA6xrCIokc2ItC7uZ5SmFph6f4cJZxYuj2FCKMRvKrX6DBuZWTsf1bHtSclTolm+MjlS5DR3v0hydmoBZefhMY/m9MEidzs3RC0kLEquCsHTx3OH1dZpCqTtOt00RhZ68yrbORzm4DGhfO2T9Z2381sTUbHcBv4PbTE0p8lliM7qy1m9RAzsP4xhZvQbeEv1G1d5BDGYxPS6FuO+5wapYsDRvbqHus6oZOpAZJsjEGvm+ji9/+adJY9fAkhzmdr4S/eFBHnJ06Ip6fK66CGuaLH+YgHLbCTUkl/zbHwUgfFdL5yTFw/bkO+maVJK0vfFwz2l4wA+quxzHKXm9vhTnLAeet+UG9SU0diFASGbQeQiOY8N+PbjyzBdfDf79Vn4NiOoAMQjoi796zsxF+g9v/vQh0KwA6G2BJiVm6sNVJ3BQGcnY2GOH1YR4kEPl0mw86FVhyrYhoT7J84J/mYqi0k2LZbpmokU7nekqF5WlscGWC3KsCaXRAKHEyouNRU1Xoxy0zxO6b7baljCMxWzoZyUy1ckejCOGLMPlq16cS0iPW4hto4Ri3w3ocw4mICpZorRr0FHHz0M46a5GXsUOZejSTuGUY51C0O8vpNdiPD/KEm9zjzvV5Y0WBFdX+aoZjo8ARLQgA3PWoQSAW/9hSTPJJlqRrtg0Wx1JAT1tD3PLsQ/nIK8NRDFvpgUtcN3yCrhEmeFAiZnpA+6N0YvYYRHIslEx44yoV+EtCBsFCFrzTnvof30VHFz/Q9tw3yLXChw/54/sJHuIM8SSZcXLfJpR5xQ6E4GGyZZuCaZXw9t3I8SUx07n0JoD2WkYpTKDOh7VGjYJDhbQff1bea3md5rCp4fZYXm6nMN33svqElZvRx8EEj6qcbXlAfp568wT5emwqUeA/PGqQVYr9CGcUA8joXKHd5Wb6VHwybzzHiMuSJ5+KpJqOg3ULRInUMhgqmQyAoBp2YxhSwMH9SNxRYEESi7CSMxRImGDkOFpplLoeHo7CDH+lBhchI0NFIdd7C4pD53pre/KoIkyuDzujYu9zMM+tj0kxJO5ksxMw99akaDiejaNaAvnreMqSNg+nJLldc8G8xnCAQkIAGbUwRsrhlh9gql2pD8mSYjujcgLgj6yoLeVaH7/pcMjhXIBxSpO7MSKcOTBYWU6HXW5uEoiffO4tSBLUwZokEXq7mLPKi15snEx4VDUB5FuLJ92Ot9Le7Glt9D4z3UT27yWnKoVOGjO6XJsDRmninQCh+eiZXaBy4Uk5PxVeYiytMas3fkwsRxL6xPlwYvWMNt3WMh/nZxMsj9SWd+rfd/QaQrCsylcFm4WywObZt3CTykGVdmD3uLYGRSXojaOD1jZUTwPsEowdErtHJ8oyNElyiiDSU23ZPErlrhHPb58kb99wJECPdAx2qJyAPwV66BIDBUWfBIPUBcletf6DN9Z76kMlK4ZGdbW+F0zxLLrCPSB3LuKK+zCKGRUVLj12qdarUQHyUromQCHMr+jOqH4ZIVmEFy0vX7ZrWpRJ4eERu6BXKBGmPJK2dQjpGQkQKAtZGs5uedz9g33dli/4t1t5hs8eDLMNmvnMugKaO7GyQtIj0tlNtw8paQfcYCgmWqJqs17OVgWpjDuo10iNZKkDqYLD6V0mES5j/3Fg2QpH3ktcgQJt8xPGD0+D8gEUuoVnv5wjY5R3cJ42Vpmp7vWOSvifPQmiZzv1jFdWE9cVrojK+XFtOPpXhK8RQu2dgSWEG2/tZQIoOIAcSC5XzNht5xOZ2KTwkinw9t+36LzG4HNA58E9W7zcj55VQZlXp21MMUHHUX/QN58nDRrpzbPcT6bjD03aB/LPT/iu3EBAWaLRfIq1I5DlIazHi0uyVlSYd/6JBr/qxRb4tdvjUZoDmUaFS3szqyWVwto7gpUQv9E7GFR88QIXVFcNojnJxQRmu5ZwTQNhbKa0c3toRMqQIDMTHTCtZbKTtVg9es0QRtK7aYfkORcWLrsiEjbUl4R7mt36WXD2t5ojgE15LPJoRKCyX2xUuuo1yLF5QOBxe8LXLO4AowN0HfWALo714KfAEUywMsXXZNwLo1JYRJnLs+nh6RZy6fm+UlSw2KzRZvXiUP6bm2vlz1DDRUFvQmRG5fG+r6Ii7u9r1nxSokUKsvtrHuoN/7y5qd9i7PEGMQFdndgxcbyLoBmNrIgpg3c4/um2jdyM8Akot593az/JUcMbi9Imq92kNtyA6T423TEMCJMLbuwB5z+fHCwQKGYaVzGCvvgmk5nWz7EBIM9ITCvCiqSIy+VsNQ1CIaT2DDsDMU6WzNtQhSpL7iYNOixfUApAU5oHuNLyFSysQtzO9jcWNp0jip1NKuiM2vEpUHdw2PQaQm/4RWbksjb6Tsi0292mX02+Yc/2MsJtzAbdvkKyB1vVqcnzXXpuJRbmcDzf0V6fiXGbZZpSltbb3kW4Qj0EeliUSV7YL07inP+yMZQRF0CHxKGEfqMCWUSdpObWdU/doho5OOAnVBusXoKOLcj/yjjgeC8g6K9Sz5xor+DOr2J76kHB8qyKh2C89Pz+ZyIeEm9HjQwHWT+h9z8Vg+2yNrIQtVPQXuIAQsPtbe1eoSqMXpiqGy177unbtKueSfQ7UOGzSKp4JDTu/8tqampCB7XpZB+EbWJmOSuzcfW5bEGWaJGmJJlmtwK6jw2X9hH5TwCymR0+bwr8y3w3KWLij0zjl/vIxi4b/K4bAnAUcyAu+Ma+hG9k0PYLL5lDDrtKomptNL+pTW8Fa/Jj4XIK0npFxqJtNAG2cSMQi3FOvJ/e5LpbOsLinOjzLLAB84DPq+rMR8RW+PFZiX1jTHP+edMnqITSeZAJcqjKLt4TQc1F6rj9TZqTPvkHB4GKlcRuVM7XJiiWaPByMGnRKIuY7ZOSIUFxKdL22PwTgHwNGUOsmoEwdx/AOVskoMWIiTcjM70PSyEJeoUQ73NzCvGGbXZohWf9M+5RUxAdWUTqVgXWpjkmXA2tfTgwJKlOS1qV3ImBaKGYOSgEwUCb0fBmynMt44FzQRcKQnx+sB4rQRGiiYX9wAfZNIK6dfRdo6aZKegMCDCjjEJg4++nzWCmRQ0N072mBkpW+OHxCuANldcsPcfR71yJtqcT+zTj+wXPg2JU3uHLjOs/A9SJDfA245VoWe8U7uuVXajZYlbx/kgeUoyrAHS+erVqaCdAU8OKWT+ksSBQpRDE9Z34/BdIcum8T5kHWgJXVZUmtC6HZU9Von0c7AMby/32b4zTulemoRy/47/dJUu4PgfepVgbp/ZNN3IREb9/A8ySpdBQgWwRKK4JPPlnRZnhE0j04L3JPEI1w0pDrm5asG6d5sIWZMGFnRoQpTawsuuMsT5Tn/SorHYY/KYNkCFNUJ0mvs3A+NW592ea8Mc6IHTcU8T08qBSY1GXP6Zzw0JFF7mrwfYI4mqUwnFAicjoVXxPj4eUz43PtXejzcggqhUcN65kZxq/1zO8S4S3h5cSVcWWXop7myRMbyrjvNHO3gw8717RDv4HliCTI4ab4P3S/xBa0xuJVImdIY6wtP0QvksGo/sMnQtNJERvwEdQeIdkhAezoVM33vPtRQB/QmlUE03gObdH+ThaefPyCi1NHC0YbAKvtw5T2BqcGL5xWw7jZHNHgxMteqkeLtyBpneSfdAlGUp1H2TVrKYm7fT3wfQ/ltkTwbku2CqYCNSiPVacmrKcvjhzaaa0CtGTaewQ7AIxv+5Mbd3+vq6leyVoAozKfi+zNs6IJd+wDzcX3K+IZesJTloBfoSQeUi/NbyCSkT2omsMZutnUBik1fGm2PQDDf5cKDMFCupvU862yPWMAt9FHqafO5lUiGVFF/Qm9FJDWnDFWpGbGYB/eNfB6wctDpdvCJJD425Y6BCCqLucGY6SKSYP7pqi7RXcMG4r1mHsET1TzHSHse1vaqNYvzuNCWpgwVjVLgggMX5KG7srsbNaNbuFXjOV+tMT4n0wzh/lFmlCLhr4QavG2YkA6bc0HQ33bAE2/5FDQ6i/6lmPnzlFE3A4meBa8m6Dm22WfMrTUn3dMTwy87m9h9QBnd7kf50IlSFaCbsAt8uaGwemORkozIRXJf1+eT5CqLahiXFR2VbpV7C89R831iKycKTPl1wKnoOOBhPk7xg/zw1TELK2AFdN19FjEbhWcAhbZiVIOuha6o8j6AyhPJgnoXtt30NrWyyfEb/1Jz8MMhtfyYk7ydWOHOzLzQhgwxWHO2LWkeOOl+XnmzpRHUOGAiezKChoyERx9395n995DhNI4EMUUDXQSahvB4qq99XPcU66L6zRe7WmCsfec1jLBZhDce2nEe5amcUFzFXT6y7gcMJvJShlxaQB0ezOFRYVwn9rofUN7tAwy95Qa4AqQCIGD8nXxwbSvxShaAjyMrFEZ38Hbmj5nQC0+eRK58aLcID7vj2pFj8eHO7YrMDHlI57dOhfozEG+Y1hfHXVfKm6ztlarZ/gELLhY2Q/2CqKSq6KugurylaVYuBG94q5oP/GJC5R+C26ycn3VA8XDhXwzsRvMskubZQLYPh/SEkbsrdv1bedwrQQwrJCPw09VsVxMu7SKOH70HU98qFaeMtAz9Me8pc5XyUuE9i6TEAcq9V9y2V9FWfDBb/qXUxa8n59j7t7Si8eqZTtnTp8FrcQXaCVMJN30h6tD28jF5Xvvd2LxRIeYqvO1tfPkRKba+wcpf+J7pH/HnXx/S6RJVhq8ws1lVuS7I7/dPXwsRcCq4fLBj2nsJ7jOw2D3h+r0zfFtcJ7aJ0mG04dTkCZn1jRlSyQbUOYki160QaK8yZYFKz34HkoNVLNU39LLNm5KvBM4SCumg7j1EeIEwn57uolHioTCU0a6TH+vctPv5ki0FYmv45AQqWq3caqSl5gkSC6swUJwDvmghQTPoqT8CGwl1FS+OMRroJb6QC/g8gOiM8xMFBmZaIB/catf9XscJZE2+cITqffZkH8dE0QDqtZwuwutUvQdFl5uxxkkJphvTeb7aEl63N34HDH4y+jBd3x75uCSze3WQcxr7iTRUlJMKgA6ELcaXI45O0wF5VePr/CozrfaHjVI5/s6fWoE4q7tFcDLtehVS4OojJgkentdm0hTLSylwSj696BrqiUFFpEthYgu4IJh4Uc+AYSZIgica4XDuGZUEc1xz2Ipsmc7e6jTmnwIuj5Z4gy6t/hlLnLKO2QRnv2EzuoaEeYI+qLC//HMiD1jZ18yAluDu6IVtwRCz9gbQJwTVlbh3cNB973I2hrKU4cBX3TxEtVsR1uIdNzFQjV1fyAlAx/RIj+RyrccqjS123HtZOeVEl6MOkdpqvfYZCyktDE3tr489eJk+tfPbG7QdLMqtjUb44WpYjvVSM4mLaN5JkXm0t8ba0KVRTRgwk+19bFiVq9pTf1glcSnMk9ka3/rkOOucpTz9E3N67MktXIVXiKpTiGDvODGlJMbUiBzBmqDMvxxR4cKGaFQa3nFIex4Ktst3JMf4UNZWBRASRiK/66PAty1eaMQLtYBYcdnid1OgJtLs/1OX3sd8WI8BK1uj2XmCPES/E21ysJJi9cRsVFGzl98MFZYRzMacbW3X0ydOvrjd3RJvDCEk6yOthnm11Bl2nKX0+XhbGkeAXbQ6xVWyxBMHYTCLJ8ZIGuyyZOcToeLnCw+5QP3d0PbplRiKIQVddIASwk1rEPrvKjE/yfvLuCYS+D40kwGmywdPvLQfBT00fzH9m0Hxtqk7+kt1XG5u3ndSHeey7KvexWHFAHEudTSBcijMCnXfJk3YLVlr6y2q5ccXWErNY++0aA/NQ1mKlTg5NAXqAclGkVuHgtaNtzf8mRMWP43ZdrwfFmTs2Sekpv3Qlr7thc8GE/977c0yIfoo7LkRkAJDIToq65hPR/xtEHhOeNY7q+V8bPhsp+qHAzDLx5cLqyKI3MnDQc8D21yPrT1NfMTxV/7YNKlABlVztZeAWdrQXJRQwXeLtNLK49ku2/DJ74nFlvyibHkrAbi8tV1ZpeK6mRxKabA4jmEB/HFkOVfwZyuASBb/QenMHDNS2rE2Jn4BDduEaAD1T0bvZbgPnhWYD9+KgwxXxZNO9Atsaiqg9QGd2j6SHocKEbHUI61JJG/8YONqdUGQAPaby3EQYVRoYAR2ULUY/HxBVRry0xR4Yv96qMtccqYc5gU5R2a3CBTulzVixw6LvSvbsfPflku1qmc5bHcEfxSCvt6gw894Yi/37R5Sa3LrkD35aQKl4jVWowVlVCdIe/wzBkMRMoI+1x5Yvg3OaX+YLvpo+qh/x/3ZoVpVNSONlyoEWH0bn+H+qHM4co1Qoa6BAPC6aQr64RQaTd2xE1FrHzDFvJ1mlyYJyx9E1fWZh95UNuD3KufdU1z6icUOKHLF0jU5JYvikEuJIzrZde/0uq7/DiRxhDS8/yJjxIRXY5DK06UZTLiVb5szZpI0SmWeyWHqYstjyNyLiys0Uxz7JwnrIBmpcBKPMfPkhzP6u1GuXNvaolk3ovzN5K2ATpgj6eiplif/fFbKJ7k+I5NHL915s2pMxIFp3dXUv280Jtb6WlCYFarv6dLRrVkZvoj8J+LsOPyzrWUIoKgllqVLc+uxir/3GMI5ZwEnyD9MTHyWn6KpDwILiuQZNkt9YOcCDzi9eEkxCM1rM8LItfOjHXhtZItDfBHV1luA0FbTkeXZN5d+I30/IdxVOhP9Cxc1bBFf9EQyQboJBFUTeHb79meWcHlzBN1K/EvlhgFv+WHk71k57FNGjB1sQxg/4bLvXUTlc4x7jKQnRUbyxzC2uQwO3Z/SHV4Fd5Vz2UKJBtJ5FiiISklP79qhrayH0OrQu6LiPTLiTr0tL6cC7514nBrijBMrwiwJHWiktRs8VHiQgiquyMzI+5mbP6/pCXfZ6HRQtOpVE6aZj3VGV0zSiWpbtMLpNx/bIxz1++ok1x7KseQK5sWOvFHevnxjqb7bomGH+JtPHxW+sIDqsTIX6URxnYzj9cHXT+qs3du04lkox295eg+TvUPsIqFdYOBO4Qd6DW9ZnPU0ONhTxUwQUgPqvFq6S4omcEetrpo+rEGvVPf+y3EURpUtmARZ9yy9dH8ehgNnjvkf/K2bFxG6y7meURfDJSGfqGb7Bf+0RZawGkvjYNs5o8LuHRJ6PgSGuwi+P0DBDABdbv/EIQwR2edg8j4ZsGWZF+FHfzVlR5lNUbYZBH1yTnEOu42VxkW49c6AIXUiior4w7kvCeeonqRFP1ld0hSQFbWgPNzjdJe/dfqZ4PS8LVqqIVYU9Wprpjo3DaNBJoHg5z3ARxtSsN5d80sh11XsQLfjqWfeQ2MQgnEaB4BFLQAz58SDq9gXqMQTZKXbmTW0IRXiR3KM6q+R0firTifLf+HwHUyIWP84Ds7xRh7iVYroi+XM55/93iv1mpteMqsVyPmP49JODsaU7EjgQ5EDzCyd7IGq8wdBc7JvI6IWvSGJgpMGtLmrZNOJEOyprLNyf9BU7Ac1+6nm9wFLhCSW16bphn240pQs8SKK8sInjaw+RtJ04dfjiQHA3GcLWVm3DmQykvzxNQNCo3CSGXeMjwMQc1CXeC+6A7vTYIcESQah05O3VM3lMqspGLYnLQ4e+UF0AjdPYacz2966lxtOm8urzwSrvuuqYvXJ8FJBmRb8bgph47TRhIS1SJ4/th22/x0mA031OTM+QDByMLz+0/fRMJVye0cdjaxg0/omRGgLmQ87nCmNOPs5ZLUm4nxlzDN7f3jOgJOWm4HE/eKso1lFvoNKhXRBfLXuHLpCD87aHeCQ4Nkc6YPTpL6m24DYpBZDQTz2NlTL3C25UcCxV8XP7Df/1Iu4EY67zYNdQz+LIK8xkCZGnHUi0bMDLGmsC/rzup10YGX+GeXzrN46mDfn8hG0zxV4TdwcUM4oYuppxwapeOl0FqUnHtv1xnECigDNLJoA1SSPE9Tx3EVurKVsKz90x5cUEdSwIbwni3FXr7q/OdOtfDp69SQWnE7i8bEm105tYuFnFGMYdFtcyXEfpbXqMh+F/AzhSZRfGskq3TTIkWRGit0XD0TTPS/KBnCuBNponGfBsA5pu+g56ZkzDK/NhqJ9ebKEtCvh48SnwPnMbJIsBPOFGCf0FxtjIWvQ8d2twNtzPt3zJ7wXPnWCxw8dnjVZEMG7+gwbQ12fuEXgV9GeqkNLJNNEAj8nuTYRsFTiYu8XG1paOOZEog19pzOB01Z4lOafpLJyz5Zox2HkX+oYyl5A3N7VfAMHSJAH2THX/9FMFsOq035aOEMY8z5Q30z/BaK1UfHQzMotrWTRJFSkIllFa0mmsn7Pet8u0uLrOoyc5WxeXWTR6GIQ12Eqo/0rnI6vTukClGkTHR5328jOzUhRPbq5d85oGs9t4ig9kUSNI2Z2anxUMr544LBgFNfEUO5N7eCorZHMHlw15hT6huiS0j9sKYi8xbjEeDDhnNMZ0VL0bCuvLGujLHkhkijWercuROQRj0HhuepJjmytzWVb530PTLLlUzZvjUOvtKG5A/cFNuG2oL/2nIxB2uhZNnVU3p+03TbNNOaFeTf6pMs62DsY+EeMuxktax7KtniePU4LUgD6IHZECAaWnC5S9ko2aeDwoBOQghnxuYiiU1rWRTPFDZdeK1/4O5ED/7Hj28TOwjC6wJ/4qNntX3Hk8RuJOHEATanKOCvSZ7Z8UzmyX21z78SnPcGTCZ+ytPEVReIG3qwQ5v8WQULu6SwiDBbgjYlZrXMjHMAQGvhP4WxRySaOu9XZYNNBIZJ6TcRAS7+4mo60t6b0IqFTHOUe6BOfUJGr/CDSGrka2Og41v1qaXIllnauiWpDCcpUBobpFE1AF/adkQ9GgyRpP0zc4xfx/cXui15G1iqAph/eJtQfW1IR2HKFt2JEM4WZseoxQ8ipMUGB2TP8oK8IPQ9nbGhC67ua6mFUrudH03i1cSdTeSJVMgeIBHm7Mgzr0B8m4BfV7ExA3dcaLOpSWrsZDWr1+ENPT4tEYf/E6aDMsuXnvqmX4srG2iPSEzdgdgqxDpEmL6bXO2s8SyNGJqO306ogwexJN2EBGAS3ypkXi6JL9krhzyey/5RIw8Fnw7q8t4MG7hu13uWuICo7KfNzCAwq4sbWd0WixlSSxrItgxr/Qhrusp+GqJooD8adKq3TgVnPWf4ARuihUEJnLgcCaTSug+OOoxOOgJMZ5zQJwWm5R77GkDhdVSOmtEzXettoZa/RMQ/Yo9EH34Yj3/JTvwT712Ff0du9SqRJvWQITBNLRex/8VJ34pS9d1ESPNw4u9QUlUjB1PG1Pek9Va0Nx+XVgpyXJKSqUBfqmfiaLxvNtlf22XUSFCseKbzNYdZCjtwnCCane39sUAQ7PS1Nk6RvDoytmD8j94VVVbz3wQJ98/m/99BvP5xc3WX+ffiLPKly1ctyrU0zczYxBiZV3EhixkCelktKZI/miAAibT6XT27N6nO4FQBnKWDvOiVGqQi8jOQJwln0BvoY65twM1JQnV2SvaON3nRw2iNR/E0oa78EKXWHaC9sXJvRujwjnjZ4Wxrr2I+OO4Ktf1VCwr/YMxbSJ6L4OB/1L3kPtZRhrJBUN99CbrJdGnAxWsnUjeUV2Ujq2N+gbS2UH3uFf/xRQiPepmd4uVXrmtiSIuvP7ZYOc5RG/vc5Vv13FGQ/kFGr7aJ/dhizlFL07eC8sCEx8FSnKLG2CVnshZIgEbQfZAtxeSdwe6r7wa8USjELwG93J5wrO9jJ5uyJOTLU6jhfbcp1sfSeHY/MTCgElbDWuA19MbN8M/4GDKDsqIn8uX3jzCiE1AxdiIHuPgeKAKBZEqUJZXAzgK+QuWDuJBD2LzRWbHb8u8bSmXSXiLQsrIV2H6ZYtOl1bNKoSh2zZCe2PENrYtwsy6ddppbxtA+F0FgJMOpS3/pJahiVPiv6KRfTTvJj7OqOrSO3IxnN+cYhX1xLSSew81WVe2GCX52WyZ+cyXW4eTs6su/i85jP5Ayn0OAO0179uqXEskaALngzCCTSPD1Lq06ANvWBdoSpRWuoENZE+zw8Bu8dzyi7njXl3cUvV4wXQEIgA+Pk0XCGDOPYNc5OyN+YKxag0w60WoQD3lCVPcArYp6LeLFXg3/0Xb/2sja7eBayS2QhLfIaY5GOiIXt7h0RXqdtSCFG2s0hygfoW2DVa1eDKTWYzMyJoW+X2AJDHbTQNbhrQ/Hcsd0+3usv9fN3UhlUalfEjjPMD2K2dGYxCJlWi8zL0jp8Zu7FZh9Ig7zthzZNNyIpUPK1AuPMPMwadoP4zbMkocs5+2Cm8xYYRENQND9NNzygkvGhQvX52gZAjYg2gURj+YxzjgSEjwT2F2Vl7NdsBTvtvbPPUmNtPjxtSTty7ldn7Th24QtSUaBG0HoenMb2gQ/xj7GJHleEQ6YuUSpiSYjc02pRH9ZBABgIgYnIajlToZ1M3QYrERCGoOrscWPcpSdiILTfbLPFApguOA9EjtR/BCcp//l7lOe1LZX4z5ZK4YdMUBX99QHjk9LlgncbrJuqa6ndK0O3jR2jpY+YCZBw5ZVCcZeFZsH/UCr11kvxWRtiQcQ4543Y3I/SNjj2pUQsmfEPG/dzI7PZhNnaJZeDBWeHHbProyhLfgByiDJrgy6myRAgx6QsBEOHZRDMQoKyK2th56I+fcnbNwR7hoGwJgDa8Ug+6cH06PHBarCSihKLEEn55Wck8MIxnPue/Jipnjql1dKF6avUWz6Xf28GV+24aVihBOXpLKz1azez0oqWtROAkBh0A5DnzDjoshgOHRLD4dmFwskkQLpqZ9p5O1E0ApdyxfuW0kd9EKNJWrvDF8/LuSYk0pXZJlCCKbecz1mX1ImXwQqaR3gUpfHK5Rr15IAf8uhh2CgyFT0ZtzKuKtsdozO16Z4DsvmFPVpayHB7MtRdCs9cLPM1fCITBkrY6FHFXRBUh2rqCncKe/EKbmZT5BJZhApIiWFDdJ0HiGVsQsW5ZeRP2XeLJwCwEyk8HJnum7sY4nLy77ipA+Jos9IWxu8XpFBWQwUAOCAEHpqou2tp21AdmdpVOcX9qgqA8EB6Y34s1OldaBYEG6+i55ZBkb1M+tBVKiZMpa91qTiXnDU3gaFdnMFK2X3QPJBgAsC4Q2VM7naeVqwtRc1lsOnaqMrGtwqQsbFpMtM/dhXB4g5iUhI6nZkgfhczajBVS64nNcTJncuI2JQMXVsDiKqlY9StrspQfm4IcAReI8ca2ER3GDaVmr07ANid3ONmc0IUeaLtfW4vUiKNPdWimZ5CkD5LdL7FJCaALPhuCRDffeGoWlbPWamElV9yofq4V2UEBI5sHhdkght3QsBv96L/Wi47ro3FN8ctTW7PuJJP8UGo76ChZK21C071ReCkm9SfWvD3Hhth0FaWEXY23qFx00L/wYf1wc4bvbiFN8bjMFT2ipwmuOXTub8yfDrWEF5pQouTLIAe1UaCt4EB8RldzJKwAhXcS2tjuTfsqRgpJU+5tAPWbrj6wzdlSAHNYD/5HbdBgG8V747WZP06kjQv5iFxHXi9eHRIrwiyg6HVzZ2EvBrb8QV9bt1q2MFioW7cg5HToVu7HsTerD6CYAfAQMfoKDa5JDbF3qGIYBxH88vNuPzO5c8iP1seI9cKaj1HtU+QHMIUUlRun6zT62gJBX2KLnoJpaAme6F8Buy+FrSplROsoZuH/M/6u5iIq1Nr3XlIWZs7WvP8kJqV8YmOaMPEcatEqQrkTIg1lHDdzc5cj9Ob4CwBdhKmQqZcG74NF2RnBDd+MbgTkS6iJ7erBKkFSrzONTWTWHdiVa7ev8t7KMFdVbdOdXouvyXjRlhzxqXiBOm6IyPFEnu/6f+A4X9nOeU6OpSeg75ohbFFGyiFsDeljAzysAxpbPUquwcoWXgNlJIsHUAC5LdBIZ83IgR6ynayLT1Ax2yLiT6kYkEkgRfXmfw6HjkG0F3IPM1kHwuJd673Cg/OCmBsAV7G2TmqNfkUg4G5bDg3eS70jqhzHTFtXzVUznUGb2q992NiJm4VQqRv6eFtLkMCAkMqjQYzq9zUYPncO02bnzbFI9ymUpp1R9zYTGOBrGs/ByGnx5kjHZVByrr90Pek2q5svYJJIk+qF6j2nVRN3QlmsbMr13Ns5zXgG8Dljm4RQ5/gFEEtIkP2JdIV+LKwihD8ue2idjjczXYKuhnWTvJ0dmGfQzhII6DwTymNI68B3b+cqPzgCsDc54Yxl3l2s4qTVLC1CuHwZ2A+xxKPy416EL/dcoh4KW/uyPnNNrzWhqxMF2MrydlRGbOK+rjaVSelaOaEmoYmBWXttV0mRpUzruBx+tsksfw6GaW8+tSQcIX7BQP2stK2i/ISYLC2lwQyyabiUZnldt0NLB/pIGpBcr7AMFKgs90+UmQ72Ub6VjSRDKGOmjLVmEsCZ6LttsOeeW8zW1dDnUsVWXDTpXoTuKaviXtoSCzAPbDWO1nr2XpTRRpxWXoiiKsS5kupO/GqC06AArA0Kl+ww2SbZ2UoIPP7x42+mMoTW0SwgFrWv0J4fq5mQl8OtwJaaU52zVEYMZJjlDwRL2gzJCZxsf3JssI33ejhA0DEteDmDuQWglUK99JRYas/Pu0Hr3ggPAIDHE4fs8u8hbAFkYOBLGyYX81bSxkwfbYkIMQ3WJ38y7BOIHySeI5W97MUVzztT0tw2ejPJgLWNIN2YWWnxPHFD99+snztoJd4Vv6sTMlABh3xlk9cqC0eG4BFRJhf986m0kbemGYpiydknvyqk/35SQ5Y2sf3lvEcIVOCZ9iovV5eL38Fofn3QAzaeY5w7yl5775kPk+OC6lUBWOZ/n5+Vkvg6Fs0D7VIJ8YfE6uroWwTFfsCwq/EgTbDsa7cIqrveoagOu+cBSJZmWQkiGOdBqvZELTNAVCURl1Cc3JTIgg6WivUjyGMokccQHogZ1YT0lzakyQlLVGs8L1s/bnotcwQsZLOKoK2DGW+9F/Ln7dzrT/RMjDKDRXFMXMdKxclfeDw55Dxnm+C4YJE0fW50iyXbFDChKEDdcUbDTt45pG28AUE8lm0oUXb2y6G2lNCVBefmGolDZUpplZNiayZ6d7U4FxpaB7ePuQaNm7N9rqvFjHICaq1q9W1sYozisWmFiP5KXOerWHGiz0LaMT8pqSDBLU7mQxuZs91RQZEk7j+SjsSnnQJujNNNzwHKLzoYLY/cyxIPmiQNBS6mg5Sdl1MQo1QdaKonYkAd0hgIGI1DORqVCRLDiLD4Xs7Ul74zZhNw4clkibdkiRjGX/PJZrFmcPzH5eRD8s085Io6ZpbWKbO/T6qAba9f2HoTHsCaNswEiBJxuXtW7ywxm/eQsF0b8nBj4jhYG7xBoGR9NxH9mwjj6y/TKhCj6hnZpernqiclnRYAeOn4zbZ+avC9FenZuPXo9ZTqLLsxQtArpi80UrrzdSMP2kTlLZAA+gaCWKjwdN6hkH9CH1o0WR558lSFYZ/nKjf3mT3oFWh3Gbb5wjBqaY0CFLptZb7dPRMervRd+C7XEQUCte0PkJfNEM3OEL3StdZehHnBPpto+HPLbBkbmTMF7TI+FTUQmH2RkuoVPMyOF0KD+kMUCupi+eZYyoqENN8YBZeRMvKKUgmoiscrpLb9BUPQrrHJy/zjjq4oZbRZVTL8Oi+hzkB85vjXRHZlqaaqP3KeBJyyFc3Kf3sptYWeV9xVGFv1OWHGRsoIkd22lm/HUEhk0gb79f9BMqPwD00tqZO5OQYawghZM3kmLOlwaZ6g5f3c82qPDMOUNJQKVldzA1JNXt8K+kd9qVJ6ViKR2Enm+9MSFL1tKBUlYUxlmJFm7YK4N9X4LEgM6/5eqXZFdMyThLl1FtOQ3xv1fclyIzLPChQ3n2EqgK97K4EMt8zURC6lZMe2Lg5NdaZlOPODnIgN18Vg9NodyHqH6CYGLDxL/IvBm1k6LyaNAEvRN3WFeFxcogx0lCVKAI72ka06Tk3SKLsJnRBB3QkrY1X2wc0Yz/6k+YgRdEqRIEZ+7eZW+Hska3GARwtVEOk5toViB3yV9wYZkC3CF4S6BMcmk9f1RQTCuCYH6EBL2fTMGsAhVZ200Kw+NFIGWZU41VuyROAGeiLp29e81AbzIPoOpktfOcrCkhG5AJT90hjcOaxaH9rgxvWT/TRgEHnty9edUf4ZLZGYh1OmOf1hzYRmoMyNpo49BOVJCChRmlcK39wU/YL6mCWe8ytlpRHGMfrxTOEdw8hNXq0koPRYufyXrlaiRArdvEB5Fp3wC3ieTVnZSr5vT5rzBGMJXQsR5Sva9YRWecrFl/9+Xdp7upvYzQBB7OeNvxs1vY98QgbC43l9dfq9wVtioKF6IIZEOw+uZjJSsoI7XaybXKWtkb+mhMyXXBhQvHLa1c87RYn37Z1+Yk25aX1kS78FcF8VOm1Rk7nIXEiE3aZVpftbSZxE+F/7/GLcKzZO1uybg9PdzNlIRueQLiGJxXFM/z72xI7vi8dJWEGldMKOEWKUIE//VKZ6WR2RE0jEOyT9zNM7fLyaMuIGtH/O0SYekjbYWc9OcWiLJYVOULyWy8CiJFjl80d/fk92Ne3cO+826AS1vOaX6b6xvqYWyIu1CLUAV+J14W39HVtbLHxbqmLAq8x5A+dFw3oGVAy7GkQ895qe0G3iuSN31wkpqiMyy6e1FWf0HitItpi5nIGAUVMX9F50NyHyqNtcdX0qnuFYypOx6zm4Twz8aCU/FOpSTB+07UqPYbhwV3y2AxtDb8aNEfzvemoIyEia89dXtSDyB18x1p4t1egCUUYckMQgKw98nPTkK3disrgGum3cNDPGtf4aZ0LEonpiSZH9eedoJGk7UEfw4J8ZX4ByEdKp49tBpHJbdTukMkGOrvFWR+zSczuTcbPNuFAaTjCfLspAicIOkUNI/A2eDPB/7DXL95yq2YtZ33xwkZqZBTrSSxCUNGwF/riuHV15DwSdZYEMA8a/B0m8cu3Cy3wbQTxA3BlSq/mG4y7GSK5b5jaGwILDJtifdE8TIUw4YNEcQBQwTsBjfRLjMRrprg38SbGS4PXqJGfbrg2H9O7jHbDUlisP5oGmIEnoi28w8iGylBeYyghV06dAtwW3sJ2sNAWJZSw9KlVg0SqhBHx2X0zQuswk6tygnHOlT/WJXQ4JL9YJEh3/F5/WubcWmWFLMAawmy9OcU0BgLHExhB8/nNC3kJUPAJQB5UFhGu6gjcTLl568pKt+E57UFxve940iI3B4ZxQKLetRwdtD2w25bnNjEijKSjRUDRnLPj4gT9f2uWa/vJTJnLSqphIA3Y6v1zd4TVttN1kmqccZRvVbKUPoQgE0vLU/vCo9luYxYPsax2cz2Rf79AIwzWifGo0F3jrqnWrTKcS2uhXuLDF5ri/i/hIJS8rKK6mMqjMIgzPR7rKp3KK0yiifambXZxsJOQ556euHy4C+Bg33WCKxTGw3QCRr2RqO3+RAhuQswaOZng6rMu2F1AO7pulgHKORmRlPPbEsquC8St6wM6fjVUfL4W40MAjOrl0Fu7RXEVXF41q49YsHIAwfWNN1mHe73L/6XFms1zLVbDYK+dqE1Unqz2vgsFx8+GG9M7HF6wzSLWrgfyPG/d9ydMo1e3TJ8f1S7PZ7gCoM8GQ09NwssPevJAWTDzvjRbK/KDMujIBppYCxqDu5EILRA1dszhJqcwKDEiAKKY/MvFV7ki2S8BdAWccRcVTKcD7PmeUdqb879XkfdjBeFPfWgOJPycq6PHM0sKz7tw77PFVda70DdUzJ6H0nHmjkgm9iNBjGDlNH/6ekgkHqXO78F0u40EqkIbUhbao9Hl55Fz7GzTMxI9ucP9bYkyaxR4aM3/s1IKqICzaPgmebebhNNITjbKG4I+5+CSqbW92Nn+7QtI5XZFWAkl0PfPLHVDJGbkOgaEXAp/MpzASPhPo2tqGftr7qjr1fvDf3UI8uPTRdUKswC6Nqw6e3nCtack4DndutS9fe2TEQfCpcVxY11PG98EII+dBuLbpxZzatjSopgS8UeqCcd1BPFkW16aZPlxyjXKBw/mnAsZjzwMLLsT4/adHWvUio0mIdF+ddWYPuVPddv+Cb/b1HHoxjExhxZKOrRGNsvk3MnRWl2GAcESvufUU4EOavhWMnn0+czjBADzobV6fOiJgyC1dw1A/q80Yj4zzX3CQln6D6GzlCUweJ7lRA11/FeRBJ0EcRlxrmryaYdck+HZvGOKaV05CFSLAeO7QfdCHM8PuAvhZS4av4HlmhQQhRnPWtP/QSMRfvBLp9cqelkJ84+LvxWWrr852OpGiXLwb/0GV+GgEGFbpZ7X5NwgwDA/8kcPju5uWi5eV0CaDXfm7aY35oy+nQiDHs70cgGMx5Ud2kCtuV55Xv/T4g+BBf4rzgwrDHGhTCmU9fDFOl6OPi4lPx7WPxJ68pnRkio1dw0L4RkBJvCaNxofkTuFiEtiMecjXxmQozBNf8//6y46HQIYc8kgOp+tz41JRd4hJ4h9NDZrucPQdqYeBPbUFq2oroYQx1NHlDqbIXeU1AtjBYx5VO8WHrcBoDIpvvMT8ZC/MAaHEBvii/Z3MbgetZ1VBimly73z9dOzmRIhv3T6ZPKZdDod7sLVyWd8iKdBDIDHKmHRhBoIbxOYE9lcCxouxkFAwgB97jcEwvn7/n0+PChP24vV4HgdtSEp8yIIbilFUdyutnsoTACzgx/8pIFQR4z585gNn3SPjLpNFo4p6guZNQfQyybV5yy5cGPDo1MlqFSbQZoY9zmVYZngGg9t2QXgkEkd+I4GtNYG5o90gb58bOHedDknjPlXFZn2UOsc0FclR/iRIzZtjgKIvpvJ+b5YSJ2EQZzIogiNyc45yr/B3nHTQDHgCk2v0cxqqM6bSs9hVxF7ULowVBJeHPaiPhGuul7LrUqxIK55kNMr/bSLsHd/fYR++4O6xOOhX2EA8vZ2UWifZQas3fN3fF6h7Ydfmbxt9yqVglUGQVSl4ryQj1gY2swzBxXLZfMSvL16inQv1V7DHWwrPVrU59JfurgsZ0fxJI9mcORIAGeFRdXQS5axkGhuLD27jRUNAZb60EIUVCecFk2BtCh7L8IBZqn0+ZZPgGWkDmd+QpC6f/cZcSH0VlRGUVyCv7ivjPBNQGoyDQVpR1T7zhvKCFkvQYNEd0yOLd2dEH++uZ1lkZjfDpPaESULnEGu+6evd/2aD6WNzACEFIs2kznI4agx2ICb4uX6xvcgzngpgRYI5jOyzK9tLJgFqNPDxLrCkhaMzlgYwcGqd51ndLKl/2u+aIGiIjWASj/EEBQP3hpquuHgzZul3gbhvPU6NcUxDir0A7G6WWPQQJ/amqj2OJ66YQ2Zy3LI57TEbOaNxIjfcMIjYVxpAJ7qM20Gh8MtDqVmR0lVxXwr20N2RfhCOTV9lWMVYxr7FMGh5wlGQiC4uGeDtnIDwxf1Va2Ohi6uLOFM+gL96DoHLQJGmpBugrzEgnZFVDmxDHTnm8DN28WpP+VVMhzdhxbPoLSbLwvmuCW74fQXnfpUngzhddRNPvrr6sRj/kqws76Q2hx/Q4eLUE6zhw9Kfp3MtA5TrELNbNGxOID/vsuSdOhf0lGHU+PJsEN6fZsrDc/g8jVKfyFsi3a6X0rA6k2hxJ++egqW1qZltYoK1ksUSIf3byw4RvpCuCPaZxlxz6wr/82PBTvpUWPiKxsC+inoRelpIagWUc/v0VLPQFrsxaZUrU8jtiKzT1SgrrddWg8K6BmkCRFqX1Qe6iwj2JGiE0Tq3fFtnBKJBSE3IlBAFrPyuV7LqEoM2eIPnx/wdxsWGq2+WLK9lMqAg1qaxLeeLTVP6Z4TDH7eSEop56G/16a8KfkCWSjs9/I3QDWAEDPqfxhcPTrfEDwzVOQKjsoroWpI24Fs27ZB/mO5lxlac3qh4xxdBXuODwfxrR+wxafBvsR3OuP6Jx2lCOjnLmIn6IYdZTWjKX7KezNA1qGsij3bRCti3nB0LAlvMm9DX0Evd8FLNs7tgGPWtLJfNthxvI/OncSq3j5g6vcEVwEraqTz2HB4CiYeBwKHyQoQe5+/RLwcVtKg6RHVHTBL+60b4cT3AKHTyoVhsX1ut+R0U50fkfaY0575c30tZmyYdtvXXS7Y44nj3mrEMhRdqBlcyHjN8cE69E/Q9WvBD652tFPqPDsijZcdpVw+Et9kMuC0f91GjdRYuweW+mesT6ilGAtRAfTdQKcSzKU1OEG3nvJNIxb4sBtm31kPjR9M1xekPsAJnwPq5ydSbS4qsgFIcxj5zytjPKGwOzl5dVLEWzRpID7NLb7x44NzkTLjMe1hEhq37j0RXa5xgrxV4BLvLFAsXzZzsgn74ioNRez1mLBg9UpPlzM1doJbZGZt2adRB23BIrWpe1Os6juoNHTzHo3BLfzYNo91FP1T5gi7vIMhKQ2rG2wXZUVu0//eL5qKuI93Ttz56LmMctY9dLdbP5bSbPqIH1QfviYterNky0G7XI4wDWdVH6ul4wqrOLV2kjQM69rFlFT74wTwtHCrm3yV9I4PInwqL3G/s1pQ9tiIbkuMTnFwx7AatSQkcl+2Ks86Xl8Sk0twYJNlsqRiT8w0WW+1wCN1bxoIIRd6540nqHEtB0gZjAOJp2oSZ8npZKoa6IBWuEM18H+Xug0btzx758pMaI7T1Kq2zUFpun7qH7DJxuZPf1DNJybws+sNG0bBfHOEJTvGNBeT8c0DdCth/aYUn/UTPoLxWWqfMdyA7AL6Os+VaisiC7LlT/UiWEUfiP7yWGhRDSimqGTZp5I4NPVYHbXL/i6hXIOf/Ta1o4z1wStOQC1yhCgcOckhkrVcRDB6e13yP0NCfRKQkkP0pOg99A6Ayxa7mHHphACcfhcqNXLVVCbLkQ2sxbwsgQ83ua7jz+o+9f4N1DOumSww6Z8VG2SVRedV/hsLaDY6925niwwEf0FOL1yQ0QgA35gVuqlSiKdNPpeUnrAJ93dYinvZsWODXHxP1SZFRrwDUTa+7ldA6pjT1yFeArogZcIOJP209VZO1HeMykJqZTo4RoPDRLzvscumUX/jXGG5cRpWNB1L69Cio+YuJ9qH1FHbafNab77i0Gn7UrlXBqOEh8/nuDS8VT4tMpPTxwLS+jDTW8d+eOyOSukoHiVXUTDlOkUw5fN/I+WOx0okrqUpnm9GibjBoFTxrd2s+mfoen4scGigzQO/pYoEgB1B594XK+MexaW2Nzkobimnxb+tm91ywiu1xqP3JnAbORWr7mnmEuCL55mgRz1hXWgwWm1TBrbui3UTNqhTNXv/Xx7o8mHW1HScXLQ09vJ0kf9UnPHnI3aNvVsauvWxwUDHzaS9YNOnTryS4bT77EyHZ0z02NswxCCm2nWab8C2TXksUYOFryuehe71a1G4ep2qQcD88jT52Fe/pXVx24CxUDnqoCggm0Q7wdTmcBcClnKwS2v2DByiTM5EXQ1cex0MHPoypzfwaD/GitEqMXrmMVY86BsioJI7OsMMuhgb+zgEHNsDxu+9tDwFudsg+1zxoK9zlS2Rvg4tRa7YewvFRb4xsJj5ZilWxfy3WTQUOpFGASln1gOs7nRQ9nAlmNaPt/P17Wyvi2WKk6SQGdk+EvHBM3cyaqQdce9TbRH5tcgoPXnYdWUrs94qK0aJ51iGDDaBc9tB6ZAKBEaVmIrCCq4LhgDD5AbvhtOFMwBPuRLl26vCHvWz5m0SNNf45763tlfGR62MC4xbjno8Qe8/b5ymANoQ/Flc65gCWOgcpdIBWAGgkTm77y1RLmf4EB0ID3rKl7IHZY3Q/ONpjrJ9+Qp62heBCkKyqcg46/yqVxAkkenWtpssl6gJMimcTnkR5uh7Hwwc+aV4s1GbZfTsbc27L/H0DJtaS2dHKjs2UEFXb5Km754ETgssTElRjnKmdmrc6FrjCb60qJXtyTaJkIeMQuQAg2+zzdLrKO4Z0zBmmHf7mRhIlApuHSuJZhSL3czITGOvtgYFTsYmrMT19WoeFwLZD2LRCEVHz9lbQNHKTL2UMUYns0L3KiSOY26RASPSeGARYxY/+QwyRcONFCYfNSmGgMLVR6oounoqMkDGjNNWsh4OjFLRfVwwY2Wakercli/zRtwB1UYrQjkcsSTe+VVmQy4bk9l4HTZtTTTLnQce3v+TOc45jyT+RmWSIInIcwqEnUUESMswQAiI3w1PamhZtYLFwIhyVxq1zyrV+0lbimE97ehWGUfvJ0lFaQJlnbSOIE6ORuSCW6GGcmWlEIuezN+tYguoH7fip57cY4G3gIdBzCDGJGRIEwpqz7c49R3t1mJbYz5qJYVjPbb8AE8u3amaXQ1Itah+BX8Yl1I1b2er3xsr7YQWB3r7KpUYP3UE0moirqbwAr15CIe32ikYfVtNYKTIRfu39g4h7SXQBxwVK2cVhsvFz3stvjkt2FcT8eYM+Wblag+TqQvfpPvJune9oSHryKeowIyoEP5+vrh/86NtCL5MkDyTui32z5X69iMAexVx5Yr+h8bFJdmj2Wm2N+JoIqakYssjINMhfm4MN7tH26TnVi2QrXq7MEbnZR1PjAMo4jRtoxq8OeCeD/ZGNv9dPDNzul7wVS3PONSA4yD8hfEYZ4eDg+9kM+MMHNLIF1uDRf88HdAiEmxiB+HWBA0IgibQz/mXnNWa4gaatjgLjcjl/ek1TQatLHfTXW2o4gRH7CVfp77o6YApZ+Dsp/ovHdivH/7f+JiDVyeAwjg8jLqvCUAKWN1ybqpmrs5BTC1utyOn2c1cQayjgSEC4GI6d0qGcUwR+D00xsUeI3xjtTW6GGbi5+jgYMcr85ThvZO9a+mS2Nksh3mVZlcMmOMuwjqA5hrQVVihk4tgICP21BauLr+5Dtq464XfEHbmtRoCF9s1LU7DS6XN0a9JiYEKZ8Nu5uTxIASd4i0UURVUaLcsMEbPyo3I1tveGoyPa8GQeyl/2t1/KBT/pIhGR8Q7cI7Ho2bqksOpM5DgJ/TE7BDh3355v2+oXFCTv2KER5aBABlYiiq/VhQD03I2Ch3KR8kIK0g99Ce2wfUOQlAjapLmkg4hvXlRElzYujZHrQ47a/4VF0C7o07wGJGugtU1T1DEWxvrZa5x+7m7aCXDqmztNsQnaBTe4aeALnNbUt1Jh3NqREq6yF4d0b/Pj/DQ8dMdQPK8TiugNGzsXeiF4b5F55AJNzwMy9Hr2/AtqaN3lYL2jPRJceOPItwG6GLr/g5jriVX9jAK7/XcNBeNBLyKXpcOJwGodw7YWq+rXPIslfKC6cSp6RetdgeB35hrSZ/Ids6F+v16FlDqK+brC7ABXIg99FlfL+Vd5y6JcTVGhAMJtYpA87wDRu/umrob05TZyxOul3R1vhRsEjIs6MbU7ypEiWv77wRKbCfvWAgdTTyLoztydWaOVNTEyu3LiGccYCP6IHQ7Pg1NIdQ5OnQjvSPT3PDmPnk0M25qH8BU9p+P1F0HjNzaO4U+11i0s2agr4SiHrelbfB5ICvb6c0nP5nFoQzrpYlYuPLg1XkvBphWRmiKJ0wD9HcOqXNrmN33Oc8Av5LFNWKrd9YVl2nbOXsOsuoO7Y4LoMLhm4Q/nQCpOM+ZLVdRU6q6WxkRQ9VO3rM51HNyKg+15AY4bNwIgPzN1Hw9rzXgDJ/Th0KQUswirXS6CjAv2lY+DMrzZrn02ZygT7Misp8QhOfy1C2pP19T7TuK05B5h+mZMCaE5X4ym3cHK/RMRCgytCJec7mFHZ86/JGOzE8NwUzr+RWhEHuXTI6O0MTZPjKFg4bBa35ARKHv0QaNXk+qI8Yync1MbA64+C8tOiMZJWNjJ/gyxFBZphMaai+QxOXg/6xeL4DwoJOaHVXthhkRDe8YV5FY6Yysa0hXzTvTLhXkX2sFngZvvfcvv1uYhrRMyetx3864+3cD8k+A0RFYgw/PowiURgM36grr3eKGIUBcSvqDNj0ogCrKEOY68NFKdqXEE5MqPwdT3PLsgnehtosuNnPNSQDc0Ik1KJW0KAq1BnkagOLsD3SBOZ2VyYJpnaiNDKcD1DindQ8s34oj4YOa0Jx0NO00oLWKcHPElWTbyIxN4/DcWEgL44XWs82zS8+BkNUudCL6aYUlaxi/GgAA2SDgdiJbBliEExIKayzmC9qhqgW7by/djvJxugeCnniCWQUNSNtSkepv8sBaqC3iRsGClBNna9yiG0x1V5QWomCaqLfC1QHcP9S88ksOEpwoocccpLgSJFGbswYo51YkyhRheOUiN8rbHsOtIUY0TB3KiNT42YdfpU+EVH6Ztap+EaVSblJ8i52deGIzXYLz8C5q0MtGRNWoublBAVv/qDB+9AUVNBBFjoHjijlnDqeqQYBWb8imY6nWCbr3Rh9Q1TuO32xljtdzAEbVk6IKugnsg8joBxid5M7EfSI+PG9M45ZCtuHbDMBPAvdFxTxz4/D0zumSMjLi0KJoopE80rS7gXaTKkr+PvecLi3XH3YnPSby2N1VUD97y1fCHdvnuVo2xORygtTtgM9vp8c0GhFXwif4qr2/mbujaGVMrmuN88GR1tkQH41+IvDonnfuohKT6vxBy0VQjmApth5sSM1SPXaJfNmkSiW9ef2/k5m5Kh0m+gtDiqEtMqCoLMcF/8FguVbOH8wwq0y9rUhmG0OzQSOVmI43L84SbkW7TanU5qn/58uP+HEtpqkEN/eppKYapobZ3xAyglzGd7KBgIvBuVJosPkG+Diws6Mixrta8EvJh6ubKB3hBZe5sABib5J2m7osAXYNGTE/Dh6r1BrGq3+YenOw4FiR5oCcB5POXd0d7s+NvXbtfIYuXjKEwDFcd464EQ/t/mCn1LqLKMkKW1gmZeNxHMAa7ephY+SAjaFtENm6lLf7NIfLTmrb/oMH0K/Sf5IhzoEJe3zLSAF/8vlOnFVBM2KU7QQiw1eAfgDlLtiiYaWscu9kxjEJbH0Z7s6KSzM/FVol9JChfLUNEGraJ+xaUgD6uLHNpBVzA9bscb+uV2sd8l9gWWqsArZu793B11FfFKh3KDjblZZWmWhYEf3tpVr8EuwPK79IELjN3TDH2xZ9x88KcM193CfgCoR0Abv7C/utP8AHeExEltNaAnLGMsr0TcKJgRykBU10i/1lI23AUmn7w6Az4pscmtjdEG28ma2B0xWosnvi5+oAZIqGYKYCFxptrlPKWC3Twdct8VO85mZQppxLNme6CVr/4UsrnfphG2julbVHLzPMPYDM4PiY1drmm0lWo0ga8AplBmOy0HRuWdIFWfvWyPtuh6mx0L62Yilabsr1LyBtAzwfWcPU+9EmgvyX/mN7keBZB8rQ8zNtIxir/VFOF5zdnvCgfsMYAwj5XQwlc6NmoUaTN45CHl+N1BnjjWWxoyEBQ/TztIUl8Q6RRV+PL+KkUht0WLIupuE8T0k0RwYsgkSG6nqWMfF0JtgtSItZB6Kgj47lJ8j8di5Qqy70C721gB2Ojm12WKNmRb/MPIbnKSbIB52qbi/Lsg2R9FIzQBEaAQzyS9kH59+WJQ8hYlogDJ2m7WpHj7/KBWOXNcd6AyP2okkovqjxn02YAu7oJWbO8tlR9JEAR40J5y4alxWI3++iQ/lOZ0tYddIE1MpTgIT8xyxL91aFqaM2ic237GPr2JidMrBw/aWdh91gd8nlNi1t21EWqYUePt/RhV02HRCxbY+IMqSf38GzxSubBvJ9PFi8eNDtk9qFa6vrX04f4bSeO5+KXQfN5eiSX6kTWfKiRWyhiWhoZUcdq/8RnLNdD99Uklr4dK0ONdjm4xRZPID6NYhJ1U7OARYCotE3dDxSCn1EJVwT6pDbKnGcnR671gtryIhmDpahenm7HRfy0iT7qyyx8Ujgv2t1ZK0OWaXQUKAgDYslpLElTVlCokB2qU/gST4gjDcrFHUE1XpzA1Wi/2iX2dT3DnbuwlDNYNi2hs2OpVjjo7K6oKMZwTrh1nnZfAj8O1kAwPNfQ5OUQ88e0veM8mZccyzbWxoiMipzHnqqAVsNsxFtZtCpAtUnLFNM+v3lwYfnEWjlwNcgwHMJ0aW7re/GO39w2PP5krIw2Y0bHNUyzjwVerjAhAnveZYraBDf+Lcn82wH02+P8Rg6wveU2X2Hu/mp2j9Ov0uN0R1qmjMK5XVz9Jwd7wgY4b1RK/sO4dZo+kuaPhQZFKd1GSSrDzM1EK7b848HEVDIO/fD7j8OTc58eBsvs/ywTfcUgBEI7bTP23KXoQz0A71Df0csp4fNOGHFAa4/vvFJ2mjJ4/lqSbeOpH3CB03ZeJ8ctyWHgoAHj1A2yDxwGgRoOPm9jBeBdMobsi+letmlCLyQ1uS37s7M8VqrRaf00FlolU7ES+IxzDMnpeQ/C3mnErb1Q30GHA7Iof4Ggri1+K5eNF3AoHB5xe5anUEGf/Xcu9KCS8aBGlNr/yGPIBcC3WVnZ5YEFMhSEZCEZK9YPYzrtupBgdYjOMGizMNcFX6Bmsi+h9RR6kXlACl2TY9Xia1/4uzZTuTK7wdwAuDWUHeq4SzeoPr4F3COcbdJoejXKc8S6id/5VW2lGitm9pSlCQrQ0oNG0p5teFJH+hNCTyGfsIgGSwfX3ckNYLxnaPykwyITGqpI3ttR1ehtG2nlubOWs3ITJ8VhLcV/iyqd6PWKse5QMTbHiy8/Y0XMbzP37l83hhVO6tbjjMLkFmgn5uwwLIi9Hlvsn4/uPyLM39bg2++wIvqwGpWNEWFpHWFo03XyLYpTGBZNQx/YSwtO9l3KJwIoGQwwzNFexGGPgb/BQsUoTdJvZ/vaw1M2yM/9Q5roCWmMSwZCZPOqKGnK5lVFviFd7MCa5NIcJyS35128QWXWGitHEdaQjrDfmX6dq2dnLEoQyDYYbxD79ui0vSfG8k3449IjsE6ztVxFxjnI12Oq05/rq339Skkzmc1Jjp1vNBBJ6yoWmUxYS5dMRldfSu+HCtieWEmSKDjmYQy76GhEPQnqwLqYm63Kl/huOCOW51BBN6fHBFcs/IGS3zzCbvdiOwTntMklCa0bEAeOa1cDxgQcj+BJUVA0lKWbTYydoLGyIpFgADann1a3yCARaMo6s5zuP9XceURQIMQC1aAjjKhlBpgrwEbuvXJWAZM7AKFQcnBv9KBtcrFaNApleE4qlpZo1WsWRGv/MHrFtKIBnuKpHLWiI0DUzg0ajhaz4IvrTbr3KhX4ko/6EGY7l4vC38SRAmrvi86l6f31pxfLUCGVuiqNZhS/YmSHehoZ5xplH2wuP/BnIHaSjcflMgVA4wjVbZC6WwW9cYNTcvvHxMQz1/lY0WFuSudurkJs+r43LD5Osmj4pb/e4Dftl089Dsh4Z9YUPh+aZGfcMBRCdx3ZCr0qQEfRiTWtZGjlxza7nIi3GHUSThEfiSidbv3Q76JuwURQDdTk2WSYq1fsGPujRclJqYuTE9NSAiMzN9DB15ogNMkyQBbhajZPNuY6f9D6jsYNBRiZaTX7FSZMy/+7qu1n7C3Xvn0D1v6QhiI2gsv9XZLoHNRtTl14Ey0Ndl706tebHBvBrUg3KtwAt/FJoxIOrU/9giIDCOyLMvU8F5yhsO3sUr40YkWIYWyFDE8xmvcqfEV9Ab+cMUC7LoJKX5w1T983WIZD/Q2Lu0rhkhMlyZaqVckwLLaL0aIrdKvSgZDhgdb3k1XVYtsRiI9pVljvC/aC63n2e98Uw3+fi7rvRRz+Ljdj8J/KI3DT+PbXWJLVv+kR5pFCFt1TNFQ8fLAFSH+O9RxftKcp9FajoMuPDU0TZ8sIk0v6Lm/0kalrWxEbBqDedQC/tNBlvytlE6TYKNXcdrGLbjqBsu1D9mH3XejL5BdetFi2ss0bF5NjZsQlqz69Hwbf4xYGKUCSo6vMl/hb0lxFTpcwQsdcLf368fa+vlkAp2dnyW6WxdbGB/m5O46Hq5J3kY3Wb411E3VBfKG/nFIfx2dIp/p02SwHnb7gmABWZrsjAgYoe53LWMJpdDEEU+XlkVjFzu0MTAWguihSyuYbLPtkDhm6xqYlKCQDzDFOVk3Ba/69skpVRbKecZbdiWghYDF/xbfAW37tnKlRD9htdJ4Ft6YnIoqNY6KhgEwkB4HmVno1uPiKhvnH9SsF0JBuC4DiqTSxWugYvb/JmIiPlw+h6UO5xjJ8XAUS+WPI4Q25RLvfcM9T76ZXQ4rlNEz4f8r7iwJbY7jOe+FjkzfZK8n+kAtKSyzOrqik23ApwJ+EghYRfOuwBfQLRNhiUgFXTj25QSH8TZP1BIawSrW6pqDcESFAScutfrvyck2MC2y2DQ1yRDRWpgOoSFZCPyh6yo9qNfKeJBhxF58r3i2/EZ80ym9VMVTBOglshlOHrjlfpP7EedEOyZZjp3vz1tVR45q5ox9Zctwl1YvcAdXLt+JoX78N6bkdz8maZlLvr0O+LrNSYXXEs7DsZi41kEoFyYgrWdxBSg/3312vWbBBoifZWUKQNNgUPr6OqvAQrFeBE70db0OtSPH0SSa5rZVkz5hKCdvRuLNz3i7Cz9mfH/CMNMPnRJPz9PMbSZnpLszCxmgx8FY9pO3GUXkEDtV5GjqGYwGYzyVHJh1CQtP9hWPZ0qtjtByG7fAXAKcXivL/ZvVnsdejgy4j9Naoc9NFaLmgLWyfNTZwkzgc4IaiAQWwkDfPKAMxwegFBzZ8F2/NJYdKdyp4CNB+A8Y6f3ovFfTGYhUAoFjtrMaUQpDJGFeMpp17QYzHp1GaEo9fIKGRDmhxoghgyUtcI8ZbC053d6jG7sXBHkagElyMhL/jExxd96TMniXy190iT9yRCl3iJhLf+qEYZXvVV9wqTnGjyNUCiCdZKj972f1sGla7OX0gxYPwHA4tWGmUhiHDlDoBdw4ST8bRteCPT2FG3eapq9xbvx8OywVCVCqhWFY9sx9XbVFnPhO3JYTQ+SiLtKbEztEntqz+kQ4u85PJXCsCeK2h7kWg1rUpxUXACs8WdOumMkXKomobjzmsfkyJJt30TEBk/p7ftZQeBX0XvOwXN9wktNuUARLyESa0S3ay+kUJ/kPuqg8iUt12e6GR1ReE2seg7Bq0uAWJuxrc4VSnuzw6SsdpGrmyuKO7tmAeP1Vpfpp6Oy+3cA56+vtPvI4IZf5mqdYMaJeQpQHB3ZMmw/zmf4yheN3tLkXQyCF1FeqDSuE8ooXl6DTin9tiMK/hwDef0sHCi14VYlICwqIDWKsIU208zxHh5VHmz7Bd7GKM7Bif35LYtzF0caurM5eoS7drakIkxtbi4iRhMOwh4o1Ve3um/lnQugd385TYq/BqB0uZj6p3CgEe/u5cxmPFTci46IT1J62tx8/8u+pCg8qvSLHctN4X+ObLbOm5n9EaURqE2h5Ku6MKkmBqeRL7bGgGBDmz7SFysKrmqFGgUExtn1t5y+qtc2kSzbC3I0NG4sEJbes8P4y6+nSTccOPQzGckI6xLdjVDwUXPUDd1jaeDDPWrhGe5xB5lA3eWABYTMiVWyAQ4/jAH+0RhVgMtOTsj7zHPZHvziW9+ozU39soQ+63DHmo3WGgtvc1II+jRan6I0kGjdVkSqEfd2kkj7tp6LpOsRGcaQn+V9VZQJKPVW0dVsL1QfjxULr0cCunNP6PGhtq5DZ/J8FS7n1b9bfyesqySAkhThCKtHHMnzNXYFVOYZHYYbFzUiXJharnaOYoMUpyOfwEVKb/tmGAExexKYdEuGxUrWCQ5vO1wRzi1Rf16lIPc6l9BSvd8OY82eGb9BZKsUOBo0YrVs5as0qyZu/YTAK3cKl/yfLr97/zHNAv9qUAcvlZavUPg9NDfButzZ/TnbfSBpKsRxYJSmxIYRBhyY6dHVgmpvqh5js0+0ysh9k+45HX2/aG1ctzjNiNwO2g+YAKYLlQSmtmG6dGTwKcVjaGGv/4gc9/wKAUJZZMPaPXaFNGvmgPx+L7lV2U6xsFl+RJVxiCU7tn/E6g6vYBcF3tIF06I4t/4yS3A/fBl5wj3UqdaKXTPHLrPjatq7049iHNCLE+FcSOa9njyb58NTzv+N4G8/m+8djlPgMoZohpcktTmTCeOvHS2HVnHXL6yvvj1FRGvrqZH/vQ/UhywTQRVGTzeqQJGVUiVkW0pIrGWN94acBqsNdUoM4SQbuaVAftL1CtNGXbgrPgPJHFPlpcUw9eH5W39tQ0z1qfJeal1FJhrjAjZUnWhU47yzHDniW3bx9zKyoEO8YhTUCsNgBceoEEJcXWIlD+dg9zlarDjCKwKdo8gM5cqBfZM+FmZ8gD2UYpYh7U3XSOAuUEr/hikf1IAx99r31N8VIQN7tEDOc2QkDkqXTxkCLpTCkyohGVYOyJV3KbDPiXJs12zNnB35YYZUMxGF1G8iElMytWQ19RjidA4FCE1wV7f1eJChOzQJ5yRyyg/IpL58kuj9qi0eYUki1iF+WA6Elcm9r8DL1WNVyOKonFmb0/bCysZXcaFF/Ph0hYZGGbH1g+y7S3j8gdWj+pnYu4xzTxCOxU/kpLaBa+fZ8/1a53u6X8E6RdxL4Gy99upV0huyhui54jgh6oCcOJTC4YRNDY0YXKkbv1Fxsu2vJxAY9oTgko3T4WrI5vC2xSnd9s8g=", "it": 200000};
+const dec = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decrypt(pw) {
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt:dec(B.s), iterations:B.it, hash:"SHA-256"},
+    km, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:dec(B.iv)}, key, dec(B.ct));
+  return new TextDecoder().decode(pt);
+}
+// Each page saves its unlock under its OWN key. One shared slot used to let a
+// word saved on tool A shadow tool B's gate and, worse, skip the member
+// auto-unlock entirely (the cross-tool "Wrong password." bug, 2026-07-17).
+const KEY_ID = "";
+const SKEY = "eve_k::" + (KEY_ID || location.pathname);
+async function tryUnlock(pw, save, quiet) {
+  try {
+    const html = await decrypt(pw);
+    if (save) sessionStorage.setItem(SKEY, pw);
+    document.open(); document.write(html); document.close();
+    return true;
+  } catch (e) {
+    sessionStorage.removeItem(SKEY);
+    if (!quiet) { const el = document.getElementById("err"); if (el) el.textContent = "Wrong password."; }
+    return false;
   }
-})();
+}
+// logged-in members skip the gate: the portal hands back the shared password
+// for their session. Falls back to the manual gate when logged out or offline.
+function autoUnlock() {
+  if (!KEY_ID) return;
+  fetch("/api/unlock?k=" + encodeURIComponent(KEY_ID), { credentials: "same-origin" })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){ if (d && d.ok && d.key) tryUnlock(d.key, true, true); })
+    .catch(function(){});
+}
+document.getElementById("go").onclick = () => tryUnlock(document.getElementById("pw").value, true);
+document.getElementById("pw").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("go").click(); });
+// honor the legacy shared slot once (quiet); wrong word falls through to auto-unlock
+const saved = sessionStorage.getItem(SKEY) || sessionStorage.getItem("eve_k");
+if (saved) tryUnlock(saved, false, true).then(function(ok){ if (!ok) autoUnlock(); });
+else autoUnlock();
 </script>
 </body></html>
