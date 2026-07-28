@@ -121,6 +121,13 @@
   /* ---- GOBSEC track: same components, another key. See GOBSEC-PORTAL-SPEC.md section 9. ---- */
   body.t-gobsec{ --ore:#ff4757; --ore-deep:#c4133a; --laser:#ffb3ba; background:#08090a; }
   body.t-gobsec .bubble{ border-left-color:#ff4757; }
+  /* the seal only exists in combat mode; it fades in rather than popping when the track flips */
+  .pgseal{ display:block; width:88px; height:88px; margin:0 auto 12px;
+           filter:drop-shadow(0 8px 22px rgba(0,0,0,.6)); animation:sealin .45s ease both; }
+  .pgseal[hidden]{ display:none; }
+  @keyframes sealin{ from{ opacity:0; transform:translateY(-5px) scale(.94); } to{ opacity:1; transform:none; } }
+  @media(prefers-reduced-motion:reduce){ .pgseal{ animation:none; } }
+  @media(max-width:620px){ .pgseal{ width:66px; height:66px; } }
   body.t-gobsec .gobtn{ background:transparent; color:#ff4757; border:1px solid #ff4757;
     box-shadow:none; }
   body.t-gobsec .gobtn:hover{ background:#ff4757; color:#12060a; }
@@ -133,7 +140,8 @@
 </style></head>
 <body>
   <header class="bnhead">
-    <div class="bnover">BIG ROCK ENERGY [BONK]</div>
+    <img id="pgSeal" class="pgseal" src="gss.png" alt="Goblin State Security seal" width="128" height="128" hidden>
+    <div class="bnover" id="pgOver">BIG ROCK ENERGY [BONK]</div>
     <h1 id="pgTitle">JOIN THE GOBLINS</h1>
   </header>
   <div class="wrap">
@@ -185,7 +193,12 @@
   function paintTrack(){
     document.body.classList.toggle("t-gobsec", gobMode());
     var t = document.getElementById("pgTitle"), u = document.getElementById("pgSub");
-    if (t) t.innerHTML = gobMode() ? "&#128737; GOBSEC" : "&#129704; JOIN THE GOBLINS &#129704;";
+    // The seal IS the branding in combat mode, so the wordmark stays clean (no emoji, which
+    // is also what stopped paintTrack from quietly undoing the shared header treatment).
+    var seal = document.getElementById("pgSeal"), over = document.getElementById("pgOver");
+    if (seal) seal.hidden = !gobMode();
+    if (over) over.textContent = gobMode() ? "GOBLIN STATE SECURITY" : "BIG ROCK ENERGY [BONK]";
+    if (t) t.textContent = gobMode() ? "GOBSEC" : "JOIN THE GOBLINS";
     if (u) u.textContent = gobMode()
       ? "the part of the corp that shoots back. no panel, no essay, one nosy goblin with a killboard open."
       : "the official BONK application. no panel, no essay. one nosy goblin.";
