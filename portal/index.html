@@ -142,6 +142,64 @@
   .med.mlock .earn b{ color:var(--silver-dim); }
   .med.mlock::before{ background:var(--muted); }
 
+  /* ---------- trophy case, collapsed list form (Kyle 2026-07-28): names only,
+     descriptions fold out smoothly on tap ---------- */
+  .medlist{ display:flex; flex-direction:column; gap:8px; margin:0 0 8px; }
+  .medrow{ background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--ore); min-width:0; }
+  .medrow.honor{ border-left-color:var(--amber); }
+  .medrow.mlock{ border-left-color:var(--muted); }
+  .medrow .mrhead{ display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer; user-select:none; }
+  .medrow .ico{ font-size:18px; line-height:1; }
+  .medrow .mname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+                  font-size:13px; color:var(--silver); flex:1; min-width:0; overflow-wrap:break-word; margin:0; }
+  .medrow.honor .mname{ color:var(--amber); }
+  .medrow.mlock .ico{ filter:grayscale(1); opacity:.5; }
+  .medrow.mlock .mname{ color:var(--muted); }
+  .medrow .mwhen{ font-family:var(--mono); font-size:10.5px; color:var(--silver-dim); white-space:nowrap; }
+  .medrow .mcar{ color:var(--muted); font-size:10px; transition:transform .25s ease; }
+  .medrow.open .mcar{ transform:rotate(90deg); }
+  .medrow .medx{ max-height:0; overflow:hidden; padding:0 12px; transition:max-height .3s ease, padding .3s ease; }
+  .medrow.open .medx{ max-height:280px; padding:0 12px 12px; }
+  .medx .flav{ color:#a9b2a8; font-size:12.5px; line-height:1.5; }
+  .medx .earn{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); line-height:1.5;
+               margin-top:8px; border-top:1px solid var(--line-soft); padding-top:7px; }
+  .medx .earn b{ color:var(--ore); text-transform:uppercase; letter-spacing:.06em; font-size:10px; }
+  .medrow.honor .medx .earn b{ color:var(--amber); }
+  .medrow.mlock .medx .flav, .medrow.mlock .medx .earn{ color:var(--muted); }
+  @media(prefers-reduced-motion: reduce){ .medrow .medx, .medrow .mcar{ transition:none; } }
+
+  /* ---------- rail event cards ---------- */
+  .revt{ display:block; background:var(--black); border:1px solid var(--line-soft);
+         border-left:3px solid var(--amber); padding:10px 12px; margin:0 0 12px; text-decoration:none; }
+  .revt .rehead{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+                 letter-spacing:.05em; font-size:12.5px; color:var(--amber); }
+  .revt .reline{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:5px; line-height:1.5; }
+  .revt .rebasis{ font-size:10.5px; color:var(--muted); margin-top:5px; }
+  .revt:hover{ border-color:var(--amber); }
+
+  /* ---------- kill feed ---------- */
+  .kfhead{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .kfhead .ptitle{ flex:1; margin-bottom:0; }
+  .kfsw{ display:flex; gap:6px; }
+  .kfc{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+        font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+        padding:4px 10px; cursor:pointer; }
+  .kfc.on{ border-color:var(--ore); color:var(--ore); }
+  .kfrows{ display:flex; flex-direction:column; }
+  .kfr{ display:flex; align-items:baseline; gap:10px; padding:8px 4px;
+        border-top:1px solid var(--line-soft); text-decoration:none;
+        font-family:var(--mono); font-size:12px; color:var(--silver-dim); }
+  .kfr:first-child{ border-top:0; }
+  .kfr .kft{ flex:0 0 62px; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; }
+  .kfr.kill .kft{ color:var(--ore); }
+  .kfr.loss .kft{ color:var(--red); }
+  .kfr.gnd .kft{ color:var(--amber); }
+  .kfr .kfw{ flex:1; min-width:0; overflow-wrap:anywhere; color:var(--silver); }
+  .kfr .kfv{ white-space:nowrap; }
+  .kfr .kfa{ white-space:nowrap; color:var(--muted); font-size:11px; }
+  .kfr:hover .kfw{ color:var(--ore); }
+  .kfnote{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
+
   /* ---------- ESI mining ledger panel ---------- */
   .esidisc{ background:var(--black); border:1px solid rgba(70,255,94,.25); border-left:3px solid var(--ore);
     padding:12px 15px; margin:0 0 16px; font-size:13px; line-height:1.6; color:#a9b2a8; }
@@ -615,14 +673,22 @@
    Rule: the rail is for things you READ, the main column is for things you DO. ---- */
 .pgrid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
 .pmain{ min-width:0; }
-.prail{ min-width:0; position:sticky; top:70px; }
+/* The rail owns its own scroll: hover it and the wheel moves the rail, not the page
+   (native behavior once it has overflow), capped so it never rides up over the nav.
+   overscroll-behavior stops the wheel leaking to the page at either end. */
+.prail{ min-width:0; position:sticky; top:70px; max-height:calc(100vh - 84px);
+        overflow-y:auto; overscroll-behavior:contain; padding-right:3px;
+        scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.prail::-webkit-scrollbar{ width:7px; }
+.prail::-webkit-scrollbar-thumb{ background:var(--line); }
+.prail::-webkit-scrollbar-track{ background:transparent; }
 /* the rail is peripheral vision by design: quieter type, no accent fills */
 .prail .goalstrip, .prail .corpstrip{ font-size:.95em; }
 @media(max-width:980px){
   .pgrid{ grid-template-columns:1fr; }
   /* rail is AFTER main in the DOM, so on a phone the member reads themselves first.
      Stacking it above would put us straight back where we started. */
-  .prail{ position:static; }
+  .prail{ position:static; max-height:none; overflow:visible; padding-right:0; }
 }
 </style></head>
 <body>
@@ -695,6 +761,7 @@
         <div class="panel" id="panelInbox" style="display:none"></div>
         <div id="assayWrap"></div>
         <div class="panel" id="panelStats"></div>
+        <div class="panel" id="panelKills" style="display:none"></div>
         <div class="panel" id="panelHauls"></div>
         <div class="panel" id="panelContracts"></div>
         <div class="panel" id="panelIndustry"></div>
@@ -708,6 +775,7 @@
            with no order: override for somebody to break later -->
       <aside class="prail">
         <div id="goalStripWrap"></div>
+        <div id="railEventsWrap"></div>
         <div id="corpStripWrap"></div>
       </aside>
     </div>
@@ -1677,22 +1745,116 @@ function renderBanners(){
       '<div class="bline">' + esc(String(Number(fl.online)||0)) + ' goblins on &middot; ' +
         fmtIsk(fl.fleetDisplay) + ' ISK on the table. Get in here.</div></a>';
   }
+  el.innerHTML = html;
+}
+/* Events live on the rail (Kyle 2026-07-28), compact cards; the live-op banner
+   alone keeps the full-width top slot because it decays by the minute. */
+function renderRailEvents(){
+  var el = $("railEventsWrap"); if (!el) return;
   var evs = S.events || [];
-  for (var i=0;i<evs.length;i++){
-    var ev = evs[i];
+  el.innerHTML = evs.map(function(ev){
     var viewer = ev.me
       ? 'you are #' + esc(String(ev.me.rank)) + ' with ' + eventValueFmt(ev.metric, ev.me.value)
       : (String(ev.source) === "esi" ? "attach ESI to compete" : "no score yet &middot; get on the belt");
-    html += '<a class="bnr" href="/portal/leaderboard/?event=' + esc(encodeURIComponent(String(ev.id))) + '">' +
-      '<div class="bhead">EVENT LIVE &middot; ' + esc(ev.name) + '</div>' +
-      '<div class="bline">' +
+    return '<a class="revt" href="/portal/leaderboard/?event=' + esc(encodeURIComponent(String(ev.id))) + '">' +
+      '<div class="rehead">EVENT LIVE &middot; ' + esc(ev.name) + '</div>' +
+      '<div class="reline">' +
         (ev.prize_note ? esc(ev.prize_note) + ' &middot; ' : '') +
         viewer + ' &middot; ' + esc(bannerEnds(ev.ends_at)) +
       '</div>' +
-      (ev.basis ? '<div class="bbasis">' + esc(ev.basis) + '</div>' : '') +
+      (ev.basis ? '<div class="rebasis">' + esc(ev.basis) + '</div>' : '') +
     '</a>';
+  }).join("");
+}
+
+/* ============ kill feed (Kyle 2026-07-28) ============
+   CORP view: our killmails, served by /api/kills off a daily server cache, so the
+   feed self-updates once a day. GROUND view (officer/admin toggle): everything
+   that died in our regions in 24h, straight off the tripwire's public /region. */
+var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
+function kfAgo(t){
+  var ms = Date.now() - (typeof t === "number" ? t : Date.parse(t));
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  var m = Math.floor(ms / 60000);
+  if (m < 60) return m + "m ago";
+  var h = Math.floor(m / 60);
+  if (h < 48) return h + "h ago";
+  return Math.floor(h / 24) + "d ago";
+}
+function renderKillFeed(){
+  var el = $("panelKills"); if (!el) return;
+  var mode = S.kfMode || "corp";
+  var html = '<div class="kfhead"><div class="ptitle">Kill feed &middot; ' +
+    (mode === "corp" ? "the corp record" : "the ground, last 24h") + '</div>' +
+    (isOfficer()
+      ? '<div class="kfsw"><button class="kfc' + (mode === "corp" ? " on" : "") + '" data-kf="corp">corp</button>' +
+        '<button class="kfc' + (mode === "ground" ? " on" : "") + '" data-kf="ground">ground</button></div>'
+      : '') + '</div>';
+  if (mode === "corp"){
+    var ks = (S.kf && S.kf.kills) || [];
+    if (!ks.length) html += '<div class="emptyline">Quiet. Nothing on the board this week.</div>';
+    else html += '<div class="kfrows">' + ks.map(function(k){
+      return '<a class="kfr ' + (k.ours === "loss" ? "loss" : "kill") + '" target="_blank" rel="noopener" ' +
+        'href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+        '<span class="kft">' + (k.ours === "loss" ? "LOSS" : "KILL") + '</span>' +
+        '<span class="kfw" data-i18n-skip>' + esc(k.ship || "?") +
+          (k.victim ? ' &middot; ' + esc(k.victim) : '') +
+          (k.system ? ' &middot; ' + esc(k.system) : '') + '</span>' +
+        '<span class="kfv">' + fmtIsk(k.value || 0) + '</span>' +
+        '<span class="kfa">' + kfAgo(k.time) + '</span></a>';
+    }).join("") + '</div>';
+    if (S.kf && S.kf.fetched_at)
+      html += '<div class="kfnote">refreshes itself daily &middot; last sweep ' + kfAgo(S.kf.fetched_at) + '</div>';
+  } else {
+    var gs = S.kfGround || [];
+    if (!gs.length) html += '<div class="emptyline">Nothing died in our regions in the last day. Suspicious, honestly.</div>';
+    else html += '<div class="kfrows">' + gs.slice(-40).reverse().map(function(k){
+      var sys = (S.kfSys && S.kfSys[k.sysId]) || ("system " + k.sysId);
+      return '<a class="kfr gnd" target="_blank" rel="noopener" href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+        '<span class="kft" data-i18n-skip>' + esc(String(k.region || "?").slice(0, 9)) + '</span>' +
+        '<span class="kfw" data-i18n-skip>' + esc(sys) + '</span>' +
+        '<span class="kfv">' + fmtIsk(k.isk || 0) + '</span>' +
+        '<span class="kfa">' + kfAgo(k.ts) + '</span></a>';
+    }).join("") + '</div>';
+    html += '<div class="kfnote">every kill in our regions, off the tripwire. The map reads the same wire.</div>';
   }
+  el.style.display = "";
   el.innerHTML = html;
+  Array.prototype.forEach.call(el.querySelectorAll("[data-kf]"), function(b){
+    b.onclick = function(){
+      S.kfMode = b.getAttribute("data-kf");
+      if (S.kfMode === "ground" && !S.kfGround) loadGround();
+      renderKillFeed();
+    };
+  });
+}
+async function loadKillFeed(){
+  try { S.kf = await api("kills"); }
+  catch(e){ if (isOut(e)) return; S.kf = { kills: [] }; }
+  safeRender(renderKillFeed, $("panelKills"));
+}
+async function loadGround(){
+  try {
+    var r = await fetch(TRIPWIRE + "/region");
+    var d = await r.json();
+    S.kfGround = Array.isArray(d) ? d : [];
+    var ids = [];
+    for (var i = 0; i < S.kfGround.length; i++){
+      var sid = S.kfGround[i].sysId;
+      if (sid && ids.indexOf(sid) < 0) ids.push(sid);
+    }
+    S.kfSys = S.kfSys || {};
+    if (ids.length){
+      var nr = await fetch("https://esi.evetech.net/latest/universe/names/", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ids.slice(0, 500)) });
+      if (nr.ok){
+        var names = await nr.json();
+        for (var n = 0; n < names.length; n++) S.kfSys[names[n].id] = names[n].name;
+      }
+    }
+  } catch(e){ S.kfGround = S.kfGround || []; }
+  safeRender(renderKillFeed, $("panelKills"));
 }
 /* each fetch is best effort on its own; no banner beats a broken banner */
 async function loadBanners(){
@@ -1701,6 +1863,7 @@ async function loadBanners(){
   try { var j2 = await api("fleet/live"); S.fleetLive = j2; }
   catch(e2){ if (isOut(e2)) return; }
   safeRender(renderBanners, $("banners"));
+  safeRender(renderRailEvents, $("railEventsWrap"));
 }
 
 /* ============ my contracts list ============ */
@@ -2359,44 +2522,52 @@ function renderTrophies(){
   var high = decs.filter(function(d){ return (Number(d.tier)||99) <= 4; });
   var rest = decs.filter(function(d){ return (Number(d.tier)||99) > 4; });
   if (high.length){
-    html += '<div class="tier gold">The High Honors</div><div class="medgrid">';
+    html += '<div class="tier gold">The High Honors</div><div class="medlist">';
     for (var i=0;i<high.length;i++) html += medHtml(high[i], true);
     html += '</div>';
   }
   if (rest.length){
-    html += '<div class="tier">The Earned Ranks</div><div class="medgrid">';
+    html += '<div class="tier">The Earned Ranks</div><div class="medlist">';
     for (var j=0;j<rest.length;j++) html += medHtml(rest[j], false);
     html += '</div>';
   }
   el.innerHTML = html;
+  // the list is names only; a tap folds the story out (and back) smoothly
+  Array.prototype.forEach.call(el.querySelectorAll(".medrow .mrhead"), function(h){
+    h.onclick = function(){ h.parentNode.classList.toggle("open"); };
+  });
 }
 function medHtml(d, honor){
-  var cls = "med" + (honor ? " honor" : "") + (d.earned ? "" : " mlock");
-  var html = '<div class="' + cls + '" id="med_' + esc(String(d.key||"")) + '">' +
-    '<div class="ico">' + esc(d.emoji || "\u{1F396}️") + '</div>' +
-    '<div class="mname">' + esc(d.name) + '</div>' +
-    '<div class="flav">' + esc(d.description) + '</div>';
+  var cls = "medrow" + (honor ? " honor" : "") + (d.earned ? "" : " mlock");
+  var when = d.earned ? (d.awarded_at ? ymd(d.awarded_at) : "earned") : "locked";
+  var x = '<div class="flav">' + esc(d.description) + '</div>';
   if (d.earned){
     var bits = [];
     if (d.awarded_at) bits.push(ymd(d.awarded_at));
     if (d.awarded_by) bits.push("by " + d.awarded_by);
     if (d.note) bits.push(d.note);
-    html += '<div class="earn"><b>Awarded</b>' + (bits.length ? ' &middot; ' + esc(bits.join(" · ")) : '') + '</div>';
+    x += '<div class="earn"><b>Awarded</b>' + (bits.length ? ' &middot; ' + esc(bits.join(" · ")) : '') + '</div>';
   } else {
-    // description already shows in .flav above; the earn line is status only
-    // (repeating the criteria here rendered it twice with a double period).
-    html += '<div class="earn"><b>Locked</b> &middot; Go get it.</div>';
+    x += '<div class="earn"><b>Locked</b> &middot; Go get it.</div>';
     if (d.progress && d.progress.threshold){
       var cur = Number(d.progress.current) || 0;
       var thr = Number(d.progress.threshold) || 1;
       var p = Math.min(100, Math.floor(cur / thr * 100));
       var fc = thr >= 1e4 ? fmtSig(cur) : String(Math.round(cur));
       var ft = thr >= 1e4 ? fmtSig(thr) : String(Math.round(thr));
-      html += '<div class="medprog"><div class="pl">' + fc + ' / ' + ft + ' &middot; ' + p + '%</div>' +
-              '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
+      x += '<div class="medprog"><div class="pl">' + fc + ' / ' + ft + ' &middot; ' + p + '%</div>' +
+           '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
     }
   }
-  return html + '</div>';
+  return '<div class="' + cls + '" id="med_' + esc(String(d.key||"")) + '">' +
+    '<div class="mrhead">' +
+      '<div class="ico">' + esc(d.emoji || "\u{1F396}️") + '</div>' +
+      '<div class="mname">' + esc(d.name) + '</div>' +
+      '<span class="mwhen">' + esc(when) + '</span>' +
+      '<span class="mcar">&#9656;</span>' +
+    '</div>' +
+    '<div class="medx">' + x + '</div>' +
+  '</div>';
 }
 
 /* ============ the academy ============ */
@@ -2888,6 +3059,7 @@ function renderFoot(){
     renderAll();
     loadContracts();
     loadBanners();
+    loadKillFeed();
   } catch(e){
     if (isOut(e)) return; /* gate already shown */
     /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
