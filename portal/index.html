@@ -5,6 +5,38 @@
 <title>BONK &middot; Member Portal</title>
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
+  /* HEADER, matched to FLEET COMMAND (Kyle 2026-07-28: cleaner, more refined, elite).
+     Centered wordmark, wide tracking, an overline, and one thin ore tick that breathes
+     with a brief RGB-split stutter. No glow band, no emoji. Verbatim treatment from
+     fleet/index.html so the two front doors read as the same building. */
+  header.pchead{ text-align:center; padding:26px 20px 14px; background:none;
+    border-bottom:1px solid var(--line-soft); }
+  .pcover{ font-family:var(--mono); font-size:10px; letter-spacing:.5em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:8px; padding-left:.5em; }
+  header.pchead h1{ font-size:19px; letter-spacing:.34em; padding-left:.34em; color:var(--silver); }
+  header.pchead .sub{ margin-top:8px; font-size:11.5px; }
+  header.pchead::after{ content:""; display:block; width:34px; height:1px; margin:13px auto 0;
+    background:var(--ore); border-radius:1px; will-change:transform, box-shadow, filter;
+    animation:pcPulse 3.6s ease-in-out infinite, pcGlitch 7.5s linear infinite; }
+  @keyframes pcPulse{
+    0%,100%{ opacity:.78; filter:drop-shadow(0 0 3px rgba(70,255,94,.40)); }
+    50%{ opacity:1; filter:drop-shadow(0 0 8px rgba(70,255,94,.75)); } }
+  @keyframes pcGlitch{
+    0%,82%,100%{ transform:translateX(0) scaleX(1); box-shadow:none; clip-path:none; }
+    83%{ transform:translateX(-2px) scaleX(1.18); box-shadow:2px 0 0 rgba(0,240,255,.9), -2px 0 0 rgba(255,42,120,.9); }
+    84.6%{ transform:translateX(2px) scaleX(.86); box-shadow:-3px 0 0 rgba(0,240,255,.8), 3px 0 0 rgba(255,42,120,.8); clip-path:inset(0 0 0 46%); }
+    86%{ transform:translateX(-1px) scaleX(1.07); box-shadow:1px 0 0 rgba(0,240,255,.7), -1px 0 0 rgba(255,42,120,.7); clip-path:inset(0 46% 0 0); }
+    87.2%{ transform:translateX(0) scaleX(1); box-shadow:none; clip-path:none; } }
+  .gateword{ text-align:center; font-size:17px; letter-spacing:.30em; padding-left:.30em; color:var(--silver); }
+  .gateword::after{ content:""; display:block; width:34px; height:1px; margin:12px auto 2px;
+    background:var(--ore); border-radius:1px;
+    animation:pcPulse 3.6s ease-in-out infinite, pcGlitch 7.5s linear infinite; }
+  @media(max-width:620px){ .gateword{ font-size:14px; letter-spacing:.2em; padding-left:.2em; } }
+  @media(prefers-reduced-motion:reduce){ .gateword::after{ animation:none; } header.pchead::after{ animation:none; box-shadow:0 0 6px rgba(70,255,94,.5); } }
+  @media(max-width:620px){
+    header.pchead h1{ font-size:15px; letter-spacing:.22em; padding-left:.22em; }
+    .pcover{ letter-spacing:.3em; padding-left:.3em; }
+  }
   /* Kyle 2026-07-28: the portal read cramped on desktop. 1180 (the site-wide --maxw in
      common.css) x1.2. Scoped to this page so every other page keeps the shared width;
      below the breakpoint the grid collapses to one column and this never applies. */
@@ -730,8 +762,8 @@
 
 <!-- ================= SKELETON (first paint) ================= -->
 <div id="skeleton">
-  <header><h1>&#9935; MEMBER PORTAL</h1>
-    <div class="sub">your goblin career, in numbers. checking your credentials...</div></header>
+  <header class="pchead"><div class="pcover">BIG ROCK ENERGY [BONK]</div><h1>MEMBER PORTAL</h1>
+    <div class="sub">your goblin career, in numbers. checking your credentials&hellip;</div></header>
   <div class="wrap">
     <div class="panel"><div class="idrow"><div class="skel h96"></div>
       <div style="flex:1"><div class="skel h20"></div><div class="skel h12"></div></div></div></div>
@@ -744,7 +776,8 @@
 <div id="gate" class="gate" style="display:none">
   <div class="gatewrap">
   <div class="card">
-    <h1>&#9935; MEMBER PORTAL</h1>
+    <div class="pcover" style="text-align:center">BIG ROCK ENERGY [BONK]</div>
+    <h1 class="gateword">MEMBER PORTAL</h1>
     <p>the career page is inside. main character IGN and password, goblin.</p>
     <form id="loginForm">
       <input id="loginIgn" type="text" placeholder="MAIN CHARACTER IGN" autocomplete="username" autofocus>
@@ -783,7 +816,7 @@
 
 <!-- ================= LOGGED IN ================= -->
 <div id="app" style="display:none">
-  <header><h1>&#9935; MEMBER PORTAL</h1>
+  <header class="pchead"><div class="pcover">BIG ROCK ENERGY [BONK]</div><h1>MEMBER PORTAL</h1>
     <div class="sub">your goblin career, in numbers. watch it climb.</div></header>
   <div class="wrap">
     <!-- banners stay full width above the grid: the live op banner is the one thing on this
@@ -3149,7 +3182,7 @@ function renderFoot(){
     if (isOut(e)) return; /* gate already shown */
     /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
     $("skeleton").innerHTML =
-      '<header><h1>&#9935; MEMBER PORTAL</h1><div class="sub">something is off</div></header>' +
+      '<header class="pchead"><div class="pcover">BIG ROCK ENERGY [BONK]</div><h1>MEMBER PORTAL</h1><div class="sub">something is off</div></header>' +
       '<div class="wrap"><div class="panel"><div class="perr"></div>' +
       '<button class="mini" onclick="location.reload()">Try again</button></div></div>';
     $("skeleton").querySelector(".perr").textContent = e.message;
