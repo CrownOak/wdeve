@@ -5,6 +5,11 @@
 <title>BONK &middot; Member Portal</title>
 <link rel="stylesheet" href="/common.css?v=5">
 <style>
+  /* Kyle 2026-07-28: the portal read cramped on desktop. 1180 (the site-wide --maxw in
+     common.css) x1.2. Scoped to this page so every other page keeps the shared width;
+     below the breakpoint the grid collapses to one column and this never applies. */
+  .wrap{ max-width:1416px; }
+
   /* ---------- skeletons (C8 first paint) ---------- */
   @keyframes skpulse{ 0%{opacity:.45} 50%{opacity:.9} 100%{opacity:.45} }
   .skel{ background:var(--steel-2); animation:skpulse 1.4s ease-in-out infinite; border:1px solid var(--line-soft); }
@@ -216,7 +221,10 @@
   .refrot{ background:none; border:0; color:var(--muted); font-family:var(--mono); font-size:10px;
            text-decoration:underline; cursor:pointer; padding:0; margin-top:8px; }
   .refrot:hover{ color:var(--red); }
-  /* vouch prompt: a referral that nobody stands behind is just a stranger with your link */
+  .notmine{ background:none; border:0; padding:0; margin-left:6px; cursor:pointer; color:var(--muted);
+            font-family:var(--mono); font-size:10.5px; text-decoration:underline; }
+  .notmine:hover{ color:var(--red); }
+  /* (retired) the vouch banner rendered a wall of prompts for one shrug of a question */
   .vouch{ background:var(--steel-2); border:1px solid var(--amber); border-left-width:3px; padding:12px 14px; margin:0 0 10px; }
   .vouch .vh{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
               font-size:12.5px; color:var(--amber); }
@@ -781,7 +789,6 @@
     <!-- banners stay full width above the grid: the live op banner is the one thing on this
          page that is worth less every minute it goes unread, so it never moves to the rail. -->
     <div id="banners"></div>
-    <div id="vouchWrap"></div>
     <div class="pgrid">
       <div class="pmain">
         <div class="panel" id="profileDrawer"></div>
@@ -1127,7 +1134,7 @@ function renderIdentity(){
 }
 
 var NOTE_ICONS = { contract:"\u{1F4DC}", medal:"\u{1F396}️", decoration:"\u{1F396}️",
-                   role:"♛", nudge:"\u{1F440}", announce:"\u{1F4E3}", system:"\u{1FAA8}" };
+                   role:"♛", referral:"🤝", nudge:"\u{1F440}", announce:"\u{1F4E3}", system:"\u{1FAA8}" };
 async function toggleInbox(){
   var el = $("panelInbox");
   S.inboxOpen = !S.inboxOpen;
@@ -1143,14 +1150,21 @@ async function toggleInbox(){
     } else {
       for (var i=0;i<list.length;i++){
         var n = list[i];
+        var nd = null; try { nd = n.data ? (typeof n.data === "string" ? JSON.parse(n.data) : n.data) : null; } catch(e){}
+        var vouchLink = (n.kind === "referral" && nd && nd.application_id)
+          ? ' <button class="notmine" data-a="' + esc(String(nd.application_id)) + '" data-k="' +
+            esc(nd.kind || "corp") + '">not yours?</button>' : '';
         html += '<div class="note-row">' +
           '<div class="note-ico">' + (NOTE_ICONS[n.kind] || "\u{1FAA8}") + '</div>' +
-          '<div class="note-body' + (n.read ? '' : ' unread') + '">' + esc(n.body) + '</div>' +
+          '<div class="note-body' + (n.read ? '' : ' unread') + '">' + esc(n.body) + vouchLink + '</div>' +
           '<div class="note-ago">' + esc(ago(n.created_at)) + '</div>' +
         '</div>';
       }
     }
     el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll(".notmine"), function(b){
+      b.onclick = function(){ sendVouch(b.getAttribute("data-a"), b.getAttribute("data-k"), "no", b); };
+    });
     if ((Number(S.me.notificationsUnread) || 0) > 0){
       try {
         await api("notifications/read", { all: true });
@@ -1892,37 +1906,15 @@ function renderReferral(){
     catch(e){ toast("Could not mint a new link."); }
   };
 }
-function renderVouches(){
-  var el = $("vouchWrap"); if (!el) return;
-  var p = (S.vouches || []);
-  el.innerHTML = p.map(function(v){
-    return '<div class="vouch" data-v="' + esc(String(v.id)) + '" data-k="' + esc(v.kind) + '">' +
-      '<div class="vh">Do you vouch for this pilot?</div>' +
-      '<div class="vb"><b data-i18n-skip>' + esc(v.ign) + '</b> applied through your link' +
-        (v.kind === "gobsec" ? ' (GOBSEC)' : '') + '. Saying no does not get them rejected, ' +
-        'it just tells us you did not personally put them forward.</div>' +
-      '<div class="va"><button class="yes">I vouch</button><button class="no">Not mine</button></div>' +
-    '</div>';
-  }).join("");
-  Array.prototype.forEach.call(el.querySelectorAll(".vouch"), function(box){
-    var id = box.getAttribute("data-v"), kind = box.getAttribute("data-k");
-    box.querySelector(".yes").onclick = function(){ sendVouch(id, kind, "yes", box); };
-    box.querySelector(".no").onclick  = function(){ sendVouch(id, kind, "no", box); };
-  });
-}
-async function sendVouch(id, kind, v, box){
+async function sendVouch(id, kind, v, link){
   try { await api("referral/vouch", { application_id: Number(id), kind: kind, vouch: v });
-    box.style.display = "none";
-    S.vouches = (S.vouches || []).filter(function(x){ return String(x.id) !== String(id) || x.kind !== kind; });
-    toast(v === "yes" ? "Vouched. That counts for something." : "Noted. Thanks for the honesty.");
+    if (link) { link.textContent = "flagged, thanks"; link.onclick = null; link.style.cursor = "default"; }
+    toast("Noted. Thanks for the honesty.");
   } catch(e){ toast("Could not record that."); }
 }
 async function loadReferral(){
   try { S.ref = await api("referral"); } catch(e){ if (isOut(e)) return; S.ref = null; }
   safeRender(renderReferral, $("referralWrap"));
-  try { var p = await api("referral/pending"); S.vouches = p.pending || []; }
-  catch(e){ S.vouches = []; }
-  safeRender(renderVouches, $("vouchWrap"));
 }
 
 async function loadGround(){
