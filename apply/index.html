@@ -140,7 +140,7 @@
 </style></head>
 <body>
   <header class="bnhead">
-    <img id="pgSeal" class="pgseal" src="gss.png" alt="Goblin State Security seal" width="128" height="128" hidden>
+    <img id="pgSeal" class="pgseal" src="bonk.png" alt="Big Rock Energy" width="180" height="180">
     <div class="bnover" id="pgOver">BIG ROCK ENERGY [BONK]</div>
     <h1 id="pgTitle">JOIN THE GOBLINS</h1>
   </header>
@@ -194,10 +194,15 @@
   function paintTrack(){
     document.body.classList.toggle("t-gobsec", gobMode());
     var t = document.getElementById("pgTitle"), u = document.getElementById("pgSub");
-    // The seal IS the branding in combat mode, so the wordmark stays clean (no emoji, which
-    // is also what stopped paintTrack from quietly undoing the shared header treatment).
+    // Both doors wear a mark: the GSS seal for the combat track, our own for the mining
+    // track. The wordmark stays clean either way (no emoji, which is also what stopped
+    // paintTrack from quietly undoing the shared header treatment).
     var seal = document.getElementById("pgSeal"), over = document.getElementById("pgOver");
-    if (seal) seal.hidden = !gobMode();
+    if (seal) {
+      seal.hidden = false;
+      seal.src = gobMode() ? "gss.png" : "bonk.png";
+      seal.alt = gobMode() ? "Goblin State Security seal" : "Big Rock Energy";
+    }
     if (over) over.textContent = gobMode() ? "GOBLIN STATE SECURITY" : "BIG ROCK ENERGY [BONK]";
     if (t) t.textContent = gobMode() ? "GOBSEC" : "JOIN THE GOBLINS";
     if (u) u.textContent = gobMode()
