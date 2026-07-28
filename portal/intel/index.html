@@ -92,6 +92,32 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .bkey{ font-family:var(--mono); font-size:10px; color:var(--muted); line-height:1.7; margin-top:12px;
   border-top:1px solid var(--line-soft); padding-top:9px; }
 
+
+/* ---- FOCUS: one entity and its neighbourhood. Distance from centre is HOPS, which is
+   the entire reason this replaces the blob: position finally means something. ---- */
+#fsvg{ width:100%; height:340px; display:block; }
+#fsvg .fedge{ stroke:rgba(159,178,188,.28); stroke-width:1; }
+#fsvg .fedge.un{ stroke-dasharray:3 4; stroke:rgba(159,178,188,.16); }
+#fsvg .flab{ font-family:var(--mono); font-size:9px; fill:#aeb6ba; text-anchor:middle; pointer-events:none; }
+#fsvg .flab.un{ fill:#5f7f8c; }
+#fsvg .elab2{ font-family:var(--mono); font-size:7.5px; fill:#5f7f8c; text-anchor:middle; pointer-events:none; }
+#fsvg .fnode{ cursor:pointer; }
+#fsvg .hopring{ fill:none; stroke:rgba(159,178,188,.10); stroke-dasharray:2 5; }
+.fbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 8px;
+  font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+.fbar b{ color:var(--silver); }
+.fbar button{ font-family:var(--mono); font-size:10px; padding:3px 8px; background:transparent;
+  border:1px solid var(--line); color:var(--muted); cursor:pointer; }
+.fbar button.on{ border-color:var(--ore); color:var(--ore); }
+/* ---- PATH: the operation the blob could not do at all ---- */
+.pathbox{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:8px; }
+.pathbox select{ background:var(--black); border:1px solid var(--line); color:var(--silver);
+  font-family:var(--mono); font-size:11px; padding:5px 7px; max-width:210px; }
+.chain{ display:flex; flex-wrap:wrap; align-items:center; gap:4px; font-family:var(--mono); font-size:11.5px; }
+.chain .lnk{ padding:5px 9px; border:1px solid var(--line); color:var(--silver); }
+.chain .via{ color:var(--muted); font-size:9.5px; letter-spacing:.05em; }
+.chain .lnk.end{ border-color:var(--ore); color:var(--ore); }
+
 /* the neighborhood graph (removed) */
 #gcard{ padding-bottom:8px; }
 #gsvg{ width:100%; height:430px; display:block; }
@@ -323,6 +349,21 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
           <div class="bkey" id="bkey"></div>
         </div>
 
+        <div class="card" id="fcard" style="display:none">
+          <h3>How does this connect <span class="sub" id="fsub"></span></h3>
+          <div class="fbar" id="fbar"></div>
+          <svg id="fsvg" role="img" aria-label="entity neighbourhood"></svg>
+        </div>
+
+        <div class="card" id="pcard">
+          <h3>How are these two connected <span class="sub">shortest chain in our files</span></h3>
+          <div class="pathbox">
+            <select id="pa"></select><span style="color:var(--muted)">to</span><select id="pb"></select>
+            <button class="wchip" id="pgo" style="font-family:var(--mono);font-size:10px;padding:5px 10px;background:transparent;border:1px solid var(--line);color:var(--muted);cursor:pointer">trace</button>
+          </div>
+          <div id="pout"></div>
+        </div>
+
         <div class="sec-h"><span class="ix">The Cabinet</span></div>
         <div class="filters" id="filters"></div>
         <div class="grid" id="grid"></div>
@@ -429,7 +470,8 @@ function init(){
     if(w && w.loggedIn && w.gss){
       document.getElementById("gate").style.display="none";
       document.getElementById("app").style.display="block";
-      loadBoard(); loadBoard2(); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
+      loadBoard(); loadBoard2();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
       setInterval(loadDanger, 300000);
       return;
     }
@@ -494,6 +536,7 @@ function loadBoard2(){
     document.getElementById("bsub").textContent = d.total+" files &middot; "+d.on_ground+" on our ground";
     document.getElementById("bsub").innerHTML = d.total+" files &middot; "+d.on_ground+" on our ground";
     renderBoard();
+    fillPathPickers();
     document.getElementById("bkey").innerHTML =
       "<b>Grade</b> is Admiralty (NATO AJP-2.1): letter = source reliability, number = information credibility. "
       + "<b>A1</b> ESI identity plus combat corroboration. <b>B2</b> killboard only, identity unconfirmed. "
@@ -544,7 +587,96 @@ function renderBoard(){
       + '</div>';
   }).join("");
   Array.prototype.forEach.call(document.querySelectorAll("[data-eid]"),function(el){
-    el.onclick=function(){ openEntity(el.getAttribute("data-eid")); }; });
+    el.onclick=function(){ var id=el.getAttribute("data-eid"); openEntity(id); loadFocus(id,1); }; });
+}
+
+
+/* ---------- FOCUS: one entity, its neighbourhood, hops as distance ---------- */
+var FOCUS=null, FDEPTH=1, FID=null;
+function loadFocus(id, depth){
+  FID=id; FDEPTH=depth||1;
+  api("/gss/focus/"+id+"?depth="+FDEPTH).then(function(d){
+    if(!d||!d.ok) return;
+    FOCUS=d;
+    document.getElementById("fcard").style.display="";
+    var root=(d.nodes||[]).filter(function(n){return n.hop===0;})[0]||{};
+    document.getElementById("fsub").innerHTML = esc(root.name||"")+" &middot; "+(d.nodes.length-1)+" connected";
+    document.getElementById("fbar").innerHTML =
+      '<b>'+esc(root.name||"")+'</b> and everything within '
+      + '<button class="'+(FDEPTH===1?"on":"")+'" data-fd="1">1 hop</button>'
+      + '<button class="'+(FDEPTH===2?"on":"")+'" data-fd="2">2 hops</button>'
+      + '<span style="margin-left:auto">dashed = we have no file on it</span>';
+    Array.prototype.forEach.call(document.querySelectorAll("[data-fd]"),function(b){
+      b.onclick=function(){ loadFocus(FID, +b.getAttribute("data-fd")); }; });
+    renderFocus();
+    document.getElementById("fcard").scrollIntoView({behavior:"smooth",block:"nearest"});
+  });
+}
+function renderFocus(){
+  if(!FOCUS) return;
+  var svg=document.getElementById("fsvg"), W=svg.clientWidth||760, H=340;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var cx=W/2, cy=H/2;
+  /* Distance from centre = HOPS. Not force equilibrium. A viewer reading "further out
+     means further away" is now reading something true. Angle spreads within each ring,
+     grouped by relationship type so the shape says something as well. */
+  var rings={}; FOCUS.nodes.forEach(function(n){ (rings[n.hop]=rings[n.hop]||[]).push(n); });
+  var pos={}, RSTEP=Math.min(120,(Math.min(W,H)/2-40)/Math.max(1,FDEPTH));
+  Object.keys(rings).forEach(function(h){
+    var arr=rings[h], R=RSTEP*(+h);
+    if(+h===0){ pos[arr[0].id]={x:cx,y:cy}; return; }
+    arr.sort(function(a,b){ return String(a.rel||"").localeCompare(String(b.rel||"")); });
+    arr.forEach(function(n,i){
+      var a=(2*Math.PI*i/arr.length)-Math.PI/2;
+      pos[n.id]={x:cx+R*Math.cos(a), y:cy+R*Math.sin(a)};
+    });
+  });
+  var out="";
+  for(var h=1; h<=FDEPTH; h++) out+='<circle class="hopring" cx="'+cx+'" cy="'+cy+'" r="'+(RSTEP*h)+'"/>';
+  FOCUS.edges.forEach(function(e){
+    var a=pos[e.a], b=pos[e.b]; if(!a||!b) return;
+    var un=String(e.b).slice(0,2)==="u:"||String(e.a).slice(0,2)==="u:";
+    out+='<line class="fedge'+(un?" un":"")+'" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"/>';
+    out+='<text class="elab2" x="'+((a.x+b.x)/2)+'" y="'+((a.y+b.y)/2-3)+'">'+esc(String(e.type||"").replace(/_/g," "))+'</text>';
+  });
+  FOCUS.nodes.forEach(function(n){
+    var p=pos[n.id]; if(!p) return;
+    var ci=n.unresolved?{c:"#5f7f8c"}:clsInfo(n.classification);
+    var r=n.hop===0?10:(n.unresolved?4:6+(n.threat_level||0));
+    out+='<g class="fnode" data-fid="'+esc(String(n.id))+'">'
+       + '<circle cx="'+p.x+'" cy="'+p.y+'" r="'+r+'" fill="'+ci.c+'" opacity="'+(n.unresolved?.5:1)+'"/>'
+       + '<text class="flab'+(n.unresolved?" un":"")+'" x="'+p.x+'" y="'+(p.y+r+11)+'">'+esc(n.name||"")+'</text></g>';
+  });
+  svg.innerHTML=out;
+  Array.prototype.forEach.call(svg.querySelectorAll("[data-fid]"),function(g){
+    g.onclick=function(){ var id=g.getAttribute("data-fid");
+      if(String(id).slice(0,2)==="u:") return;   // nothing to open, we have no file
+      loadFocus(id, FDEPTH); };
+  });
+}
+
+/* ---------- PATH: the chain between two files ---------- */
+function fillPathPickers(){
+  if(!BOARD) return;
+  var opts=BOARD.rows.slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name));})
+    .map(function(r){ return '<option value="'+r.id+'">'+esc(r.name)+'</option>'; }).join("");
+  var pa=document.getElementById("pa"), pb=document.getElementById("pb");
+  if(pa&&!pa.innerHTML){ pa.innerHTML=opts; pb.innerHTML=opts; if(BOARD.rows[1]) pb.value=BOARD.rows[1].id; }
+}
+function tracePath(){
+  var a=document.getElementById("pa").value, b=document.getElementById("pb").value;
+  api("/gss/path?a="+encodeURIComponent(a)+"&b="+encodeURIComponent(b)).then(function(d){
+    var out=document.getElementById("pout");
+    if(!d||!d.ok){ out.innerHTML='<div class="foot-line">could not trace</div>'; return; }
+    if(d.hops===null){ out.innerHTML='<div class="foot-line">'+esc(d.note||"no connection in our files")+'</div>'; return; }
+    out.innerHTML='<div class="chain">'+d.chain.map(function(c,i){
+      var end=(i===0||i===d.chain.length-1)?" end":"";
+      return (c.via?'<span class="via">'+esc(String(c.via).replace(/_/g," "))+' &rarr;</span>':'')
+           + '<span class="lnk'+end+'" data-pid="'+c.id+'">'+esc(c.name)+'</span>';
+    }).join("")+'</div><div class="foot-line" style="margin-top:7px">'+d.hops+' hop'+(d.hops===1?"":"s")+' apart in our files.</div>';
+    Array.prototype.forEach.call(out.querySelectorAll("[data-pid]"),function(el){
+      el.onclick=function(){ loadFocus(el.getAttribute("data-pid"),1); }; });
+  });
 }
 
 /* ---------- the neighborhood graph ---------- */
@@ -949,10 +1081,12 @@ function submitPaste(id){
   api("/gss/channel/"+id+"/roster",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paste:v})}).then(function(d){
     if(!d||!d.ok){ document.getElementById("rperr").textContent=(d&&d.error)||"the merge did not take"; return; }
     openEntity(id); loadGraph(); loadBoard(); loadBoard2();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0);
   });
 }
 function enrich(id){ api("/gss/entity/"+id+"/enrich",{method:"POST"}).then(function(d){ openEntity(id); loadEntities(curClass); loadPersons(); }); }
-function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadBoard2(); loadEntities(curClass); }); }
+function markVerified(id){ api("/gss/entity/"+id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({verify:true})}).then(function(){ openEntity(id); loadBoard(); loadBoard2();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0); loadEntities(curClass); }); }
 
 /* ---------- the debrief module ---------- */
 function personById(id){ return PERSONS.filter(function(p){return p.id===id;})[0]; }
@@ -1038,6 +1172,7 @@ function fileDebrief(id){
     btn.disabled=false;
     if(!d||!d.ok){ document.getElementById("db_err").textContent=(d&&d.error)||"the file did not take"; return; }
     loadPersons(); loadBoard(); loadBoard2();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0);
     openEntity(id);
   });
 }
@@ -1116,7 +1251,8 @@ document.getElementById("f_go").addEventListener("click",function(){
     if(!d||!d.ok){ document.getElementById("f_err").textContent=(d&&d.error)||"could not file it"; return; }
     document.getElementById("f_name").value=""; document.getElementById("f_summary").value="";
     document.getElementById("addForm").classList.remove("show");
-    loadBoard(); loadBoard2(); loadEntities(curClass); loadGraph(); loadPersons();
+    loadBoard(); loadBoard2();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0); loadEntities(curClass); loadGraph(); loadPersons();
   });
 });
 

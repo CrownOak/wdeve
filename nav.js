@@ -38,7 +38,7 @@
     ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
     ["CLASSIFIED",  BASE + "bonk-prospects/", "INTEL",  false],
     ["REDACTED",    BASE + "alliance/",       "INTEL",  false],
-    ["SENTRY",      BASE + "warden/",         "INTEL",  false],
+    ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
     ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
     ["Market",      BASE + "market/",         "MARKET", false],
     ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
@@ -49,7 +49,7 @@
   var GROUPS = ["HOME", "MEMBER", "INTEL", "MARKET"];
   // Members see the recruiting tools by name; the public sees the redacted labels.
   // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
-  var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Cartel Map", "warden/": "GOBSEC" };
+  var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Cartel Map", "gobsec/": "GOBSEC" };
 
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";
