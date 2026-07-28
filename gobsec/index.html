@@ -16,9 +16,27 @@
              font-size:19px; color:var(--silver); margin:0; }
   .ghead .sub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
                color:var(--muted); margin-top:4px; }
-  .gate{ background:var(--steel); border:1px solid var(--line-soft); padding:26px; text-align:center;
-         font-family:var(--mono); font-size:13px; color:var(--silver-dim); }
+  .gate{ min-height:calc(100vh - 220px); display:flex; flex-direction:column; align-items:center;
+         justify-content:center; text-align:center; padding:24px; }
   .gate a{ color:var(--gs); }
+  .gate h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.14em; font-size:18px;
+            color:var(--silver); margin:0 0 8px; }
+  .gate p{ font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em; line-height:1.7; }
+  .cplock{ font-size:28px; color:var(--gs); margin-bottom:10px; }
+  .cp{ display:flex; gap:8px; justify-content:center; margin:18px 0 4px; flex-wrap:wrap; }
+  .cp input{ background:var(--black); border:1px solid var(--line); color:var(--silver);
+             font-family:var(--mono); font-size:12.5px; padding:9px 12px; width:240px; letter-spacing:.14em; }
+  .cp input:focus{ outline:none; border-color:var(--gs); }
+  .cp button{ background:transparent; border:1px solid var(--gs); color:var(--gs); cursor:pointer;
+              font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; padding:9px 18px; }
+  .cp button:hover{ background:var(--gs); color:#08090a; }
+  .cphint{ margin-top:16px; font-size:11px; }
+  .stamp{ margin-top:26px; font-family:var(--mono); font-size:9.5px; letter-spacing:.26em;
+          text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .rec{ width:7px; height:7px; border-radius:50%; background:var(--gs); display:inline-block;
+        animation:recblink 1.9s ease-in-out infinite; }
+  @keyframes recblink{ 0%,100%{opacity:.25} 50%{opacity:1} }
+  .stamp2{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--line); }
 
   .band{ background:var(--steel); border:1px solid var(--line-soft); padding:16px 18px 18px; margin:14px 0; }
   .band > h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.09em;
@@ -77,8 +95,11 @@
     <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the board</div></div>
   </div>
 
+  <!-- THE CHECKPOINT. Same trick as the GSS workbench: it looks like a way in and it is not.
+       Cleared personnel are recognized by SESSION and never see this. Anyone who types a code
+       is telling us something about themselves, which is the only thing this box collects. -->
   <div id="gate" class="gate" style="display:none">
-    This one is for goblins. <a href="/portal/">Log in</a> and it opens.
+    <div id="gatemsg"><p class="cpwait">Checking clearance&hellip;</p></div>
   </div>
 
   <div id="app" style="display:none">
@@ -226,10 +247,40 @@ function renderBoard(ours){
       'which is the entire point of the corp.</div>';
 }
 
+/* ---- THE CHECKPOINT ----
+   Cleared personnel are recognized by session and never see this. The box is not a lock,
+   it is a tripwire: one attempt, any code, straight to the wall, and the attempt is filed. */
+var OVERRIDE = "assume-everything";
+function toVoid(reason){
+  try { fetch("/api/gss/trip", { method:"POST", headers:{"Content-Type":"application/json"},
+    credentials:"same-origin", body: JSON.stringify({ reason: reason, door: "gobsec" }) }); } catch(e){}
+  location.href = "/portal/intel/void/";
+}
+function tryCode(){
+  var el = $("gsspw"); var v = (el.value || "").trim();
+  if (!v){ el.focus(); return; }
+  toVoid(v === OVERRIDE ? "override" : "wrong");
+}
+function showCheckpoint(){
+  $("gatemsg").innerHTML =
+    '<div class="cplock">&#9679;</div>' +
+    '<h2>Clearance checkpoint</h2>' +
+    '<p>GOBSEC operational board. Cleared personnel are recognized by session.<br>' +
+    'Nobody types their way in here.</p>' +
+    '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus>' +
+    '<button id="gsspwgo">submit</button></div>' +
+    '<p class="cphint">Flying with us and still seeing this? <a href="/portal/">Log in to the portal</a> first.<br>' +
+    'Everyone else: <a href="/apply/gobsec">the door is over here</a>.</p>' +
+    '<div class="stamp"><span class="rec"></span>Restricted terminal &middot; GOBSEC &middot; Tranquility</div>' +
+    '<div class="stamp2">this session is monitored &middot; every entry is logged</div>';
+  $("gsspwgo").addEventListener("click", tryCode);
+  $("gsspw").addEventListener("keydown", function(e){ if (e.key === "Enter") tryCode(); });
+}
+
 (async function(){
   var who = null;
   try { who = await (await fetch("/api/whoami", {credentials:"same-origin"})).json(); } catch(e){}
-  if (!who || !who.loggedIn){ $("gate").style.display = ""; return; }
+  if (!who || !who.loggedIn){ $("gate").style.display = ""; showCheckpoint(); return; }
   $("app").style.display = "";
   var ours = [], ground = [], sysNames = {};
   try { var kf = await api("kills"); ours = kf.kills || []; } catch(e){}
