@@ -1,9 +1,69 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>GOBSEC · apply</title>
-<link rel="canonical" href="/apply/?track=gobsec">
-<meta http-equiv="refresh" content="0; url=/apply/?track=gobsec">
-<script>location.replace("/apply/?track=gobsec");</script>
-</head><body style="background:#08090a;color:#9aa0a6;font-family:monospace;padding:40px">
-Taking you to the <a href="/apply/?track=gobsec" style="color:#ff4757">GOBSEC application</a>.
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GOBSEC — Goblin State Security</title>
+<link rel="stylesheet" href="/common.css?v=3">
+<style>
+  /* GOBSEC cover: the door for killers. Monochrome, seal-dominant, one red accent.
+     Deliberately NOT the goblin-interview look; the interview is one click below. */
+  :root{ --gsred: rgba(255,71,87,.72); --gsred-dim: rgba(255,71,87,.38); }
+  .gsWrap{ max-width:600px; margin:0 auto; padding:34px 22px 60px; text-align:center; }
+  .gsSeal{ width:min(360px,76vw); height:auto; display:block; margin:10px auto 26px;
+           filter:drop-shadow(0 14px 44px rgba(0,0,0,.65)); }
+  .gsName{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+           letter-spacing:.22em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); }
+  .gsTick{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+           color:var(--muted); margin-top:8px; }
+  .gsRule{ width:46px; height:1px; background:var(--gsred); margin:24px auto; }
+  .gsLine{ font-size:15.5px; color:var(--silver-dim); letter-spacing:.02em; }
+  .gsRows{ margin:34px auto 0; max-width:520px; text-align:left;
+           border-top:1px solid var(--line-soft); }
+  .gsRow{ display:flex; gap:16px; padding:13px 4px; border-bottom:1px solid var(--line-soft);
+          align-items:baseline; }
+  .gsK{ font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+        color:var(--gsred); flex:0 0 74px; }
+  .gsV{ flex:1; font-size:13.5px; line-height:1.55; color:var(--silver-dim); }
+  .gsV b{ color:var(--silver); font-weight:600; }
+  .gsBegin{ display:inline-block; margin:38px auto 0; padding:13px 46px;
+            font-family:var(--mono); font-size:12px; letter-spacing:.3em; text-transform:uppercase;
+            color:var(--silver); border:1px solid var(--line); text-decoration:none;
+            transition:border-color .2s, color .2s, letter-spacing .2s; }
+  .gsBegin:hover{ border-color:var(--gsred); color:#ff4757; letter-spacing:.34em; }
+  .gsAlt{ margin-top:16px; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+          color:var(--muted); }
+  .gsAlt a{ color:var(--silver-dim); text-decoration:none; border-bottom:1px solid var(--line); }
+  .gsAlt a:hover{ color:#ff4757; border-color:var(--gsred-dim); }
+  .gsFoot{ margin-top:56px; font-family:var(--mono); font-size:10.5px; letter-spacing:.3em;
+           text-transform:uppercase; color:var(--muted); }
+  .gsFoot .dockline{ display:block; margin-top:10px; letter-spacing:.06em; text-transform:none;
+                     color:var(--silver-dim); }
+  @media(max-width:480px){ .gsK{ flex-basis:62px; } .gsBegin{ padding:12px 30px; } }
+</style></head>
+<body>
+<script src="/nav.js?v=16"></script>
+<div class="gsWrap" data-i18n-skip>
+  <img class="gsSeal" src="gss.png" alt="Goblin State Security seal" width="520" height="520">
+  <div class="gsName">Goblin State Security</div>
+  <div class="gsTick">GOBSEC &middot; [GOBSC] &middot; Big Rock Energy</div>
+  <div class="gsRule"></div>
+  <div class="gsLine">Violence, but as a public service.</div>
+
+  <div class="gsRows">
+    <div class="gsRow"><span class="gsK">the job</span>
+      <span class="gsV"><b>Protect the miners.</b> Everything out here preys on them. We prey back.</span></div>
+    <div class="gsRow"><span class="gsK">the list</span>
+      <span class="gsV">Short, built name by name. <b>Invites are scarce on purpose.</b></span></div>
+    <div class="gsRow"><span class="gsK">the bar</span>
+      <span class="gsV">The nastiest killers in EVE, assembled into <b>one fleet.</b></span></div>
+    <div class="gsRow"><span class="gsK">the ground</span>
+      <span class="gsV">Highsec is home. The work runs into lowsec and null, and we don't send people alone.</span></div>
+  </div>
+
+  <a class="gsBegin" href="/apply/?track=gobsec">Begin</a>
+  <div class="gsAlt">or come argue with us first: <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
+
+  <div class="gsFoot">Assume Nothing
+    <span class="dockline">Miners dock up. We don't.</span></div>
+</div>
 </body></html>
