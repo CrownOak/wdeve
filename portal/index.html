@@ -256,6 +256,36 @@
    the link row can stretch instead of wrapping in a narrow rail */
   .refcard{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
             padding:18px 20px 20px; margin:0 0 18px; }
+  /* MAIN EVENT. Elevated on purpose (Kyle 2026-07-29) but kept inside the existing palette:
+     a full ore border plus a lift, not a new colour language. The glow is a wide, very low
+     alpha spread so it reads as raised rather than neon. */
+  .refcard.main{ border:1px solid var(--ore); border-left-width:3px; background:var(--steel-2, var(--steel));
+    box-shadow:0 0 0 1px rgba(70,255,94,.07), 0 14px 38px -22px rgba(70,255,94,.5); }
+  .mev{ margin:-4px 0 16px; padding:0 0 15px; border-bottom:1px solid var(--line-soft); }
+  .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .mevtag{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.34em;
+    text-transform:uppercase; color:#04140a; background:var(--ore); padding:4px 9px; }
+  .mevclock{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--muted); }
+  .mevname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    font-size:21px; line-height:1.15; color:var(--silver); margin-top:11px; }
+  .mevprize{ font-size:13px; line-height:1.55; color:var(--silver-dim); margin-top:6px; }
+  .mevprize b{ color:var(--ore); }
+  .mevboard{ margin-top:13px; }
+  .mevrow{ display:grid; grid-template-columns:22px minmax(0,1fr) 42px 46px; gap:10px; align-items:baseline;
+    padding:5px 7px; border-bottom:1px solid var(--line-soft); }
+  .mevrow.lead{ background:rgba(70,255,94,.06); }
+  .mevrow.me{ box-shadow:inset 2px 0 0 var(--ore); }
+  .mevrow .mvr{ font-family:var(--mono); font-size:11px; color:var(--muted); }
+  .mevrow .mvn{ font-size:13px; color:var(--silver); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mevrow.lead .mvn{ color:var(--ore); font-weight:600; }
+  .mevrow .mvh{ font-family:var(--mono); font-size:12.5px; color:var(--ore); text-align:right; }
+  .mevrow .mvj{ font-family:var(--mono); font-size:12.5px; color:var(--muted); text-align:right; }
+  .mevkey{ display:grid; grid-template-columns:22px minmax(0,1fr) 42px 46px; gap:10px; padding:5px 7px 0; }
+  .mevkey span{ grid-column:3; font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); text-align:right; }
+  .mevkey span + span{ grid-column:4; }
+  .mevfoot{ margin-top:9px; font-size:11px; line-height:1.5; color:var(--muted); }
+  .mevempty{ margin-top:12px; font-size:12.5px; color:var(--muted); }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
                 font-size:13px; color:var(--ore); }
   .refcard .rs{ font-size:13px; color:var(--silver); line-height:1.55; margin-top:7px; }
@@ -2076,24 +2106,59 @@ async function loadKillFeed(){
 /* ============ referral link + vouch (Certified Goblin Dealer) ============
    One button, one link, attribution handled. The token is opaque: it identifies
    the member without exposing an id anyone could guess or forge. */
+/* THE MAIN EVENT header: prize, period, countdown, standings.
+   Kyle 2026-07-29 wants this to read as the main event, so it gets the top of the card and
+   real visual weight. The numbers are the ones the board endpoint can prove; see the comment
+   on referralBoard() for why there is no column called "retained" yet. */
+function eventClock(endsAt){
+  var ms = Date.parse(endsAt) - Date.now();
+  if (!isFinite(ms) || ms <= 0) return "closing now";
+  var d = Math.floor(ms / 86400000), h = Math.floor(ms % 86400000 / 3600000);
+  if (d >= 1) return d + (d === 1 ? " day" : " days") + " left";
+  return h + (h === 1 ? " hour" : " hours") + " left";
+}
+function renderEventBoard(){
+  var b = S.refBoard;
+  if (!b || !b.ok) return "";
+  var h = '<div class="mev">' +
+    '<div class="mevtop">' +
+      '<span class="mevtag">Main event</span>' +
+      '<span class="mevclock">' + esc(eventClock(b.ends_at)) + '</span>' +
+    '</div>' +
+    '<div class="mevname">Certified Goblin Dealer</div>' +
+    '<div class="mevprize"><b>500M ISK</b> and the title, to whoever brings in the most. ' +
+      'Resets every month, so the title keeps moving.</div>';
+  if (b.board && b.board.length){
+    h += '<div class="mevboard">' + b.board.map(function(row){
+      return '<div class="mevrow' + (row.me ? ' me' : '') + (row.rank === 1 ? ' lead' : '') + '">' +
+        '<span class="mvr">' + row.rank + '</span>' +
+        '<span class="mvn" data-i18n-skip>' + esc(row.ign) + '</span>' +
+        '<span class="mvh">' + row.held + '</span>' +
+        '<span class="mvj">' + row.joined + '</span></div>';
+    }).join("") +
+    '<div class="mevkey"><span>held</span><span>joined</span></div>' +
+      '<div class="mevfoot">Held means still in the corp 14 days after approval. That is the number the prize pays on.</div></div>';
+  } else {
+    h += '<div class="mevempty">Nobody on the board yet. First one up sets the pace.</div>';
+  }
+  return h + '</div>';
+}
 function renderReferral(){
   var el = $("referralWrap"); if (!el) return;
   var r = S.ref;
   if (!r || !r.url || isAlly()){ el.innerHTML = ""; return; }
-  el.innerHTML = '<div class="refcard">' +
-    '<div class="rt">&#129689; Bring us goblins</div>' +
-    /* STAKES, not a feature description (Kyle 2026-07-29: "I want them to know what they are
-       losing by not referring"). Everything here is TRUE today: no unbuilt prize is promised. */
-    '<div class="rs">Every pilot who joins without your link counts for somebody else. ' +
-      'Every good one you never asked is out there mining alone for a corp that taxes them.</div>' +
-    '<div class="rs2">Orca boosts need bodies on grid. Fleets need people. ' +
-      'The rock gets built faster with more hands on it. This is the cheapest thing you can do ' +
-      'for the corp and it takes one paste.</div>' +
+  el.innerHTML = '<div class="refcard main">' + renderEventBoard() +
+    '<div class="rt">&#129689; Bring a friend</div>' +
+    /* Relaxed and human (Kyle 2026-07-29). The previous version leaned on what you LOSE by not
+       referring, which read as a guilt pitch. Nobody forwards a link because they feel bad. */
+    '<div class="rs">Know somebody still mining on their own? Send them this. ' +
+      'They show up tagged as yours.</div>' +
+    '<div class="rs2">Most of us are here because somebody thought to ask. That is the whole system.</div>' +
     '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
       '<button class="refbtn" id="refCopy">copy</button></div>' +
     '<div class="refstat">' + ((r.referred||0)
       ? ('<b>' + r.referred + '</b> referred &middot; <b>' + (r.joined||0) + '</b> in the door')
-      : 'Nobody yet. The board is empty and somebody has to be first.') + '</div>' +
+      : 'No one yet. Whenever you are ready.') + '</div>' +
     '<button class="refrot" id="refRot">get a fresh link</button>' +
   '</div>';
   var c = $("refCopy");
@@ -2118,6 +2183,10 @@ async function sendVouch(id, kind, v, link){
 }
 async function loadReferral(){
   try { S.ref = await api("referral"); } catch(e){ if (isOut(e)) return; S.ref = null; }
+  safeRender(renderReferral, $("referralWrap"));
+  // Standings load second and re-render: the link is the thing a member came for, so it
+  // must not sit behind a second query to paint.
+  try { S.refBoard = await api("referral/board"); } catch(e){ S.refBoard = null; }
   safeRender(renderReferral, $("referralWrap"));
 }
 
