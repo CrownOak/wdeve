@@ -426,7 +426,9 @@ tr.haulrow{ cursor:pointer; }
         var el = document.getElementById("stanceBanner");
         var amber = (p === "ESCORT");
         if (amber){ el.style.borderColor = "rgba(233,196,106,.45)"; el.style.borderLeftColor = "#e9c46a"; el.style.color = "#e9c46a"; }
-        el.textContent = "GOBSEC · " + p + " — " + (st.member || "check the board before you undock.")
+        // a nudge, not an order: lowercase state, the caring line does the talking
+        el.textContent = "GOBSEC, a heads up · " + p.toLowerCase() + " — "
+          + (st.member || "worth a glance at the board before you undock.")
           + (st.why ? " (" + st.why + ")" : "");
         el.style.display = "block";
       }).catch(function(){});
