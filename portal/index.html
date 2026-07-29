@@ -720,6 +720,12 @@
   .gs-l-running{ border-color:var(--ore); } .gs-l-running i{ color:var(--ore); }
   .gs-note{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
   .gs-mine{margin-top:8px;padding:8px 10px;border-left:3px solid var(--ore);background:rgba(255,255,255,.02);font-family:var(--mono,monospace);font-size:12px;color:var(--silver-dim);}
+  /* no priority tagged: same slot, visibly NOT an order */
+  .gs-mine-none{ border-left-color:var(--muted); }
+  .gs-mine-none b{ color:var(--muted); }
+  .gs-stale{ margin-top:5px; font-family:var(--mono); font-size:10px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--muted); }
+  .gs-stale.old{ color:var(--amber); }
 .gs-mine b{color:var(--ore);letter-spacing:.08em;margin-right:8px;}
 .gs-mine span{color:var(--silver);font-weight:700;}
 .gs-mine i{display:block;font-style:normal;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5;}
@@ -1573,12 +1579,28 @@ function renderGoal(){
     var chips = '';
     var pri = co.filter(function(o){ return o.role==='priority'; });
     var names = pri.map(function(o){ return String(o.ore||'').toUpperCase(); });
-    if (!names.length) names = co.slice(0,1).map(function(o){ return String(o.ore||'').toUpperCase(); });
+    // NO PRIORITY TAG, NO ASSIGNMENT. This used to fall back to co.slice(0,1), which is the
+    // FIRST ORE IN ARRAY ORDER: an arbitrary row presented in the card's most authoritative
+    // voice ("This is the assignment"). Array position is not a decision, and a confident
+    // instruction to mine the wrong rock is worse than no instruction at all.
     if (names.length){
       var what = names.join(' or ');
-      var why  = pri.length && pri[0].min ? ' It becomes ' + esc(pri[0].min) + ', which is the one we run out of first.' : '';
+      var why  = pri[0].min ? ' It becomes ' + esc(pri[0].min) + ', which is the one we run out of first.' : '';
       chips = '<div class="gs-mine"><b>MINE THIS</b> <span data-i18n-skip>'+esc(what)+'</span>'
             + '<i>'+why+' Everything else is nice. This is the assignment.</i></div>';
+    } else {
+      chips = '<div class="gs-mine gs-mine-none"><b>NO CALL YET</b>'
+            + '<i> Nothing is tagged priority right now, so mine any of the above and log it. '
+            + 'An officer sets the call from the hangar numbers.</i></div>';
+    }
+    // The hangar snapshot is hand pasted, so it AGES. Showing when it was taken is the
+    // difference between a stale number and a lie: a member can see the call is a week old
+    // and weigh it accordingly instead of trusting it as current.
+    if (g.stockAt){
+      var ageD = Math.floor((Date.now() - Date.parse(g.stockAt)) / 86400000);
+      if (isFinite(ageD) && ageD >= 0)
+        chips += '<div class="gs-stale' + (ageD >= 7 ? ' old' : '') + '">Hangar numbers behind this call: '
+          + (ageD === 0 ? 'checked today' : ageD + (ageD === 1 ? ' day old' : ' days old')) + '</div>';
     }
     inSec = '<div class="gs-sec"><div class="gs-k">&#9935; IN &middot; WHAT THE MACHINE EATS</div><div class="gs-orerow">'
       + co.map(function(o){ var pri = o.role==='priority';
