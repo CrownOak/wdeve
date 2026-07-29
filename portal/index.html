@@ -74,6 +74,18 @@
   .rolechip.officer{ color:var(--ore); border-color:rgba(70,255,94,.4); }
   .rolechip.admin{ color:var(--amber); border-color:rgba(233,196,106,.45); }
   .rolechip.ally{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .rolechip.orca{ color:#7ec8e3; border-color:rgba(126,200,227,.45); }
+  /* the Orca program panel */
+  .orcachip{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+             padding:3px 9px; border:1px solid rgba(126,200,227,.45); color:#7ec8e3; margin-left:10px; white-space:nowrap; }
+  .orcap{ font-size:13.5px; line-height:1.6; color:var(--silver-dim); margin:0 0 12px; }
+  .orcaval{ border:1px solid var(--line-soft); border-left:3px solid #7ec8e3; background:var(--steel); padding:12px 16px; }
+  .ovlab{ font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+  .ovnum{ font-family:var(--display); font-weight:700; font-size:26px; color:#7ec8e3; margin:4px 0 6px; }
+  .ovsub{ font-size:12.5px; line-height:1.55; color:var(--silver-dim); }
+  .orcahail{ border:1px solid rgba(70,255,94,.35); border-left:3px solid var(--ore); background:var(--steel);
+             padding:10px 14px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver); }
+  .orcabtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
   .allywelcome{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
                 padding:11px 15px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver-dim); }
   .idacts{ margin-left:auto; display:flex; gap:10px; align-items:center; }
@@ -997,6 +1009,7 @@
         <div class="panel" id="panelStats"></div>
         <div class="panel" id="panelKills" style="display:none"></div>
         <div class="panel" id="panelHauls"></div>
+        <div class="panel" id="panelOrca"></div>
         <div class="panel" id="panelContracts"></div>
         <div class="panel" id="panelIndustry"></div>
         <div class="panel" id="panelChars"></div>
@@ -1233,6 +1246,7 @@ function renderAll(){
   safeRender(renderIdentity, $("panelIdentity"));
   safeRender(renderStats,    $("panelStats"));
   safeRender(renderHauls,    $("panelHauls"));
+  safeRender(renderOrca,     $("panelOrca"));
   safeRender(renderContractsPanel, $("panelContracts"));
   safeRender(renderIndustry, $("panelIndustry"));
   safeRender(renderChars,    $("panelChars"));
@@ -1304,6 +1318,7 @@ function renderIdentity(){
       : role === "ally"
         ? '<span class="rolechip ally">&#129309; ally</span>'
         : '<span class="rolechip">member</span>';
+  if (a.orca) roleChip += '<span class="rolechip orca">&#128011; orca</span>';
   var unread = Number(S.me.notificationsUnread) || 0;
   el.innerHTML =
     '<div class="idrow">' +
@@ -2411,6 +2426,78 @@ async function loadBanners(){
 }
 
 /* ============ my contracts list ============ */
+/* ============ the Orca program (fleet rights + contract to corp) ============
+   The confirm is the whole ceremony: you say you have an Orca, you hit
+   confirm, and boom, you hold the right to run fleets. The ONLY figure this
+   panel ever shows is the CONTRACT TO CORP buyback number the worker sends;
+   no other hull valuation exists on any member surface, by house rule. */
+function renderOrca(){
+  if (isAlly()) return hidePanel("panelOrca");
+  var el = $("panelOrca");
+  var o = S.me.orca || {};
+  var isOn = !!(o.on || (S.me.account && S.me.account.orca));
+
+  if (isOn){
+    var val = Number(o.contract_value) || 0;
+    var html = '<div class="ptitle">The Orca program <span class="orcachip">&#128011; fleet rights</span></div>';
+    if (S.orcaJust){
+      html += '<div class="orcahail">Boom. You have the right to run fleets now. The belt just got a new middle manager, and it is you.</div>';
+    }
+    html += '<p class="orcap">You fly the whale, so you can run the show. Start an op whenever you want: rally goblins on Discord, open the ' +
+      '<a href="/fleet/">Fleet Drop Ledger</a>, park the office, and keep the bubble on them. The buyback pays the fleet like always. ' +
+      'Nobody mines alone in the cold like a Victorian orphan, and enforcing that is officially your job now.</p>';
+    html += '<div class="orcaval"><div class="ovlab">Contract to corp</div>';
+    if (val > 0){
+      html += '<div class="ovnum">' + fmtIsk(val) + ' ISK</div>' +
+        '<div class="ovsub">That is the number. The corp buys Orca hulls at it, flat, on the spot. Done with the whale, or hauling one home for us? ' +
+        'Contract it to the corp in game and the wallet answers. No Jita undock, no haggling with strangers, no tears.</div>';
+    } else {
+      html += '<div class="ovnum">number lands soon</div>' +
+        '<div class="ovsub">Command posts the corp buy price for Orca hulls right here. Holding a whale you want gone? Poke an officer.</div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  if (S.orcaStep === 1){
+    el.innerHTML =
+      '<div class="ptitle">Have an Orca?</div>' +
+      '<p class="orcap">So you own the whale. You understand what this means: you hit confirm, and boom, you have the right to run fleets. ' +
+      'Boosts, compression, a bubble full of goblins getting rich because you parked correctly.</p>' +
+      '<div class="orcabtns">' +
+        '<button class="mini" id="orcaYes">&#128011; Confirm. I run fleets now.</button>' +
+        '<button class="mini" id="orcaNo">Not yet</button>' +
+      '</div><div class="perr" id="orcaErr" style="margin-top:8px"></div>';
+    $("orcaYes").addEventListener("click", orcaConfirm);
+    $("orcaNo").addEventListener("click", function(){ S.orcaStep = 0; safeRender(renderOrca, $("panelOrca")); });
+    return;
+  }
+
+  el.innerHTML =
+    '<div class="ptitle">Have an Orca?</div>' +
+    '<p class="orcap">The whale. The big blue foreman&rsquo;s office. If you own one, you qualify to run your own fleets under BONK colors, ' +
+    'with the corp buying the hull off you whenever you are done with it.</p>' +
+    '<div class="orcabtns"><button class="mini" id="orcaBtn">&#128011; Yes, I have an Orca</button></div>';
+  $("orcaBtn").addEventListener("click", function(){ S.orcaStep = 1; safeRender(renderOrca, $("panelOrca")); });
+}
+async function orcaConfirm(){
+  var btn = $("orcaYes"), errEl = $("orcaErr");
+  if (btn) btn.disabled = true;
+  try {
+    var r = await api("orca/claim", { code: "BONKORCA" });
+    S.me.orca = { on: true, contract_value: r.contract_value || 0 };
+    if (S.me.account) S.me.account.orca = true;
+    S.orcaJust = !r.already;
+    S.orcaStep = 0;
+    safeRender(renderOrca, $("panelOrca"));
+    safeRender(renderIdentity, $("panelIdentity"));
+  } catch(e){
+    if (btn) btn.disabled = false;
+    if (!isOut(e) && errEl) errEl.textContent = e.message;
+  }
+}
+
 function renderContractsPanel(){
   if (isAlly()) return hidePanel("panelContracts");
   var el = $("panelContracts");

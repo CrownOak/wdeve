@@ -818,7 +818,7 @@ function drawRoster(){
     const id=accId(r), alts=mAlts(r), ops=mOps(r), pct=onbPct(r);
     const quiet=daysSince(r.last_login)>=14;
     h+='<tr data-open="'+esc(String(id))+'" style="cursor:pointer">'
-      +'<td class="tl">'+avat(r,22)+'<b>'+esc(accName(r))+"</b></td>"
+      +'<td class="tl">'+avat(r,22)+'<b>'+esc(accName(r))+"</b>"+(r.orca?" 🐋":"")+"</td>"
       +'<td class="kind">'+esc(r.role||"member")+"</td>"
       +'<td class="num">'+fmtN(r.tenure_days)+"</td>"
       +'<td class="'+(quiet?"warn":"")+'">'+esc(ago(r.last_login))+"</td>"
@@ -983,6 +983,7 @@ async function openMemberDrawer(id){
       +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(curRole===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
     +(ISADMIN?'<div><label>GSS clearance</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_gss" type="checkbox" data-orig="'+(a.gss?"1":"0")+'"'+(a.gss?" checked":"")+'> designate to Goblin State Security</label></div>':"")
+    +'<div><label>Orca program</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_orca" type="checkbox" data-orig="'+(a.orca?"1":"0")+'"'+(a.orca?" checked":"")+'> &#128011; fleet rights (owns an Orca, can run their own fleets)</label></div>'
     +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
     +'</div><button class="inv" id="dw_save">Save identity</button> '
     +'<button class="cmail" id="dw_viewas">View as member</button></div>';
@@ -1107,6 +1108,11 @@ function wireDrawer(aid, chars, main){
       var gc=q("#dw_gss");
       if(ISADMIN && gc && (gc.checked?"1":"0")!==gc.getAttribute("data-orig")){
         await api("/api/admin/gss-clearance",{account_id:aid, on:gc.checked});
+      }
+      // Orca flag is an OFFICER lever by design (it is a program flag, not a role).
+      var oc=q("#dw_orca");
+      if(oc && (oc.checked?"1":"0")!==oc.getAttribute("data-orig")){
+        await api("/api/admin/orca",{account_id:aid, on:oc.checked});
       }
       toast("Saved. The record stands.");
       openMemberDrawer(aid);
@@ -1960,6 +1966,18 @@ async function secSettings(){
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_stsave">Save the fund</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div>";
+  /* Orca program: members with fleet rights see ONE hull number, the contract to corp
+     buyback. The real hull number never renders on any member surface. */
+  h+='<div class="panel"><div class="ptitle">The Orca program <span class="pn">&#128011; fleet rights + contract to corp</span></div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">Members who confirm an Orca get the right to run their own fleets. '
+    +'They see exactly ONE hull figure: the contract to corp number below, the flat buyback we pay when a goblin contracts an Orca hull to the corp. '
+    +'The real hull value stays off the site entirely. The confirm word gates the self serve door on the portal; rotate it to close the door.</div>'
+    +'<div class="frm">'
+    +'<div><label>Contract to corp (ISK)</label><input id="st_ov" type="number" min="0" value="'+esc(s.orca_contract_value!=null&&s.orca_contract_value>0?s.orca_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div><label>Confirm word</label><input id="st_ow" value="'+esc(s.orca_code||"BONKORCA")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +"</div>"
+    +(ISADMIN?'<button class="inv" id="st_osave">Save the program</button>':'<span class="rowmeta">read only at your clearance</span>')
+    +"</div>";
   /* station fund approval queue: members declare ISK sent to the corp wallet; approve adds it to the bar */
   const contribs=(cj&&cj.contributions)||[];
   const pendC=contribs.filter(function(c){ return c.status==="pending"; });
@@ -2057,6 +2075,20 @@ async function secSettings(){
         if(str!=="") body.station_raised=Number(str);
         await api("/api/admin/settings", body);
         toast("Station fund saved. The bar moves.");
+        secSettings();
+      });
+    });
+    document.getElementById("st_osave").addEventListener("click", function(){
+      const btn=this;
+      busy(btn, async function(){
+        const body={};
+        const ov=document.getElementById("st_ov").value;
+        if(ov!=="") body.orca_contract_value=Number(ov);
+        const ow=document.getElementById("st_ow").value.trim();
+        if(ow) body.orca_code=ow;
+        if(!Object.keys(body).length){ toast("Nothing to save yet. Type a number or a word.", true); return; }
+        await api("/api/admin/settings", body);
+        toast("Orca program saved. That is the only number they will ever see.");
         secSettings();
       });
     });
