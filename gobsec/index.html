@@ -283,6 +283,10 @@ async function fillHud(who){
   $("hudPosture").textContent=p;
   $("hudPosture").className="hposture "+p.replace(/\s/g,"");
   var whyBits=[];
+  if(p==="HUNT" && st.until){
+    var left=Math.max(0, Math.round((st.until-Date.now())/60000));
+    whyBits.push("hunting session · "+left+"m left, then it lapses");
+  }
   if(st.why) whyBits.push("“"+st.why+"”");
   if(st.at){ var ms=Date.now()-Date.parse(st.at); if(isFinite(ms)&&ms>0){
     var hh=Math.floor(ms/3600000); whyBits.push("set "+(hh<1?"under an hour":hh<48?hh+"h":Math.floor(hh/24)+"d")+" ago"); } }
@@ -364,13 +368,15 @@ async function fillHud(who){
     var sw=$("hudSwitch");
     sw.style.display="";
     sw.innerHTML = STANCE_KEYS.map(function(k){
-      return '<button data-st="'+k+'"'+(k===p?' class="on"':'')+">"+k+"</button>";
+      var label = k==="HUNT" ? "HUNT &middot; 1H" : k;
+      return '<button data-st="'+k+'"'+(k===p?' class="on"':'')+">"+label+"</button>";
     }).join("") + '<input id="hudWhyIn" maxlength="160" placeholder="why (one line, everyone reads it)">'
-      + '<div class="hnote">flipping the stance re-renders the board, the portal brief and the fleet banner. it\'s one lever on purpose.</div>';
+      + '<div class="hnote">one lever on purpose: it re-renders the board, the portal brief and the fleet banner. '
+      + 'HUNT opens a one hour session and lapses back to ROUTINE on its own; press it again to restart the hour.</div>';
     Array.prototype.forEach.call(sw.querySelectorAll("button[data-st]"),function(b){
       b.onclick=async function(){
         var k=b.getAttribute("data-st");
-        if(k===p && !$("hudWhyIn").value.trim()) return;
+        if(k===p && k!=="HUNT" && !$("hudWhyIn").value.trim()) return;
         b.disabled=true;
         try{
           await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",

@@ -284,6 +284,7 @@ function renderBrief(b, wire){
     (st.meaning || st.why || st.at
       ? '<div class="vsub" style="margin-top:9px">' +
         esc(st.meaning || "") +
+        (st.until ? ' &middot; hunting session, ' + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + 'm left' : '') +
         (st.why ? ' &middot; &ldquo;' + esc(st.why) + '&rdquo;' : '') +
         (st.at ? ' &middot; set ' + ago(st.at) : '') + '</div>'
       : '');
