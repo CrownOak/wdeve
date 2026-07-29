@@ -279,7 +279,14 @@ function stChip(s){
 /* ---- BANDS 2 + 6 ---- */
 function renderBrief(b, wire){
   var p = b.posture || "ROUTINE";
-  $("posture").innerHTML = '<span class="posture ' + esc(p.replace(/\s/g,"")) + '">' + esc(p) + '</span>';
+  var st = b.stance || {};
+  $("posture").innerHTML = '<span class="posture ' + esc(p.replace(/\s/g,"")) + '">' + esc(p) + '</span>' +
+    (st.meaning || st.why || st.at
+      ? '<div class="vsub" style="margin-top:9px">' +
+        esc(st.meaning || "") +
+        (st.why ? ' &middot; &ldquo;' + esc(st.why) + '&rdquo;' : '') +
+        (st.at ? ' &middot; set ' + ago(st.at) : '') + '</div>'
+      : '');
   $("fc").innerHTML = b.fc
     ? 'FC today: <b data-i18n-skip>' + esc(b.fc) + '</b>'
     : 'No FC on. Do not start anything you cannot finish alone.';

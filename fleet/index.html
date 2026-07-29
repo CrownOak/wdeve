@@ -411,6 +411,27 @@ tr.haulrow{ cursor:pointer; }
     <h1>FLEET COMMAND</h1>
     <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
   </header>
+  <!-- GOBSEC stance banner: renders ONLY when the stance is not ROUTINE (member session
+       required; logged-out visitors and quiet days see nothing). One line, one color. -->
+  <div id="stanceBanner" style="display:none;max-width:1180px;margin:10px auto 0;padding:9px 14px;
+       font-family:var(--mono,monospace);font-size:12px;letter-spacing:.04em;background:var(--steel,#14171a);
+       border:1px solid rgba(255,71,87,.4);border-left:3px solid #ff4757;color:#ff8a93"></div>
+  <script>
+  (function(){
+    fetch("/api/gobsec/brief",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; })
+      .then(function(b){
+        if (!b || !b.ok) return;
+        var st = b.stance || {}; var p = st.key || b.posture || "ROUTINE";
+        if (p === "ROUTINE") return;
+        var el = document.getElementById("stanceBanner");
+        var amber = (p === "ESCORT");
+        if (amber){ el.style.borderColor = "rgba(233,196,106,.45)"; el.style.borderLeftColor = "#e9c46a"; el.style.color = "#e9c46a"; }
+        el.textContent = "GOBSEC · " + p + " — " + (st.member || "check the board before you undock.")
+          + (st.why ? " (" + st.why + ")" : "");
+        el.style.display = "block";
+      }).catch(function(){});
+  })();
+  </script>
   <div class="wrap">
     <div class="howto" id="howto"><button id="howtox" class="howtox" title="dismiss">&times;</button>
     <b>How it works:</b> enter the fleet password and say who you are. During the op,

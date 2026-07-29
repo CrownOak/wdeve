@@ -86,6 +86,40 @@
   .orcahail{ border:1px solid rgba(70,255,94,.35); border-left:3px solid var(--ore); background:var(--steel);
              padding:10px 14px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver); }
   .orcabtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
+  /* GSS brief (the rail's one red block: the serious one). GOBSEC register. */
+  .gsb{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid #ff4757;
+        padding:14px 16px; margin-bottom:14px; }
+  .gsb .gh{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .gsb .gh img{ width:38px; height:38px; filter:saturate(.65); }
+  .gsb .gh .t{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em;
+               font-size:13px; color:var(--silver); }
+  .gsb .gh .s{ font-family:var(--mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase;
+               color:var(--muted); margin-top:2px; }
+  .gsb .gpost{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
+               text-transform:uppercase; font-size:15px; padding:3px 10px; border:1px solid var(--line);
+               color:var(--silver); margin-bottom:8px; }
+  .gsb .gpost.ESCORT{ color:var(--amber); border-color:var(--amber); }
+  .gsb .gpost.HUNT, .gsb .gpost.STANDDOWN{ color:#ff4757; border-color:#ff4757; }
+  .gsb .gv{ font-size:12.5px; line-height:1.55; color:var(--silver-dim); margin-bottom:10px; }
+  .gsb .gv.hot{ color:#ff8a93; }
+  .gsb .grow{ display:flex; align-items:baseline; gap:8px; font-family:var(--mono); font-size:10.5px;
+              color:var(--silver-dim); padding:4px 0; border-top:1px solid var(--line-soft); }
+  .gsb .grow .gk{ flex:0 0 74px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-size:9px; }
+  .gsb .gst{ font-weight:700; font-size:9px; letter-spacing:.12em; padding:1px 6px; border:1px solid var(--line); color:var(--muted); }
+  .gsb .gst.HOT{ color:#ff4757; border-color:#ff4757; }
+  .gsb .gst.WARM{ color:var(--amber); border-color:var(--amber); }
+  .gsb .gst.QUIET{ color:var(--ore); border-color:rgba(70,255,94,.35); }
+  .gsb .gsay{ font-family:var(--mono); font-size:10.5px; color:var(--silver-dim); line-height:1.6;
+              border-top:1px solid var(--line-soft); padding-top:8px; margin-top:2px; }
+  .gsb .glink{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); text-decoration:none;
+               margin-top:9px; }
+  .gsb .glink:hover{ color:#ff4757; }
+  .gsb .gsig{ font-family:var(--mono); font-size:8.5px; letter-spacing:.2em; text-transform:uppercase;
+              color:var(--muted); margin:12px 0 7px; text-align:center; }
+  .gsb .gjoin{ display:block; text-align:center; font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+               text-transform:uppercase; color:rgba(255,71,87,.85); text-decoration:none;
+               border:1px solid rgba(255,71,87,.4); padding:8px 0; transition:background .15s,color .15s; }
+  .gsb .gjoin:hover{ background:#ff4757; color:#08090a; }
   .allywelcome{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
                 padding:11px 15px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver-dim); }
   .idacts{ margin-left:auto; display:flex; gap:10px; align-items:center; }
@@ -1021,6 +1055,7 @@
       <!-- rail comes AFTER main in the DOM so the mobile stack order is right by default,
            with no order: override for somebody to break later -->
       <aside class="prail">
+        <div id="gssBriefWrap"></div>
         <div id="goalStripWrap"></div>
         <div id="railEventsWrap"></div>
         <div id="corpStripWrap"></div>
@@ -1255,6 +1290,7 @@ function renderAll(){
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderSay,      $("panelSay"));
   safeRender(renderGoalStrip,$("goalStripWrap"));
+  safeRender(renderGssBrief, $("gssBriefWrap"));
   safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap"));
   safeRender(renderCorpStrip,$("corpStripWrap"));
   safeRender(renderFoot,     $("footActs"));
@@ -1796,6 +1832,88 @@ function goalArchive(){ if (confirm('Archive the current op goal? The strip disa
 /* The dictate flies at the TOP of the dashboard (goalStripWrap, first thing under
    the header) — a corp goal nobody scrolls to is not dictated (Kyle 2026-07-25). */
 function renderGoalStrip(){ var el=$("goalStripWrap"); if (el) el.innerHTML = renderGoal(); }
+
+/* ============ the GSS brief (rail): the board compressed to a postcard.
+   GOBSEC register. The only figures here are counts off public feeds; the
+   detail lives at /gobsec/board/. ============ */
+var GSS_HOME = 30000031, GSS_DOOR = 30000117, GSS_CORRIDOR = [30000943, 30000944, 30000901];
+function gsbHeat(wire, ids){
+  var now = Date.now(), last = 0, k24 = 0;
+  (wire||[]).forEach(function(k){
+    if (ids.indexOf(k.sysId) < 0) return;
+    if (k.ts > last) last = k.ts;
+    if (k.ts > now - 86400000) k24++;
+  });
+  var st = "QUIET";
+  if ((last && last > now - 21600000) || k24 >= 3) st = "HOT";
+  else if (k24 >= 1) st = "WARM";
+  return { st: st, k24: k24 };
+}
+function loadGssBrief(){
+  Promise.all([
+    api("gobsec/brief").catch(function(){ return null; }),
+    api("gobsec/ground").catch(function(){ return null; }),
+    fetch("https://bonk-tripwire.kyle-dd7.workers.dev/region").then(function(r){ return r.json(); })
+      .then(function(w){ return Array.isArray(w) ? w : []; }).catch(function(){ return []; })
+  ]).then(function(rs){
+    S.gssBrief = { brief: rs[0], ground: rs[1], wire: rs[2] };
+    safeRender(renderGssBrief, $("gssBriefWrap"));
+  });
+}
+function renderGssBrief(){
+  var el = $("gssBriefWrap");
+  if (!el) return;
+  if (isAlly()){ el.innerHTML = ""; return; }
+  if (S.gssBrief === undefined){ S.gssBrief = null; loadGssBrief(); }
+  var d = S.gssBrief;
+  var brief = d && d.brief, ground = d && d.ground, wire = (d && d.wire) || [];
+  var stance = (brief && brief.stance) || { key: (brief && brief.posture) || "ROUTINE" };
+  var p = stance.key || "ROUTINE";
+
+  // the verdict: ours dead > busy corridor > quiet, honestly stated
+  var now = Date.now();
+  var ours24 = 0;
+  if (ground && ground.losses) ground.losses.forEach(function(l){
+    if (Date.parse(l.time) > now - 86400000) ours24++;
+  });
+  var wire24 = wire.filter(function(k){ return (k.ts||0) > now - 86400000; }).length;
+  var verdict, hot = false;
+  if (!d){ verdict = "Reading the wire…"; }
+  else if (ours24){ hot = true; verdict = ours24 + " of ours died in the last day. Read the board before you undock."; }
+  else if (wire24 >= 12){ hot = true; verdict = "Busy corridor today. " + wire24 + " kills on the wire. Fly like it."; }
+  else if (!brief && !ground && !wire.length){ verdict = "The wire is quiet or the wire is down. Either way, mine aligned."; }
+  else { verdict = "Quiet. Nothing of ours died today."; }
+
+  // one GSS line: the top patterned hunter off the public record, else curated card
+  var say = "";
+  var hs = (ground && ground.hunters) || [];
+  if (hs.length && hs[0].kills >= 2){
+    say = "GSS: <span data-i18n-skip>" + esc(hs[0].name) + "</span>"
+      + (hs[0].systems && hs[0].systems.length ? " working <span data-i18n-skip>" + esc(hs[0].systems[0]) + "</span>." : ".")
+      + " " + hs[0].kills + " of ours, 30 days.";
+  } else if (brief && brief.threats && brief.threats.length){
+    say = "GSS: eyes on <span data-i18n-skip>" + esc(brief.threats[0].name) + "</span>.";
+  }
+
+  var home = gsbHeat(wire, [GSS_HOME]), door = gsbHeat(wire, [GSS_DOOR]), corr = gsbHeat(wire, GSS_CORRIDOR);
+  function chip(label, sys, h){
+    return '<div class="grow"><span class="gk">' + label + '</span>' +
+      '<span data-i18n-skip>' + sys + '</span>' +
+      '<span class="gst ' + h.st + '" style="margin-left:auto">' + h.st + (h.k24 ? " · " + h.k24 : "") + '</span></div>';
+  }
+  el.innerHTML =
+    '<div class="gsb">' +
+      '<div class="gh"><img src="/portal/intel/gss-96.png" alt="GSS seal">' +
+        '<div><div class="t">GOBSEC</div><div class="s">the brief</div></div></div>' +
+      '<div class="gpost ' + esc(p.replace(/\s/g, "")) + '">' + esc(p) + '</div>' +
+      '<div class="gv' + (hot ? " hot" : "") + '">' + verdict + '</div>' +
+      chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
+      (say ? '<div class="gsay">' + say + '</div>' : '') +
+      '<a class="glink" href="/gobsec/board/">the full board &rarr;</a>' +
+      '<div class="gsig">Miners dock up. We don’t.</div>' +
+      '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
+    '</div>';
+}
 function renderWorks(){
   var w = S.works;
   var off = isOfficer();

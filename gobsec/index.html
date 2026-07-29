@@ -67,6 +67,34 @@
   .tool.locked .go{ color:var(--muted); }
   .foot{ margin-top:44px; font-family:var(--mono); font-size:10px; letter-spacing:.28em;
          text-transform:uppercase; color:var(--muted); text-align:center; }
+
+  /* THE HUD (GOBSEC-COMMAND P1+P2): stance, the mining op, guns available. One row,
+     read in three seconds. The switcher is the officer's lever; members see the state. */
+  .hud{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--gs);
+        padding:15px 17px; margin:0 0 16px; }
+  .hudrow{ display:grid; grid-template-columns:auto 1fr 1fr; gap:20px; align-items:start; }
+  @media(max-width:700px){ .hudrow{ grid-template-columns:1fr; gap:12px; } }
+  .hk{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+       color:var(--muted); margin-bottom:6px; }
+  .hposture{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
+             text-transform:uppercase; font-size:20px; padding:6px 14px; border:1px solid var(--line); color:var(--silver); }
+  .hposture.ESCORT{ color:var(--amber); border-color:var(--amber); }
+  .hposture.HUNT, .hposture.STANDDOWN{ color:var(--gs); border-color:var(--gs); }
+  .hwhy{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px; max-width:260px; line-height:1.5; }
+  .hv{ font-size:14px; color:var(--silver); line-height:1.5; }
+  .hv b{ color:var(--ore); font-weight:700; }
+  .hv b.hot{ color:var(--gs); }
+  .hsub2{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.6; }
+  .hswitch{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:14px;
+            border-top:1px solid var(--line-soft); padding-top:12px; }
+  .hswitch button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim); cursor:pointer;
+                   font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; padding:7px 13px; }
+  .hswitch button:hover{ border-color:var(--gs); color:var(--gs); }
+  .hswitch button.on{ background:var(--gs); border-color:var(--gs); color:#08090a; font-weight:700; }
+  .hswitch input{ flex:1; min-width:170px; background:var(--black); border:1px solid var(--line); color:var(--silver);
+                  font-family:var(--mono); font-size:11px; padding:7px 10px; }
+  .hswitch input:focus{ outline:none; border-color:var(--gsdim); }
+  .hnote{ font-family:var(--mono); font-size:9.5px; color:var(--muted); width:100%; }
   @media(max-width:600px){ .ghead img{ width:44px; height:44px; } .tool .td{ min-height:0; } }
 </style></head>
 <body>
@@ -84,6 +112,25 @@
   <div id="app" style="display:none">
     <div class="rule"></div>
     <div class="who" id="who"></div>
+    <div class="hud" id="hud" style="display:none">
+      <div class="hudrow">
+        <div>
+          <div class="hk">Stance</div>
+          <div class="hposture" id="hudPosture">&hellip;</div>
+          <div class="hwhy" id="hudWhy"></div>
+        </div>
+        <div>
+          <div class="hk">The mining op</div>
+          <div class="hv" id="hudOp">reading&hellip;</div>
+        </div>
+        <div>
+          <div class="hk">Guns available</div>
+          <div class="hv" id="hudAvail">reading&hellip;</div>
+          <div class="hsub2" id="hudPilots"></div>
+        </div>
+      </div>
+      <div class="hswitch" id="hudSwitch" style="display:none"></div>
+    </div>
     <div class="deck">
       <a class="tool" href="/gobsec/board/">
         <div class="num">01</div>
@@ -205,6 +252,62 @@ async function fillIntel(gss){
   }catch(e){ $("stIntel").textContent="files on record"; }
 }
 
+/* ---- THE HUD: stance + op + guns, and the officer's stance lever ---- */
+var STANCE_KEYS=["ROUTINE","ESCORT","HUNT","STAND DOWN"];
+async function fillHud(who){
+  var h=null;
+  try{ h=await api("gobsec/hud"); }catch(e){ return; }
+  $("hud").style.display="";
+  var st=h.stance||{};
+  var p=st.key||"ROUTINE";
+  $("hudPosture").textContent=p;
+  $("hudPosture").className="hposture "+p.replace(/\s/g,"");
+  var whyBits=[];
+  if(st.why) whyBits.push("“"+st.why+"”");
+  if(st.at){ var ms=Date.now()-Date.parse(st.at); if(isFinite(ms)&&ms>0){
+    var hh=Math.floor(ms/3600000); whyBits.push("set "+(hh<1?"under an hour":hh<48?hh+"h":Math.floor(hh/24)+"d")+" ago"); } }
+  if(st.fc) whyBits.push("FC "+st.fc);
+  $("hudWhy").textContent=whyBits.join(" · ")||(st.meaning||"");
+  var op=h.op||{};
+  $("hudOp").innerHTML = !op.reachable
+    ? "the ledger isn't answering"
+    : op.live
+      ? "<b>UP</b> · "+(op.online||0)+" on grid"+(op.lead?(" · "+esc(op.lead)+" leading"):"")
+      : "no op running";
+  var av=h.availability||{};
+  $("hudAvail").innerHTML = "<b"+((av.online||0)===0?' class="hot"':'')+">"+(av.online||0)+"</b> online now"
+    + ' <span style="color:var(--muted);font-size:11px">('+(av.fresh||0)+" fresh of "+(av.attached||0)+" attached)</span>";
+  if(av.pilots&&av.pilots.length){
+    $("hudPilots").innerHTML=av.pilots.slice(0,6).map(function(x){
+      return esc(x.ign)+(x.ship?" · "+esc(x.ship):"")+(x.system?" · "+esc(x.system):"")+" · "+x.age_min+"m";
+    }).join("<br>");
+  } else if((av.online||0)===0){
+    $("hudPilots").textContent="counts come from attached ESI characters, refreshed a few times a day";
+  }
+  /* the lever: officers flip the stance with one line of why. That's the whole ceremony. */
+  if(who && (who.role==="officer"||who.role==="admin")){
+    var sw=$("hudSwitch");
+    sw.style.display="";
+    sw.innerHTML = STANCE_KEYS.map(function(k){
+      return '<button data-st="'+k+'"'+(k===p?' class="on"':'')+">"+k+"</button>";
+    }).join("") + '<input id="hudWhyIn" maxlength="160" placeholder="why (one line, everyone reads it)">'
+      + '<div class="hnote">flipping the stance re-renders the board, the portal brief and the fleet banner. it\'s one lever on purpose.</div>';
+    Array.prototype.forEach.call(sw.querySelectorAll("button[data-st]"),function(b){
+      b.onclick=async function(){
+        var k=b.getAttribute("data-st");
+        if(k===p && !$("hudWhyIn").value.trim()) return;
+        b.disabled=true;
+        try{
+          await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({posture:k, why:$("hudWhyIn").value.trim()})});
+          fillHud(who); fillBoard();
+        }catch(e){ b.disabled=false; }
+      };
+    });
+  }
+}
+
 (async function(){
   var who=null;
   try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
@@ -214,7 +317,7 @@ async function fillIntel(gss){
   /* The workbench holds the hostile files and person dossiers. One gate gets you to the desk;
      the third card still needs clearance, exactly as /portal/intel always has. */
   if(!who.gss){ var c=$("cardIntel"); c.classList.add("locked"); c.removeAttribute("href"); }
-  fillBoard(); fillFinder(); fillIntel(who.gss);
+  fillHud(who); fillBoard(); fillFinder(); fillIntel(who.gss);
 })();
 </script>
 </body></html>
