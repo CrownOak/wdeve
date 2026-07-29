@@ -315,5 +315,29 @@ body.t-gobsec .btn-ore{ background:transparent; color:var(--gob); border:1px sol
 body.t-gobsec .gobtn:hover,
 body.t-gobsec .btn-ore:hover{ background:var(--gob); color:#12060a; }
 /* the GOBSEC door, usable on any page without the body class */
-.btn-gob{ border:1px solid var(--gob); color:var(--gob); background:transparent; }
-.btn-gob:hover{ background:var(--gob); color:#12060a; box-shadow:0 0 18px var(--gob-glow); }
+.btn-gob{ border:1px solid var(--gob); color:var(--gob); background:transparent;
+  position:relative; overflow:hidden; isolation:isolate;
+  transition:letter-spacing .25s ease, border-color .2s, color .2s, box-shadow .3s; }
+/* A GOBSEC control should feel like it ARMS rather than lights up. Three things happen at once
+   and none of them is a colour fill: the label opens out, a scan passes over it, and the whole
+   thing takes one hard RGB-split stutter as if the signal dropped. Pure CSS, no JS. */
+.btn-gob::before{ content:""; position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(90deg, transparent, rgba(255,71,87,.22) 45%, transparent);
+  transform:translateX(-105%); }
+.btn-gob:hover, .btn-gob:focus-visible{
+  color:#ff6b78; border-color:var(--gob); letter-spacing:.22em;
+  box-shadow:0 0 0 1px rgba(255,71,87,.35), 0 0 26px var(--gob-glow), inset 0 0 22px rgba(255,71,87,.10);
+  animation:gobArm .42s steps(1) 1; }
+.btn-gob:hover::before, .btn-gob:focus-visible::before{ animation:gobScan .5s ease-out 1 forwards; }
+.btn-gob:active{ color:#12060a; background:var(--gob); letter-spacing:.14em; }
+@keyframes gobScan{ from{ transform:translateX(-105%) } to{ transform:translateX(105%) } }
+@keyframes gobArm{
+  0%{   text-shadow:none; }
+  22%{  text-shadow:2px 0 rgba(0,240,255,.85), -2px 0 rgba(255,42,120,.85); transform:translateX(-1px); }
+  44%{  text-shadow:-3px 0 rgba(0,240,255,.7), 3px 0 rgba(255,42,120,.7); transform:translateX(1px); }
+  66%{  text-shadow:1px 0 rgba(0,240,255,.5), -1px 0 rgba(255,42,120,.5); transform:translateX(0); }
+  100%{ text-shadow:0 0 12px rgba(255,71,87,.5); } }
+@media(prefers-reduced-motion:reduce){
+  .btn-gob, .btn-gob:hover, .btn-gob:focus-visible{ transition:none; animation:none; letter-spacing:inherit; }
+  .btn-gob:hover::before{ animation:none; }
+  .btn-gob:hover{ background:var(--gob); color:#12060a; } }
