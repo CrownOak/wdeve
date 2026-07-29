@@ -244,7 +244,8 @@
             padding:18px 20px 20px; margin:0 0 18px; }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
                 font-size:13px; color:var(--ore); }
-  .refcard .rs{ font-size:12px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
+  .refcard .rs{ font-size:13px; color:var(--silver); line-height:1.55; margin-top:7px; }
+  .refcard .rs2{ font-size:12px; color:var(--silver-dim); line-height:1.55; margin-top:7px; }
   .reflink{ display:flex; gap:6px; margin-top:10px; }
   .reflink input{ flex:1; min-width:0; background:var(--black); border:1px solid var(--line); color:var(--silver);
                   font-family:var(--mono); font-size:11px; padding:7px 8px; }
@@ -547,7 +548,7 @@
      stretch used to let the TEXT decide the photo's height, then object-fit cropped to fill.
      The 560px mobile rule below has always done it this way; desktop now agrees. */
   .station .sthead{ flex-direction:column; }
-  .station .stpic{ width:100%; aspect-ratio:16/9; height:auto; object-fit:cover; flex:0 0 auto;
+  .station .stpic{ width:100%; aspect-ratio:5/2; max-height:150px; height:auto; object-fit:cover; flex:0 0 auto;
                    border-right:0; border-bottom:1px solid var(--line-soft); }
   .station .stinfo{ padding:13px 15px 12px; flex:1 1 auto; min-width:0; }
   .station .sttitle{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:15px; color:var(--silver); }
@@ -697,9 +698,8 @@
   /* the success hero: a launched structure, up and proud */
   .stup{ display:flex; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
     box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
-  .stup-pic{ width:100%; aspect-ratio:21/9; height:auto; object-fit:cover; flex:0 0 auto;
+  .stup-pic{ width:100%; aspect-ratio:5/2; max-height:130px; height:auto; object-fit:cover; flex:0 0 auto;
              border-right:0; border-bottom:1px solid var(--ore); }
-  @media(max-width:440px){ .stup-pic{ width:96px; } }
   .stup-info{ padding:13px 15px; flex:1 1 auto; min-width:0; }
   .stup-badge{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#04140a; background:var(--ore); padding:2px 9px; }
   .stup-name{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:18px; color:var(--silver); margin-top:8px; }
@@ -727,7 +727,7 @@
   .station .stanchor .stanchor-sub{ color:var(--muted); font-size:10.5px; }
   .station .stanchor.open{ border-left-color:var(--ore); }
   .station .stanchor.open b{ color:var(--ore); }
-  @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ width:100%; height:130px; border-right:0; border-bottom:1px solid var(--line-soft); } }
+  @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ max-height:130px; } }
   .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
           margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
   .tline b{ color:var(--ore); font-weight:400; }
@@ -1942,11 +1942,18 @@ function renderReferral(){
   if (!r || !r.url || isAlly()){ el.innerHTML = ""; return; }
   el.innerHTML = '<div class="refcard">' +
     '<div class="rt">&#129689; Bring us goblins</div>' +
-    '<div class="rs">Your link. Anyone who applies through it is counted as yours, ' +
-      'no names to type, no arguing about who brought who.</div>' +
+    /* STAKES, not a feature description (Kyle 2026-07-29: "I want them to know what they are
+       losing by not referring"). Everything here is TRUE today: no unbuilt prize is promised. */
+    '<div class="rs">Every pilot who joins without your link counts for somebody else. ' +
+      'Every good one you never asked is out there mining alone for a corp that taxes them.</div>' +
+    '<div class="rs2">Orca boosts need bodies on grid. Fleets need people. ' +
+      'The rock gets built faster with more hands on it. This is the cheapest thing you can do ' +
+      'for the corp and it takes one paste.</div>' +
     '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
       '<button class="refbtn" id="refCopy">copy</button></div>' +
-    '<div class="refstat"><b>' + (r.referred || 0) + '</b> referred &middot; <b>' + (r.joined || 0) + '</b> in the door</div>' +
+    '<div class="refstat">' + ((r.referred||0)
+      ? ('<b>' + r.referred + '</b> referred &middot; <b>' + (r.joined||0) + '</b> in the door')
+      : 'Nobody yet. The board is empty and somebody has to be first.') + '</div>' +
     '<button class="refrot" id="refRot">get a fresh link</button>' +
   '</div>';
   var c = $("refCopy");
