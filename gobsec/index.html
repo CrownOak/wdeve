@@ -2,8 +2,8 @@
 <html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>GOBSEC — the board</title>
-<link rel="stylesheet" href="/common.css?v=3">
+<title>GOBSEC — Goblin State Security</title>
+<link rel="stylesheet" href="/common.css?v=6">
 <style>
   /* THE COMBAT PILOT'S PAGE (GOBSEC-PORTAL-SPEC part one). Five bands, in the order a
      pilot cares. The test: read for eight seconds, know whether to undock and where.
@@ -83,6 +83,22 @@
   .card .cw{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px;
              border-top:1px solid var(--line-soft); padding-top:6px; }
   .empty{ font-family:var(--mono); font-size:11.5px; color:var(--muted); line-height:1.6; }
+
+  /* ---- the switcher ---- */
+  .tabs{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:2px 0 16px;
+         border-bottom:1px solid var(--line-soft); padding-bottom:10px; }
+  .tab{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+        font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+        padding:8px 18px; cursor:pointer; transition:color .15s, border-color .15s; }
+  .tab:hover{ color:var(--gs); border-color:var(--gsdim); }
+  .tab.on{ color:#08090a; background:var(--gs); border-color:var(--gs); font-weight:700; }
+  .tab[hidden]{ display:none; }
+  .tabwho{ margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--muted); }
+  .pane[hidden]{ display:none; }
+  /* the frames carry full pages; give them the room and kill the inner chrome on load */
+  .frame{ width:100%; height:calc(100vh - 190px); min-height:520px; border:1px solid var(--line-soft);
+          background:var(--black); display:block; }
   .foot{ font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
          color:var(--muted); text-align:center; margin-top:34px; }
   @media(max-width:600px){ .order .os{ flex-basis:64px; } .ghead img{ width:40px; height:40px; } }
@@ -92,7 +108,7 @@
 <div class="gw">
   <div class="ghead">
     <img src="gss.png" alt="GSS seal">
-    <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the board</div></div>
+    <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; one desk, three surfaces</div></div>
   </div>
 
   <!-- THE CHECKPOINT. Same trick as the GSS workbench: it looks like a way in and it is not.
@@ -103,6 +119,17 @@
   </div>
 
   <div id="app" style="display:none">
+    <!-- ONE DESK. The board is inline; the finder and the workbench are same-origin frames so
+         they stay the single source of truth (the finder is regenerated daily, the workbench is
+         a living app). Duplicating either would recreate the drift we just cleaned up. -->
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-v="board">Board</button>
+      <button class="tab" data-v="finder">Finder</button>
+      <button class="tab" data-v="intel" id="tabIntel" hidden>Workbench</button>
+      <span class="tabwho" id="tabwho"></span>
+    </div>
+
+    <div id="paneBoard">
     <div class="band">
       <h2><span class="n">01</span> RIGHT NOW</h2>
       <div id="verdict" class="verdict">Reading the wire&hellip;</div>
@@ -132,8 +159,16 @@
       <div id="board"></div>
     </div>
 
-    <div class="foot"><a href="/gobsec/finder/" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)">The finder</a>
-      &nbsp;&middot;&nbsp; Assume Nothing</div>
+    </div><!-- /paneBoard -->
+
+    <div id="paneFinder" class="pane" hidden>
+      <iframe id="frFinder" class="frame" title="GOBSEC finder" loading="lazy"></iframe>
+    </div>
+    <div id="paneIntel" class="pane" hidden>
+      <iframe id="frIntel" class="frame" title="GSS workbench" loading="lazy"></iframe>
+    </div>
+
+    <div class="foot">Assume Nothing</div>
   </div>
 </div>
 <script>
@@ -277,11 +312,55 @@ function showCheckpoint(){
   $("gsspw").addEventListener("keydown", function(e){ if (e.key === "Enter") tryCode(); });
 }
 
+/* ---- THE SWITCHER ----
+   One desk, three surfaces. The frames are same-origin, so the session cookie flows and the
+   finder auto-unlocks (page_lock key 'bonkrec') and the workbench recognises clearance, both
+   without a second login. Loaded lazily: a member who never opens the workbench never fetches
+   it. Inner nav is stripped on load so the whole thing reads as one page, not a page in a page. */
+var VKEY = "gobsec_view_v1";
+var SRC = { finder: "/gobsec/finder/", intel: "/portal/intel/" };
+function stripChrome(fr){
+  try {
+    var d = fr.contentDocument; if (!d) return;
+    var st = d.createElement("style");
+    st.textContent = ".topnav,.bn-bar,#bnpanel,nav.topnav{display:none!important}" +
+                     "body{padding-top:0!important;margin-top:0!important}";
+    (d.head || d.documentElement).appendChild(st);
+  } catch(e){ /* cross-origin or not ready: the frame still works, it just keeps its nav */ }
+}
+function show(v){
+  var known = { board:1, finder:1, intel:1 };
+  if (!known[v]) v = "board";
+  if (v === "intel" && $("tabIntel").hidden) v = "board";
+  $("paneBoard").hidden = v !== "board";
+  $("paneFinder").hidden = v !== "finder";
+  $("paneIntel").hidden  = v !== "intel";
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(b){
+    b.classList.toggle("on", b.getAttribute("data-v") === v); });
+  if (v === "finder" || v === "intel"){
+    var fr = $(v === "finder" ? "frFinder" : "frIntel");
+    if (!fr.getAttribute("src")){
+      fr.addEventListener("load", function(){ stripChrome(fr); });
+      fr.setAttribute("src", SRC[v]);
+    }
+  }
+  try { localStorage.setItem(VKEY, v); } catch(e){}
+}
+
 (async function(){
   var who = null;
   try { who = await (await fetch("/api/whoami", {credentials:"same-origin"})).json(); } catch(e){}
   if (!who || !who.loggedIn){ $("gate").style.display = ""; showCheckpoint(); return; }
   $("app").style.display = "";
+  /* CLEARANCE: one gate gets you in the door, but the workbench holds the hostile files and
+     the person dossiers. It stays officer/GSS only, exactly as it is at /portal/intel. */
+  if (who.gss) $("tabIntel").hidden = false;
+  $("tabwho").textContent = (who.ign ? who.ign + " · " : "") + (who.gss ? "GSS clearance" : "member");
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(b){
+    b.onclick = function(){ show(b.getAttribute("data-v")); }; });
+  var last = "board";
+  try { last = localStorage.getItem(VKEY) || "board"; } catch(e){}
+  show(last);
   var ours = [], ground = [], sysNames = {};
   try { var kf = await api("kills"); ours = kf.kills || []; } catch(e){}
   try {
