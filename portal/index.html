@@ -729,6 +729,27 @@
 .gs-mine b{color:var(--ore);letter-spacing:.08em;margin-right:8px;}
 .gs-mine span{color:var(--silver);font-weight:700;}
 .gs-mine i{display:block;font-style:normal;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5;}
+  /* the hangar runway board */
+  .hgr{ margin-top:11px; padding-top:10px; border-top:1px solid var(--line-soft); }
+  .hgr-h{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:7px; }
+  .hgr-h b{ font-family:var(--mono); font-size:9.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); }
+  .hgr-age{ font-family:var(--mono); font-size:9.5px; color:var(--muted); }
+  .hgr-age.old{ color:#e0c05a; }
+  .hgr-r{ display:grid; grid-template-columns:76px 40px minmax(0,1fr) 52px; gap:9px; align-items:center; padding:3px 0; }
+  .hgr-r .hm{ font-family:var(--mono); font-size:10.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--silver-dim); }
+  .hgr-r .hd{ font-family:var(--mono); font-size:11px; color:var(--silver); text-align:right; }
+  .hgr-r .hb{ height:6px; background:rgba(255,255,255,.05); display:block; }
+  .hgr-r .hb i{ display:block; height:100%; background:var(--muted); }
+  .hgr-r .ht{ font-family:var(--mono); font-size:8.5px; letter-spacing:.12em; color:var(--muted); text-align:right; }
+  .hgr-r.short .hd, .hgr-r.short .ht{ color:var(--red,#f0817a); }
+  .hgr-r.short .hb i{ background:var(--red,#f0817a); }
+  .hgr-r.tight .hb i{ background:#e0c05a; }
+  .hgr-r.ok .hb i{ background:rgba(70,255,94,.5); }
+  .hgr-r.glut .hb i{ background:rgba(70,255,94,.75); }
+  .hgr-r.glut .ht{ color:var(--ore); }
+  .hgr-r.buy .hb i{ background:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 6px); }
+  .hgr-say{ margin-top:8px; font-size:11.5px; line-height:1.5; color:var(--muted); }
+  .hgr-say b{ color:var(--silver); }
 .gs-stock{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:11px; padding-top:9px; border-top:1px solid var(--line-soft); }
   .gs-c{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; padding:2px 8px; border:1px solid var(--line); color:var(--silver-dim); }
   .gs-c-red{ color:var(--red,#f0817a); border-color:var(--red,#f0817a); }
@@ -786,6 +807,13 @@
   .wk-b{ background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono); font-size:12px; line-height:1; padding:2px 7px; cursor:pointer; }
   .wk-b:hover{ border-color:var(--ore); color:var(--ore); }
   .wk-empty{ font-family:var(--mono); font-size:11px; color:var(--muted); padding:6px 0; }
+  .wk-paste{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
+  .wk-pl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .wk-paste textarea{ width:100%; box-sizing:border-box; background:var(--black); border:1px solid var(--line);
+    color:var(--silver); font-family:var(--mono); font-size:11px; line-height:1.5; padding:8px 9px; resize:vertical; }
+  .wk-paste textarea:focus{ outline:none; border-color:var(--ore); }
+  .wk-prow{ display:flex; align-items:center; gap:9px; margin-top:7px; }
+  .wk-ph{ margin-top:6px; font-size:11px; line-height:1.5; color:var(--muted); }
   .wk-add{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
   .wk-add select, .wk-add input{ background:#0b0d0e; border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12px; padding:6px 8px; }
   .wk-add input:first-of-type{ flex:1 1 150px; min-width:120px; }
@@ -1416,7 +1444,12 @@ function renderStats(){
       html += '<div class="minecard"><div class="mk">In game ledger (ESI)</div>' +
         (esiU > 0
           ? '<div class="mv">' + esiUnits(esiU) + ' <span class="mu">units</span></div>' +
-            '<div class="ms">' + fmtIsk(esiIskT) + ' ISK &middot; raw, everything you mine</div>'
+            '<div class="ms">' + fmtIsk(esiIskT) + ' ISK &middot; raw, everything you mine</div>' +
+            /* The ESI side sat as a headline with an empty column under it while the fleet
+               side listed eight ores, so the panel read as though ESI knew less. It does not:
+               this is the same array the mining ledger ranks. Ranked by ISK to match the
+               ledger below, and because units alone put veldspar on top of everything. */
+            esiOreRows(esiMine)
           : '<div class="ms">Attach your EVE character below to track your real in game mining here.</div>') +
         '</div>';
       html += '</div><div class="pnote">These are two different measures, never added together: <b>fleet</b> is what you dropped to the ledger (compressed blocks counted ×100), <b>ESI</b> is your true in game mining ledger (raw units, solo or fleet).</div>';
@@ -1556,6 +1589,46 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
 /* THE GOAL STRIP — the one dictated corp goal, a bar every goblin watches move.
    Progress comes counted from the worker (industry_contributions of the goal
    item since the dictate); nothing is computed client-side but the percent. */
+/* THE HANGAR: what we are short of, and what to stop mining.
+   activeGoal() has been computing days-of-stock all along (mineral_burn units/day divided
+   into the mineral_stock snapshot, Nocxium flagged BUY because it is never mined highsec at
+   scale) and shipping it to this page as g.stock, where nothing rendered it. The .gs-stock
+   CSS was already here with no markup behind it.
+   Runway, never quantity: 223M Tritanium and 3,677 Zydrine are not comparable as counts, and
+   ranking by count would put the thing we have most of at the top. Runway ranks the PROBLEM
+   first, and it is the only framing that can say "stop mining this, we have years of it",
+   which is half of what Kyle asked for. */
+var HANGAR_SHORT = 45, HANGAR_TIGHT = 90, HANGAR_GLUT = 365;
+function renderHangar(g){
+  var st = (g && g.stock) || [];
+  st = st.filter(function(r){ return r && r.d !== null && isFinite(r.d); });
+  if (!st.length) return '';
+  st.sort(function(a,b){ return a.d - b.d; });
+  var worst = st[0], maxD = Math.max(HANGAR_GLUT, st[st.length-1].d);
+  var h = '<div class="hgr"><div class="hgr-h"><b>THE HANGAR</b>' + hangarAge(g) + '</div>';
+  h += st.map(function(r){
+    var cls = r.buy ? 'buy' : (r.d < HANGAR_SHORT ? 'short' : (r.d >= HANGAR_GLUT ? 'glut' : (r.d < HANGAR_TIGHT ? 'tight' : 'ok')));
+    var tag = r.buy ? 'BUY' : (cls === 'short' ? 'SHORT' : (cls === 'glut' ? 'PLENTY' : ''));
+    var w = Math.max(3, Math.min(100, Math.round(Math.log10(Math.max(1, r.d)) / Math.log10(maxD) * 100)));
+    return '<div class="hgr-r ' + cls + '">' +
+      '<span class="hm" data-i18n-skip>' + esc(r.m) + '</span>' +
+      '<span class="hd">' + r.d + 'd</span>' +
+      '<span class="hb"><i style="width:' + w + '%"></i></span>' +
+      '<span class="ht">' + tag + '</span></div>';
+  }).join('');
+  // The one line that turns a table into an instruction.
+  if (worst && !worst.buy && worst.d < HANGAR_TIGHT)
+    h += '<div class="hgr-say"><b data-i18n-skip>' + esc(worst.m) + '</b> runs out first, in about '
+       + worst.d + ' days. That is what the corp is short of.</div>';
+  return h + '</div>';
+}
+function hangarAge(g){
+  if (!g.stockAt) return '';
+  var d = Math.floor((Date.now() - Date.parse(g.stockAt)) / 86400000);
+  if (!isFinite(d) || d < 0) return '';
+  return '<span class="hgr-age' + (d >= 7 ? ' old' : '') + '">'
+    + (d === 0 ? 'counted today' : 'counted ' + d + (d === 1 ? ' day ago' : ' days ago')) + '</span>';
+}
 function renderGoal(){
   var g = S.works && S.works.goal; if (!g) return '';
   var off = isOfficer();
@@ -1593,15 +1666,7 @@ function renderGoal(){
             + '<i> Nothing is tagged priority right now, so mine any of the above and log it. '
             + 'An officer sets the call from the hangar numbers.</i></div>';
     }
-    // The hangar snapshot is hand pasted, so it AGES. Showing when it was taken is the
-    // difference between a stale number and a lie: a member can see the call is a week old
-    // and weigh it accordingly instead of trusting it as current.
-    if (g.stockAt){
-      var ageD = Math.floor((Date.now() - Date.parse(g.stockAt)) / 86400000);
-      if (isFinite(ageD) && ageD >= 0)
-        chips += '<div class="gs-stale' + (ageD >= 7 ? ' old' : '') + '">Hangar numbers behind this call: '
-          + (ageD === 0 ? 'checked today' : ageD + (ageD === 1 ? ' day old' : ' days old')) + '</div>';
-    }
+    chips += renderHangar(g);
     inSec = '<div class="gs-sec"><div class="gs-k">&#9935; IN &middot; WHAT THE MACHINE EATS</div><div class="gs-orerow">'
       + co.map(function(o){ var pri = o.role==='priority';
         return '<span class="gs-ore'+(pri?' gs-ore-pri':'')+'" data-i18n-skip>'+esc(String(o.ore||'').toUpperCase())
@@ -1665,7 +1730,18 @@ function renderWorks(){
   var addForm = off ? (
     '<div class="wk-add"><select id="wkSec"><option value="building">Building</option><option value="need">Need</option></select>' +
     '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
-    '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>'
+    '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>' +
+    /* The hangar paste. The stock-set endpoint has existed since the goal card shipped with
+       NO UI anywhere, which is why corp state was being updated by hand outside the portal.
+       It merges, so a partial paste never wipes the rest. */
+    '<div class="wk-paste">' +
+      '<div class="wk-pl">Update the hangar &middot; paste the mineral list straight from the in game window</div>' +
+      '<textarea id="wkStock" rows="4" placeholder="Tritanium\t223,803,309&#10;Pyerite\t48,616,958&#10;Mexallon\t5,314,977"></textarea>' +
+      '<div class="wk-prow"><button class="wk-addbtn" onclick="stockPaste()">update hangar</button>' +
+      '<span class="wk-err" id="wkStockErr"></span></div>' +
+      '<div class="wk-ph">Only mineral lines are read, and anything you leave out keeps its ' +
+      'current number. Days of stock recalculate the moment this saves.</div>' +
+    '</div>'
   ) : '';
   var linesGrid = '';
   if (w && w.lines && w.lines.length){
@@ -1765,6 +1841,22 @@ function worksAdvance(id){
   worksAct({action:'update', id:id, status:next});
 }
 function worksRemove(id){ worksAct({action:'remove', id:id}); }
+async function stockPaste(){
+  var ta = $("wkStock"), er = $("wkStockErr");
+  var txt = (ta && ta.value || '').trim();
+  if (er) er.textContent = '';
+  if (!txt){ if (er) er.textContent = 'paste the list first'; return; }
+  try {
+    S.works = await api("admin/works", { action:'stock-set', text: txt });
+    if (ta) ta.value = '';
+    // same three surfaces worksAct refreshes: the goal strip carries the hangar board,
+    // the assay and corp strip both read off S.works
+    safeRender(renderGoalStrip, $("goalStripWrap"));
+    safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap"));
+    safeRender(renderCorpStrip, $("corpStripWrap"));
+    toast("Hangar updated.");
+  } catch(e){ if (!isOut(e) && er) er.textContent = e.message; }
+}
 function worksAdd(){
   var item=($("wkItem").value||'').trim(); if(!item){ $("wkErr").textContent='name it'; return; }
   worksAct({action:'add', section:$("wkSec").value, item:item, qty:($("wkQty").value||'').trim()||null, note:($("wkNote").value||'').trim()});
@@ -2881,6 +2973,24 @@ function renderOreLedger(mining, totalU, totalIsk){
 function esiUnits(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B"; if(n>=1e6) return (n/1e6).toFixed(2)+"M"; if(n>=1e3) return (n/1e3).toFixed(1)+"k"; return String(n); }
 function esiIsk(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B ISK"; if(n>=1e6) return (n/1e6).toFixed(1)+"M ISK"; if(n>=1e3) return (n/1e3).toFixed(0)+"k ISK"; return Math.round(n)+" ISK"; }
 function esiYears(iso){ var ms=Date.now()-Date.parse(iso); if(isNaN(ms)) return "?"; var y=ms/(365.25*86400000); return y>=1?y.toFixed(1)+"y":Math.floor(ms/86400000)+"d"; }
+/* The ESI twin of fleetOreRows. Deliberately identical in shape, ordering and units so the
+   two tallies read as equals: this panel is a UNITS comparison (both headlines are units),
+   and putting ISK on one side would quietly make them look like the same measure counted
+   two ways, which is exactly what the footnote warns against. The value-ranked view of the
+   same data is the mining ledger further down, where it is labelled as such. */
+function esiOreRows(mining){
+  var arr = (mining || []).slice()
+    .filter(function(m){ return (Number(m.units)||0) > 0; })
+    .sort(function(a,b){ return (Number(b.units)||0) - (Number(a.units)||0); })
+    .slice(0, 8);
+  if (!arr.length) return '';
+  var h = '<div class="minerows">';
+  arr.forEach(function(m){
+    h += '<div class="mrow"><span class="mrn" data-i18n-skip>' + (ICE_BASES[m.base_ore] ? "\u{1F9CA} " : "")
+       + esc(m.base_ore) + '</span><span class="mn">' + esiUnits(m.units) + '</span></div>';
+  });
+  return h + '</div>';
+}
 function fleetOreRows(ore){
   ore = ore || {};
   var arr = Object.keys(ore).map(function(k){ return [k, ore[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
