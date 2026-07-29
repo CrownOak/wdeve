@@ -70,7 +70,7 @@
   @media(max-width:600px){ .ghead img{ width:44px; height:44px; } .tool .td{ min-height:0; } }
 </style></head>
 <body>
-<script src="/nav.js?v=16"></script>
+<script src="/nav.js?v=17"></script>
 <div class="gw">
   <div class="ghead">
     <img src="gss.png" alt="GSS seal">
@@ -103,8 +103,17 @@
         <div class="go">Open &#9656;</div>
       </a>
 
-      <a class="tool" id="cardIntel" href="/portal/intel/">
+      <a class="tool" href="/cartel/">
         <div class="num">03</div>
+        <div class="tn">The Watchtower</div>
+        <div class="td">The Cartel Map. The corridor drawn as terrain: who taxes which ring, where
+          the camps sit, and who is dying on the road right now.</div>
+        <div class="tstate" id="stCartel">reading the corridor&hellip;</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+
+      <a class="tool" id="cardIntel" href="/portal/intel/">
+        <div class="num">04</div>
         <div class="tn">The Workbench</div>
         <div class="td">The files. Entities, persons, the graph, region terrain, debriefs and the
           Derelik danger board. Everything we know about everyone.</div>
@@ -168,8 +177,12 @@ async function fillBoard(){
     if(Array.isArray(d)){
       var s=Date.now()-86400000, n=d.filter(function(k){return (k.ts||0)>s;}).length;
       line.push(n?(n+" kills in our regions, 24h"):"regions quiet, 24h");
+      var big=d.filter(function(k){ return (k.ts||0)>s && (k.isk||0)>=1e8; }).length;
+      $("stCartel").innerHTML = (n
+        ? "<b"+(n>=12?' class="hot"':'')+">"+n+"</b> on the road, 24h"+(big?(" &middot; "+big+" over 100m"):"")
+        : "the road is quiet, 24h") + " &middot; unlocks on your session";
     }
-  }catch(e){}
+  }catch(e){ $("stCartel").textContent="the corridor, drawn live"; }
   $("stBoard").innerHTML = line.join(" &middot; ") || "the wire is not answering";
 }
 async function fillFinder(){

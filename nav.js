@@ -188,6 +188,13 @@
     ".navwho.in .dotln{background:var(--ore,#46ff5e);box-shadow:0 0 6px rgba(70,255,94,.55);}" +
     ".navwho .unrd{color:var(--ore,#46ff5e);font-weight:700;flex:none;white-space:nowrap;}" +
     "@media(max-width:620px){.navwho .lbl{display:none;}}" +
+    /* logged-out visitors get one quiet door. Understated by law (Kyle 7/29):
+       same chip language as the login indicator, no pulse, no color shout. */
+    ".navjoin{font-family:var(--mono,ui-monospace,monospace);font-size:11px;letter-spacing:.09em;" +
+    "display:inline-flex;align-items:center;color:var(--muted,#6f776f);text-decoration:none;text-transform:uppercase;" +
+    "border:1px solid var(--line,rgba(150,168,158,.16));padding:5px 11px;white-space:nowrap;margin-left:6px;" +
+    "clip-path:polygon(0 0,100% 0,92% 100%,0 100%);transition:border-color .15s,color .15s;}" +
+    ".navjoin:hover{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
     /* ---- the toolbelt ---- */
     ".bn-burger{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono,ui-monospace,monospace);" +
     "font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--silver-dim,#9aa39c);" +
@@ -320,6 +327,16 @@
           w.className = "navwho";
           w.innerHTML = '<span class="dotln"></span><span>log in</span>';
           w.title = "Not logged in. Log in to the member portal so your career is tracked.";
+          // the one quiet door for visitors: every tool page carries it, nobody shouts
+          if (!document.getElementById("navjoin")) {
+            var jn = document.createElement("a");
+            jn.id = "navjoin";
+            jn.className = "navjoin";
+            jn.href = ORIGIN + BASE + "apply/";
+            jn.textContent = "join BONK";
+            jn.title = "Applications are open. The interview is painless. Mostly.";
+            w.parentNode.insertBefore(jn, w.nextSibling);
+          }
         }
       })
       .catch(function () { if (w) w.style.display = "none"; });
