@@ -1717,7 +1717,7 @@ function renderCorpStrip(){
     S.launched = station.launched || [];
     html += renderStationUp(S.launched[0]);
     html += '<div class="station"><div class="sthead">' +
-      '<img class="stpic" src="' + esc(stPhoto) + '" alt="' + esc(station.structure || "our station") + '" loading="lazy">' +
+      '<img class="stpic" onerror="this.remove()" src="' + esc(stPhoto) + '" alt="' + esc(station.structure || "our station") + '" loading="lazy">' +
       '<div class="stinfo">' +
         '<div class="sttitle">' + stTitle + '</div>' +
         '<div class="stsub">' + esc(station.note || "We are buying BONK its own refinery.") + '</div>' +
@@ -1748,7 +1748,7 @@ function renderCorpStrip(){
           var i = si + 1;
           var n = (c.contributors || []).length;
           return '<button class="stl-row" data-lidx="' + i + '">' +
-            '<img class="stl-pic" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="" loading="lazy">' +
+            '<img class="stl-pic" onerror="this.remove()" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="" loading="lazy">' +
             '<span class="stl-info">' +
               '<span class="stl-name">' + esc(c.name) + ' <span class="stl-badge">launched</span></span>' +
               '<span class="stl-sub">' + esc(c.structure || "") + ' &middot; ' + fmtIsk(Number(c.raised_final)||0) + ' raised &middot; ' + n + (n===1?' builder':' builders') + '</span>' +
@@ -2240,7 +2240,7 @@ function renderStationUp(c){
   var n = (c.contributors || []).length;
   var since = c.completed_at ? String(c.completed_at).slice(0,10) : '';
   return '<div class="stup">' +
-    '<img class="stup-pic" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="' + esc(c.structure||"") + '" loading="lazy">' +
+    '<img class="stup-pic" onerror="this.remove()" src="' + esc(c.photo || "/portal/athanor.jpg") + '" alt="' + esc(c.structure||"") + '" loading="lazy">' +
     '<div class="stup-info">' +
       '<div class="stup-badge">&#127968; Anchored &amp; online</div>' +
       '<div class="stup-name">' + esc(c.name) + '</div>' +
