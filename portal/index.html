@@ -562,7 +562,7 @@
      stretch used to let the TEXT decide the photo's height, then object-fit cropped to fill.
      The 560px mobile rule below has always done it this way; desktop now agrees. */
   .station .sthead{ flex-direction:column; }
-  .station .stpic{ width:100%; aspect-ratio:5/2; max-height:150px; height:auto; object-fit:cover; flex:0 0 auto;
+  .station .stpic{ width:100%; aspect-ratio:5/1; max-height:88px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
                    border-right:0; border-bottom:1px solid var(--line-soft); }
   .station .stinfo{ padding:13px 15px 12px; flex:1 1 auto; min-width:0; }
   .station .sttitle{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:15px; color:var(--silver); }
@@ -712,7 +712,7 @@
   /* the success hero: a launched structure, up and proud */
   .stup{ display:flex; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
     box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
-  .stup-pic{ width:100%; aspect-ratio:5/2; max-height:130px; height:auto; object-fit:cover; flex:0 0 auto;
+  .stup-pic{ width:100%; aspect-ratio:6/1; max-height:70px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
              border-right:0; border-bottom:1px solid var(--ore); }
   .stup-info{ padding:13px 15px; flex:1 1 auto; min-width:0; }
   .stup-badge{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#04140a; background:var(--ore); padding:2px 9px; }
@@ -741,7 +741,7 @@
   .station .stanchor .stanchor-sub{ color:var(--muted); font-size:10.5px; }
   .station .stanchor.open{ border-left-color:var(--ore); }
   .station .stanchor.open b{ color:var(--ore); }
-  @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ max-height:130px; } }
+  @media(max-width:560px){ .station .sthead{ flex-direction:column; } .station .stpic{ max-height:80px; } }
   .tline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); letter-spacing:.03em;
           margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
   .tline b{ color:var(--ore); font-weight:400; }
