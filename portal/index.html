@@ -729,6 +729,23 @@
 .gs-mine b{color:var(--ore);letter-spacing:.08em;margin-right:8px;}
 .gs-mine span{color:var(--silver);font-weight:700;}
 .gs-mine i{display:block;font-style:normal;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5;}
+  /* WHAT TO MINE: the order, in ore and in places, not in chemistry */
+  .mine2{ margin-top:10px; padding:13px 15px; background:var(--black); border:1px solid var(--ore);
+    border-left-width:3px; }
+  .mine2-h{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .mine2-h .m2k{ font-family:var(--mono); font-size:9.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); }
+  .m2band{ font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.16em; color:#04140a;
+    background:var(--ore); padding:3px 7px; }
+  .m2ore{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    font-size:25px; line-height:1.1; color:var(--ore); margin-top:8px; }
+  .m2why{ font-size:12.5px; line-height:1.55; color:var(--silver-dim); margin-top:6px; }
+  .m2row{ display:grid; grid-template-columns:72px minmax(0,1fr); gap:10px; margin-top:8px; align-items:baseline; }
+  .m2row .m2l{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .m2row .m2v{ font-size:12.5px; line-height:1.5; color:var(--silver); }
+  .m2skip{ margin-top:10px; padding-top:9px; border-top:1px solid var(--line-soft);
+    font-size:12px; line-height:1.5; color:var(--muted); }
+  .m2skip b{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:#e0c05a; }
+  .m2skip span{ color:var(--silver); text-transform:capitalize; }
   /* the hangar runway board */
   .hgr{ margin-top:11px; padding-top:10px; border-top:1px solid var(--line-soft); }
   .hgr-h{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:7px; }
@@ -1589,6 +1606,73 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
 /* THE GOAL STRIP — the one dictated corp goal, a bar every goblin watches move.
    Progress comes counted from the worker (industry_contributions of the goal
    item since the dictate); nothing is computed client-side but the percent. */
+/* WHERE THE ROCK LIVES.
+   Nobody should have to know a Mexallon from a shoe to take an order. The hangar board
+   speaks minerals because that is what the factory burns; this speaks ORE and PLACE,
+   because that is what a person actually undocks and does.
+   THIS MAP IS THE ONE HAND-MAINTAINED INPUT IN THE SYSTEM and that is deliberate: ore
+   availability by security band is stable game design, not live data, and the SDE does not
+   encode it cleanly. Kept to the ores we actually run. Do NOT hand-type yields or volumes,
+   those are SDE-baked already. Anything not listed falls back to the safe generic line. */
+var ORE_WHERE = {
+  "veldspar":    { band:"HIGHSEC", where:"Every belt has it. Any belt in Mohas will do." },
+  "scordite":    { band:"HIGHSEC", where:"Every belt has it. Any belt in Mohas will do." },
+  "plagioclase": { band:"HIGHSEC", where:"Highsec belts. Warp to a belt in Mohas or a system next door." },
+  "pyroxeres":   { band:"HIGHSEC", where:"Highsec belts around home." },
+  "omber":       { band:"HIGHSEC", where:"Highsec belts, and richer as security drops." },
+  "kernite":     { band:"HIGHSEC", where:"Highsec belts, and richer as security drops." }
+};
+var ORE_WHERE_DEFAULT = { band:"ASK FIRST", where:"Check with an officer before you go after this one." };
+/* WHAT TO MINE: the order, derived from runway rather than from a tag somebody has to keep
+   current. Shortest runway that a rock can actually fix wins. Nocxium is skipped because it
+   is bought at Amarr, never mined highsec at scale, so pointing miners at it is the same
+   failure as the old array-order bug, just slower. */
+function whatToMine(g, co){
+  var st = ((g && g.stock) || []).filter(function(r){ return r && r.d !== null && isFinite(r.d) && !r.buy; });
+  if (!co || !co.length) return '';
+  function oreFor(min){
+    for (var i=0;i<co.length;i++) if (String(co[i].min||'').toLowerCase() === String(min||'').toLowerCase()) return co[i];
+    return null;
+  }
+  var pick = null, mineral = null, days = null;
+  st.sort(function(a,b){ return a.d - b.d; });
+  for (var i=0;i<st.length && !pick;i++){
+    var o = oreFor(st[i].m);
+    if (o){ pick = o; mineral = st[i].m; days = st[i].d; }
+  }
+  // An officer's tag outranks the arithmetic, but it has to say so out loud.
+  var tagged = co.filter(function(o){ return o.role === 'priority'; })[0];
+  var byOfficer = false;
+  if (tagged && (!pick || String(tagged.ore) !== String(pick.ore))){ pick = tagged; byOfficer = true; }
+  if (!pick) return '';
+
+  var key = String(pick.ore||'').toLowerCase();
+  var loc = ORE_WHERE[key] || ORE_WHERE_DEFAULT;
+  var why = byOfficer
+    ? 'An officer called this one.'
+    : (mineral && days != null
+        ? 'It refines into ' + esc(mineral) + ', and we run out of ' + esc(mineral) + ' in about '
+          + days + ' days. That is the thing slowing the factory down.'
+        : 'This is what the factory is short of.');
+
+  var h = '<div class="mine2">' +
+    '<div class="mine2-h"><span class="m2k">What to mine</span>' +
+      '<span class="m2band">' + esc(loc.band) + '</span></div>' +
+    '<div class="m2ore" data-i18n-skip>' + esc(String(pick.ore).toUpperCase()) + '</div>' +
+    '<div class="m2why">' + why + '</div>' +
+    '<div class="m2row"><span class="m2l">Where</span><span class="m2v">' + esc(loc.where) + '</span></div>' +
+    '<div class="m2row"><span class="m2l">How much</span><span class="m2v">' +
+      'About 23,000 m&#179; is one good night. Drop it at the Den, buyback pays as always.</span></div>';
+
+  // What NOT to spend a night on. Straight off the runway, and the half people forget.
+  var glut = st.filter(function(r){ return r.d >= HANGAR_GLUT; })
+               .map(function(r){ var o = oreFor(r.m); return o ? { ore:o.ore, d:r.d } : null; })
+               .filter(Boolean);
+  if (glut.length)
+    h += '<div class="m2skip"><b>Skip</b> <span data-i18n-skip>' + esc(glut[0].ore) + '</span>'
+       + ' for now. We already have about ' + glut[0].d + ' days of what it makes.</div>';
+  return h + '</div>';
+}
 /* THE HANGAR: what we are short of, and what to stop mining.
    activeGoal() has been computing days-of-stock all along (mineral_burn units/day divided
    into the mineral_stock snapshot, Nocxium flagged BUY because it is never mined highsec at
@@ -1649,19 +1733,8 @@ function renderGoal(){
     // hand pasted hangar snapshot nobody could keep current, so they published precise
     // numbers that silently drifted wrong. The PRIORITY tag already says what we are
     // short of, so this states it plainly instead of counting it badly.
-    var chips = '';
-    var pri = co.filter(function(o){ return o.role==='priority'; });
-    var names = pri.map(function(o){ return String(o.ore||'').toUpperCase(); });
-    // NO PRIORITY TAG, NO ASSIGNMENT. This used to fall back to co.slice(0,1), which is the
-    // FIRST ORE IN ARRAY ORDER: an arbitrary row presented in the card's most authoritative
-    // voice ("This is the assignment"). Array position is not a decision, and a confident
-    // instruction to mine the wrong rock is worse than no instruction at all.
-    if (names.length){
-      var what = names.join(' or ');
-      var why  = pri[0].min ? ' It becomes ' + esc(pri[0].min) + ', which is the one we run out of first.' : '';
-      chips = '<div class="gs-mine"><b>MINE THIS</b> <span data-i18n-skip>'+esc(what)+'</span>'
-            + '<i>'+why+' Everything else is nice. This is the assignment.</i></div>';
-    } else {
+    var chips = whatToMine(g, co);
+    if (!chips){
       chips = '<div class="gs-mine gs-mine-none"><b>NO CALL YET</b>'
             + '<i> Nothing is tagged priority right now, so mine any of the above and log it. '
             + 'An officer sets the call from the hangar numbers.</i></div>';
