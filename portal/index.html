@@ -1367,6 +1367,7 @@ function renderIdentity(){
         ? '<span class="rolechip ally">&#129309; ally</span>'
         : '<span class="rolechip">member</span>';
   if (a.orca) roleChip += '<span class="rolechip orca">&#128011; orca</span>';
+  else if (a.porpoise) roleChip += '<span class="rolechip orca">&#128044; porpoise</span>';
   var unread = Number(S.me.notificationsUnread) || 0;
   el.innerHTML =
     '<div class="idrow">' +
@@ -2567,63 +2568,88 @@ async function loadBanners(){
    confirm, and boom, you hold the right to run fleets. The ONLY figure this
    panel ever shows is the CONTRACT TO CORP buyback number the worker sends;
    no other hull valuation exists on any member surface, by house rule. */
+var ORCA_HULLS = {
+  orca:     { emoji: "\u{1F40B}", label: "Orca",     line: "The big blue foreman&rsquo;s office." },
+  porpoise: { emoji: "\u{1F42C}", label: "Porpoise", line: "The little whale. Same boosts, same office energy, fits in the garage." }
+};
+function orcaValRow(hull, val){
+  var h = ORCA_HULLS[hull];
+  var html = '<div class="orcaval" style="margin-bottom:10px"><div class="ovlab">Contract to corp &middot; ' + h.label + '</div>';
+  if (val > 0){
+    html += '<div class="ovnum">' + fmtIsk(val) + ' ISK</div>' +
+      '<div class="ovsub">That is the number. The corp buys ' + h.label + ' hulls at it, flat, on the spot. ' +
+      'Contract it to the corp in game and the wallet answers. No Jita undock, no haggling with strangers, no tears.</div>';
+  } else {
+    html += '<div class="ovnum">number lands soon</div>' +
+      '<div class="ovsub">Command posts the corp buy price for ' + h.label + ' hulls right here. Holding one you want gone? Poke an officer.</div>';
+  }
+  return html + '</div>';
+}
 function renderOrca(){
   if (isAlly()) return hidePanel("panelOrca");
   var el = $("panelOrca");
   var o = S.me.orca || {};
-  var isOn = !!(o.on || (S.me.account && S.me.account.orca));
+  var a = S.me.account || {};
+  var has = { orca: !!(o.orca || a.orca), porpoise: !!(o.porpoise || a.porpoise) };
+  var vals = o.values || { orca: Number(o.contract_value) || 0, porpoise: 0 };
+  var isOn = has.orca || has.porpoise;
 
-  if (isOn){
-    var val = Number(o.contract_value) || 0;
-    var html = '<div class="ptitle">The Orca program <span class="orcachip">&#128011; fleet rights</span></div>';
+  if (isOn && !S.orcaStep){
+    var chip = has.orca ? '&#128011; fleet rights' : '&#128044; fleet rights';
+    var html = '<div class="ptitle">The Orca program <span class="orcachip">' + chip + '</span></div>';
     if (S.orcaJust){
       html += '<div class="orcahail">Boom. You have the right to run fleets now. The belt just got a new middle manager, and it is you.</div>';
     }
     html += '<p class="orcap">You fly the whale, so you can run the show. Start an op whenever you want: rally goblins on Discord, open the ' +
       '<a href="/fleet/">Fleet Drop Ledger</a>, park the office, and keep the bubble on them. The buyback pays the fleet like always. ' +
       'Nobody mines alone in the cold like a Victorian orphan, and enforcing that is officially your job now.</p>';
-    html += '<div class="orcaval"><div class="ovlab">Contract to corp</div>';
-    if (val > 0){
-      html += '<div class="ovnum">' + fmtIsk(val) + ' ISK</div>' +
-        '<div class="ovsub">That is the number. The corp buys Orca hulls at it, flat, on the spot. Done with the whale, or hauling one home for us? ' +
-        'Contract it to the corp in game and the wallet answers. No Jita undock, no haggling with strangers, no tears.</div>';
-    } else {
-      html += '<div class="ovnum">number lands soon</div>' +
-        '<div class="ovsub">Command posts the corp buy price for Orca hulls right here. Holding a whale you want gone? Poke an officer.</div>';
+    if (has.orca) html += orcaValRow("orca", Number(vals.orca) || 0);
+    if (has.porpoise) html += orcaValRow("porpoise", Number(vals.porpoise) || 0);
+    var other = !has.orca ? "orca" : (!has.porpoise ? "porpoise" : null);
+    if (other){
+      html += '<div class="orcabtns"><button class="mini" id="orcaAlso">' + ORCA_HULLS[other].emoji +
+        ' Also fly ' + (other === "orca" ? "an Orca" : "a Porpoise") + '? Confirm it too</button></div>';
     }
-    html += '</div>';
     el.innerHTML = html;
+    var alsoBtn = $("orcaAlso");
+    if (alsoBtn) alsoBtn.addEventListener("click", function(){ S.orcaStep = other; safeRender(renderOrca, $("panelOrca")); });
     return;
   }
 
-  if (S.orcaStep === 1){
+  if (S.orcaStep && ORCA_HULLS[S.orcaStep]){
+    var hk = S.orcaStep, hh = ORCA_HULLS[hk];
     el.innerHTML =
-      '<div class="ptitle">Have an Orca?</div>' +
-      '<p class="orcap">So you own the whale. You understand what this means: you hit confirm, and boom, you have the right to run fleets. ' +
+      '<div class="ptitle">Have ' + (hk === "orca" ? "an Orca" : "a Porpoise") + '?</div>' +
+      '<p class="orcap">So you own the ' + (hk === "orca" ? "whale" : "little whale") + '. You understand what this means: you hit confirm, and boom, you have the right to run fleets. ' +
       'Boosts, compression, a bubble full of goblins getting rich because you parked correctly.</p>' +
       '<div class="orcabtns">' +
-        '<button class="mini" id="orcaYes">&#128011; Confirm. I run fleets now.</button>' +
+        '<button class="mini" id="orcaYes">' + hh.emoji + ' Confirm. I run fleets now.</button>' +
         '<button class="mini" id="orcaNo">Not yet</button>' +
       '</div><div class="perr" id="orcaErr" style="margin-top:8px"></div>';
-    $("orcaYes").addEventListener("click", orcaConfirm);
+    $("orcaYes").addEventListener("click", function(){ orcaConfirm(hk); });
     $("orcaNo").addEventListener("click", function(){ S.orcaStep = 0; safeRender(renderOrca, $("panelOrca")); });
     return;
   }
 
   el.innerHTML =
-    '<div class="ptitle">Have an Orca?</div>' +
-    '<p class="orcap">The whale. The big blue foreman&rsquo;s office. If you own one, you qualify to run your own fleets under BONK colors, ' +
+    '<div class="ptitle">Have an Orca? A Porpoise?</div>' +
+    '<p class="orcap">The whale, or the little whale. If you own either, you qualify to run your own fleets under BONK colors, ' +
     'with the corp buying the hull off you whenever you are done with it.</p>' +
-    '<div class="orcabtns"><button class="mini" id="orcaBtn">&#128011; Yes, I have an Orca</button></div>';
-  $("orcaBtn").addEventListener("click", function(){ S.orcaStep = 1; safeRender(renderOrca, $("panelOrca")); });
+    '<div class="orcabtns">' +
+      '<button class="mini" id="orcaBtn">&#128011; I have an Orca</button>' +
+      '<button class="mini" id="porpBtn">&#128044; I have a Porpoise</button>' +
+    '</div>';
+  $("orcaBtn").addEventListener("click", function(){ S.orcaStep = "orca"; safeRender(renderOrca, $("panelOrca")); });
+  $("porpBtn").addEventListener("click", function(){ S.orcaStep = "porpoise"; safeRender(renderOrca, $("panelOrca")); });
 }
-async function orcaConfirm(){
+async function orcaConfirm(hull){
   var btn = $("orcaYes"), errEl = $("orcaErr");
   if (btn) btn.disabled = true;
   try {
-    var r = await api("orca/claim", { code: "BONKORCA" });
-    S.me.orca = { on: true, contract_value: r.contract_value || 0 };
-    if (S.me.account) S.me.account.orca = true;
+    var r = await api("orca/claim", { code: "BONKORCA", hull: hull });
+    S.me.orca = { on: !!(r.orca || r.porpoise), orca: !!r.orca, porpoise: !!r.porpoise,
+                  values: r.values || {}, contract_value: (r.values && r.values.orca) || 0 };
+    if (S.me.account){ S.me.account.orca = !!r.orca; S.me.account.porpoise = !!r.porpoise; }
     S.orcaJust = !r.already;
     S.orcaStep = 0;
     safeRender(renderOrca, $("panelOrca"));

@@ -818,7 +818,7 @@ function drawRoster(){
     const id=accId(r), alts=mAlts(r), ops=mOps(r), pct=onbPct(r);
     const quiet=daysSince(r.last_login)>=14;
     h+='<tr data-open="'+esc(String(id))+'" style="cursor:pointer">'
-      +'<td class="tl">'+avat(r,22)+'<b>'+esc(accName(r))+"</b>"+(r.orca?" 🐋":"")+"</td>"
+      +'<td class="tl">'+avat(r,22)+'<b>'+esc(accName(r))+"</b>"+(r.orca?" 🐋":"")+(r.porpoise?" 🐬":"")+"</td>"
       +'<td class="kind">'+esc(r.role||"member")+"</td>"
       +'<td class="num">'+fmtN(r.tenure_days)+"</td>"
       +'<td class="'+(quiet?"warn":"")+'">'+esc(ago(r.last_login))+"</td>"
@@ -983,7 +983,9 @@ async function openMemberDrawer(id){
       +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(curRole===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
     +(ISADMIN?'<div><label>GSS clearance</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_gss" type="checkbox" data-orig="'+(a.gss?"1":"0")+'"'+(a.gss?" checked":"")+'> designate to Goblin State Security</label></div>':"")
-    +'<div><label>Orca program</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_orca" type="checkbox" data-orig="'+(a.orca?"1":"0")+'"'+(a.orca?" checked":"")+'> &#128011; fleet rights (owns an Orca, can run their own fleets)</label></div>'
+    +'<div><label>Orca program</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_orca" type="checkbox" data-orig="'+(a.orca?"1":"0")+'"'+(a.orca?" checked":"")+'> &#128011; Orca (fleet rights)</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_porp" type="checkbox" data-orig="'+(a.porpoise?"1":"0")+'"'+(a.porpoise?" checked":"")+'> &#128044; Porpoise (fleet rights)</label></div>'
     +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
     +'</div><button class="inv" id="dw_save">Save identity</button> '
     +'<button class="cmail" id="dw_viewas">View as member</button></div>';
@@ -1109,10 +1111,14 @@ function wireDrawer(aid, chars, main){
       if(ISADMIN && gc && (gc.checked?"1":"0")!==gc.getAttribute("data-orig")){
         await api("/api/admin/gss-clearance",{account_id:aid, on:gc.checked});
       }
-      // Orca flag is an OFFICER lever by design (it is a program flag, not a role).
+      // Orca program flags are an OFFICER lever by design (program, not role).
       var oc=q("#dw_orca");
       if(oc && (oc.checked?"1":"0")!==oc.getAttribute("data-orig")){
-        await api("/api/admin/orca",{account_id:aid, on:oc.checked});
+        await api("/api/admin/orca",{account_id:aid, on:oc.checked, hull:"orca"});
+      }
+      var pc=q("#dw_porp");
+      if(pc && (pc.checked?"1":"0")!==pc.getAttribute("data-orig")){
+        await api("/api/admin/orca",{account_id:aid, on:pc.checked, hull:"porpoise"});
       }
       toast("Saved. The record stands.");
       openMemberDrawer(aid);
@@ -1973,7 +1979,8 @@ async function secSettings(){
     +'They see exactly ONE hull figure: the contract to corp number below, the flat buyback we pay when a goblin contracts an Orca hull to the corp. '
     +'The real hull value stays off the site entirely. The confirm word gates the self serve door on the portal; rotate it to close the door.</div>'
     +'<div class="frm">'
-    +'<div><label>Contract to corp (ISK)</label><input id="st_ov" type="number" min="0" value="'+esc(s.orca_contract_value!=null&&s.orca_contract_value>0?s.orca_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div><label>Orca &middot; contract to corp (ISK)</label><input id="st_ov" type="number" min="0" value="'+esc(s.orca_contract_value!=null&&s.orca_contract_value>0?s.orca_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
+    +'<div><label>Porpoise &middot; contract to corp (ISK)</label><input id="st_ovp" type="number" min="0" value="'+esc(s.porpoise_contract_value!=null&&s.porpoise_contract_value>0?s.porpoise_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
     +'<div><label>Confirm word</label><input id="st_ow" value="'+esc(s.orca_code||"BONKORCA")+'"'+(ISADMIN?"":" disabled")+"></div>"
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_osave">Save the program</button>':'<span class="rowmeta">read only at your clearance</span>')
@@ -2084,6 +2091,8 @@ async function secSettings(){
         const body={};
         const ov=document.getElementById("st_ov").value;
         if(ov!=="") body.orca_contract_value=Number(ov);
+        const ovp=document.getElementById("st_ovp").value;
+        if(ovp!=="") body.porpoise_contract_value=Number(ovp);
         const ow=document.getElementById("st_ow").value.trim();
         if(ow) body.orca_code=ow;
         if(!Object.keys(body).length){ toast("Nothing to save yet. Type a number or a word.", true); return; }
