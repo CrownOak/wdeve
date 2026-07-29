@@ -236,6 +236,20 @@
   .kfr .kfa{ white-space:nowrap; color:var(--muted); font-size:11px; }
   .kfr:hover .kfw{ color:var(--ore); }
   .kfnote{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:8px; }
+  /* one expand control for every long list on this page */
+  .more{ display:flex; align-items:center; gap:8px; width:100%; margin-top:10px; padding:8px 10px;
+         background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+         font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+         cursor:pointer; transition:border-color .15s, color .15s; }
+  .more:hover{ border-color:var(--ore); color:var(--ore); }
+  .more .car{ margin-left:auto; transition:transform .2s ease; }
+  .more.open .car{ transform:rotate(180deg); }
+  @media(prefers-reduced-motion:reduce){ .more .car{ transition:none; } }
+  /* the headline above a list: the summary IS the information, the rows are the evidence */
+  .lsum{ display:flex; flex-wrap:wrap; gap:14px; align-items:baseline; margin:0 0 10px;
+         font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+  .lsum b{ color:var(--silver); font-size:15px; font-family:var(--display); letter-spacing:.02em; }
+  .lsum .warn b{ color:var(--amber); }
 
   /* ---------- referral link (Certified Goblin Dealer) ---------- */
   /* lives in MAIN now (it is an action, not a read), so it gets panel-weight padding and
@@ -1872,6 +1886,7 @@ function renderRailEvents(){
    feed self-updates once a day. GROUND view (officer/admin toggle): everything
    that died in our regions in 24h, straight off the tripwire's public /region. */
 var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
+var KF_VISIBLE = 6, HAULS_FIRST = 6;
 function kfAgo(t){
   var ms = Date.now() - (typeof t === "number" ? t : Date.parse(t));
   if (!isFinite(ms) || ms < 0) ms = 0;
@@ -1893,7 +1908,17 @@ function renderKillFeed(){
   if (mode === "corp"){
     var ks = (S.kf && S.kf.kills) || [];
     if (!ks.length) html += '<div class="emptyline">Quiet. Nothing on the board this week.</div>';
-    else html += '<div class="kfrows">' + ks.map(function(k){
+    else {
+    var wk = Date.now() - 7*86400000;
+    var recent = ks.filter(function(k){ return Date.parse(k.time) > wk; });
+    var lost = recent.filter(function(k){ return k.ours === "loss"; }).length;
+    var got = recent.length - lost;
+    var val = recent.reduce(function(a,k){ return a + (k.value||0); }, 0);
+    html += '<div class="lsum"><span><b>' + got + '</b> killed</span>' +
+            '<span class="' + (lost?'warn':'') + '"><b>' + lost + '</b> lost</span>' +
+            '<span><b>' + fmtIsk(val) + '</b> ISK on the board, 7d</span></div>';
+    var shown = S.kfAll ? ks : ks.slice(0, KF_VISIBLE);
+    html += '<div class="kfrows">' + shown.map(function(k){
       return '<a class="kfr ' + (k.ours === "loss" ? "loss" : "kill") + '" target="_blank" rel="noopener" ' +
         'href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
         '<span class="kft">' + (k.ours === "loss" ? "LOSS" : "KILL") + '</span>' +
@@ -1903,6 +1928,10 @@ function renderKillFeed(){
         '<span class="kfv">' + fmtIsk(k.value || 0) + '</span>' +
         '<span class="kfa">' + kfAgo(k.time) + '</span></a>';
     }).join("") + '</div>';
+    if (ks.length > KF_VISIBLE)
+      html += '<button class="more' + (S.kfAll?' open':'') + '" data-kfmore="1">' +
+              (S.kfAll ? 'show less' : 'show all ' + ks.length) + '<span class="car">&#9662;</span></button>';
+    }
     if (S.kf && S.kf.fetched_at)
       html += '<div class="kfnote">refreshes itself daily &middot; last sweep ' + kfAgo(S.kf.fetched_at) + '</div>';
   } else {
@@ -1920,6 +1949,8 @@ function renderKillFeed(){
   }
   el.style.display = "";
   el.innerHTML = html;
+  var kfm = el.querySelector("[data-kfmore]");
+  if (kfm) kfm.onclick = function(){ S.kfAll = !S.kfAll; renderKillFeed(); };
   Array.prototype.forEach.call(el.querySelectorAll("[data-kf]"), function(b){
     b.onclick = function(){
       S.kfMode = b.getAttribute("data-kf");
@@ -2091,7 +2122,7 @@ async function loadContracts(){
 }
 
 /* ============ my hauls (per op payout receipts, the trust surface) ============ */
-var HAULS_VISIBLE = 15;
+var HAULS_VISIBLE = 6;
 function renderHauls(){
   var el = $("panelHauls");
   if (S.hauls === null && !S.haulsLoading){ S.haulsLoading = true; loadHauls(); }
@@ -2103,6 +2134,21 @@ function renderHauls(){
   } else if (!S.hauls.length){
     html += '<div class="emptyline">No hauls logged yet. Get in a fleet and watch this number climb.</div>';
   } else {
+    /* SUMMARY FIRST. A run of 15 rows stops meaning anything; the totals are the point and
+       the rows are the evidence. */
+    var tot = 0, m3t = 0, owed = 0, owedN = 0, fresh = Date.now() - 14*86400000;
+    for (var q=0;q<S.hauls.length;q++){
+      var hh = S.hauls[q];
+      tot += Number(hh.payout)||0; m3t += Number(hh.m3)||0;
+      if (!hh.paid && (Number(hh.payout)||0) > 0 && Date.parse(hh.finished_at) > fresh){
+        owed += Number(hh.payout)||0; owedN++;
+      }
+    }
+    html += '<div class="lsum"><span><b>' + S.hauls.length + '</b> ops</span>' +
+            '<span><b>' + fmtIsk(tot) + '</b> ISK paid out</span>' +
+            '<span><b>' + fmtM3(m3t) + '</b> hauled</span>' +
+            (owedN ? '<span class="warn"><b>' + fmtIsk(owed) + '</b> awaiting payout &middot; ' + owedN + ' op' + (owedN===1?'':'s') + '</span>' : '') +
+            '</div>';
     var list = S.haulsAll ? S.hauls : S.hauls.slice(0, HAULS_VISIBLE);
     for (var i=0;i<list.length;i++){
       var h = list[i];
@@ -2115,15 +2161,20 @@ function renderHauls(){
           '<span class="cvol">at ' + esc(pct(h.rate)) + '</span>' +
           '<span class="cval">' + fmtIsk(h.payout) + ' ISK</span>' +
           '<span class="cvol">' + fmtM3(h.m3) + '</span>' +
-          (h.paid ? '<span class="pill acc">paid</span>' : '<span class="pill pend">unpaid</span>') +
+          /* The ledger's `paid` flag records whether a lead TICKED A BOX on the payout screen,
+             not whether ISK moved, and it defaults to true. Showing "unpaid" on a six month old
+             op therefore alarms people about bookkeeping, not money. So: say nothing when there
+             is nothing to say, and only flag a RECENT op that genuinely still owes. */
+          ((!h.paid && (Number(h.payout)||0) > 0 && Date.parse(h.finished_at) > fresh)
+            ? '<span class="pill pend">awaiting payout</span>' : '') +
           (beltMs > 0 ? '<span class="hrph">' + fmtIsk((Number(h.payout)||0) / (beltMs/3600000)) + '/hr</span>' : '') +
         '</div>' +
         '<div class="cdetail">' + haulDetailHtml(h) + '</div>' +
       '</div>';
     }
     if (!S.haulsAll && S.hauls.length > HAULS_VISIBLE){
-      html += '<div class="statbtns"><button class="mini" id="haulsAllBtn">Show all ' +
-              esc(String(S.hauls.length)) + '</button></div>';
+      html += '<button class="more" id="haulsAllBtn">show all ' + esc(String(S.hauls.length)) +
+              ' ops<span class="car">&#9662;</span></button>';
     }
   }
   if (S.haulsLedger && S.haulsLedger.warm === false){

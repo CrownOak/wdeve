@@ -610,7 +610,7 @@
     tq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
     answer.appendChild(tq);
     var trackWrap = el("div", "chips"); trackWrap.style.marginBottom = "14px";
-    [["corp","Join Wealthy Dropouts"],["gobsec","I want to shoot people"],["ally","My corp wants to mine with you"]].forEach(function(o){
+    [["corp","I want to mine"],["gobsec","I want to shoot"],["ally","We want to work with you"]].forEach(function(o){
       var c = el("button", "chip" + (ans.track === o[0] ? " onpick" : ""), o[1]); c.type = "button";
       c.addEventListener("click", function(){
         ans.track = o[0]; saveDraft();
