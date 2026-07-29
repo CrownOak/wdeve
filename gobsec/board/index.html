@@ -59,10 +59,17 @@
   /* band 2 */
   .posture{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
             text-transform:uppercase; font-size:22px; padding:8px 18px; border:1px solid var(--line); color:var(--silver); }
+  /* the stance palette, ONE language on every surface (board, desk, portal, fleet):
+     ROUTINE quiet silver · ESCORT amber caution · HUNT red active · STAND DOWN
+     steel blue restriction. Change it here, change it everywhere, or not at all. */
   .posture.ROUTINE{ color:var(--silver); }
   .posture.ESCORT{ color:var(--amber); border-color:var(--amber); }
   .posture.HUNT{ color:var(--gs); border-color:var(--gs); }
-  .posture.STANDDOWN{ color:var(--muted); }
+  .posture.STANDDOWN{ color:#8fb7c9; border-color:rgba(143,183,201,.5); }
+  .stword{ font-size:12.5px; color:var(--silver-dim); line-height:1.6; margin-top:10px;
+           border-left:2px solid var(--line-soft); padding-left:11px; font-style:italic; }
+  .stword b{ font-style:normal; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--muted); display:block; margin-bottom:2px; }
   .fcline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:11px; }
   .fcline b{ color:var(--ore); }
   .orders{ margin-top:14px; border-top:1px solid var(--line-soft); }
@@ -287,6 +294,10 @@ function renderBrief(b, wire){
         (st.until ? ' &middot; hunting session, ' + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + 'm left' : '') +
         (st.why ? ' &middot; &ldquo;' + esc(st.why) + '&rdquo;' : '') +
         (st.at ? ' &middot; set ' + ago(st.at) : '') + '</div>'
+      : '') +
+    // what the miners were told, verbatim — pilots should know the word that went out
+    (p !== "ROUTINE" && st.member
+      ? '<div class="stword"><b>the word to the miners</b>' + esc(st.member) + '</div>'
       : '');
   $("fc").innerHTML = b.fc
     ? 'FC today: <b data-i18n-skip>' + esc(b.fc) + '</b>'

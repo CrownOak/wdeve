@@ -424,10 +424,16 @@ tr.haulrow{ cursor:pointer; }
         var st = b.stance || {}; var p = st.key || b.posture || "ROUTINE";
         if (p === "ROUTINE") return;
         var el = document.getElementById("stanceBanner");
-        var amber = (p === "ESCORT");
-        if (amber){ el.style.borderColor = "rgba(233,196,106,.45)"; el.style.borderLeftColor = "#e9c46a"; el.style.color = "#e9c46a"; }
+        // stance palette, same language as the board / desk / portal:
+        // ESCORT amber · HUNT red · STAND DOWN steel blue
+        var tone = p === "ESCORT" ? ["rgba(233,196,106,.45)", "#e9c46a", "#e9c46a"]
+                 : p === "STAND DOWN" ? ["rgba(143,183,201,.45)", "#8fb7c9", "#8fb7c9"]
+                 : ["rgba(255,71,87,.4)", "#ff4757", "#ff8a93"];
+        el.style.borderColor = tone[0]; el.style.borderLeftColor = tone[1]; el.style.color = tone[2];
+        var clock = (p === "HUNT" && st.until)
+          ? " · " + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + "m left" : "";
         // a nudge, not an order: lowercase state, the caring line does the talking
-        el.textContent = "GOBSEC, a heads up · " + p.toLowerCase() + " — "
+        el.textContent = "GOBSEC, a heads up · " + p.toLowerCase() + clock + " — "
           + (st.member || "worth a glance at the board before you undock.")
           + (st.why ? " (" + st.why + ")" : "");
         el.style.display = "block";

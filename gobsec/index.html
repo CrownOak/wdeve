@@ -78,8 +78,11 @@
        color:var(--muted); margin-bottom:6px; }
   .hposture{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
              text-transform:uppercase; font-size:20px; padding:6px 14px; border:1px solid var(--line); color:var(--silver); }
+  /* stance palette, same language as the board / portal / fleet:
+     ESCORT amber · HUNT red · STAND DOWN steel blue · ROUTINE quiet */
   .hposture.ESCORT{ color:var(--amber); border-color:var(--amber); }
-  .hposture.HUNT, .hposture.STANDDOWN{ color:var(--gs); border-color:var(--gs); }
+  .hposture.HUNT{ color:var(--gs); border-color:var(--gs); }
+  .hposture.STANDDOWN{ color:#8fb7c9; border-color:rgba(143,183,201,.5); }
   .hwhy{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px; max-width:260px; line-height:1.5; }
   .hv{ font-size:14px; color:var(--silver); line-height:1.5; }
   .hv b{ color:var(--ore); font-weight:700; }

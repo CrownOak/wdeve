@@ -98,8 +98,12 @@
   .gsb .gpost{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
                text-transform:uppercase; font-size:15px; padding:3px 10px; border:1px solid var(--line);
                color:var(--silver); margin-bottom:8px; }
+  /* stance palette, same language as the board / desk / fleet */
   .gsb .gpost.ESCORT{ color:var(--amber); border-color:var(--amber); }
-  .gsb .gpost.HUNT, .gsb .gpost.STANDDOWN{ color:#ff4757; border-color:#ff4757; }
+  .gsb .gpost.HUNT{ color:#ff4757; border-color:#ff4757; }
+  .gsb .gpost.STANDDOWN{ color:#8fb7c9; border-color:rgba(143,183,201,.5); }
+  .gsb .gword{ font-size:11.5px; line-height:1.55; color:var(--silver-dim); margin:-2px 0 10px;
+               border-left:2px solid var(--line-soft); padding-left:9px; font-style:italic; }
   .gsb .gv{ font-size:12.5px; line-height:1.55; color:var(--silver-dim); margin-bottom:10px; }
   .gsb .gv.hot{ color:#ff8a93; }
   .gsb .grow{ display:flex; align-items:baseline; gap:8px; font-family:var(--mono); font-size:10.5px;
@@ -1902,11 +1906,20 @@ function renderGssBrief(){
       '<span data-i18n-skip>' + sys + '</span>' +
       '<span class="gst ' + h.st + '" style="margin-left:auto">' + h.st + (h.k24 ? " · " + h.k24 : "") + '</span></div>';
   }
+  // an active stance speaks in its own words (the nudge), with the hunt clock when running
+  var word = "";
+  if (p !== "ROUTINE" && stance.member){
+    var clock = (p === "HUNT" && stance.until)
+      ? ' <span style="font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--muted)">· ' +
+        Math.max(0, Math.round((stance.until - Date.now()) / 60000)) + 'm left</span>' : '';
+    word = '<div class="gword">' + esc(stance.member) + clock + '</div>';
+  }
   el.innerHTML =
     '<div class="gsb">' +
       '<div class="gh"><img src="/portal/intel/gss-96.png" alt="GSS seal">' +
         '<div><div class="t">GOBSEC</div><div class="s">the brief</div></div></div>' +
       '<div class="gpost ' + esc(p.replace(/\s/g, "")) + '">' + esc(p) + '</div>' +
+      word +
       '<div class="gv' + (hot ? " hot" : "") + '">' + verdict + '</div>' +
       chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
       (say ? '<div class="gsay">' + say + '</div>' : '') +
