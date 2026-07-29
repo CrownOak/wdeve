@@ -177,17 +177,17 @@ async function fillFinder(){
   try{
     var r=await fetch("/gobsec/finder/stamp.json",{cache:"no-store"});
     if(r.ok){ var d=await r.json();
-      var n=d.rows||d.count||d.n;
+      var n=d.rows||d.count||d.n, when=d.baked||d.at;
       $("stFinder").innerHTML=(n?("<b>"+n+"</b> killers on the board"):"board baked")+
-        (d.at?(" &middot; "+esc(String(d.at).slice(0,10))):"");
+        (when?(" &middot; baked "+esc(String(when).slice(0,10))):"");
       return; }
   }catch(e){}
   $("stFinder").textContent="ranked killers, rebuilt daily";
 }
 async function fillIntel(gss){
   if(!gss){ $("stIntel").textContent="GSS clearance only"; return; }
-  try{ var g=await api("gss/entities?limit=1");
-    var n=(g && (g.total||g.count)) || null;
+  try{ var g=await api("gss/entities");
+    var n=(g && Array.isArray(g.entities)) ? g.entities.length : null;
     $("stIntel").innerHTML = n?("<b>"+n+"</b> files on record"):"files on record";
   }catch(e){ $("stIntel").textContent="files on record"; }
 }
