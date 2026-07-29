@@ -39,7 +39,9 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .howtox{ position:absolute; top:6px; right:9px; background:none; border:none; color:var(--red);
   cursor:pointer; font-size:16px; line-height:1; padding:2px; }
 .howtox:hover{ filter:brightness(1.25); }
-.howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-bottom:14px; }
+.howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+/* the one header band: everything at one height, wraps as a unit on phones */
+.toggle{ flex-wrap:wrap; row-gap:8px; }
 .howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
   font-size:11.5px; text-decoration:underline dotted; padding:0; }
 .howtomini button:hover{ color:var(--ore); }
@@ -447,7 +449,6 @@ tr.haulrow{ cursor:pointer; }
     copy with <kbd>Ctrl</kbd>+<kbd>C</kbd>, and paste it here. The ledger values it at Jita and tracks
     your tab live, next to everyone else's. When the op wraps, fleet command runs the payout at the
     buyback rate. The ledger saw you drop it, so no arguing at the end.</div>
-    <div class="howtomini" id="howtomini" style="display:none"><button id="howtoshow">How it works</button> &middot; <button id="howtotour">take the tour</button></div>
 
     <!-- gate: refine Project Tracker idiom. Password goes out as X-Token; it never lives in this file. -->
     <div id="gate" class="howto" style="display:none"><b>Fleet Drop Ledger.</b> The round ledger, roster and
@@ -467,9 +468,14 @@ tr.haulrow{ cursor:pointer; }
         <datalist id="whonames"></datalist>
         <button id="whosave" class="gobtn">That's me</button><span id="werr" class="err"></span></div></div>
 
+      <!-- ONE header band (Kyle 7/29: no stacked strips above the grid). Left
+           cluster: back + tabs + help. Right cluster: role + session. Every
+           control lives at one height; nothing floats on its own line. -->
       <div class="toggle">
+        <button id="toBoard" class="fbbackbtn" style="display:none">&larr; FLEET SELECT</button>
         <button id="tFleet" class="on">Fleet</button>
         <button id="tHauls">Haul Log</button>
+        <span class="howtomini" id="howtomini" style="display:none"><button id="howtoshow">How it works</button> &middot; <button id="howtotour">take the tour</button></span>
         <span id="rolechip" class="rolechip" style="margin-left:auto"></span>
         <button id="rswbtn" class="link">switch</button>
         <button id="flock" class="link">lock</button>
@@ -519,7 +525,6 @@ tr.haulrow{ cursor:pointer; }
       </div>
 
       <div id="fleetTab">
-        <div class="fbback"><button id="toBoard" class="fbbackbtn">&larr; FLEET SELECT</button></div>
         <div class="fgrid">
           <!-- scout column (Kyle: at a glance, left of the paste box). Static DOM
                per DR-FLEET-12: only #scout / #scfrom / #scfoot / #sckillwrap
@@ -807,10 +812,14 @@ tr.haulrow{ cursor:pointer; }
   var LS_VIEW="bonk_fleet_view", SOLO_LS="bonk_solo_v1", curView="ledger", WORKS_INFO=null;
   function soloGet(){ try{ return JSON.parse(lsGet(SOLO_LS)||"null"); }catch(e){ return null; } }
   function soloSet(s){ lsSet(SOLO_LS, JSON.stringify(s)); }
+  // the back button lives in the header band now; it shows only where it acts
+  // (ledger view, Fleet tab), same reach it had when it sat inside the grid
+  function syncTopBack(){ var b=el("toBoard"); if(b) b.style.display=(curView==="ledger"&&tab==="fleet")?"":"none"; }
   function showView(v){ curView=v; lsSet(LS_VIEW,v);
     el("fleetTab").style.display = v==="ledger"?"":"none";
     el("fleetBoard").style.display = v==="board"?"":"none";
     el("soloView").style.display = v==="solo"?"":"none";
+    syncTopBack();
     if(v==="board"){ fetchWorks(); renderBoard(); }
     if(v==="solo"){ soloEnter(); }
     if(v==="ledger"){ bump(); } }
@@ -2667,8 +2676,9 @@ tr.haulrow{ cursor:pointer; }
   function setTab(t){ tab=t; bump();
     el("tFleet").classList.toggle("on", t==="fleet");
     el("tHauls").classList.toggle("on", t==="hauls");
-    el("fleetTab").style.display = t==="fleet" ? "" : "none";
+    el("fleetTab").style.display = (t==="fleet" && curView==="ledger") ? "" : "none";
     el("haulTab").style.display  = t==="hauls" ? "" : "none";
+    syncTopBack();
     if(t==="hauls") loadHauls(); }
   el("tFleet").onclick=function(){ setTab("fleet"); };
   el("tHauls").onclick=function(){ setTab("hauls"); };
