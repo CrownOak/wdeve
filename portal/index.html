@@ -2379,9 +2379,22 @@ function renderIndustry(){
   }
   var counted = Number(S.industry.counted_isk) || 0;
   var p = Math.min(100, Math.floor(counted / 1e9 * 100));
-  html += '<div class="medprog"><div class="pl">' + fmtIsk(counted) + ' / 1B ISK &middot; ' + p + '%</div>' +
-          '<div class="pbar"><i style="width:' + p + '%"></i></div></div>';
-  html += '<div class="indform">' +
+  var conts = S.industry.contributions || [];
+  var nPend = 0, nCount = 0;
+  for (var q=0;q<conts.length;q++){
+    var st0 = String(conts[q].status||"pending");
+    if (st0 === "counted") nCount++; else if (st0 === "pending") nPend++;
+  }
+  /* The data card carries the state; the list is evidence and stays shut by default. */
+  html += '<div class="lsum"><span><b>' + fmtIsk(counted) + '</b> counted</span>' +
+          '<span><b>' + p + '%</b> of 1B</span>' +
+          '<span><b>' + nCount + '</b> logged</span>' +
+          (nPend ? '<span class="warn"><b>' + nPend + '</b> awaiting review</span>' : '') +
+          '</div>' +
+          '<div class="pbar"><i style="width:' + p + '%"></i></div>';
+  html += '<button class="more" id="indFormBtn">' + (S.indForm ? 'close' : 'log finished goods') +
+           '<span class="car">&#9662;</span></button>' +
+           '<div class="indform"' + (S.indForm ? '' : ' hidden') + '>' +
     '<textarea id="indRaw" placeholder="Paste finished goods from the EVE client, name then quantity per line"></textarea>' +
     '<input id="indNote" type="text" maxlength="200" placeholder="note for leadership (optional)">' +
     '<div class="formerr" id="indErr"></div>' +
@@ -2392,9 +2405,10 @@ function renderIndustry(){
   if (!list.length){
     html += '<div class="emptyline">Nothing logged. Build something. Feed the machine.</div>';
   } else {
+    var shownI = S.indAll ? list : list.slice(0, 4);
     html += '<div class="minehdr">Contributions</div>';
-    for (var i=0;i<list.length;i++){
-      var c = list[i];
+    for (var i=0;i<shownI.length;i++){
+      var c = shownI[i];
       var status = String(c.status || "pending");
       var chip = status === "counted" ? '<span class="pill acc">counted</span>'
                : status === "rejected" ? '<span class="pill rej">rejected</span>'
@@ -2409,10 +2423,17 @@ function renderIndustry(){
       (c.note ? '<div class="pnote">note: ' + esc(c.note) + '</div>' : '') +
       '</div>';
     }
+    if (list.length > 4)
+      html += '<button class="more' + (S.indAll ? ' open' : '') + '" id="indMoreBtn">' +
+              (S.indAll ? 'show less' : 'show all ' + list.length) + '<span class="car">&#9662;</span></button>';
   }
   el.innerHTML = html;
   var btn = $("indSubmit");
   if (btn) btn.addEventListener("click", submitIndustry);
+  var fb = $("indFormBtn");
+  if (fb) fb.onclick = function(){ S.indForm = !S.indForm; renderIndustry(); };
+  var mb = $("indMoreBtn");
+  if (mb) mb.onclick = function(){ S.indAll = !S.indAll; renderIndustry(); };
 }
 async function submitIndustry(){
   var err = $("indErr"); err.textContent = "";
@@ -2622,8 +2643,9 @@ function renderESI(){
   // character is attached that question is settled and the paragraph is just noise sitting on
   // the panel forever. A standing SECURE mark says the same thing in two words.
   if ((e.characters || []).length){
-    h += '<div class="esisec"><span class="lock">&#128274;</span><b>SECURE</b>'
-      + '<span class="sx">connected through EVE SSO &middot; we never see your login</span></div>';
+    h += '<div class="esisec"><span class="lock">&#128274;</span>'
+      + '<div class="sxwrap"><b>SECURE</b>'
+      + '<span class="sx">EVE SSO &middot; read only &middot; mining ledger</span></div></div>';
   } else {
     h += '<div class="esidisc">'
       + '<b>You are logging in on EVE\'s own site, not ours.</b> The button below sends you to '
