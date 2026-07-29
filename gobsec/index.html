@@ -199,7 +199,10 @@ var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
 function $(i){ return document.getElementById(i); }
 function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
-async function api(p){ var r=await fetch("/api/"+p,{credentials:"same-origin"});
+/* no-store: this is a command surface. The worker marks reads max-age=60 for the
+   quiet pages, but here a stance flip must render on the very next fetch, not in
+   a minute (the cache is exactly why apply used to look dead). */
+async function api(p){ var r=await fetch("/api/"+p,{credentials:"same-origin",cache:"no-store"});
   if(!r.ok) throw new Error(String(r.status)); return r.json(); }
 
 /* ---- the checkpoint: looks like a way in, is a tripwire ---- */
@@ -319,13 +322,14 @@ async function fillHud(who){
       +'<span data-i18n-skip>'+esc(h.suggest.reason)+'</span>'
       +'<button id="hudSugGo">apply</button></div>';
     $("hudSugGo").onclick=async function(){
-      this.disabled=true;
+      var btn=this; btn.disabled=true;
       try{
-        await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+        var r=await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({posture:h.suggest.stance, why:h.suggest.reason})});
+        if(!r.ok) throw new Error("http "+r.status);
         fillHud(who); fillBoard();
-      }catch(e){ this.disabled=false; }
+      }catch(e){ btn.disabled=false; btn.textContent="did not land, retry"; }
     };
   } else { sug.innerHTML=""; }
 
@@ -382,11 +386,12 @@ async function fillHud(who){
         if(k===p && k!=="HUNT" && !$("hudWhyIn").value.trim()) return;
         b.disabled=true;
         try{
-          await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+          var r=await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({posture:k, why:$("hudWhyIn").value.trim()})});
+          if(!r.ok) throw new Error("http "+r.status);
           fillHud(who); fillBoard();
-        }catch(e){ b.disabled=false; }
+        }catch(e){ b.disabled=false; b.textContent="did not land, retry"; }
       };
     });
   }
