@@ -1972,15 +1972,13 @@ async function secSettings(){
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_stsave">Save the fund</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div>";
-  /* Orca program: members with fleet rights see ONE hull number, the contract to corp
-     buyback. The real hull number never renders on any member surface. */
-  h+='<div class="panel"><div class="ptitle">The Orca program <span class="pn">&#128011; fleet rights + contract to corp</span></div>'
-    +'<div class="rowmeta" style="margin-bottom:10px">Members who confirm an Orca get the right to run their own fleets. '
-    +'They see exactly ONE hull figure: the contract to corp number below, the flat buyback we pay when a goblin contracts an Orca hull to the corp. '
-    +'The real hull value stays off the site entirely. The confirm word gates the self serve door on the portal; rotate it to close the door.</div>'
+  /* Orca program: fleet rights for whale owners, nothing more. Fleet money is the
+     ledger's member basis, same as every op; no hull numbers live here. */
+  h+='<div class="panel"><div class="ptitle">The Orca program <span class="pn">&#128011;&#128044; fleet rights</span></div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">Members who confirm an Orca or a Porpoise get the right to run their own fleets. '
+    +'Their ops pay at buyback through the ledger like every op; settlement stays with fleet command. '
+    +'The confirm word gates the self serve door on the portal; rotate it to close the door. Per goblin grant and revoke lives in the member drawer.</div>'
     +'<div class="frm">'
-    +'<div><label>Orca &middot; contract to corp (ISK)</label><input id="st_ov" type="number" min="0" value="'+esc(s.orca_contract_value!=null&&s.orca_contract_value>0?s.orca_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
-    +'<div><label>Porpoise &middot; contract to corp (ISK)</label><input id="st_ovp" type="number" min="0" value="'+esc(s.porpoise_contract_value!=null&&s.porpoise_contract_value>0?s.porpoise_contract_value:"")+'"'+(ISADMIN?"":" disabled")+"></div>"
     +'<div><label>Confirm word</label><input id="st_ow" value="'+esc(s.orca_code||"BONKORCA")+'"'+(ISADMIN?"":" disabled")+"></div>"
     +"</div>"
     +(ISADMIN?'<button class="inv" id="st_osave">Save the program</button>':'<span class="rowmeta">read only at your clearance</span>')
@@ -2089,15 +2087,11 @@ async function secSettings(){
       const btn=this;
       busy(btn, async function(){
         const body={};
-        const ov=document.getElementById("st_ov").value;
-        if(ov!=="") body.orca_contract_value=Number(ov);
-        const ovp=document.getElementById("st_ovp").value;
-        if(ovp!=="") body.porpoise_contract_value=Number(ovp);
         const ow=document.getElementById("st_ow").value.trim();
         if(ow) body.orca_code=ow;
-        if(!Object.keys(body).length){ toast("Nothing to save yet. Type a number or a word.", true); return; }
+        if(!Object.keys(body).length){ toast("Nothing to save. The word is the only lever here.", true); return; }
         await api("/api/admin/settings", body);
-        toast("Orca program saved. That is the only number they will ever see.");
+        toast("Orca program saved.");
         secSettings();
       });
     });
