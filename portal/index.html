@@ -120,6 +120,18 @@
                text-transform:uppercase; color:rgba(255,71,87,.85); text-decoration:none;
                border:1px solid rgba(255,71,87,.4); padding:8px 0; transition:background .15s,color .15s; }
   .gsb .gjoin:hover{ background:#ff4757; color:#08090a; }
+  /* the Foreman: same anatomy as the GSS brief, ore accent. The rail reads as
+     one family: the red block watches, the green block directs. */
+  .gsb.fmn{ border-left-color:var(--ore); }
+  .fmn .fmn-ico{ width:38px; height:38px; flex:0 0 38px; display:flex; align-items:center; justify-content:center;
+                 font-size:20px; border:1px solid var(--line-soft); color:var(--ore); }
+  .fmn .fv{ color:var(--silver); font-size:11.5px; }
+  .fmn .frs{ font-family:var(--mono); font-size:10px; color:var(--muted); line-height:1.5; margin:1px 0 5px 82px; }
+  .fmn .fro{ color:var(--ore); }
+  .fmn .glink:hover{ color:var(--ore); }
+  .fmn .fmnbar{ margin:5px 0 3px; }
+  .fmn .gs-ctl{ margin-left:auto; }
+  @media(max-width:560px){ .fmn .frs{ margin-left:0; } }
   .allywelcome{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--amber);
                 padding:11px 15px; margin:0 0 12px; font-size:13px; line-height:1.55; color:var(--silver-dim); }
   .idacts{ margin-left:auto; display:flex; gap:10px; align-items:center; }
@@ -1765,67 +1777,55 @@ function hangarAge(g){
     + (d === 0 ? 'counted today' : 'counted ' + d + (d === 1 ? ' day ago' : ' days ago')) + '</span>';
 }
 function renderGoal(){
-  var g = S.works && S.works.goal; if (!g) return '';
+  var w = S.works || {};
+  var f = w.foreman || null;
+  var g = w.goal || null;
+  if (!f && !g) return '';
   var off = isOfficer();
-  var built = Number(g.built)||0, target = Math.max(1, Number(g.target)||1);
-  var pct = Math.max(0, Math.min(100, Math.round(built*100/target)));
-  var complete = g.status==='done' || built >= target;
-  var ctl = off ? '<span class="gs-ctl">'
-    + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
-    + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
-  var bar = '<div class="gs-nums"><b data-i18n-skip>'+built.toLocaleString()+'</b> / <span data-i18n-skip>'+target.toLocaleString()+'</span> <span>built</span> &middot; '+pct+'%'
-      + (g.builders ? ' &middot; <span data-i18n-skip>'+g.builders+'</span> <span>'+(g.builders===1?'goblin on the line':'goblins on the line')+'</span>' : '')
-      + '</div><div class="pbar gsbar"><i style="width:'+pct+'%"></i></div>';
-  // IN: what the machine eats — the ore doctrine + the fuel gauge
-  var inSec = '';
-  var co = S.works.coreOres;
-  if (co && co.length){
-    // ONE instruction, and it cannot go stale. The old per mineral day counts came off a
-    // hand pasted hangar snapshot nobody could keep current, so they published precise
-    // numbers that silently drifted wrong. The PRIORITY tag already says what we are
-    // short of, so this states it plainly instead of counting it badly.
-    var chips = whatToMine(g, co);
-    if (!chips){
-      chips = '<div class="gs-mine gs-mine-none"><b>NO CALL YET</b>'
-            + '<i> Nothing is tagged priority right now, so mine any of the above and log it. '
-            + 'An officer sets the call from the hangar numbers.</i></div>';
+  /* THE FOREMAN (spec v1): four directive lines and a bar, computed server side.
+     Same block anatomy as the GSS brief above it, ore accent instead of red,
+     so the rail reads as one family of command surfaces. */
+  var sub = 'computed from the line &middot; dictate wins';
+  if (f && f.cold) sub = 'assay asleep' + (f.cold_days ? ' ' + f.cold_days + 'd' : '') + ' &middot; numbers cold';
+  var h = '<div class="gsb fmn">'
+    + '<div class="gh"><span class="fmn-ico">&#9874;</span>'
+    + '<div><div class="t">The Foreman</div><div class="s">' + sub + '</div></div></div>';
+  function drow(k, v, reason){
+    return '<div class="grow"><span class="gk">' + k + '</span>'
+      + '<span class="fv" data-i18n-skip>' + v + '</span></div>'
+      + (reason ? '<div class="frs">' + reason + '</div>' : '');
+  }
+  if (f && f.mine)
+    h += drow('Mine', esc(String(f.mine.ore).toUpperCase()), esc(f.mine.reason));
+  if (f && f.build){
+    var br = esc(f.build.reason);
+    if (off && f.build.officer){
+      var o = f.build.officer;
+      br += '<span class="fro"> &middot; ' + (o.unit_profit/1e6).toFixed(1) + 'M/unit &middot; '
+          + o.margin + '% &middot; ' + (o.slot_hour/1e6).toFixed(1) + 'M/slot hr</span>';
     }
-    chips += renderHangar(g);
-    inSec = '<div class="gs-sec"><div class="gs-k">&#9935; IN &middot; WHAT THE MACHINE EATS</div><div class="gs-orerow">'
-      + co.map(function(o){ var pri = o.role==='priority';
-        return '<span class="gs-ore'+(pri?' gs-ore-pri':'')+'" data-i18n-skip>'+esc(String(o.ore||'').toUpperCase())
-          + ' <i>&rarr; '+esc(o.min||'')+'</i>'+(pri?' <b>PRIORITY</b>':(o.role&&o.role!=='staple'?' <u>'+esc(o.role)+'</u>':''))+'</span>'; }).join('')
-      + '</div>' + (g.oreNote?'<div class="gs-note">'+esc(g.oreNote)+'</div>':'') + chips + '</div>';
+    h += drow('Build', esc(f.build.item), br);
   }
-  // OUT: what the machine makes — one unnamed segment per line, lighting up as
-  // the program matures. The full NAMED list lives on the Works board below.
-  var outSec = '';
-  var L = S.works.lines;
-  if (L && L.length){
-    var counts = {need:0, researching:0, ready:0, running:0};
-    var segs = L.map(function(r){ counts[r.status] = (counts[r.status]||0)+1;
-      return '<i class="gs-seg gs-seg-'+esc(r.status)+'" title="'+esc(r.item)+' &middot; '+esc(r.status)+'"></i>'; }).join('');
-    var sum = [];
-    if (counts.running) sum.push('<b data-i18n-skip>'+counts.running+'</b> <span>running</span>');
-    if (counts.ready) sum.push('<b data-i18n-skip>'+counts.ready+'</b> <span>ready</span>');
-    if (counts.researching) sum.push('<b data-i18n-skip>'+counts.researching+'</b> <span>in the lab</span>');
-    if (counts.need) sum.push('<b data-i18n-skip>'+counts.need+'</b> <span>to buy</span>');
-    outSec = '<div class="gs-sec"><div class="gs-k">&#127981; OUT &middot; WHAT THE MACHINE MAKES</div>'
-      + '<div class="gs-segs">'+segs+'</div>'
-      + '<div class="gs-segsum"><span data-i18n-skip>'+L.length+'</span> <span>module lines</span> &middot; '+sum.join(' &middot; ')
-      + ' &middot; <a class="gs-lnk" href="#worksboard">full list &darr;</a></div></div>';
+  if (f && f.short){
+    var sv = esc(f.short.mineral) + ' &middot; ' + (f.short.days <= 0 ? 'OUT' : '~' + f.short.days + 'd');
+    var sr = esc(f.short.fix) + (f.short.stale ? ' &middot; hangar numbers are ' + f.short.stale_days + 'd old' : '');
+    h += drow('Short', sv, sr);
   }
-  // YOUR PART: the three verbs, permanent, links included
-  var verbs = '<div class="gs-sec"><div class="gs-k">&#129680; YOUR PART, ON THE WHOLE</div><div class="gs-verbs">'
-    + '<div class="gs-verb"><b>MINE</b><span> the priority ore, log every drop &middot; </span><a class="gs-lnk" href="/fleet/">open FLEET</a></div>'
-    + '<div class="gs-verb"><b>HAUL</b><span> it home to the Den &middot; buyback pays like always</span></div>'
-    + '<div class="gs-verb"><b>BUILD</b><span> from the board if you have slots &middot; jobs count themselves &middot; </span><a class="gs-lnk" href="#worksboard">THE WORKS</a></div>'
-    + '</div></div>';
-  return '<div class="goalstrip'+(complete?' gs-complete':'')+'">' +
-    '<div class="gs-badge">'+(complete?'&#9876; COMPLETE':'&#9874; CURRENT OP')+'</div>' +
-    '<div class="gs-name"><span data-i18n-skip>'+esc(g.name)+'</span>'+ctl+'</div>' +
-    (g.blurb?'<div class="gs-blurb">'+esc(g.blurb)+'</div>':'') +
-    bar + inSec + outSec + verbs + '</div>';
+  if (g){
+    var built = Number(g.built)||0, target = Math.max(1, Number(g.target)||1);
+    var pct = Math.max(0, Math.min(100, Math.round(built*100/target)));
+    var complete = g.status==='done' || built >= target;
+    var ctl = off ? ' <span class="gs-ctl">'
+      + (g.status==='active' && built>=target ? '<button class="wk-b" onclick="goalDone()" title="mark complete">&#10003;</button>' : '')
+      + '<button class="wk-b" onclick="goalArchive()" title="archive this goal">&times;</button></span>' : '';
+    h += '<div class="grow"><span class="gk">' + (complete ? 'Done' : 'Goal') + '</span>'
+      + '<span class="fv" data-i18n-skip>' + esc(g.name) + '</span>' + ctl + '</div>'
+      + '<div class="pbar gsbar fmnbar"><i style="width:' + pct + '%"></i></div>'
+      + '<div class="frs" data-i18n-skip>' + built.toLocaleString() + ' / ' + target.toLocaleString() + ' &middot; ' + pct + '%'
+      + (g.builders ? ' &middot; ' + g.builders + (g.builders===1?' goblin':' goblins') + ' on the line' : '') + '</div>';
+  }
+  h += '<a class="glink" href="#worksboard">the works board &darr;</a></div>';
+  return h;
 }
 function goalDone(){ worksAct({action:'goal-done'}); }
 function goalArchive(){ if (confirm('Archive the current op goal? The strip disappears until a new goal is dictated.')) worksAct({action:'goal-archive'}); }
@@ -1910,14 +1910,17 @@ function renderGssBrief(){
       chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
       (say ? '<div class="gsay">' + say + '</div>' : '') +
       '<a class="glink" href="/gobsec/board/">the full board &rarr;</a>' +
-      '<div class="gsig">Miners dock up. We don’t.</div>' +
+      '<div class="gsig">Somebody&rsquo;s gotta undock.</div>' +
       '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
     '</div>';
 }
 function renderWorks(){
   var w = S.works;
   var off = isOfficer();
-  if (!w || (!(w.building||[]).length && !(w.need||[]).length && !off)) return '';
+  if (!w) return '';
+  // members keep the board whenever ANYTHING renders on it (the feed moved here
+  // from the rail, so empty manual lists must not blank the whole panel)
+  if (!off && !(w.building||[]).length && !(w.need||[]).length && !(w.lines||[]).length && !w.goal) return '';
   function bchip(st){ return '<span class="wk-st wk-'+esc(st)+'">'+esc(st)+'</span>'; }
   function ctl(r, adv){ return off ? '<span class="wk-ctl"><button class="wk-b" onclick="worksAdvance('+r.id+')" title="'+adv+'">'+(adv==='mark sourced'?'&#10003;':'&#8250;')+'</button><button class="wk-b" onclick="worksRemove('+r.id+')" title="remove">&times;</button></span>' : ''; }
   function brow(r){
@@ -1957,9 +1960,24 @@ function renderWorks(){
           + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
       + '</div></div>';
   }
+  /* THE FEED: the detail the Foreman compresses. Ore doctrine chips, the full
+     mine call (where, how much), and the hangar runway all live HERE now, off
+     the rail — the sidebar directs, the board explains (FOREMAN spec law 2). */
+  var feedSec = '';
+  var g = w.goal, co = w.coreOres || [];
+  if (g || (co && co.length)){
+    var oreRow = (co && co.length)
+      ? '<div class="gs-orerow">' + co.map(function(o){ var pri = o.role==='priority';
+          return '<span class="gs-ore'+(pri?' gs-ore-pri':'')+'" data-i18n-skip>'+esc(String(o.ore||'').toUpperCase())
+            + ' <i>&rarr; '+esc(o.min||'')+'</i>'+(pri?' <b>PRIORITY</b>':(o.role&&o.role!=='staple'?' <u>'+esc(o.role)+'</u>':''))+'</span>'; }).join('')
+        + '</div>' + (g && g.oreNote ? '<div class="gs-note">'+esc(g.oreNote)+'</div>' : '')
+      : '';
+    feedSec = '<div class="wk-lines"><div class="wkcol-h">The feed &middot; ore doctrine + hangar runway</div>'
+      + oreRow + (g ? (whatToMine(g, co) || '') + renderHangar(g) : '') + '</div>';
+  }
   return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
     '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
-    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + linesGrid + addForm + '</div>';
+    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + linesGrid + feedSec + addForm + '</div>';
 }
 /* THE ASSAY ore board. Officer/GSS only while we test — the endpoint enforces it too,
    this just avoids rendering an empty card for members. When it opens to everyone the

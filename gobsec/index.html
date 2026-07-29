@@ -95,6 +95,24 @@
                   font-family:var(--mono); font-size:11px; padding:7px 10px; }
   .hswitch input:focus{ outline:none; border-color:var(--gsdim); }
   .hnote{ font-family:var(--mono); font-size:9.5px; color:var(--muted); width:100%; }
+  .hsug{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; padding:9px 12px;
+         background:rgba(255,71,87,.05); border:1px dashed var(--gsdim); font-family:var(--mono);
+         font-size:11px; color:var(--silver-dim); }
+  .hsug b{ color:var(--gs); letter-spacing:.1em; }
+  .hsug button{ margin-left:auto; background:transparent; border:1px solid var(--gs); color:var(--gs);
+                font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                padding:5px 12px; cursor:pointer; }
+  .hsug button:hover{ background:var(--gs); color:#08090a; }
+  .hplay{ margin-top:12px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .hplay .pt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+              font-size:13px; color:var(--gs); }
+  .hplay .pl{ font-size:12.5px; color:var(--silver-dim); line-height:1.6; margin-top:6px; }
+  .hplay .pc{ display:flex; gap:10px; align-items:center; margin-top:9px; }
+  .hplay .pc button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+                     font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                     padding:6px 12px; cursor:pointer; }
+  .hplay .pc button:hover{ border-color:var(--gs); color:var(--gs); }
+  .hplay .pc .ok{ font-family:var(--mono); font-size:10px; color:var(--ore); }
   @media(max-width:600px){ .ghead img{ width:44px; height:44px; } .tool .td{ min-height:0; } }
 </style></head>
 <body>
@@ -130,6 +148,8 @@
         </div>
       </div>
       <div class="hswitch" id="hudSwitch" style="display:none"></div>
+      <div id="hudSug"></div>
+      <div id="hudPlay"></div>
     </div>
     <div class="deck">
       <a class="tool" href="/gobsec/board/">
@@ -284,6 +304,61 @@ async function fillHud(who){
   } else if((av.online||0)===0){
     $("hudPilots").textContent="counts come from attached ESI characters, refreshed a few times a day";
   }
+  /* THE WIRE RECOMMENDS: a suggestion with the reason spelled out. One click applies
+     it (the reason becomes the why). The wire never flips anything by itself. */
+  var sug=$("hudSug");
+  if(h.suggest && who && (who.role==="officer"||who.role==="admin")){
+    sug.innerHTML='<div class="hsug">the wire recommends <b>'+esc(h.suggest.stance)+'</b>'
+      +'<span data-i18n-skip>'+esc(h.suggest.reason)+'</span>'
+      +'<button id="hudSugGo">apply</button></div>';
+    $("hudSugGo").onclick=async function(){
+      this.disabled=true;
+      try{
+        await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({posture:h.suggest.stance, why:h.suggest.reason})});
+        fillHud(who); fillBoard();
+      }catch(e){ this.disabled=false; }
+    };
+  } else { sug.innerHTML=""; }
+
+  /* THE PLAY: the current stance's response card, pre-written, live-filled, with the
+     call ready to paste into Discord. A checklist, not automation. ROUTINE shows
+     nothing: a quiet day earns a quiet desk. */
+  var play=$("hudPlay");
+  var member=(st.member||"");
+  var why=st.why?(" ("+st.why+")"):"";
+  var P=null;
+  if(p==="ESCORT"){
+    P={ t:"The play: walk them home",
+        l:(op.live
+          ? "The op is up with "+(op.online||0)+" on grid"+(op.lead?", "+esc(op.lead)+" leading":"")+". Guns form on the Orca, haulers undock with escort only."
+          : "No op running right now. When one forms, guns undock first."),
+        call:"GOBSEC · ESCORT posture. "+member+(op.live?" The op is live, form on the Orca.":"")+why };
+  } else if(p==="HUNT"){
+    var hu=h.hunter;
+    P={ t:"The play: bad week",
+        l:(hu?("Target: <b data-i18n-skip>"+esc(hu.name)+"</b>, "+hu.kills+" of ours on their record"
+            +(hu.systems&&hu.systems.length?", works <span data-i18n-skip>"+esc(hu.systems.join(", "))+"</span>":"")
+            +(hu.ships&&hu.ships.length?", flies <span data-i18n-skip>"+esc(hu.ships.join(", "))+"</span>":"")+".")
+          :"No named target on the wire. The board has the full record."),
+        call:"GOBSEC · HUNT. "+member+(hu?(" Target: "+hu.name+(hu.systems&&hu.systems.length?", last seen around "+hu.systems.join(", "):"")+"."):"")+why };
+  } else if(p==="STAND DOWN"){
+    P={ t:"The play: dock and hold",
+        l:"Everything docks, nothing undocks alone. The stance flips back when the wire clears.",
+        call:"GOBSEC · STAND DOWN. "+member+why };
+  }
+  if(P){
+    play.innerHTML='<div class="hplay"><div class="pt">'+P.t+'</div><div class="pl">'+P.l+'</div>'
+      +'<div class="pc"><button id="hudCopy">copy the call</button><span class="ok" id="hudCopyOk"></span></div></div>';
+    $("hudCopy").onclick=function(){
+      var txt=P.call;
+      (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){
+        $("hudCopyOk").textContent="copied. paste it in Discord.";
+      }).catch(function(){ $("hudCopyOk").textContent=txt; });
+    };
+  } else { play.innerHTML=""; }
+
   /* the lever: officers flip the stance with one line of why. That's the whole ceremony. */
   if(who && (who.role==="officer"||who.role==="admin")){
     var sw=$("hudSwitch");
