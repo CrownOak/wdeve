@@ -2647,9 +2647,13 @@ async function orcaConfirm(hull){
   if (btn) btn.disabled = true;
   try {
     var r = await api("orca/claim", { code: "BONKORCA", hull: hull });
-    S.me.orca = { on: !!(r.orca || r.porpoise), orca: !!r.orca, porpoise: !!r.porpoise,
-                  values: r.values || {}, contract_value: (r.values && r.values.orca) || 0 };
-    if (S.me.account){ S.me.account.orca = !!r.orca; S.me.account.porpoise = !!r.porpoise; }
+    // OR-merge with what we already know: a lagged read on the OTHER hull's flag
+    // must never un-render a whale the member already confirmed.
+    var prev = S.me.orca || {};
+    var oo = !!(r.orca || prev.orca), pp = !!(r.porpoise || prev.porpoise);
+    S.me.orca = { on: oo || pp, orca: oo, porpoise: pp,
+                  values: r.values || prev.values || {}, contract_value: (r.values && r.values.orca) || 0 };
+    if (S.me.account){ S.me.account.orca = oo; S.me.account.porpoise = pp; }
     S.orcaJust = !r.already;
     S.orcaStep = 0;
     safeRender(renderOrca, $("panelOrca"));
