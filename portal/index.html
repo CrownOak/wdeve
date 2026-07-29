@@ -2618,14 +2618,22 @@ function renderESI(){
   var h = '<div class="ptitle">Mining Ledger &middot; EVE ESI</div>';
   // Transparency (Kyle): be explicit they LEAVE bonkeve and log in on CCP's site,
   // that we never see their password/login, and this only reads the mining ledger.
-  h += '<div class="esidisc">'
-    + '<b>You are logging in on EVE\'s own site, not ours.</b> The button below sends you to '
-    + '<b>login.eveonline.com</b>, CCP\'s official login. You type your EVE credentials <b>there</b>. '
-    + 'BONK never sees, stores, or touches your EVE password or login, ever. '
-    + 'The <b>only</b> thing attaching does is let us read your <b>in game mining ledger</b>, so everything '
-    + 'you actually mine (solo or in a fleet) shows up here and counts toward corp events. '
-    + 'Detach any time and the data goes with it.'
-    + '</div>';
+  // The long version answers "should I click this?", so it belongs BEFORE they click. Once a
+  // character is attached that question is settled and the paragraph is just noise sitting on
+  // the panel forever. A standing SECURE mark says the same thing in two words.
+  if ((e.characters || []).length){
+    h += '<div class="esisec"><span class="lock">&#128274;</span><b>SECURE</b>'
+      + '<span class="sx">connected through EVE SSO &middot; we never see your login</span></div>';
+  } else {
+    h += '<div class="esidisc">'
+      + '<b>You are logging in on EVE\'s own site, not ours.</b> The button below sends you to '
+      + '<b>login.eveonline.com</b>, CCP\'s official login. You type your EVE credentials <b>there</b>. '
+      + 'BONK never sees, stores, or touches your EVE password or login, ever. '
+      + 'The <b>only</b> thing attaching does is let us read your <b>in game mining ledger</b>, so everything '
+      + 'you actually mine (solo or in a fleet) shows up here and counts toward corp events. '
+      + 'Detach any time and the data goes with it.'
+      + '</div>';
+  }
   if (e.configured === false){
     h += '<div class="pnote">ESI attach is not switched on yet. Leadership is finishing the one time EVE app setup. Check back soon.</div>';
     el.innerHTML = h; return;
