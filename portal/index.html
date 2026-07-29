@@ -3,7 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>BONK &middot; Member Portal</title>
-<link rel="stylesheet" href="/common.css?v=5">
+<link rel="stylesheet" href="/common.css?v=7">
 <style>
   /* HEADER, matched to FLEET COMMAND (Kyle 2026-07-28: cleaner, more refined, elite).
      Centered wordmark, wide tracking, an overline, and one thin ore tick that breathes
@@ -289,6 +289,20 @@
   .esidisc{ background:var(--black); border:1px solid rgba(70,255,94,.25); border-left:3px solid var(--ore);
     padding:12px 15px; margin:0 0 16px; font-size:13px; line-height:1.6; color:#a9b2a8; }
   .esidisc b{ color:var(--silver); }
+  /* The standing SECURE mark, shown once a character is attached. This class was being
+     emitted with NO stylesheet rule behind it, which is why the label and the scope line
+     ran together as one string. Deliberately no emoji: a lock glyph renders differently on
+     every platform and reads as decoration. A steady dot is the same language the rest of
+     the portal already uses for live state. */
+  .esisec{ display:flex; align-items:flex-start; gap:13px; margin:0 0 16px; padding:12px 15px;
+    background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--ore); }
+  .esisec .dot{ width:7px; height:7px; border-radius:50%; background:var(--ore); flex:0 0 auto;
+    margin-top:6px; box-shadow:0 0 0 3px rgba(70,255,94,.14); }
+  .esisec .sxwrap{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .esisec .slabel{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--ore); line-height:1; }
+  .esisec .sx{ font-family:var(--mono); font-size:11px; letter-spacing:.03em; color:#8d968c;
+    line-height:1.55; }
   .esichar{ border:1px solid var(--line-soft); background:var(--black); padding:14px 15px; margin:0 0 12px; }
   .esihead{ display:flex; align-items:center; gap:12px; }
   .esiport{ width:48px; height:48px; flex:0 0 48px; border:1px solid var(--line); background:#0b0d0e; }
@@ -303,11 +317,43 @@
   .esikv .v{ font-size:13px; color:var(--silver); }
   .esion{ color:var(--ore); }
   .esisub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:6px 0 8px; }
-  .esimining{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr)); gap:5px 16px; margin-bottom:14px; }
-  .orow{ display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line-soft); padding:3px 0; }
-  .orow .oname{ color:var(--silver-dim); font-size:13px; text-transform:capitalize; }
-  .orow .onum{ font-family:var(--mono); font-size:12.5px; color:var(--ore); }
-  .orow .oisk{ color:var(--silver-dim); font-size:11px; margin-left:7px; font-family:var(--mono); }
+  /* Ore ledger: one column, not an auto-fill grid. Two columns split the ranking in half and
+     destroy the thing the ranking is for, which is seeing at a glance that the top rock pays
+     for everything below it. The bar is the share of ISK; the row sits on top of it. */
+  .esimining{ display:block; margin-bottom:12px; }
+  .orow{ position:relative; display:grid; align-items:center;
+    grid-template-columns:minmax(0,1fr) auto 34px 74px; gap:10px;
+    border-bottom:1px solid var(--line-soft); padding:6px 8px; }
+  .orow .obar{ position:absolute; left:0; top:0; bottom:0; z-index:0;
+    background:linear-gradient(90deg, rgba(70,255,94,.16), rgba(70,255,94,.03)); }
+  .orow.ice .obar{ background:linear-gradient(90deg, rgba(120,205,255,.17), rgba(120,205,255,.03)); }
+  .orow > span{ position:relative; z-index:1; }
+  .orow .oname{ color:var(--silver); font-size:13px; text-transform:capitalize;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .orow .oisk{ font-family:var(--mono); font-size:12.5px; color:var(--ore); text-align:right; }
+  .orow .opct{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); text-align:right; }
+  .orow .oper{ font-family:var(--mono); font-size:11px; color:#8d968c; text-align:right; }
+  .oreread{ margin:0 0 10px; padding:10px 13px; background:var(--black);
+    border-left:2px solid var(--line-soft); }
+  .oreread p{ margin:0; font-size:12.5px; line-height:1.6; color:#a9b2a8; }
+  .oreread p + p{ margin-top:5px; }
+  .oreread b{ color:var(--ore); font-weight:600; }
+  @media (max-width:520px){
+    .orow{ grid-template-columns:minmax(0,1fr) auto 60px; }
+    .orow .opct{ display:none; }
+  }
+  /* Heads up: derived safety read on the kill feed */
+  .kfhu{ margin:0 0 10px; padding:10px 13px; background:var(--black); border-left:2px solid var(--ore); }
+  .kfhu.clean{ border-left-color:var(--line-soft); }
+  .kfhu .hul{ display:block; font-family:var(--mono); font-size:9.5px; letter-spacing:.26em;
+    text-transform:uppercase; color:var(--ore); margin-bottom:7px; }
+  .kfhu.clean .hul{ color:var(--muted); }
+  .kfhu .hut{ font-size:12.5px; line-height:1.6; color:#a9b2a8; }
+  .hugrid{ display:flex; flex-direction:column; gap:5px; }
+  .hur{ display:grid; grid-template-columns:88px minmax(0,1fr) auto; gap:10px; align-items:baseline; }
+  .hur .huk{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .hur .huv{ font-size:13px; color:var(--silver); }
+  .hur .hun{ font-family:var(--mono); font-size:10.5px; color:#8d968c; }
   .esisub .esitot{ color:var(--ore); }
   .esiacts{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:6px; }
   .esilogin{ display:inline-flex; align-items:center; gap:8px; font-family:var(--display); font-weight:700;
@@ -562,7 +608,7 @@
      stretch used to let the TEXT decide the photo's height, then object-fit cropped to fill.
      The 560px mobile rule below has always done it this way; desktop now agrees. */
   .station .sthead{ flex-direction:column; }
-  .station .stpic{ width:100%; aspect-ratio:5/1; max-height:88px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
+  .station .stpic{ width:100%; aspect-ratio:5/2; max-height:104px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
                    border-right:0; border-bottom:1px solid var(--line-soft); }
   .station .stinfo{ padding:13px 15px 12px; flex:1 1 auto; min-width:0; }
   .station .sttitle{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:15px; color:var(--silver); }
@@ -710,9 +756,9 @@
   .wk-addbtn{ background:var(--ore); color:#04140a; border:0; font-weight:700; font-family:var(--mono); font-size:12px; padding:6px 13px; cursor:pointer; }
   .wk-err{ font-family:var(--mono); font-size:11px; color:var(--red, #f0817a); align-self:center; }
   /* the success hero: a launched structure, up and proud */
-  .stup{ display:flex; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
+  .stup{ display:flex; flex-direction:column; gap:0; margin:0 0 12px; background:var(--steel); border:1px solid var(--ore); border-left:3px solid var(--ore); overflow:hidden;
     box-shadow:0 0 0 1px rgba(224,168,90,.12), 0 8px 22px -14px rgba(224,168,90,.5); }
-  .stup-pic{ width:100%; aspect-ratio:6/1; max-height:70px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
+  .stup-pic{ width:100%; aspect-ratio:5/2; max-height:104px; height:auto; object-fit:cover; object-position:center 40%; flex:0 0 auto;
              border-right:0; border-bottom:1px solid var(--ore); }
   .stup-info{ padding:13px 15px; flex:1 1 auto; min-width:0; }
   .stup-badge{ display:inline-block; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:#04140a; background:var(--ore); padding:2px 9px; }
@@ -1896,6 +1942,55 @@ function kfAgo(t){
   if (h < 48) return h + "h ago";
   return Math.floor(h / 24) + "d ago";
 }
+/* HEADS UP: turn the loss records into something a miner can act on.
+   A feed of dead ships is a scoreboard; what a miner actually needs is where people die,
+   in what hull, and at what hour. Every line below needs at least two supporting records:
+   one loss is an anecdote, and a panel that dresses an anecdote up as a pattern teaches
+   the wrong lesson. If nothing clears the bar we print nothing rather than reach. */
+function kfHeadsUp(ks){
+  var WIN = 14;
+  var cut = Date.now() - WIN*86400000;
+  var L = (ks || []).filter(function(k){
+    return k.ours === "loss" && Date.parse(k.time) > cut;
+  });
+  if (L.length < 2)
+    return '<div class="kfhu clean"><span class="hul">Heads up</span>' +
+           '<span class="hut">Nothing lost in ' + WIN + ' days. No pattern to read, which is the point.</span></div>';
+  // null-safe mode: hour 0 is a real value, so test for null explicitly rather than falsiness
+  function top(pick){
+    var m = Object.create(null), best = null, n = 0;
+    L.forEach(function(k){
+      var v = pick(k);
+      if (v === null || v === undefined || v === "") return;
+      m[v] = (m[v] || 0) + 1;
+      if (m[v] > n){ n = m[v]; best = v; }
+    });
+    return best === null ? null : { v: best, n: n };
+  }
+  var rows = [];
+  var sys = top(function(k){ return k.system; });
+  if (sys && sys.n >= 2)
+    rows.push(['Where', esc(String(sys.v)), sys.n + ' of ' + L.length + ' losses']);
+  var hull = top(function(k){ return k.ship; });
+  if (hull && hull.n >= 2)
+    rows.push(['What we lose', esc(String(hull.v)), hull.n + ' in ' + WIN + 'd']);
+  var band = top(function(k){
+    var d = new Date(k.time);
+    var h = d.getUTCHours();
+    return isFinite(h) ? Math.floor(h / 4) * 4 : null;
+  });
+  if (band && band.n >= 2){
+    var a = ("0" + band.v).slice(-2), b = ("0" + ((band.v + 4) % 24)).slice(-2);
+    rows.push(['When', a + ':00 to ' + b + ':00', band.n + ' losses, EVE time']);
+  }
+  if (!rows.length) return '';
+  return '<div class="kfhu"><span class="hul">Heads up &middot; last ' + WIN + ' days</span>' +
+    '<div class="hugrid">' + rows.map(function(r){
+      return '<div class="hur"><span class="huk">' + r[0] + '</span>' +
+             '<span class="huv" data-i18n-skip>' + r[1] + '</span>' +
+             '<span class="hun">' + r[2] + '</span></div>';
+    }).join("") + '</div></div>';
+}
 function renderKillFeed(){
   var el = $("panelKills"); if (!el) return;
   var mode = S.kfMode || "corp";
@@ -1914,9 +2009,23 @@ function renderKillFeed(){
     var lost = recent.filter(function(k){ return k.ours === "loss"; }).length;
     var got = recent.length - lost;
     var val = recent.reduce(function(a,k){ return a + (k.value||0); }, 0);
-    html += '<div class="lsum"><span><b>' + got + '</b> killed</span>' +
-            '<span class="' + (lost?'warn':'') + '"><b>' + lost + '</b> lost</span>' +
+    // Kills are NOT the lead number. We are a mining corp that shoots to protect miners,
+    // so the first thing on the board is whether our people are getting home. Kills are
+    // the second line because they are the means, not the point.
+    var lastLoss = null;
+    ks.forEach(function(k){
+      if (k.ours !== "loss") return;
+      var t = Date.parse(k.time);
+      if (isFinite(t) && (lastLoss === null || t > lastLoss)) lastLoss = t;
+    });
+    var cleanD = lastLoss === null ? null : Math.floor((Date.now() - lastLoss) / 86400000);
+    html += '<div class="lsum">' +
+            (lost
+              ? '<span class="warn"><b>' + lost + '</b> ' + (lost === 1 ? 'ship' : 'ships') + ' lost, 7d</span>'
+              : '<span><b>' + (cleanD === null ? 'No' : cleanD + 'd') + '</b> without a loss</span>') +
+            '<span><b>' + got + '</b> hostiles killed</span>' +
             '<span><b>' + fmtIsk(val) + '</b> ISK on the board, 7d</span></div>';
+    html += kfHeadsUp(ks);
     var shown = S.kfAll ? ks : ks.slice(0, KF_VISIBLE);
     html += '<div class="kfrows">' + shown.map(function(k){
       return '<a class="kfr ' + (k.ours === "loss" ? "loss" : "kill") + '" target="_blank" rel="noopener" ' +
@@ -2618,6 +2727,66 @@ function dataUrlBytes(d){
 
 /* ============ ESI mining ledger (attach an EVE character) ============ */
 var ICE_BASES = {"blue ice":1,"clear icicle":1,"glacial mass":1,"white glaze":1,"glare crust":1,"dark glitter":1,"gelidus":1,"krystallos":1};
+var ORE_VISIBLE = 6;
+/* THE ORE LEDGER.
+   A flat list of "ore, units, ISK" is sixteen rows that all look equally important, and the
+   biggest number on each row (units) is the one that matters least. The ledger already
+   contains a much sharper fact: value per unit spans roughly four orders of magnitude, so
+   WHAT you mine dominates HOW MUCH you mine. So we rank by ISK, show each ore's share of
+   the total as a bar, and put ISK-per-unit on the row as the thing worth learning.
+   Honesty note: per UNIT, not per m3 or per hour. We do not carry SDE volumes here and are
+   not going to invent them, so the richest/thinnest comparison is drawn from ore only,
+   never ore against ice, whose units are enormously bigger and would flatter the ice. */
+function renderOreLedger(mining, totalU, totalIsk){
+  var rows = mining.slice().sort(function(a,b){
+    return (Number(b.isk)||0) - (Number(a.isk)||0) || (Number(b.units)||0) - (Number(a.units)||0);
+  });
+  var priced = totalIsk > 0;
+  var h = '<div class="esisub">' + (priced ? 'Ranked by value' : 'By volume') + ' &middot; ' + esiUnits(totalU) + ' units'
+    + (priced ? ' &middot; <span class="esitot">' + esiIsk(totalIsk) + ' value</span>' : '') + '</div>';
+
+  if (priced){
+    var lines = [];
+    var top3 = rows.slice(0, 3).reduce(function(a, m){ return a + (Number(m.isk)||0); }, 0);
+    if (rows.length > 3)
+      lines.push('Your top ' + (rows.length >= 3 ? 'three' : rows.length) + ' ores are <b>'
+        + Math.round(top3 / totalIsk * 100) + '%</b> of your ISK.');
+    var ore = rows.filter(function(m){
+      return !ICE_BASES[m.base_ore] && (Number(m.units)||0) > 0 && (Number(m.isk)||0) > 0;
+    }).map(function(m){
+      return { name: m.base_ore, per: Number(m.isk) / Number(m.units) };
+    }).sort(function(a,b){ return b.per - a.per; });
+    if (ore.length >= 2){
+      var hi = ore[0], lo = ore[ore.length - 1];
+      if (hi.per / lo.per >= 5)
+        lines.push('Richest rock you touched: <b data-i18n-skip>' + esc(hi.name) + '</b> at '
+          + esiIsk(hi.per) + ' a unit. Thinnest: <b data-i18n-skip>' + esc(lo.name) + '</b> at '
+          + esiIsk(lo.per) + '.');
+    }
+    if (lines.length)
+      h += '<div class="oreread">' + lines.map(function(l){ return '<p>' + l + '</p>'; }).join("") + '</div>';
+  }
+
+  var max = rows.length ? (Number(rows[0].isk)||0) : 0;
+  var shown = S.oreAll ? rows : rows.slice(0, ORE_VISIBLE);
+  h += '<div class="esimining">' + shown.map(function(m){
+    var isk = Number(m.isk)||0, u = Number(m.units)||0;
+    var pct = totalIsk > 0 ? isk / totalIsk * 100 : 0;
+    var w   = max > 0 ? Math.max(2, isk / max * 100) : 0;
+    return '<div class="orow' + (ICE_BASES[m.base_ore] ? ' ice' : '') + '">'
+      + '<div class="obar" style="width:' + w.toFixed(1) + '%"></div>'
+      + '<span class="oname" data-i18n-skip>' + (ICE_BASES[m.base_ore] ? "\u{1F9CA} " : "") + esc(m.base_ore) + '</span>'
+      + '<span class="oisk">' + (priced ? esiIsk(isk) : esiUnits(u)) + '</span>'
+      + '<span class="opct">' + (priced ? (pct >= 1 ? Math.round(pct) + '%' : '<1%') : '') + '</span>'
+      + '<span class="oper">' + (priced && u > 0 ? esiIsk(isk / u).replace(' ISK', '') + '/u' : esiUnits(u)) + '</span>'
+      + '</div>';
+  }).join("") + '</div>';
+  if (rows.length > ORE_VISIBLE)
+    h += '<button class="more' + (S.oreAll ? ' open' : '') + '" data-oremore="1">'
+      + (S.oreAll ? 'show less' : 'show all ' + rows.length + ' ores')
+      + '<span class="car">&#9662;</span></button>';
+  return h;
+}
 function esiUnits(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B"; if(n>=1e6) return (n/1e6).toFixed(2)+"M"; if(n>=1e3) return (n/1e3).toFixed(1)+"k"; return String(n); }
 function esiIsk(n){ n=Number(n)||0; if(n>=1e9) return (n/1e9).toFixed(2)+"B ISK"; if(n>=1e6) return (n/1e6).toFixed(1)+"M ISK"; if(n>=1e3) return (n/1e3).toFixed(0)+"k ISK"; return Math.round(n)+" ISK"; }
 function esiYears(iso){ var ms=Date.now()-Date.parse(iso); if(isNaN(ms)) return "?"; var y=ms/(365.25*86400000); return y>=1?y.toFixed(1)+"y":Math.floor(ms/86400000)+"d"; }
@@ -2643,16 +2812,18 @@ function renderESI(){
   // character is attached that question is settled and the paragraph is just noise sitting on
   // the panel forever. A standing SECURE mark says the same thing in two words.
   if ((e.characters || []).length){
-    h += '<div class="esisec"><span class="lock">&#128274;</span>'
-      + '<div class="sxwrap"><b>SECURE</b>'
-      + '<span class="sx">EVE SSO &middot; read only &middot; mining ledger</span></div></div>';
+    h += '<div class="esisec">'
+      + '<span class="dot" aria-hidden="true"></span>'
+      + '<div class="sxwrap">'
+      + '<span class="slabel">Secure</span>'
+      + '<span class="sx">EVE SSO &middot; read only &middot; mining ledger</span>'
+      + '</div></div>';
   } else {
     h += '<div class="esidisc">'
-      + '<b>You are logging in on EVE\'s own site, not ours.</b> The button below sends you to '
-      + '<b>login.eveonline.com</b>, CCP\'s official login. You type your EVE credentials <b>there</b>. '
-      + 'BONK never sees, stores, or touches your EVE password or login, ever. '
-      + 'The <b>only</b> thing attaching does is let us read your <b>in game mining ledger</b>, so everything '
-      + 'you actually mine (solo or in a fleet) shows up here and counts toward corp events. '
+      + '<b>You log in on EVE\'s own site, not ours.</b> The button sends you to '
+      + '<b>login.eveonline.com</b>, CCP\'s official login. Your password goes to CCP. '
+      + 'What comes back to us is a read only token for your <b>in game mining ledger</b>, so everything '
+      + 'you mine, solo or in a fleet, shows up here and counts toward corp events. '
       + 'Detach any time and the data goes with it.'
       + '</div>';
   }
@@ -2705,20 +2876,15 @@ function renderESI(){
   if (mining.length){
     var totalU = 0, totalIsk = 0;
     mining.forEach(function(m){ totalU += Number(m.units)||0; totalIsk += Number(m.isk)||0; });
-    h += '<div class="esisub">Mined by ore, in game ledger &middot; '+esiUnits(totalU)+' units'
-      + (totalIsk>0?' &middot; <span class="esitot">'+esiIsk(totalIsk)+' value</span>':'')+'</div><div class="esimining">';
-    mining.slice(0,16).forEach(function(m){
-      h += '<div class="orow"><span class="oname">'+(ICE_BASES[m.base_ore]?"\u{1F9CA} ":"")+esc(m.base_ore)+'</span>'
-        + '<span class="onum">'+esiUnits(m.units)
-        + (Number(m.isk)>0?' <span class="oisk">'+esiIsk(m.isk)+'</span>':'')+'</span></div>';
-    });
-    h += '</div>';
+    h += renderOreLedger(mining, totalU, totalIsk);
   }
   h += '<div class="esiacts">'
     + '<a class="esilogin" href="/api/esi/login">'+(chars.length?'Attach another character':'Log in with EVE Online')+' <span class="ev">EVE</span></a>'
     + (chars.length ? '<button class="esibtn wide" id="esiSyncBtn">Sync ledger now</button>' : '')
     + '</div>';
   el.innerHTML = h;
+  var om = el.querySelector("[data-oremore]");
+  if (om) om.addEventListener("click", function(){ S.oreAll = !S.oreAll; renderESI(); });
   var sy = $("esiSyncBtn");
   if (sy) sy.addEventListener("click", async function(){
     sy.disabled = true; sy.textContent = "Syncing...";
