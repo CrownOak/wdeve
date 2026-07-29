@@ -82,7 +82,36 @@
   .card .cl{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:7px; }
   .card .cw{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px;
              border-top:1px solid var(--line-soft); padding-top:6px; }
+  .card .cw.wire{ color:var(--gs); }
+  .card.auto{ border-left-style:dashed; }
   .empty{ font-family:var(--mono); font-size:11.5px; color:var(--muted); line-height:1.6; }
+  .hsub{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; color:var(--line); font-weight:400; }
+
+  /* live route status chips */
+  .ost{ flex:0 0 auto; text-align:right; white-space:nowrap; }
+  .st{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.12em; padding:2px 7px;
+       border:1px solid var(--line); color:var(--muted); }
+  .st.HOT{ color:var(--gs); border-color:var(--gs); }
+  .st.WARM{ color:var(--amber); border-color:var(--amber); }
+  .st.QUIET{ color:var(--ore); border-color:rgba(70,255,94,.35); }
+  .stx{ display:block; font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:4px; }
+  .order.home{ background:rgba(70,255,94,.04); }
+  .order.home .os{ color:var(--ore); }
+
+  /* the area table */
+  .arow{ display:flex; gap:10px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line-soft);
+         font-family:var(--mono); font-size:12px; color:var(--silver-dim); text-decoration:none; }
+  .arow .an{ flex:0 0 92px; color:var(--silver); overflow-wrap:anywhere; }
+  .arow:hover .an{ color:var(--gs); }
+  .arow .ar{ flex:0 0 92px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .arow .ak{ flex:1; min-width:0; }
+  .arow .ak b{ color:var(--silver); font-weight:400; }
+  .arow .aa{ white-space:nowrap; color:var(--muted); font-size:11px; }
+  .abadge{ font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.14em; padding:1px 6px;
+           border:1px solid var(--gsdim); color:var(--gs); margin-left:7px; vertical-align:1px; }
+  .abadge.home{ border-color:rgba(70,255,94,.4); color:var(--ore); }
+  .regline{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-bottom:4px; letter-spacing:.05em; }
+  @media(max-width:600px){ .arow .ar{ display:none; } .ost{ flex-basis:100%; text-align:left; } }
 
   /* ---- the switcher ---- */
   .tabs{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:2px 0 16px;
@@ -107,7 +136,7 @@
 <script src="/nav.js?v=16"></script>
 <div class="gw">
   <div class="ghead">
-    <img src="gss.png" alt="GSS seal">
+    <img src="/gobsec/gss.png" alt="GSS seal">
     <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the board</div></div>
   </div>
 
@@ -127,24 +156,35 @@
     </div>
 
     <div class="band">
-      <h2><span class="n">02</span> STANDING ORDERS</h2>
+      <h2><span class="n">02</span> STANDING ORDERS <span class="hsub">home + the corridor &middot; live status off the wire</span></h2>
       <div id="posture"></div>
       <div id="fc" class="fcline"></div>
       <div class="orders" id="orders"></div>
     </div>
 
     <div class="band">
-      <h2><span class="n">03</span> THE DOCTRINE</h2>
-      <div id="doctrine"></div>
+      <h2><span class="n">03</span> WHO IS HUNTING US <span class="hsub">from our own losses &middot; public record, counted</span></h2>
+      <div id="hunters"></div>
+      <div id="lossrows" style="margin-top:12px"></div>
     </div>
 
     <div class="band">
-      <h2><span class="n">04</span> THE GROUND</h2>
+      <h2><span class="n">04</span> THE AREA <span class="hsub">everything dying in the three regions we work</span></h2>
+      <div id="area"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">05</span> WHAT GSS IS SAYING <span class="hsub">curated files &middot; live counters joined from the wire</span></h2>
       <div id="threats"></div>
     </div>
 
     <div class="band">
-      <h2><span class="n">05</span> THE BOARD</h2>
+      <h2><span class="n">06</span> THE DOCTRINE</h2>
+      <div id="doctrine"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">07</span> THE BOARD</h2>
       <div id="board"></div>
     </div>
 
@@ -212,16 +252,47 @@ function renderNow(ours, ground, sysNames){
   $("kills").innerHTML = rows.join("") || '<div class="empty">Nothing on the wire.</div>';
 }
 
-/* ---- BANDS 2-5 ---- */
-function renderBrief(b){
+/* ---- LIVE ROUTE STATUS off the tripwire wire. The corridor systems are baked
+   by id (same names the standing orders carry); status is computed honestly
+   from timestamps, and quiet gets said confidently, same rule as band 1. ---- */
+var ROUTES = { "Khabi": 30000117, "7Q-8Z2": 30000943, "SUR-F7": 30000944, "JPL-RA": 30000901 };
+var HOME = { name: "Mohas", id: 30000031 };
+function sysStats(wire, sid){
+  var now = Date.now(), last = 0, k24 = 0, k72 = 0, isk72 = 0;
+  (wire||[]).forEach(function(k){
+    if (k.sysId !== sid) return;
+    if (k.ts > last) last = k.ts;
+    if (k.ts > now - 86400000) k24++;
+    if (k.ts > now - 259200000){ k72++; isk72 += (k.isk||0); }
+  });
+  var st = "QUIET";
+  if ((last && last > now - 21600000) || k24 >= 3) st = "HOT";
+  else if (k24 >= 1) st = "WARM";
+  return { st: st, last: last, k24: k24, k72: k72, isk72: isk72 };
+}
+function stChip(s){
+  return '<span class="st ' + s.st + '">' + s.st + '</span>' +
+    '<span class="stx">' + (s.k24 ? s.k24 + " in 24h" : (s.k72 ? s.k72 + " in 72h" : "clear 72h")) +
+    (s.last ? " &middot; last " + ago(s.last) : "") + '</span>';
+}
+
+/* ---- BANDS 2 + 6 ---- */
+function renderBrief(b, wire){
   var p = b.posture || "ROUTINE";
   $("posture").innerHTML = '<span class="posture ' + esc(p.replace(/\s/g,"")) + '">' + esc(p) + '</span>';
   $("fc").innerHTML = b.fc
     ? 'FC today: <b data-i18n-skip>' + esc(b.fc) + '</b>'
     : 'No FC on. Do not start anything you cannot finish alone.';
-  $("orders").innerHTML = (b.standing||[]).map(function(o){
-    return '<div class="order"><span class="os" data-i18n-skip>' + esc(o.sys) + '</span>' +
-           '<span class="ot">' + esc(o.rule) + '</span></div>'; }).join("");
+  var rows = ['<div class="order home"><span class="os" data-i18n-skip>' + esc(HOME.name) + '</span>' +
+    '<span class="ot">HOME. The rock, the Athanor, the whole point. If home is hot, everything else waits.</span>' +
+    '<span class="ost">' + stChip(sysStats(wire, HOME.id)) + '</span></div>'];
+  (b.standing||[]).forEach(function(o){
+    var sid = ROUTES[o.sys];
+    rows.push('<div class="order"><span class="os" data-i18n-skip>' + esc(o.sys) + '</span>' +
+      '<span class="ot">' + esc(o.rule) + '</span>' +
+      (sid ? '<span class="ost">' + stChip(sysStats(wire, sid)) + '</span>' : '') + '</div>');
+  });
+  $("orders").innerHTML = rows.join("");
 
   var d = b.doctrine || [];
   $("doctrine").innerHTML = d.length
@@ -233,17 +304,110 @@ function renderBrief(b){
       }).join("") + '</div>'
     : '<div class="empty">Doctrine is not posted yet. Fly cheap, fly what you can replace twice, ' +
       'and ask before you buy anything expensive. Officers can post the list from the admin desk.</div>';
+}
 
-  var t = b.threats || [];
-  $("threats").innerHTML = t.length
-    ? '<div class="cards">' + t.map(function(x){
-        return '<div class="card t"><div class="ct" data-i18n-skip>' + esc(x.name) + '</div>' +
-          '<div class="cr">' + esc([x.size, x.awake].filter(Boolean).join(" · ")) + '</div>' +
-          (x.flies ? '<div class="cl"><b>Flies:</b> ' + esc(x.flies) + '</div>' : '') +
-          (x.kills ? '<div class="cl"><b>Kills:</b> ' + esc(x.kills) + '</div>' : '') +
-          (x.doabout ? '<div class="cw">' + esc(x.doabout) + '</div>' : '') + '</div>';
+/* ---- BAND 3: WHO IS HUNTING US. Built from our own losses with attacker
+   attribution (public killboard record, aggregated server side). ---- */
+function renderHunters(gr){
+  var hs = (gr && gr.hunters) || [];
+  var ls = (gr && gr.losses) || [];
+  if (!gr){
+    $("hunters").innerHTML = '<div class="empty">The loss record did not answer. Reload to knock again.</div>';
+    return;
+  }
+  $("hunters").innerHTML = hs.length
+    ? '<div class="cards">' + hs.slice(0, 9).map(function(h){
+        return '<div class="card t"><div class="ct" data-i18n-skip>' + esc(h.name) + '</div>' +
+          '<div class="cr">' + h.kills + ' of ours &middot; ' + isk(h.isk) + ' taken' +
+            (h.pilots ? ' &middot; ' + h.pilots + ' pilot' + (h.pilots === 1 ? '' : 's') + ' seen' : '') + '</div>' +
+          (h.systems && h.systems.length ? '<div class="cl"><b>Where:</b> <span data-i18n-skip>' + esc(h.systems.slice(0,4).join(", ")) + '</span></div>' : '') +
+          (h.ships && h.ships.length ? '<div class="cl"><b>Flies:</b> <span data-i18n-skip>' + esc(h.ships.slice(0,4).join(", ")) + '</span></div>' : '') +
+          '<div class="cw">last hit on us ' + (h.last ? ago(h.last) : "?") + '</div></div>';
       }).join("") + '</div>'
-    : '<div class="empty">No cards posted yet. The files exist, they are just not projected here. ' +
+    : '<div class="empty">No repeat customers in the recent loss record. Nobody has a pattern on us. Stay boring, stay alive.</div>';
+  $("lossrows").innerHTML = ls.slice(0, 8).map(function(k){
+    return '<a class="krow ours" target="_blank" rel="noopener" href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+      '<span class="kt">LOST</span><span class="kw" data-i18n-skip>' + esc(k.ship||"?") +
+      (k.victim ? " &middot; " + esc(k.victim) : "") + (k.system ? " &middot; " + esc(k.system) : "") +
+      (k.by ? " &middot; by " + esc(k.by) + (k.gang > 1 ? " (" + k.gang + " guns)" : "") : "") +
+      '</span><span class="ka">' + isk(k.value) + " &middot; " + ago(k.time) + '</span></a>';
+  }).join("");
+}
+
+/* ---- BAND 4: THE AREA. Everything dying in the three regions, grouped by
+   system, ranked by heat, our home and corridor flagged. ---- */
+function renderArea(wire, sysNames){
+  var now = Date.now();
+  var by = {}, regions = {}, order = [];
+  (wire||[]).forEach(function(k){
+    if (k.ts < now - 259200000) return;
+    if (!by[k.sysId]){ by[k.sysId] = { id: k.sysId, region: k.region, k24: 0, k72: 0, isk: 0, last: 0 }; order.push(k.sysId); }
+    var b = by[k.sysId];
+    b.k72++; b.isk += (k.isk||0); if (k.ts > b.last) b.last = k.ts;
+    if (k.ts > now - 86400000){ b.k24++; }
+    regions[k.region] = (regions[k.region]||0) + 1;
+  });
+  order.sort(function(x, y){ return by[y].k72 - by[x].k72 || by[y].isk - by[x].isk; });
+  if (!order.length){
+    $("area").innerHTML = '<div class="empty">The wire is quiet across all three regions. 72 hours, nothing recorded. Suspicious, frankly.</div>';
+    return;
+  }
+  var routeIds = {}; Object.keys(ROUTES).forEach(function(k){ routeIds[ROUTES[k]] = 1; });
+  var regLine = Object.keys(regions).map(function(r){ return esc(r) + " " + regions[r]; }).join(" &middot; ");
+  var html = '<div class="regline" data-i18n-skip>72h across the wire: ' + regLine + ' kills</div>';
+  order.slice(0, 10).forEach(function(sid){
+    var b = by[sid];
+    var nm = (sysNames && sysNames[sid]) || ("system " + sid);
+    var badge = sid === HOME.id ? '<span class="abadge home">HOME</span>' : (routeIds[sid] ? '<span class="abadge">ROUTE</span>' : '');
+    html += '<a class="arow" target="_blank" rel="noopener" href="https://zkillboard.com/system/' + Number(sid) + '/">' +
+      '<span class="an" data-i18n-skip>' + esc(nm) + badge + '</span>' +
+      '<span class="ar" data-i18n-skip>' + esc(b.region||"?") + '</span>' +
+      '<span class="ak"><b>' + b.k72 + '</b> in 72h' + (b.k24 ? ' (<b>' + b.k24 + '</b> today)' : '') + ' &middot; ' + isk(b.isk) + '</span>' +
+      '<span class="aa">last ' + ago(b.last) + '</span></a>';
+  });
+  $("area").innerHTML = html;
+}
+
+/* ---- BAND 5: WHAT GSS IS SAYING. The curated member-safe cards from the
+   files, each joined to its live killboard counter when the name matches a
+   hunter on the wire. Hunters with a pattern and no card yet get an AUTO card
+   built purely from the public record (nothing from the files leaks). ---- */
+function renderGss(t, gr){
+  var hs = (gr && gr.hunters) || [];
+  function liveFor(name){
+    var f = String(name||"").toLowerCase().trim();
+    if (!f) return null;
+    for (var i = 0; i < hs.length; i++){
+      var hn = String(hs[i].name||"").toLowerCase();
+      if (hn && (hn.indexOf(f) >= 0 || f.indexOf(hn) >= 0)) return hs[i];
+    }
+    return null;
+  }
+  var used = {}, cards = [];
+  (t||[]).forEach(function(x){
+    var lv = liveFor(x.name);
+    if (lv) used[lv.name] = 1;
+    cards.push('<div class="card t"><div class="ct" data-i18n-skip>' + esc(x.name) + '</div>' +
+      '<div class="cr">' + esc([x.size, x.awake].filter(Boolean).join(" · ")) + '</div>' +
+      (x.flies ? '<div class="cl"><b>Flies:</b> ' + esc(x.flies) + '</div>' : '') +
+      (x.kills ? '<div class="cl"><b>Kills:</b> ' + esc(x.kills) + '</div>' : '') +
+      (x.doabout ? '<div class="cw">' + esc(x.doabout) + '</div>' : '') +
+      (lv ? '<div class="cw wire">ON THE WIRE: ' + lv.kills + ' of ours &middot; last ' + ago(lv.last) +
+        (lv.systems && lv.systems.length ? ' &middot; <span data-i18n-skip>' + esc(lv.systems.slice(0,3).join(", ")) + '</span>' : '') + '</div>' : '') +
+      '</div>');
+  });
+  hs.forEach(function(h){
+    if (used[h.name] || h.kills < 2 || cards.length >= 12) return;
+    cards.push('<div class="card t auto"><div class="ct" data-i18n-skip>' + esc(h.name) + '</div>' +
+      '<div class="cr">AUTO &middot; from the wire, no file yet</div>' +
+      '<div class="cl"><b>Kills:</b> ' + h.kills + ' of ours, ' + isk(h.isk) + '</div>' +
+      (h.ships && h.ships.length ? '<div class="cl"><b>Flies:</b> <span data-i18n-skip>' + esc(h.ships.slice(0,4).join(", ")) + '</span></div>' : '') +
+      '<div class="cw">last ' + ago(h.last) +
+      (h.systems && h.systems.length ? ' &middot; <span data-i18n-skip>' + esc(h.systems.slice(0,3).join(", ")) + '</span>' : '') + '</div></div>');
+  });
+  $("threats").innerHTML = cards.length
+    ? '<div class="cards">' + cards.join("") + '</div>'
+    : '<div class="empty">No cards posted and nothing on the wire with a pattern. ' +
       'Officers: the workbench is at /portal/intel.</div>';
 }
 
@@ -298,22 +462,37 @@ function showCheckpoint(){
   try { who = await (await fetch("/api/whoami", {credentials:"same-origin"})).json(); } catch(e){}
   if (!who || !who.loggedIn){ $("gate").style.display = ""; showCheckpoint(); return; }
   $("app").style.display = "";
-  var ours = [], ground = [], sysNames = {};
-  try { var kf = await api("kills"); ours = kf.kills || []; } catch(e){}
+
+  // the four sources land in parallel; any one of them failing leaves the
+  // others standing, and every band has an honest empty state
+  var results = await Promise.all([
+    api("kills").catch(function(){ return null; }),
+    (async function(){
+      var r = await fetch(TRIPWIRE + "/region");
+      var w = await r.json(); return Array.isArray(w) ? w : [];
+    })().catch(function(){ return []; }),
+    api("gobsec/ground").catch(function(){ return null; }),
+    api("gobsec/brief").catch(function(){ return { posture:"ROUTINE", standing:[], doctrine:[], threats:[] }; })
+  ]);
+  var ours = (results[0] && results[0].kills) || [];
+  var wire = results[1], gr = results[2], brief = results[3];
+
+  var sysNames = {};
   try {
-    var r = await fetch(TRIPWIRE + "/region");
-    ground = await r.json(); if (!Array.isArray(ground)) ground = [];
-    var ids = []; ground.forEach(function(k){ if (k.sysId && ids.indexOf(k.sysId) < 0) ids.push(k.sysId); });
+    var ids = []; wire.forEach(function(k){ if (k.sysId && ids.indexOf(k.sysId) < 0) ids.push(k.sysId); });
     if (ids.length){
       var nr = await fetch("https://esi.evetech.net/latest/universe/names/", {
         method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(ids.slice(0,500)) });
       if (nr.ok) (await nr.json()).forEach(function(n){ sysNames[n.id] = n.name; });
     }
   } catch(e){}
-  renderNow(ours, ground, sysNames);
+
+  renderNow(ours, wire, sysNames);
+  renderBrief(brief, wire);
+  renderHunters(gr);
+  renderArea(wire, sysNames);
+  renderGss((brief && brief.threats) || [], gr);
   renderBoard(ours);
-  try { renderBrief(await api("gobsec/brief")); }
-  catch(e){ renderBrief({ posture:"ROUTINE", standing:[], doctrine:[], threats:[] }); }
 })();
 </script>
 </body></html>
