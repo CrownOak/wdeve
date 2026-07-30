@@ -313,6 +313,24 @@
   .lsum b{ color:var(--silver); font-size:15px; font-family:var(--display); letter-spacing:.02em; }
   .lsum .warn b{ color:var(--amber); }
 
+  /* ONE HUNDRED GOBLINS, rail edition. Sits at the TOP of the rail so it is the first thing a
+     member sees on login, and it is dismissible so a celebration cannot rot into furniture.
+     Narrower column than the landing band, so the number carries it and the prose stays short. */
+  .hnd{ position:relative; background:var(--black); border:1px solid var(--ore); border-left-width:3px;
+        padding:16px 17px 17px; margin:0 0 14px; text-align:center;
+        box-shadow:0 0 0 1px rgba(70,255,94,.06), 0 14px 34px -24px rgba(70,255,94,.55); }
+  .hnd-x{ position:absolute; top:6px; right:8px; background:none; border:0; color:var(--muted);
+          font-size:16px; line-height:1; cursor:pointer; padding:2px 4px; }
+  .hnd-x:hover{ color:var(--silver); }
+  .hnd-k{ font-family:var(--mono); font-size:9px; letter-spacing:.26em; text-transform:uppercase;
+          color:var(--ore); }
+  .hnd-n{ font-family:var(--display); font-weight:700; font-size:56px; line-height:.95; color:var(--ore);
+          margin:7px 0 4px; letter-spacing:-.02em; text-shadow:0 0 30px rgba(70,255,94,.35); }
+  .hnd-l{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+          font-size:11.5px; line-height:1.4; color:var(--silver); margin-bottom:9px; }
+  .hnd-b{ font-size:12.5px; line-height:1.6; color:var(--silver-dim); }
+  .hnd-c{ margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft);
+          font-size:11.5px; line-height:1.55; color:var(--muted); }
   /* ---------- referral link (Certified Goblin Dealer) ---------- */
   /* lives in MAIN now (it is an action, not a read), so it gets panel-weight padding and
    the link row can stretch instead of wrapping in a narrow rail */
@@ -1098,6 +1116,7 @@
       <!-- rail comes AFTER main in the DOM so the mobile stack order is right by default,
            with no order: override for somebody to break later -->
       <aside class="prail">
+        <div id="hundredWrap"></div>
         <div id="gssBriefWrap"></div>
         <div id="goalStripWrap"></div>
         <div id="railEventsWrap"></div>
@@ -2511,6 +2530,38 @@ function renderEventBoard(){
     h += '<div class="mevempty">Nobody on the board yet. First one up sets the pace.</div>';
   }
   return h + '</div>';
+}
+/* ONE HUNDRED GOBLINS. The landing band is proof for a stranger; this one is for the person
+   who helped do it, so it is second person and it credits them rather than the structures.
+   DISMISSIBLE and remembered: a celebration that will not go away stops being a celebration
+   and becomes furniture (the same reason the academy notice needed a home rather than a
+   permanent slot). Count is live off ESI, so it keeps climbing past 100. */
+function renderHundred(){
+  var el = $("hundredWrap"); if (!el) return;
+  if (isAlly()) { el.innerHTML = ""; return; }
+  try { if (localStorage.getItem("bonk_hundred_seen") === "1") { el.innerHTML = ""; return; } } catch(e){}
+  el.innerHTML =
+    '<div class="hnd">' +
+      '<button class="hnd-x" id="hndX" title="dismiss">&times;</button>' +
+      '<div class="hnd-k">&#129703; A hundred goblins</div>' +
+      '<div class="hnd-n"><span id="hndCount">100</span></div>' +
+      '<div class="hnd-l">Twelve years to build the machine. Two weeks to fill it.</div>' +
+      '<div class="hnd-b">A corp is the people who show up, and a hundred of you show up. ' +
+        'Whether you have been here twelve years or twelve hours, you are the reason this works.</div>' +
+      '<div class="hnd-c">Almost every one of us is here because somebody thought to ask.</div>' +
+    '</div>';
+  var x = $("hndX");
+  if (x) x.onclick = function(){
+    try { localStorage.setItem("bonk_hundred_seen", "1"); } catch(e){}
+    el.innerHTML = "";
+  };
+  fetch("https://esi.evetech.net/latest/corporations/98342394/?datasource=tranquility")
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      var n = $("hndCount");
+      if (n && d && typeof d.member_count === "number") n.textContent = d.member_count;
+    })
+    .catch(function(){});
 }
 function renderReferral(){
   var el = $("referralWrap"); if (!el) return;
@@ -4039,6 +4090,7 @@ function renderFoot(){
     loadBanners();
     loadKillFeed();
     loadReferral();
+    safeRender(renderHundred, $("hundredWrap"));
   } catch(e){
     if (isOut(e)) return; /* gate already shown */
     /* /api/me itself failed (not a 401): the whole page cannot render; be honest */
