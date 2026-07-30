@@ -2,20 +2,23 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>GOBSEC — Goblin State Security</title>
+<title>GOBSEC &middot; Goblin State Security</title>
 <link rel="stylesheet" href="/common.css?v=7">
 <style>
-  /* GOBSEC cover: the door for killers. Monochrome, seal-dominant, one red accent.
-     Deliberately NOT the goblin-interview look; the interview is one click below. */
+  /* GOBSEC cover. Seal-dominant, one red accent, deliberately NOT the goblin-interview look.
+     The SEAL stays austere (that is the logo canon) while the copy is relaxed and dry: a
+     serious badge worn by somebody entirely unbothered is the whole GOBSEC voice. Toned back
+     2026-07-29 (Kyle: "so aggressive, make it hilarious, it's meant to be fun") because the
+     old copy read as a recruitment poster, which GOBSEC-VOICE.md says to kill on sight. */
   :root{ --gsred: rgba(255,71,87,.72); --gsred-dim: rgba(255,71,87,.38); }
   .gsWrap{ max-width:660px; margin:0 auto; padding:34px 22px 64px; }
   .gsSeal{ width:min(320px,70vw); height:auto; display:block; margin:10px auto 24px;
            filter:drop-shadow(0 14px 44px rgba(0,0,0,.65)); }
   .gsHead{ text-align:center; }
-  .gsMark{ font-family:var(--mono); font-size:10.5px; letter-spacing:.34em; text-transform:uppercase;
-           color:#ff4757; }
+  .gsMark{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
+           color:#ff6b78; }
   .gsName{ font-family:var(--display); font-weight:700; text-transform:uppercase;
-           letter-spacing:.22em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); margin-top:9px; }
+           letter-spacing:.14em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); margin-top:9px; }
   .gsTick{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
            color:var(--muted); margin-top:8px; }
   .gsRule{ width:46px; height:1px; background:var(--gsred); margin:24px auto; }
@@ -24,8 +27,8 @@
   .gsBody b{ color:var(--silver); font-weight:600; }
 
   .blk{ margin-top:30px; border-top:1px solid var(--line-soft); padding-top:16px; }
-  .blk h2{ font-family:var(--mono); font-size:10.5px; letter-spacing:.3em; text-transform:uppercase;
-           color:#ff4757; margin:0 0 12px; }
+  .blk h2{ font-family:var(--mono); font-size:10.5px; letter-spacing:.24em; text-transform:uppercase;
+           color:#ff6b78; margin:0 0 12px; }
   .blk ul{ list-style:none; margin:0; padding:0; }
   .blk li{ position:relative; padding-left:20px; margin:0 0 9px; font-size:14px;
            color:var(--silver-dim); line-height:1.6; }
@@ -61,61 +64,65 @@
   </div>
   <div class="gsRule"></div>
 
-  <div class="gsLede">Somebody has to hunt the people preying on honest pilots.<br>
-    We are very good at it.</div>
+  <div class="gsLede">Somebody keeps shooting our miners.<br>
+    We're the somebody who goes and has a word about it.</div>
 
-  <div class="gsBody">Out here the strong farm the weak because nobody stops them. <b>We stop them.</b>
-    Not for ISK, not for a green board, because someone should. GOBSEC hunts the predators and ends them.</div>
+  <div class="gsBody">It's less noble than it sounds. We just got tired of it. Ganking is a great
+    business right up until the part where somebody shows up who's also having a good time.
+    <b>We're that part.</b></div>
 
   <div class="blk">
     <h2>The job</h2>
     <ul>
-      <li>Find the gankers, pirates, and parasites who farm people who cannot fight back.</li>
-      <li>Point the skill they use on the defenseless <b>back at them</b>.</li>
-      <li>Protect our own, and make preying on the weak the last mistake you make.</li>
+      <li>Somebody jumps a barge, somebody undocks. That's the whole arrangement.</li>
+      <li>We find the guys who only ever fight people who can't shoot back, and we
+        <b>introduce a variable</b>.</li>
+      <li>Sometimes something expensive explodes. We've made our peace with it.</li>
     </ul>
   </div>
 
   <div class="blk">
     <h2>The list</h2>
     <ul>
-      <li>GSS keeps files on everyone working our space. <b>We do not guess.</b></li>
-      <li>We know their names, corps, and habits before they undock.</li>
-      <li>We do not wander into fights. <b>We arrive at them.</b></li>
+      <li>GSS keeps files. Names, corps, timezones, who they fly with. It's a bit much, honestly.</li>
+      <li>So we usually know who you are a while before you know we're around.</li>
+      <li>We don't really wander into fights. <b>We schedule them.</b></li>
     </ul>
   </div>
 
   <div class="blk">
     <h2>The bar</h2>
     <ul>
-      <li><b>Elite unit. We mean it.</b> Specialists only: logi, EWAR, tackle, recon, real FCs.</li>
-      <li>A board that speaks for itself, or the raw talent to build one.</li>
-      <li>Discipline over ego. No passengers. We do not lose twice to the same name.</li>
-      <li><b>Invites are earned.</b> If you get one, you are one of the best out here. Most never will be.</li>
+      <li>Logi, EWAR, tackle, recon, FCs. <b>Good at one thing counts.</b> Most people are good
+        at one thing.</li>
+      <li>A killboard, or the obvious talent to go make one.</li>
+      <li>Nobody here's going to explain the game to you. We'll happily fly next to you while
+        you work it out, though.</li>
+      <li>Invites are picky. Nothing personal, we just like knowing everybody's name.</li>
     </ul>
   </div>
 
   <div class="blk">
     <h2>The ground</h2>
     <ul>
-      <li>Home is highsec. The work runs into lowsec and null.</li>
-      <li>We escort our own, hold the grid, and hunt the hunters.</li>
-      <li>We fly cheap, build our own gear, and win for a reason.</li>
+      <li>We live in highsec. The work doesn't.</li>
+      <li>We escort our own, sit on the grid, and go bother lowsec when the mood takes us.</li>
+      <li>We fly cheap and build our own gear, which makes losing a ship a lot less emotional.</li>
     </ul>
   </div>
 
   <div class="gsClose">
-    We are here to be the best, not the biggest.<br>
-    <span class="quiet">If you are good enough, you already know.</span>
+    We're not trying to be the biggest.<br>
+    <span class="quiet">Mostly we'd just like the road to be boring for our own people.</span>
   </div>
 
   <div class="gsActs">
-    <a class="gsBegin" href="/apply/?track=gobsec">Begin</a>
+    <a class="gsBegin" href="/apply/?track=gobsec">Alright, I'm in</a>
     <div class="gsAlt">or come argue with us first:
       <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
   </div>
 
-  <div class="gsFoot">Assume Nothing
+  <div class="gsFoot">Somebody's gotta undock
     <span class="dockline">GOBSEC. Violence, but make it a public service.</span></div>
 </div>
 </body></html>

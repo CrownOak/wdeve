@@ -221,7 +221,7 @@ function showCheckpoint(){
     'Nobody types their way in here.</p>'+
     '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus>'+
     '<button id="gsspwgo">submit</button></div>'+
-    '<p class="cphint">Flying with us and still seeing this? <a href="/portal/">Log in to the portal</a> first.<br>'+
+    '<p class="cphint">Mining with us and seeing this? This wing is walled off on purpose, ask an officer.<br>'+
     'Everyone else: <a href="/apply/gobsec">the door is over here</a>.</p>'+
     '<div class="stamp"><span class="rec"></span>Restricted terminal &middot; GOBSEC &middot; Tranquility</div>'+
     '<div class="stamp2">this session is monitored &middot; every entry is logged</div>';
@@ -400,7 +400,7 @@ async function fillHud(who){
 (async function(){
   var who=null;
   try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
-  if(!who||!who.loggedIn){ $("gate").style.display="flex"; showCheckpoint(); return; }
+  if(!who||!who.loggedIn||!who.gobsec){ $("gate").style.display="flex"; showCheckpoint(); return; }
   $("app").style.display="";
   $("who").innerHTML = esc(who.ign||"goblin") + " &middot; <b>" + (who.gss?"GSS clearance":"member") + "</b>";
   /* The workbench holds the hostile files and person dossiers. One gate gets you to the desk;

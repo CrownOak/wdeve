@@ -428,7 +428,7 @@ tr.haulrow{ cursor:pointer; }
   (function(){
     function hesc(v){ return String(v==null?"":v).replace(/[&<>"]/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-    fetch("/api/gobsec/brief",{credentials:"same-origin",cache:"no-store"}).then(function(r){ return r.ok?r.json():null; })
+    fetch("/api/gobsec/stance",{credentials:"same-origin",cache:"no-store"}).then(function(r){ return r.ok?r.json():null; })
       .then(function(b){
         if (!b || !b.ok) return;
         var st = b.stance || {}; var p = st.key || b.posture || "ROUTINE";

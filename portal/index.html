@@ -1387,7 +1387,7 @@ function renderIdentity(){
       '<div class="idacts">' +
         ((role === "officer" || role === "admin")
           ? '<a class="mini cc" href="/portal/admin/" title="Leadership command center">&#9881; Command Center</a>' : '') +
-        ((role === "officer" || role === "admin" || a.gss)
+        ((role === "officer" || role === "admin" || a.gss || a.gobsec)
           ? '<a class="mini cc" href="/portal/intel/" title="Goblin State Security" style="border-color:rgba(143,183,201,.5);color:#8fb7c9">&#128373;&#65039; GSS</a>' : '') +
         '<button class="mini" id="editProfileBtn">Profile &amp; settings</button>' +
         '<button class="bell" id="bellBtn" title="Your inbox">&#128276;' +
@@ -1856,12 +1856,11 @@ function gsbHeat(wire, ids){
 }
 function loadGssBrief(){
   Promise.all([
-    api("gobsec/brief").catch(function(){ return null; }),
-    api("gobsec/ground").catch(function(){ return null; }),
+    api("gobsec/stance").catch(function(){ return null; }),
     fetch("https://bonk-tripwire.kyle-dd7.workers.dev/region").then(function(r){ return r.json(); })
       .then(function(w){ return Array.isArray(w) ? w : []; }).catch(function(){ return []; })
   ]).then(function(rs){
-    S.gssBrief = { brief: rs[0], ground: rs[1], wire: rs[2] };
+    S.gssBrief = { brief: rs[0], ground: null, wire: rs[1] };
     safeRender(renderGssBrief, $("gssBriefWrap"));
   });
 }
@@ -1871,34 +1870,22 @@ function renderGssBrief(){
   if (isAlly()){ el.innerHTML = ""; return; }
   if (S.gssBrief === undefined){ S.gssBrief = null; loadGssBrief(); }
   var d = S.gssBrief;
-  var brief = d && d.brief, ground = d && d.ground, wire = (d && d.wire) || [];
-  var stance = (brief && brief.stance) || { key: (brief && brief.posture) || "ROUTINE" };
+  var brief = d && d.brief, wire = (d && d.wire) || [];
+  var stance = (brief && brief.stance) || { key: "ROUTINE" };
   var p = stance.key || "ROUTINE";
 
-  // the verdict: ours dead > busy corridor > quiet, honestly stated
+  /* THE WALL (Kyle 2026-07-29): a mining member's rail reads the STANCE and the
+     PUBLIC corridor wire. Hunter names, our loss record and the threat files are
+     GOBSEC work product and are not served to this surface at all — so there is
+     nothing here to leak, by construction rather than by discipline. */
   var now = Date.now();
-  var ours24 = 0;
-  if (ground && ground.losses) ground.losses.forEach(function(l){
-    if (Date.parse(l.time) > now - 86400000) ours24++;
-  });
   var wire24 = wire.filter(function(k){ return (k.ts||0) > now - 86400000; }).length;
   var verdict, hot = false;
   if (!d){ verdict = "Reading the wire…"; }
-  else if (ours24){ hot = true; verdict = ours24 + " of ours died in the last day. Read the board before you undock."; }
+  else if (p !== "ROUTINE"){ hot = (p !== "STAND DOWN"); verdict = stance.member || "Check with an officer before the next run."; }
   else if (wire24 >= 12){ hot = true; verdict = "Busy corridor today. " + wire24 + " kills on the wire. Fly like it."; }
-  else if (!brief && !ground && !wire.length){ verdict = "The wire is quiet or the wire is down. Either way, mine aligned."; }
-  else { verdict = "Quiet. Nothing of ours died today."; }
-
-  // one GSS line: the top patterned hunter off the public record, else curated card
-  var say = "";
-  var hs = (ground && ground.hunters) || [];
-  if (hs.length && hs[0].kills >= 2){
-    say = "GSS: <span data-i18n-skip>" + esc(hs[0].name) + "</span>"
-      + (hs[0].systems && hs[0].systems.length ? " working <span data-i18n-skip>" + esc(hs[0].systems[0]) + "</span>." : ".")
-      + " " + hs[0].kills + " of ours, 30 days.";
-  } else if (brief && brief.threats && brief.threats.length){
-    say = "GSS: eyes on <span data-i18n-skip>" + esc(brief.threats[0].name) + "</span>.";
-  }
+  else if (!brief && !wire.length){ verdict = "The wire is quiet or the wire is down. Either way, mine aligned."; }
+  else { verdict = "Quiet on the road. Normal operations."; }
 
   var home = gsbHeat(wire, [GSS_HOME]), door = gsbHeat(wire, [GSS_DOOR]), corr = gsbHeat(wire, GSS_CORRIDOR);
   function chip(label, sys, h){
@@ -1906,13 +1893,11 @@ function renderGssBrief(){
       '<span data-i18n-skip>' + sys + '</span>' +
       '<span class="gst ' + h.st + '" style="margin-left:auto">' + h.st + (h.k24 ? " · " + h.k24 : "") + '</span></div>';
   }
-  // an active stance speaks in its own words (the nudge), with the hunt clock when running
+  // the hunt clock, when one is running
   var word = "";
-  if (p !== "ROUTINE" && stance.member){
-    var clock = (p === "HUNT" && stance.until)
-      ? ' <span style="font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--muted)">· ' +
-        Math.max(0, Math.round((stance.until - Date.now()) / 60000)) + 'm left</span>' : '';
-    word = '<div class="gword">' + esc(stance.member) + clock + '</div>';
+  if (p === "HUNT" && stance.until){
+    word = '<div class="gword">Hunting session, ' +
+      Math.max(0, Math.round((stance.until - Date.now()) / 60000)) + 'm left.</div>';
   }
   el.innerHTML =
     '<div class="gsb">' +
@@ -1922,8 +1907,6 @@ function renderGssBrief(){
       word +
       '<div class="gv' + (hot ? " hot" : "") + '">' + verdict + '</div>' +
       chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
-      (say ? '<div class="gsay">' + say + '</div>' : '') +
-      '<a class="glink" href="/gobsec/board/">the full board &rarr;</a>' +
       '<div class="gsig">Somebody&rsquo;s gotta undock.</div>' +
       '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
     '</div>';
