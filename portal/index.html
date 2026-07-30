@@ -2489,7 +2489,7 @@ function renderEventBoard(){
       '<div class="mvp"><b>Rank up</b><span>a real promotion</span></div>' +
       '<div class="mvp"><b>&#129689; Medal</b><span>on your record, forever</span></div>' +
     '</div>' +
-    '<div class="mevprize">Most goblins brought home wins it. Resets every month, so the title keeps moving.</div>';
+    '<div class="mevprize">Most goblins brought home wins it. Runs to <b>31 August</b>, and everybody starts at zero.</div>';
   if (b.board && b.board.length){
     h += '<div class="mevboard">' + b.board.map(function(row){
       return '<div class="mevrow' + (row.me ? ' me' : '') + (row.rank === 1 ? ' lead' : '') + '">' +
@@ -2499,7 +2499,7 @@ function renderEventBoard(){
         '<span class="mvj">' + row.joined + '</span></div>';
     }).join("") +
     '<div class="mevkey"><span>held</span><span>joined</span></div>' +
-      '<div class="mevfoot">Held means still in the corp 14 days after approval. That is the number the prize pays on.</div></div>';
+      '<div class="mevfoot">Joined is what wins it. Held (still here 14 days after approval) is the quality check, and it settles ties.</div></div>';
   } else {
     h += '<div class="mevempty">Nobody on the board yet. First one up sets the pace.</div>';
   }
