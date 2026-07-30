@@ -137,6 +137,20 @@
   body.t-gobsec .chip.onpick{ box-shadow:0 0 10px rgba(255,71,87,.22); }
   body.t-gobsec .seg.on{ box-shadow:0 0 10px rgba(255,71,87,.28); }
   body.t-gobsec .brandline b{ text-shadow:0 0 12px rgba(255,71,87,.30); }
+
+  /* ---- ALLY track: the alliance door. Same components, third key. Construction
+     orange because this is the industrial handshake, not the mining floor (green)
+     and not the guns (red). Identical treatment so all three doors feel like one
+     building with different rooms. ---- */
+  body.t-ally{ --ore:#ff9f1c; --ore-deep:#c26a00; --laser:#ffd9a0; background:#0a0907; }
+  body.t-ally .bubble{ border-left-color:#ff9f1c; }
+  body.t-ally .gobtn{ background:transparent; color:#ff9f1c; border:1px solid #ff9f1c; box-shadow:none; }
+  body.t-ally .gobtn:hover{ background:#ff9f1c; color:#120c04; box-shadow:0 0 18px rgba(255,159,28,.30); }
+  body.t-ally .chip.onpick{ background:transparent; color:#ff9f1c; border-color:#ff9f1c;
+    box-shadow:0 0 10px rgba(255,159,28,.22); }
+  body.t-ally .sub{ color:#8c9196; }
+  body.t-ally .seg.on{ box-shadow:0 0 10px rgba(255,159,28,.28); }
+  body.t-ally .brandline b{ text-shadow:0 0 12px rgba(255,159,28,.30); }
 </style></head>
 <body>
   <header class="bnhead">
@@ -191,8 +205,10 @@
   var REFM = location.search.match(/[?&]r=([A-Za-z0-9]{4,32})/);
   var REF = REFM ? REFM[1] : "";
   function gobMode(){ return ans.track === "gobsec"; }
+  function allyMode(){ return ans.track === "ally"; }
   function paintTrack(){
     document.body.classList.toggle("t-gobsec", gobMode());
+    document.body.classList.toggle("t-ally", allyMode());
     var t = document.getElementById("pgTitle"), u = document.getElementById("pgSub");
     // Both doors wear a mark: the GSS seal for the combat track, our own for the mining
     // track. The wordmark stays clean either way (no emoji, which is also what stopped
@@ -200,21 +216,31 @@
     var seal = document.getElementById("pgSeal"), over = document.getElementById("pgOver");
     if (seal) {
       seal.hidden = false;
-      seal.src = gobMode() ? "gss.png" : "bonk.png";
-      seal.alt = gobMode() ? "Goblin State Security seal" : "Big Rock Energy";
+      seal.src = gobMode() ? "gss.png" : allyMode() ? "bonk-alliance.png" : "bonk.png";
+      seal.alt = gobMode() ? "Goblin State Security seal"
+               : allyMode() ? "Big Rock Energy alliance seal" : "Big Rock Energy";
     }
     if (over) over.textContent = gobMode() ? "GOBLIN STATE SECURITY" : "BIG ROCK ENERGY [BONK]";
-    if (t) t.textContent = gobMode() ? "GOBSEC" : "JOIN THE GOBLINS";
+    // the ally door is a CORP talking to an ALLIANCE, so it never says "join the goblins"
+    if (t) t.textContent = gobMode() ? "GOBSEC" : allyMode() ? "FLY WITH BONK" : "JOIN THE GOBLINS";
     if (u) u.textContent = gobMode()
       ? "the part of the corp that shoots back. no panel, no essay, one nosy goblin with a killboard open."
+      : allyMode()
+      ? "the alliance door. your corp keeps its name, its ticker and its chair. you just stop doing it alone."
       : "the official BONK application. no panel, no essay. one nosy goblin.";
     var so = document.getElementById("pgSignoff"), fo = document.getElementById("pgFoot");
-    if (so) so.innerHTML = gobMode() ? "<b>Miners dock up. We don't.</b>"
-                                     : "<b>The ore must flow. The goblins must eat. &#129704;&#129482;</b>";
+    // "Miners dock up. We don't." was retired 2026-07-29 (posturing at our own miners).
+    if (so) so.innerHTML = gobMode() ? "<b>Somebody's gotta undock.</b>"
+                         : allyMode() ? "<b>Nobody mines alone. That goes for corps too.</b>"
+                         : "<b>The ore must flow. The goblins must eat. &#129704;&#129482;</b>";
     if (fo) fo.textContent = gobMode()
       ? "This goes to GOBSEC. Somebody will read it, then read your killboard."
+      : allyMode()
+      ? "This goes to alliance leadership. A CEO reads it, and you get a straight answer."
       : "Applications go straight to the recruiting goblins.";
-    if (gobMode()) document.title = "GOBSEC · apply";
+    document.title = gobMode() ? "GOBSEC · apply"
+                   : allyMode() ? "Fly with BONK · alliance"
+                   : "Join the goblins · BONK";
   }
   var idx = 0, editReturn = false, sending = false;
 
