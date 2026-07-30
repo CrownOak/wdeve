@@ -620,12 +620,19 @@
       langWrap.appendChild(c);
     });
     answer.appendChild(langWrap);
-    // What brings you to the rock: join the corp, or an alliance/community ally seat.
+    // Two of these are a PILOT joining a corp; the third is a CORP joining the
+    // ALLIANCE (Kyle 2026-07-30: "it's not join the goblins, it's join BONK"), so
+    // it speaks as "we", names the alliance, and says the ticker survives.
     var tq = el("div", "coverSub", "What brings you to the rock?");
     tq.style.cssText = "font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px";
     answer.appendChild(tq);
+    var aly = el("div", "coverSub");
+    aly.style.cssText = "font-family:var(--mono);font-size:11px;color:var(--muted);margin:2px 0 12px;"
+      + "line-height:1.6;display:" + (ans.track === "ally" ? "block" : "none");
+    aly.innerHTML = 'Alliance seat, not a merger. You keep your corp, your name, your ticker, '
+      + 'your CEO chair, your wallet and your tax. You just stop doing it alone.';
     var trackWrap = el("div", "chips"); trackWrap.style.marginBottom = "14px";
-    [["corp","I want to mine"],["gobsec","I want to shoot"],["ally","We want to work with you"]].forEach(function(o){
+    [["corp","I want to mine"],["gobsec","I want to shoot"],["ally","My corp wants to fly with BONK"]].forEach(function(o){
       var c = el("button", "chip" + (ans.track === o[0] ? " onpick" : ""), o[1]); c.type = "button";
       c.addEventListener("click", function(){
         ans.track = o[0]; saveDraft();
@@ -633,10 +640,13 @@
         c.classList.add("onpick");
         paintTrack();            // the page turns red the moment they pick combat
         rebuildSegs();           // GOBSEC asks 11, the mining track asks 9
+        aly.style.display = (o[0] === "ally") ? "block" : "none";
       });
       trackWrap.appendChild(c);
     });
     answer.appendChild(trackWrap);
+    answer.appendChild(aly);
+    // the alliance answer: what a CEO actually wants to know before they click
     // the sideways door: a GOBSEC arrival who decides combat is not for them should land
     // somewhere useful rather than bouncing off the site
     if (gobMode()){
