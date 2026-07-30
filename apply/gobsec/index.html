@@ -87,15 +87,13 @@
     Right now they're getting away with it.</div>
 
   <div class="gsBody">Anyone bigger takes what you have and nothing happens.
-    <b>We're building the thing that happens.</b> Call it organizing against evil if you want.
-    We mostly call it Tuesday. We're new, we lose more than we win, and that's the opening.</div>
+    <b>We're building the thing that happens.</b> We're new. We lose more than we win.
+    That's the opening.</div>
 
   <div class="gsFacts">
     <div><span>The job</span><p>A barge can't shoot back. That isn't a figure of speech, it's the hull. We're the part that shoots back.</p></div>
-    <div><span>The work</span><p>Home is highsec. The work isn't. We push into lowsec and null and hold grid while the holds fill with Arkonor and Bistot, because the ore that actually pays sits in somebody else's space, watched by people who do this for a living.</p></div>
-    <div><span>The goal</span><p>Standing fleet whenever we're out. A scout parked where they stage. Logi on the barge before the second volley, because CONCORD always turns up and it's always too late. Under a minute from the call to reps on grid.</p></div>
-    <div><span>The point</span><p>Get that right and the lane is free. A market only works if people can reach it, and most of the ones getting farmed are new, flying something they saved a month for.</p></div>
-    <div><span>The list</span><p>GSS keeps files on everyone working our space. Names, corps, timezones. We're aware that's a lot.</p></div>
+    <div><span>The work</span><p>Home is highsec. The work isn't. Lowsec and null, holding grid while the holds fill with Arkonor and Bistot, against people who do this for a living.</p></div>
+    <div><span>The point</span><p>A market only works if people can reach it.</p></div>
     <div><span>The bar</span><p>Logi, EWAR, tackle, recon, FCs. Be good at one thing. That's plenty.</p></div>
   </div>
 
@@ -103,12 +101,10 @@
        because a flex with a zero in it is worse than no flex. -->
   <div class="gsPool" id="gsPool" hidden>
     <div class="gpk">The invite list</div>
-    <p class="gph">150 names and <b id="gpSolo">0</b> solo kills.</p>
+    <p class="gph">150 names. <b id="gpSolo">0</b> solo kills.</p>
     <p class="gpn">GSS scored <b id="gpRows">0</b> pilots. We're inviting the top 150.
-      The name at the top has <b id="gpTop">0</b> on their own. We read it twice, out of respect.</p>
+      None of them fly for us yet.</p>
     <p class="gpg">Solo means nobody came to help. They were fine.</p>
-    <p class="gpc">None of them fly for us yet. We're a mining corp with a spreadsheet and a very
-      specific mailing list. Figures go up without us.</p>
   </div>
 
   <div class="gsClose">
@@ -142,7 +138,6 @@
       if (rows < 50 || solo < 1000) return;   // board mid-rebuild or broken: say nothing
       document.getElementById("gpRows").textContent = rows.toLocaleString();
       document.getElementById("gpSolo").textContent = solo.toLocaleString();
-      document.getElementById("gpTop").textContent = (Number(d.top_solo) || 0).toLocaleString();
       el.hidden = false;
     })
     .catch(function () {});
