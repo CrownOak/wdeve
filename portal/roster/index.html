@@ -29,6 +29,7 @@
   .fign{ font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.02em;
          color:var(--silver); line-height:1.25; overflow-wrap:anywhere; }
   .badge.adm{ background:var(--amber); }
+  .badge.whale{ color:#7ec8e3; border-color:rgba(126,200,227,.5); }
   .badge.ally{ background:transparent; color:var(--amber); border:1px solid rgba(233,196,106,.5); }
   .allysec{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--amber);
             border-top:1px solid var(--line); padding-top:16px; margin-top:6px; }
@@ -174,6 +175,13 @@
     if (role === "ally")    return ' <span class="badge ally">&#129309; ALLY</span>';
     return "";
   }
+  /* FLEET RIGHTS: who can actually start an op. The point of the roster badge is
+     that a goblin who wants to mine tonight can find someone to ask. */
+  function fleetBadge(r){
+    if (r.orca)     return ' <span class="badge whale">&#128011; FLEET BOSS</span>';
+    if (r.porpoise) return ' <span class="badge whale">&#128044; FLEET BOSS</span>';
+    return "";
+  }
 
   function card(r){
     var ign    = r.main_ign || "unknown goblin";
@@ -207,7 +215,7 @@
       '<div class="fhead">' +
         '<div class="fava">' + avatarHTML(r.avatar_url, r.avatar_seed, ign, 72) + '</div>' +
         '<div class="fid">' +
-          '<div class="fign">' + esc(ign) + roleBadge(r.role) + '</div>' +
+          '<div class="fign">' + esc(ign) + roleBadge(r.role) + fleetBadge(r) + '</div>' +
           '<div class="fmeta">' + tenure + ' days in corp &middot; &#127894; ' + medals + '</div>' +
         '</div>' +
       '</div>' +
