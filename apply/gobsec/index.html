@@ -26,14 +26,18 @@
   .gsBody{ font-size:14.5px; color:var(--silver-dim); line-height:1.7; margin-top:16px; }
   .gsBody b{ color:var(--silver); font-weight:600; }
 
-  .blk{ margin-top:30px; border-top:1px solid var(--line-soft); padding-top:16px; }
-  .blk h2{ font-family:var(--mono); font-size:10.5px; letter-spacing:.24em; text-transform:uppercase;
-           color:#ff6b78; margin:0 0 12px; }
-  .blk ul{ list-style:none; margin:0; padding:0; }
-  .blk li{ position:relative; padding-left:20px; margin:0 0 9px; font-size:14px;
-           color:var(--silver-dim); line-height:1.6; }
-  .blk li::before{ content:"\25B8"; position:absolute; left:2px; top:0; color:var(--gsred-dim); font-size:11px; }
-  .blk li b{ color:var(--silver); font-weight:600; }
+  /* Four facts, one line each. They used to be four bordered blocks of three or four bullets,
+     which is a lot of page for a door. A label grid says the same thing in a quarter of the
+     height and reads in about five seconds, which is all this page ever gets. */
+  .gsFacts{ margin-top:30px; border-top:1px solid var(--line-soft); }
+  .gsFacts div{ display:grid; grid-template-columns:78px minmax(0,1fr); gap:16px;
+                align-items:baseline; padding:13px 0; border-bottom:1px solid var(--line-soft); }
+  .gsFacts span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+                 color:#ff6b78; }
+  .gsFacts p{ margin:0; font-size:14.5px; color:var(--silver-dim); line-height:1.6; }
+  @media(max-width:440px){
+    .gsFacts div{ grid-template-columns:1fr; gap:5px; }
+  }
 
   .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
   .gsClose .quiet{ color:var(--muted); font-size:13.5px; }
@@ -64,60 +68,25 @@
   </div>
   <div class="gsRule"></div>
 
-  <div class="gsLede">Somebody keeps shooting our miners.<br>
-    We're the somebody who goes and has a word about it.</div>
+  <div class="gsLede">People keep shooting our miners.<br>
+    It's going badly for them.</div>
 
-  <div class="gsBody">It's less noble than it sounds. We just got tired of it. Ganking is a great
-    business right up until the part where somebody shows up who's also having a good time.
-    <b>We're that part.</b></div>
+  <div class="gsBody">Ganking is a great business model right up until somebody shows up.</div>
 
-  <div class="blk">
-    <h2>The job</h2>
-    <ul>
-      <li>Somebody jumps a barge, somebody undocks. That's the whole arrangement.</li>
-      <li>We find the guys who only ever fight people who can't shoot back, and we
-        <b>introduce a variable</b>.</li>
-      <li>Sometimes something expensive explodes. We've made our peace with it.</li>
-    </ul>
-  </div>
-
-  <div class="blk">
-    <h2>The list</h2>
-    <ul>
-      <li>GSS keeps files. Names, corps, timezones, who they fly with. It's a bit much, honestly.</li>
-      <li>So we usually know who you are a while before you know we're around.</li>
-      <li>We don't really wander into fights. <b>We schedule them.</b></li>
-    </ul>
-  </div>
-
-  <div class="blk">
-    <h2>The bar</h2>
-    <ul>
-      <li>Logi, EWAR, tackle, recon, FCs. <b>Good at one thing counts.</b> Most people are good
-        at one thing.</li>
-      <li>A killboard, or the obvious talent to go make one.</li>
-      <li>Nobody here's going to explain the game to you. We'll happily fly next to you while
-        you work it out, though.</li>
-      <li>Invites are picky. Nothing personal, we just like knowing everybody's name.</li>
-    </ul>
-  </div>
-
-  <div class="blk">
-    <h2>The ground</h2>
-    <ul>
-      <li>We live in highsec. The work doesn't.</li>
-      <li>We escort our own, sit on the grid, and go bother lowsec when the mood takes us.</li>
-      <li>We fly cheap and build our own gear, which makes losing a ship a lot less emotional.</li>
-    </ul>
+  <div class="gsFacts">
+    <div><span>The job</span><p>Someone jumps a barge, someone undocks. That's the whole arrangement.</p></div>
+    <div><span>The list</span><p>GSS keeps files on everyone working our space. Names, corps, timezones. We're aware that's a lot.</p></div>
+    <div><span>The bar</span><p>Logi, EWAR, tackle, recon, FCs. Be good at one thing. That's plenty.</p></div>
+    <div><span>The ground</span><p>We live in highsec. The work doesn't.</p></div>
   </div>
 
   <div class="gsClose">
-    We're not trying to be the biggest.<br>
-    <span class="quiet">Mostly we'd just like the road to be boring for our own people.</span>
+    We're not trying to be big.<br>
+    <span class="quiet">Just inconvenient.</span>
   </div>
 
   <div class="gsActs">
-    <a class="gsBegin" href="/apply/?track=gobsec">Alright, I'm in</a>
+    <a class="gsBegin" href="/apply/?track=gobsec">I'm in</a>
     <div class="gsAlt">or come argue with us first:
       <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
   </div>
