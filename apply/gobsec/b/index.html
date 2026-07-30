@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GOBSEC &middot; Goblin State Security</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  /* GOBSEC cover, VERSION B: the funny one.
+     Identical chrome to /apply/gobsec/ on purpose, so a side by side is a pure copy test.
+     The joke engine here is the SNL move from BONK-VOICE-PROMPT: a deadpan official
+     structure wrapped around insane content. The seal, the sections and the filing all stay
+     completely straight while the writing admits the whole agency exists out of spite. The
+     contrast IS the comedy, which is why the design must NOT get jokey to match. */
+  :root{ --gsred: rgba(255,71,87,.72); --gsred-dim: rgba(255,71,87,.38); }
+  .gsWrap{ max-width:660px; margin:0 auto; padding:34px 22px 64px; }
+  .gsSeal{ width:min(320px,70vw); height:auto; display:block; margin:10px auto 24px;
+           filter:drop-shadow(0 14px 44px rgba(0,0,0,.65)); }
+  .gsHead{ text-align:center; }
+  .gsMark{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
+           color:#ff6b78; }
+  .gsName{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+           letter-spacing:.14em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); margin-top:9px; }
+  .gsTick{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+           color:var(--muted); margin-top:8px; }
+  .gsRule{ width:46px; height:1px; background:var(--gsred); margin:24px auto; }
+  .gsLede{ font-size:15.5px; color:var(--silver); line-height:1.65; text-align:center; }
+  .gsBody{ font-size:14.5px; color:var(--silver-dim); line-height:1.7; margin-top:16px; }
+  .gsBody b{ color:var(--silver); font-weight:600; }
+
+  .gsFacts{ margin-top:30px; border-top:1px solid var(--line-soft); }
+  .gsFacts div{ display:grid; grid-template-columns:78px minmax(0,1fr); gap:16px;
+                align-items:baseline; padding:13px 0; border-bottom:1px solid var(--line-soft); }
+  .gsFacts span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+                 color:#ff6b78; }
+  .gsFacts p{ margin:0; font-size:14.5px; color:var(--silver-dim); line-height:1.6; }
+  @media(max-width:440px){
+    .gsFacts div{ grid-template-columns:1fr; gap:5px; }
+  }
+
+  .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
+  .gsClose .quiet{ color:var(--muted); font-size:13.5px; }
+  .gsActs{ text-align:center; margin-top:28px; }
+  .gsBegin{ display:inline-block; padding:13px 46px;
+            font-family:var(--mono); font-size:12px; letter-spacing:.3em; text-transform:uppercase;
+            color:var(--silver); border:1px solid var(--line); text-decoration:none;
+            transition:border-color .2s, color .2s, letter-spacing .2s; }
+  .gsBegin:hover{ border-color:var(--gsred); color:#ff4757; letter-spacing:.34em; }
+  .gsAlt{ margin-top:16px; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+          color:var(--muted); }
+  .gsAlt a{ color:var(--silver-dim); text-decoration:none; border-bottom:1px solid var(--line); }
+  .gsAlt a:hover{ color:#ff4757; border-color:var(--gsred-dim); }
+  .gsFoot{ margin-top:52px; font-family:var(--mono); font-size:10.5px; letter-spacing:.3em;
+           text-transform:uppercase; color:var(--muted); text-align:center; }
+  .gsFoot .dockline{ display:block; margin-top:10px; letter-spacing:.06em; text-transform:none;
+                     color:var(--silver-dim); }
+  @media(max-width:480px){ .gsBegin{ padding:12px 30px; letter-spacing:.22em; } }
+</style></head>
+<body>
+<script src="/nav.js?v=17"></script>
+<div class="gsWrap" data-i18n-skip>
+  <img class="gsSeal" src="../gss.png" alt="Goblin State Security seal" width="520" height="520">
+  <div class="gsHead">
+    <div class="gsMark">&#128308; now accepting applications</div>
+    <div class="gsName">Goblin State Security</div>
+    <div class="gsTick">GOBSEC &middot; [GOBSC] &middot; Big Rock Energy</div>
+  </div>
+  <div class="gsRule"></div>
+
+  <div class="gsLede">Somebody shot one of our miners.<br>
+    So we founded a state security agency about it.</div>
+
+  <div class="gsBody">There's a seal. There's a filing system. There's a guy whose entire job is
+    knowing what time you log in. <b>This started as a grudge and became infrastructure.</b></div>
+
+  <div class="gsFacts">
+    <div><span>The job</span><p>Someone jumps a barge, we undock in numbers that are frankly excessive. Excessive is the strategy.</p></div>
+    <div><span>The list</span><p>GSS keeps files. Names, corps, timezones, who you fly with, how you behave when it goes wrong. We've been told this is a lot. We agree. We're still doing it.</p></div>
+    <div><span>The bar</span><p>Logi, EWAR, tackle, recon, FCs. Be excellent at one thing. We'll generously file the rest under personality.</p></div>
+    <div><span>The ground</span><p>Home is highsec, like cowards. The work is not in highsec, which is how we justify the ships.</p></div>
+  </div>
+
+  <div class="gsClose">
+    We're not trying to be the biggest corp in New Eden.<br>
+    <span class="quiet">Just the worst thing that has ever happened to somebody's Sunday.</span>
+  </div>
+
+  <div class="gsActs">
+    <a class="gsBegin" href="/apply/?track=gobsec">Fine, I'm in</a>
+    <div class="gsAlt">or come argue with us first:
+      <a href="https://discord.gg/wQf8dcYj5r" target="_blank" rel="noopener">Discord</a></div>
+  </div>
+
+  <div class="gsFoot">Somebody's gotta undock
+    <span class="dockline">GOBSEC. Violence, but make it a public service.</span></div>
+</div>
+</body></html>
