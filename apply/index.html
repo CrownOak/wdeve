@@ -252,10 +252,18 @@
     { t:"single", n:7, pose:"ledger", f:"found", other:"foundOther", otherPh:"how?",
       opts:["Belt convo","A friend","Reddit","In game mail","Discord","A vision"],
       q:function(){ return "How did you find us? I ask everyone."; } },
-    { t:"text", n:8, pose:"ask", f:"contact", max:LIM.contact, ph:"yourhandle", discord:true,
+    /* THE REFERRAL AREA (Kyle 2026-07-30). Only asked when they did NOT arrive on a
+       link: if they did, the token already rides the form and the cover says so.
+       A pasted link is proof and credits automatically; a typed name is a lead an
+       officer credits by hand (names are never auto-attributed). */
+    { t:"text", n:8, pose:"greed", f:"refnote", max:120, ph:"paste their link, or just their name",
+      skipHint:"No idea? Skip it, nobody is offended.",
+      hide:function(){ return !!REF; },
+      q:function(){ return "Did somebody send you? Paste their link, or tell me who. They get the credit."; } },
+    { t:"text", n:9, pose:"ask", f:"contact", max:LIM.contact, ph:"yourhandle", discord:true,
       skipHint:"Skipping this makes you very hard to find.",
       q:function(){ return "Where does a recruiter find you? Drop your Discord handle. The @username, not the server nickname."; } },
-    { t:"textarea", n:9, pose:"greed", f:"notes", max:LIM.notes, ph:"The floor is yours.",
+    { t:"textarea", n:10, pose:"greed", f:"notes", max:LIM.notes, ph:"The floor is yours.",
       q:function(){ return "Last question. Anything else you want on the record?"; } },
     { t:"review", pose:"ledger",
       q:function(){ return "Let me read that back. Goblins keep clean books."; } },
@@ -315,7 +323,14 @@
   ];
 
   /* ---------- dom + helpers ---------- */
-  function SL(){ return gobMode() ? GOB_SLIDES : SLIDES; }
+  /* The engine has no per-slide hide hook, so the referral question is filtered out
+     of the deck entirely when they arrived on a link (the token is already captured
+     and the cover says who sent them). Filtering here keeps numbering, review and
+     the progress bar consistent, which a hidden-but-present slide would not. */
+  function SL(){
+    var d = gobMode() ? GOB_SLIDES : SLIDES;
+    return REF ? d.filter(function(s){ return s.f !== "refnote"; }) : d;
+  }
   var $ = function(id){ return document.getElementById(id); };
   var bubble = $("bubbleText"), answer = $("answer"), hintRow = $("hintRow"),
       slideErr = $("slideErr"), backBtn = $("backBtn"), qcount = $("qcount"),
@@ -746,6 +761,7 @@
     var notes = ans.notes.trim().slice(0, LIM.notes); if (notes) p.notes = notes;
     p.lang = ans.lang === "ru" ? "ru" : "en";
     if (REF) p.ref = REF;
+    if (ans.refnote) p.ref_note = ans.refnote;
     return p;
   }
   function payload(){
@@ -764,6 +780,7 @@
     var notes = ans.notes.trim().slice(0, LIM.notes);
     if (notes) p.notes = notes;
     if (REF) p.ref = REF;
+    if (ans.refnote) p.ref_note = ans.refnote;
     if (ans.track === "ally") p.applying_for = "ally";
     p.lang = ans.lang === "ru" ? "ru" : "en";
     return p;
