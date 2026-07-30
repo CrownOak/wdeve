@@ -153,6 +153,9 @@
   body.t-ally .brandline b{ text-shadow:0 0 12px rgba(255,159,28,.30); }
 </style></head>
 <body>
+  <div id="alreadyBar" style="display:none;max-width:720px;margin:14px auto 0;padding:11px 15px;
+       background:var(--steel);border:1px solid var(--amber,#e9c46a);border-left:3px solid var(--amber,#e9c46a);
+       color:var(--amber,#e9c46a);font-family:var(--mono);font-size:12.5px;line-height:1.6"></div>
   <header class="bnhead">
     <img id="pgSeal" class="pgseal" src="bonk.png" alt="Big Rock Energy" width="180" height="180">
     <div class="bnover" id="pgOver">BIG ROCK ENERGY [BONK]</div>
@@ -204,6 +207,28 @@
   // decode it, and the roster is never fetched to this public page.
   var REFM = location.search.match(/[?&]r=([A-Za-z0-9]{4,32})/);
   var REF = REFM ? REFM[1] : "";
+  /* ALREADY ONE OF US? Then this form is the wrong door. A member who applies again
+     (typically a miner joining GOBSEC on a combat alt) would mint a SECOND account:
+     split career, split medals, split hauls, and a manual merge for an officer.
+     The alt belongs on the account they already have. */
+  function alreadyIn(w){
+    if (!w || !w.loggedIn) return;
+    if (w.role === "ally") return;              // allies are not corp members, they may apply
+    var b = document.getElementById("alreadyBar");
+    if (!b) return;
+    var safe = String(w.ign || "").replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; });
+    b.innerHTML = '<b>You already have an account' + (safe ? ", " + safe : "") + '.</b> '
+      + 'Do not apply again, it would split your career across two records. '
+      + 'Flying a new combat alt? Add it to your account in the portal, then ask an officer '
+      + 'for GOBSEC access. <a href="/portal/">Open the portal</a>';
+    b.style.display = "block";
+  }
+  try {
+    fetch("/api/whoami", { credentials:"same-origin" })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(alreadyIn).catch(function(){});
+  } catch(e){}
   function gobMode(){ return ans.track === "gobsec"; }
   function allyMode(){ return ans.track === "ally"; }
   function paintTrack(){
