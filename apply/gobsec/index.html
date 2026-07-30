@@ -39,6 +39,18 @@
     .gsFacts div{ grid-template-columns:1fr; gap:5px; }
   }
 
+  /* THE POOL. The one place on the page allowed to raise its voice, because it is the only
+     claim backed by a number somebody else generated. Numbers in ore green, the grim line in
+     red, everything else stays quiet so the figures carry it. */
+  .gsPool{ margin-top:30px; padding:18px 20px; background:var(--black);
+           border:1px solid var(--gsred-dim); border-left:3px solid var(--gsred); }
+  .gsPool .gpk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.28em; text-transform:uppercase;
+                color:#ff6b78; margin-bottom:10px; }
+  .gsPool p{ margin:0 0 8px; font-size:14.5px; line-height:1.6; color:var(--silver-dim); }
+  .gsPool .gpj{ color:var(--muted); }
+  .gsPool .gpn b{ font-family:var(--mono); font-size:16px; color:var(--ore); font-weight:700; }
+  .gsPool .gpg{ color:var(--silver); }
+  .gsPool .gpc{ margin-bottom:0; color:var(--muted); font-size:13.5px; }
   .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
   .gsClose .quiet{ color:var(--muted); font-size:13.5px; }
   .gsActs{ text-align:center; margin-top:28px; }
@@ -83,6 +95,18 @@
     <div><span>The ground</span><p>We live in highsec. The work doesn't.</p></div>
   </div>
 
+  <!-- THE POOL: live off the finder's public stamp. Hidden until the numbers actually load,
+       because a flex with a zero in it is worse than no flex. -->
+  <div class="gsPool" id="gsPool" hidden>
+    <div class="gpk">The pool</div>
+    <p class="gpj">We're a mining corp with a threat scoring machine. Nobody's proud of how
+      that happened.</p>
+    <p class="gpn">It's watching <b id="gpRows">0</b> corp-less killers right now. The top
+      <b>150</b> of them have <b id="gpSolo">0</b> solo kills between them.</p>
+    <p class="gpg">Solo means nobody came to help. They didn't need it.</p>
+    <p class="gpc">That's the room you'd be walking into.</p>
+  </div>
+
   <div class="gsClose">
     We're not trying to be big.<br>
     <span class="quiet">Just the reason somebody gets home.</span>
@@ -97,4 +121,26 @@
   <div class="gsFoot">Somebody's gotta undock
     <span class="dockline">GOBSEC. Violence, but make it a public service.</span></div>
 </div>
+<script>
+/* The pool numbers come from the finder's own public stamp, never from this file. The board
+   rebakes daily, so a figure pasted in here would start lying the first time it moved. Only
+   aggregates are published: no names, no ids, nothing that could be read back as a target list.
+   Fails silent by design. If the fetch dies the block stays hidden, because a recruiting flex
+   showing 0 solo kills is considerably worse than no flex at all. */
+(function () {
+  var el = document.getElementById("gsPool");
+  if (!el || !window.fetch) return;
+  fetch("/gobsec/finder/stamp.json", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) return;
+      var rows = Number(d.rows) || 0, solo = Number(d.top150_solo) || 0;
+      if (rows < 50 || solo < 1000) return;   // board mid-rebuild or broken: say nothing
+      document.getElementById("gpRows").textContent = rows.toLocaleString();
+      document.getElementById("gpSolo").textContent = solo.toLocaleString();
+      el.hidden = false;
+    })
+    .catch(function () {});
+})();
+</script>
 </body></html>
