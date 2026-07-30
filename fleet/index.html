@@ -795,7 +795,7 @@ tr.haulrow{ cursor:pointer; }
   // ---------- gate ----------
   function showGate(s){ el("gate").style.display=s?"":"none"; el("app").style.display=s?"none":""; }
   function gerr(m){ el("gerr").textContent=m||""; }
-  function unlock(pw){ token=pw; gerr("");
+  function unlock(pw, onFail){ token=pw; gerr("");
     api("POST","/sync",{who:who}).then(function(d){
       if(!(d&&d.ok)) throw "bad";
       unlocked=true; role=d.role||""; lsSet(LS_TOK,pw);
@@ -804,7 +804,11 @@ tr.haulrow{ cursor:pointer; }
       if(!who) showNamebox(true);
       bump(); schedule();
     }).catch(function(err){
-      if(err==="unauthorized"){ token=""; lsDel(LS_TOK); gerr("Wrong password."); showGate(true); }
+      if(err==="unauthorized"){ token=""; lsDel(LS_TOK);
+        // a saved word that no longer works is not the user's problem: ask the
+        // portal for the current one before ever showing them a gate
+        if(onFail){ onFail(); return; }
+        gerr("Wrong password."); showGate(true); }
       else{
         var c=null; try{ c=JSON.parse(lsGet(LS_CACHE)||"null"); }catch(e){}
         if(c){ unlocked=true; role=c.role||""; P=c; showGate(false); offline(true); renderRoleChip(); renderAll(); initViews(); bump(); schedule(); }
@@ -2698,8 +2702,19 @@ tr.haulrow{ cursor:pointer; }
   // ---------- boot: prices always; auto-unlock if remembered, else for members ----------
   loadOutbox();
   loadPrices();
-  (function(){ var t=lsGet(LS_TOK);
-    if(t){ unlock(t); return; }
+  (function(){
+    /* A SAVED TOKEN MUST NOT DEAD-END. This used to be `if(t){ unlock(t); return; }`, so a
+       stale token short-circuited the portal handshake entirely: after any token rotation
+       every member with a saved word was stranded at a password gate, being asked for a
+       password they had never known (the portal always handed it over for them). Exactly the
+       cross-tool bug page_lock hit on 2026-07-17 and got fixed for; the fleet page kept the
+       broken shape. Now a saved token that fails falls through to the portal, which is the
+       whole point of member auto-unlock, and rotations stop being breaking changes. */
+    var t=lsGet(LS_TOK);
+    if(t){ unlock(t, bootAuth); return; }
+    bootAuth();
+  })();
+  function bootAuth(){
     // logged-in portal members skip the password gate: the portal hands back the
     // shared fleet (member) token for their session. Command still needs BONKADMIN
     // via the switcher. Falls back to the manual gate if not logged in or offline.
@@ -2709,7 +2724,7 @@ tr.haulrow{ cursor:pointer; }
         if(u&&u.ok&&u.key) unlock(u.key); else showGate(true);
       }).catch(function(){ showGate(true); });
     }).catch(function(){ showGate(true); });
-  })();
+  }
 })();
 </script>
 <script src="/nav.js?v=17"></script>
