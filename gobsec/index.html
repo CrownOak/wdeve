@@ -65,6 +65,23 @@
   .tool.locked{ border-left-color:var(--line); opacity:.55; pointer-events:none; }
   .tool.locked .tn{ color:var(--muted); }
   .tool.locked .go{ color:var(--muted); }
+  .wholink{ background:none; border:0; color:var(--gs); cursor:pointer; font-family:var(--mono);
+             font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; padding:0; }
+  .wholink:hover{ text-decoration:underline; }
+  .altov{ position:fixed; inset:0; z-index:9600; background:rgba(7,8,9,.84); display:none;
+          align-items:center; justify-content:center; padding:20px; }
+  .altcd{ width:100%; max-width:560px; background:var(--steel); border:1px solid var(--line-soft);
+          border-left:3px solid var(--gs); padding:20px 22px; }
+  .altcd .altt{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+                letter-spacing:.08em; font-size:14px; color:var(--silver); margin-bottom:10px; }
+  .altcd p{ font-size:13px; line-height:1.65; color:var(--silver-dim); margin:0 0 12px; }
+  .alturl{ font-family:var(--mono); font-size:11px; color:var(--muted); word-break:break-all;
+           border:1px solid var(--line-soft); padding:9px 11px; margin-bottom:14px; }
+  .altrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .altrow a, .altrow button{ font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; padding:7px 14px; border:1px solid var(--line); background:transparent;
+    color:var(--silver-dim); text-decoration:none; cursor:pointer; }
+  .altrow a:hover, .altrow button:hover{ border-color:var(--gs); color:var(--gs); }
   .foot{ margin-top:44px; font-family:var(--mono); font-size:10px; letter-spacing:.28em;
          text-transform:uppercase; color:var(--muted); text-align:center; }
 
@@ -126,6 +143,7 @@
     <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the desk</div></div>
   </div>
 
+  <div class="altov" id="altov"><div class="altcd" id="altcd"></div></div>
   <div id="gate" class="gschk" style="display:none">
     <div id="gatemsg"><p>Checking clearance&hellip;</p></div>
   </div>
@@ -402,7 +420,27 @@ async function fillHud(who){
   try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
   if(!who||!who.loggedIn||!who.gobsec){ $("gate").style.display="flex"; showCheckpoint(); return; }
   $("app").style.display="";
-  $("who").innerHTML = esc(who.ign||"goblin") + " &middot; <b>" + (who.gss?"GSS clearance":"member") + "</b>";
+  $("who").innerHTML = esc(who.ign||"goblin") + " &middot; <b>" + (who.gss?"GSS clearance":"member") + "</b>"
+    + ' &middot; <button id="altlink" class="wholink">recruit a combat alt</button>';
+  var alt=$("altlink");
+  if(alt) alt.onclick=async function(){
+    var url="";
+    try{ var rr=await api("referral"); url=rr.gobsec_url||rr.url||""; }catch(e){}
+    if(!url){ alt.textContent="link unavailable"; return; }
+    try{ await navigator.clipboard.writeText(url); }catch(e){}
+    var ov=$("altov"), cd=$("altcd");
+    cd.innerHTML='<div class="altt">Recruiting a combat alt</div>'
+      +'<p>Link copied. It opens the GOBSEC application, tagged as your referral.</p>'
+      +'<p>If the pilot wants to fly with us on a second character, that character is created on '
+      +'the official EVE Online site. Accounts, character creation and billing are handled entirely '
+      +'by CCP. We never see or ask for login details.</p>'
+      +'<div class="alturl">'+esc(url)+'</div>'
+      +'<div class="altrow"><a href="https://www.eveonline.com/" target="_blank" rel="noopener">Official EVE Online site &#8599;</a>'
+      +'<button id="altx">Close</button></div>';
+    ov.style.display="flex";
+    $("altx").onclick=function(){ ov.style.display="none"; };
+    ov.onclick=function(e){ if(e.target===ov) ov.style.display="none"; };
+  };
   /* The workbench holds the hostile files and person dossiers. One gate gets you to the desk;
      the third card still needs clearance, exactly as /portal/intel always has. */
   if(!who.gss){ var c=$("cardIntel"); c.classList.add("locked"); c.removeAttribute("href"); }

@@ -379,6 +379,12 @@
   .refbtn{ background:var(--ore); color:#04140a; border:0; font-family:var(--mono); font-size:10px;
            font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:7px 11px; cursor:pointer; }
   .refbtn:hover{ background:var(--laser); }
+  .refalt{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
+  .refalt .ral{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                color:#ff8a93; margin-bottom:6px; }
+  .refalt .ras{ font-size:11.5px; color:var(--muted); line-height:1.55; margin-top:6px; }
+  .refbtn.alt{ background:#ff4757; color:#12060a; }
+  .refbtn.alt:hover{ background:#ff8a93; }
   .refstat{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:9px; }
   .refstat b{ color:var(--ore); }
   .refrot{ background:none; border:0; color:var(--muted); font-family:var(--mono); font-size:10px;
@@ -1118,6 +1124,7 @@
 </div>
 
 <!-- contract modal -->
+<div class="overlay" id="altOverlay"><div class="mcard" id="altCard"></div></div>
 <div class="overlay" id="contractOverlay">
   <div class="mcard" id="contractCard"></div>
 </div>
@@ -2518,6 +2525,15 @@ function renderReferral(){
     '<div class="rs2">Most of us are here because somebody thought to ask.</div>' +
     '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
       '<button class="refbtn" id="refCopy">copy</button></div>' +
+    /* THE ALT DOOR. Plenty of good pilots are happy where their main lives and will
+       still park a combat alt with us. That is a real recruit, it counts the same,
+       and it asks nobody to leave their friends. Every member gets their own. */
+    (r.gobsec_url
+      ? '<div class="refalt"><div class="ral">Recruiting a combat alt? Send this one instead</div>' +
+        '<div class="reflink"><input id="refUrlG" readonly value="' + esc(r.gobsec_url) + '">' +
+        '<button class="refbtn alt" id="refCopyG">copy</button></div>' +
+        '<div class="ras">Goes to the GOBSEC door. Their main stays where it is.</div></div>'
+      : '') +
     '<div class="refstat">' + ((r.referred||0)
       ? ('<b>' + r.referred + '</b> referred &middot; <b>' + (r.joined||0) + '</b> in the door')
       : 'No one yet. Whenever you are ready.') + '</div>' +
@@ -2528,6 +2544,12 @@ function renderReferral(){
     var i = $("refUrl"); i.select();
     try { navigator.clipboard.writeText(r.url); } catch(e){ document.execCommand("copy"); }
     toast("Link copied. Go find some goblins.");
+  };
+  var cg = $("refCopyG");
+  if (cg) cg.onclick = function(){
+    var i = $("refUrlG"); i.select();
+    try { navigator.clipboard.writeText(r.gobsec_url); } catch(e){ document.execCommand("copy"); }
+    openAltModal(r.gobsec_url);
   };
   var rot = $("refRot");
   if (rot) rot.onclick = async function(){
@@ -2920,6 +2942,31 @@ function closeWall(){ $("wallOverlay").classList.remove("show"); }
 $("wallOverlay").addEventListener("click", function(ev){ if (ev.target === this) closeWall(); });
 
 /* ============ add contract modal ============ */
+/* The alt link, explained plainly. A recruit who needs a character makes it on
+   EVE's own site: we never touch accounts, logins or billing, and saying so is
+   the professional thing rather than a selling point. */
+function openAltModal(url){
+  var ov = $("altOverlay"), card = $("altCard");
+  if (!ov || !card) return;
+  card.innerHTML =
+    '<div class="ptitle">Recruiting a combat alt</div>' +
+    '<p style="font-size:13px;line-height:1.65;color:var(--silver-dim);margin:0 0 12px">' +
+      'Link copied. It opens the GOBSEC application, tagged as your referral.</p>' +
+    '<p style="font-size:13px;line-height:1.65;color:var(--silver-dim);margin:0 0 12px">' +
+      'If the pilot you are sending it to wants to fly with us on a second character, ' +
+      'that character is created on the official EVE Online site. Character creation, ' +
+      'accounts and billing are handled entirely by CCP. We never see or ask for login details.</p>' +
+    '<div style="font-family:var(--mono);font-size:11px;color:var(--muted);word-break:break-all;' +
+      'border:1px solid var(--line-soft);padding:9px 11px;margin-bottom:14px">' + esc(url) + '</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+      '<a class="mini" href="https://www.eveonline.com/" target="_blank" rel="noopener">Official EVE Online site &#8599;</a>' +
+      '<button class="mini" id="altClose">Close</button>' +
+    '</div>';
+  ov.style.display = "flex";
+  var b = $("altClose");
+  if (b) b.onclick = function(){ ov.style.display = "none"; };
+  ov.onclick = function(e){ if (e.target === ov) ov.style.display = "none"; };
+}
 function openContractModal(){
   var cs = (S.me.characters || []).filter(function(c){ return c.active !== 0 && c.active !== false; });
   var opts = "";
