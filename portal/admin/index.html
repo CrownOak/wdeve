@@ -778,6 +778,27 @@ function renderCodes(j){
     });
   });
 }
+/* one chip per grantable flag. Filled = they hold it. Click toggles it, the row
+   repaints from the server's answer, and the audit trail is written worker side. */
+function accChip(id, kind, on, glyph, title){
+  return '<button class="accchip'+(on?" on":"")+'" data-acc="'+esc(String(id))+'" data-kind="'+kind+'"'
+    +' title="'+esc(title)+(on?" · click to revoke":" · click to grant")+'">'+glyph+'</button>';
+}
+async function accToggle(btn){
+  const id=btn.getAttribute("data-acc"), kind=btn.getAttribute("data-kind");
+  const on=!btn.classList.contains("on");
+  btn.disabled=true;
+  try{
+    if(kind==="orca"||kind==="porpoise") await api("/api/admin/orca",{account_id:Number(id), on:on, hull:kind});
+    else if(kind==="gobsec")             await api("/api/admin/gobsec-member",{account_id:Number(id), on:on});
+    else if(kind==="gss")                await api("/api/admin/gss-clearance",{account_id:Number(id), on:on});
+    btn.classList.toggle("on", on);
+    const who=(MSTATE.rows.find(function(x){ return String(accId(x))===String(id); })||{});
+    if(kind==="gss") who.gss_clearance=on?1:0; else who[kind]=on?1:0;
+    toast((on?"Granted ":"Revoked ")+kind+".");
+  }catch(e){ toast("That did not land: "+e.message, true); }
+  btn.disabled=false;
+}
 function rosterFiltered(){
   const q=MSTATE.q.trim().toLowerCase();
   let rows=MSTATE.rows.filter(function(r){
@@ -803,7 +824,8 @@ function rosterFiltered(){
 function drawRoster(){
   const t=document.getElementById("mtable"); if(!t) return;
   const cols=[["ign","Goblin"],["role","Role"],["tenure","Days"],["last","Last login"],
-    ["onb","Onboarding"],["meds","Medals"],["isk","Lifetime ISK"],["ops","Ops"],["alts","Alts"]];
+    ["onb","Onboarding"],["meds","Medals"],["isk","Lifetime ISK"],["ops","Ops"],["alts","Alts"],
+    ["access","Access"]];
   let h="<thead><tr>";
   cols.forEach(function(c){
     const cur=MSTATE.sort===c[0];
@@ -812,7 +834,7 @@ function drawRoster(){
   h+="</tr></thead><tbody>";
   const rows=rosterFiltered();
   if(!rows.length){
-    h+='<tr><td colspan="9"><div class="nap">No goblins match. Widen the net.</div></td></tr>';
+    h+='<tr><td colspan="10"><div class="nap">No goblins match. Widen the net.</div></td></tr>';
   }
   rows.forEach(function(r){
     const id=accId(r), alts=mAlts(r), ops=mOps(r), pct=onbPct(r);
@@ -827,6 +849,15 @@ function drawRoster(){
       +'<td class="num good">'+fmtIsk(mIsk(r))+"</td>"
       +'<td class="num" title="'+esc(ops.label)+'">'+fmtN(ops.n)+'<span class="rowmeta"> '+esc(ops.label)+"</span></td>"
       +'<td class="num">'+(alts.length? '<button class="cmail" data-alts="'+esc(String(id))+'">'+alts.length+" ▸</button>":"0")+"</td>"
+      /* ACCESS, one click (Kyle 2026-07-30: "easy way to give and revoke"). Nobody types a
+         password anywhere on this site; these four flags ARE the access model, so they belong
+         on the row rather than three clicks deep in a drawer. */
+      +'<td class="acc">'
+        +accChip(id,"orca",r.orca,"🐋","Orca · fleet rights")
+        +accChip(id,"porpoise",r.porpoise,"🐬","Porpoise · fleet rights")
+        +accChip(id,"gobsec",r.gobsec,"🛡","GOBSEC · desk, board, finder")
+        +(ISADMIN?accChip(id,"gss",r.gss_clearance,"🕵","GSS clearance · the files"):"")
+      +"</td>"
       +"</tr>";
     if(MSTATE.open[id] && alts.length){
       alts.forEach(function(c){
@@ -846,6 +877,9 @@ function drawRoster(){
       if(MSTATE.sort===k) MSTATE.dir*=-1; else { MSTATE.sort=k; MSTATE.dir=-1; }
       drawRoster();
     });
+  });
+  t.querySelectorAll("[data-acc]").forEach(function(b){
+    b.addEventListener("click", function(ev){ ev.stopPropagation(); accToggle(b); });
   });
   t.querySelectorAll("[data-alts]").forEach(function(b){
     b.addEventListener("click", function(e){

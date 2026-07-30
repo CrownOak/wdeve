@@ -42,6 +42,17 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); }
 /* the one header band: everything at one height, wraps as a unit on phones */
 .toggle{ flex-wrap:wrap; row-gap:8px; }
+.orcaask{ margin-top:10px; background:var(--steel); border:1px solid var(--line-soft);
+          border-left:3px solid #7ec8e3; padding:10px 12px; }
+.orcaask .oat{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+               color:#7ec8e3; }
+.orcaask .oal{ font-size:12px; line-height:1.55; color:var(--silver-dim); margin-top:5px; }
+.orcaask .oarow{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.orcaask button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+                 font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+                 padding:6px 11px; cursor:pointer; }
+.orcaask button:hover{ border-color:#7ec8e3; color:#7ec8e3; }
+.orcaask .ok{ font-family:var(--mono); font-size:10.5px; color:var(--ore); margin-top:7px; }
 /* GOBSEC heads-up, the quiet card under the scout */
 .gsbside{ margin-top:10px; background:var(--steel); border:1px solid var(--line-soft);
           border-left:3px solid #ff4757; padding:10px 12px; }
@@ -425,6 +436,47 @@ tr.haulrow{ cursor:pointer; }
        palette shared with board/desk/portal: ESCORT amber · HUNT red ·
        STAND DOWN steel blue. Quiet days render nothing. -->
   <script>
+  /* OWN COMPRESSION? The Orca program, asked on the ledger. A member who flies the
+     whale can run their own ops, and the ledger is where they will be when they think
+     of it. Confirms in place: one call, no page hop, same endpoint the portal uses. */
+  (function(){
+    fetch("/api/me", {credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; })
+      .then(function(me){
+        if (!me || !me.ok) return;                       // logged out: the ledger asks nothing
+        var o = me.orca || {};
+        if (o.orca || o.porpoise) return;                // already holds it, do not nag
+        var el = document.getElementById("orcaAsk");
+        if (!el) return;
+        el.innerHTML =
+          '<div class="oat">&#128011; Own compression?</div>' +
+          '<div class="oal">Fly an Orca or a Porpoise? Then you can run your own fleets: ' +
+          'boosts, compression, and the ledger paying everyone at buyback like always.</div>' +
+          '<div class="oarow">' +
+            '<button data-hull="orca">&#128011; I have an Orca</button>' +
+            '<button data-hull="porpoise">&#128044; I have a Porpoise</button>' +
+          '</div><div class="ok" id="orcaAskOk"></div>';
+        el.style.display = "";
+        Array.prototype.forEach.call(el.querySelectorAll("[data-hull]"), function(b){
+          b.onclick = function(){
+            b.disabled = true;
+            fetch("/api/orca/claim", {method:"POST", credentials:"same-origin",
+              headers:{"Content-Type":"application/json"},
+              body: JSON.stringify({code:"BONKORCA", hull:b.getAttribute("data-hull")})})
+              .then(function(r){ return r.json(); })
+              .then(function(d){
+                if (d && d.ok){
+                  el.querySelector(".oarow").style.display = "none";
+                  document.getElementById("orcaAskOk").textContent =
+                    "Fleet rights are yours. Rally goblins and open a round.";
+                } else {
+                  b.disabled = false;
+                  document.getElementById("orcaAskOk").textContent = (d && d.error) || "That did not land.";
+                }
+              }).catch(function(){ b.disabled = false; });
+          };
+        });
+      }).catch(function(){});
+  })();
   (function(){
     function hesc(v){ return String(v==null?"":v).replace(/[&<>"]/g, function(c){
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
@@ -553,6 +605,9 @@ tr.haulrow{ cursor:pointer; }
                 <div id="scfoot" class="scfoot" data-i18n-skip></div>
               </div>
             </div>
+            <!-- FLEET RIGHTS, asked where the whale pilot actually is (Kyle 7/30).
+                 Shows only to logged-in members who do NOT already hold it. -->
+            <div id="orcaAsk" class="orcaask" style="display:none"></div>
             <!-- GOBSEC heads-up: ambient, in the awareness column where road talk
                  belongs (Kyle 7/29: not top and center). Renders only when the
                  stance is not ROUTINE; quiet days show nothing at all. -->
