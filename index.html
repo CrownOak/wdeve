@@ -48,25 +48,64 @@
 
   .topbar{position:sticky;top:0;z-index:40;background:rgba(7,8,9,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
-  .brandmark{display:flex;align-items:center;gap:12px;text-decoration:none}
+  /* NOTHING IN THIS BAR MAY WRAP. It used to: twelve flex children with no nowrap meant the
+     two LONGEST labels lost, which were the corp name and the first nav link, so at 1280px
+     "BIG ROCK ENERGY" broke onto three lines. nowrap makes that class of bug impossible
+     rather than fixed at one width; the item count below is what makes nowrap affordable. */
+  .topbar .wrap a,.topbar .wrap b,.topbar .wrap button,.topbar .wrap span{white-space:nowrap}
+  .brandwrap{display:flex;align-items:center;gap:20px;flex:0 0 auto;min-width:0}
+  .brandmark{display:flex;align-items:center;gap:12px;text-decoration:none;flex:0 0 auto}
   .brandmark .tick{font-family:var(--mono);color:#04140a;background:var(--ore);font-size:12px;font-weight:700;padding:3px 7px;letter-spacing:1px;clip-path:polygon(0 0,100% 0,92% 100%,0 100%)}
   .brandmark b{font-family:var(--display);font-weight:700;letter-spacing:.06em;font-size:15px;color:var(--silver)}
   .brandmark .alli{font-family:var(--mono);color:var(--ore);font-size:12px;border:1px solid rgba(70,255,94,.4);padding:2px 6px;margin-left:2px}
   .nav{display:flex;align-items:center;gap:26px}
   .nav a{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s}
   .nav a:hover{color:var(--silver)}
-  .eveclk{display:inline-flex;align-items:baseline;gap:7px;cursor:default;font-family:var(--mono);padding-right:22px;border-right:1px solid var(--line)}
+  /* THE ROCK. One control replacing four in-page anchors, which is where the width came
+     from. Click, never hover: a hover menu is unusable on touch and twitchy on desktop. */
+  .drop{position:relative;display:inline-flex}
+  .dropbtn{background:transparent;border:0;cursor:pointer;font-family:var(--mono);font-size:12.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0;transition:color .2s;
+    display:inline-flex;align-items:center;gap:6px}
+  .dropbtn:hover,.drop.open .dropbtn{color:var(--silver)}
+  .dropbtn .car{font-size:9px;transition:transform .15s}
+  .drop.open .dropbtn .car{transform:rotate(180deg)}
+  .dropmenu{position:absolute;top:calc(100% + 14px);left:-14px;min-width:172px;
+    background:rgba(9,11,12,.97);backdrop-filter:blur(10px);border:1px solid var(--line);
+    padding:7px 0;display:flex;flex-direction:column;
+    box-shadow:0 18px 44px -18px rgba(0,0,0,.9);animation:dropin .12s ease-out}
+  .dropmenu[hidden]{display:none}
+  @keyframes dropin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .dropmenu a{padding:8px 18px;font-size:11.5px;letter-spacing:.1em}
+  .dropmenu a:hover{color:var(--ore);background:rgba(70,255,94,.05)}
+  @media(prefers-reduced-motion:reduce){.dropmenu{animation:none}.dropbtn .car{transition:none}}
+  .eveclk{display:inline-flex;align-items:baseline;gap:7px;cursor:default;font-family:var(--mono)}
   .eveclk .eveclk-l{font-size:10px;letter-spacing:.24em;color:var(--ore);font-weight:700}
   .eveclk b{font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--silver);font-variant-numeric:tabular-nums}
   @media(max-width:760px){.eveclk{display:none}}
-  .langsw{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);padding-right:18px;border-right:1px solid var(--line)}
+  /* Language is a PREFERENCE, set once. It sat between the clock and the nav with a divider
+     on each side, at the same weight as a destination. Now it is last and quiet. */
+  .langsw{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);
+    padding-left:16px;border-left:1px solid var(--line)}
   .langsw button{background:transparent;border:0;padding:4px 3px;cursor:pointer;font-family:inherit;font-size:10.5px;letter-spacing:.14em;color:var(--muted, #6f776f);transition:color .15s}
   .langsw button:hover{color:var(--ore)}
   .langsw button.on{color:var(--ore);font-weight:700}
   .langsw span{color:var(--muted,#6f776f);font-size:10px}
-  .nav .btn-mini{color:#04140a;background:var(--ore);padding:8px 14px;font-weight:700;transition:transform .15s, box-shadow .2s}
+  /* ONE primary. Three filled buttons in a row is a toolbar, not a call to action: the eye
+     has nowhere to land and the actual conversion loses. Apply stays solid, GOBSEC becomes
+     the outlined second door, Discord drops to a plain link. */
+  .nav .btn-mini{color:#04140a;background:var(--ore);padding:8px 15px;font-weight:700;
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
+    text-decoration:none;transition:transform .15s, box-shadow .2s}
   .nav .btn-mini:hover{color:#04140a;transform:translateY(-1px);box-shadow:0 6px 22px rgba(70,255,94,.3)}
-  @media(max-width:720px){.nav a:not(.btn-mini){display:none}}
+  .nav .btn-out{padding:7px 14px;border:1px solid var(--line);color:var(--muted);
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
+    text-decoration:none}
+  .nav .navlink{color:var(--muted)}
+  .nav .navlink:hover{color:var(--silver)}
+  /* below 900 the section links go; the doors and the clock stay */
+  @media(max-width:900px){.drop,.nav a[href="tools/"],.nav a[href="portal/"]{display:none}}
+  @media(max-width:720px){.nav .navlink,.langsw{display:none}}
 
   .ticker{border-bottom:1px solid var(--line);background:linear-gradient(var(--steel),var(--black));overflow:hidden;white-space:nowrap;position:relative;z-index:1}
   .ticker .rail{display:inline-flex;animation:scroll 42s linear infinite;will-change:transform}
@@ -222,14 +261,26 @@
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brandmark" href="#top"><span class="tick">BONK</span><b>BIG ROCK ENERGY</b><span class="alli">Est. 2014</span></a>
-    <nav class="nav">
+    <!-- BRAND + INSTRUMENT. The clock sits with the brand, not in the link run: it is
+         instrumentation, not navigation, and next to the wordmark it reads as ours. -->
+    <div class="brandwrap">
+      <a class="brandmark" href="#top"><span class="tick">BONK</span><b>BIG ROCK ENERGY</b></a>
       <span class="eveclk" title="EVE time (UTC)"><span class="eveclk-l">EVE</span><b data-eve-time="hms">--:--:--</b></span>
-      <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
-      <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a><a href="tools/">Tools</a><a href="portal/">Portal</a>
+    </div>
+    <nav class="nav">
+      <!-- THE ROCK: four in-page anchors folded into one control. The links are REAL markup,
+           not built by script, so they survive with JS off and stay crawlable. -->
+      <div class="drop" id="rockDrop">
+        <button type="button" class="dropbtn" id="rockBtn" aria-expanded="false" aria-controls="rockMenu">The Rock <span class="car" aria-hidden="true">&#9662;</span></button>
+        <div class="dropmenu" id="rockMenu" hidden>
+          <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a>
+        </div>
+      </div>
+      <a href="tools/">Tools</a><a href="portal/">Portal</a>
       <a class="btn-mini" href="apply/">Apply</a>
-       <a class="btn-mini btn-gob" href="apply/gobsec">GOBSEC</a>
-       <a class="btn-mini" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
+      <a class="btn-gob btn-out" href="apply/gobsec">GOBSEC</a>
+      <a class="navlink" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
+      <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
     </nav>
   </div>
 </header>
@@ -609,6 +660,23 @@
   /* Live corp headcount: pull Wealthy Dropouts member_count from ESI (CORS-open)
      so the front-page "Active goblins" stat is always current, not a stale ~30. */
   (function(){
+    /* THE ROCK disclosure. Click to open, and every sane way to close it: Escape, a click
+       outside, and picking a link (these are same-page anchors, so without that last one the
+       menu would sit open over the section you just jumped to). */
+    (function(){
+      var d=document.getElementById("rockDrop"), b=document.getElementById("rockBtn"),
+          m=document.getElementById("rockMenu");
+      if(!d||!b||!m) return;
+      function set(open){
+        d.classList.toggle("open",open);
+        b.setAttribute("aria-expanded",open?"true":"false");
+        m.hidden=!open;
+      }
+      b.addEventListener("click",function(e){ e.stopPropagation(); set(m.hidden); });
+      m.addEventListener("click",function(e){ if(e.target.tagName==="A") set(false); });
+      document.addEventListener("click",function(e){ if(!d.contains(e.target)) set(false); });
+      document.addEventListener("keydown",function(e){ if(e.key==="Escape") set(false); });
+    })();
     var el = document.getElementById("goblinCount");
     if (!el) return;
     fetch("https://esi.evetech.net/latest/corporations/98342394/?datasource=tranquility")
