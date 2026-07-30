@@ -48,7 +48,10 @@
                 color:#ff6b78; margin-bottom:10px; }
   .gsPool p{ margin:0 0 8px; font-size:14.5px; line-height:1.6; color:var(--silver-dim); }
   .gsPool .gpj{ color:var(--muted); }
-  .gsPool .gpn b{ font-family:var(--mono); font-size:16px; color:var(--ore); font-weight:700; }
+  .gsPool .gph{ font-size:16px; color:var(--silver); }
+  .gsPool .gph b, .gsPool .gpn b{ font-family:var(--mono); color:var(--ore); font-weight:700; }
+  .gsPool .gph b{ font-size:18px; }
+  .gsPool .gpn b{ font-size:15px; }
   .gsPool .gpg{ color:var(--silver); }
   .gsPool .gpc{ margin-bottom:0; color:var(--muted); font-size:13.5px; }
   .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
@@ -98,13 +101,13 @@
   <!-- THE POOL: live off the finder's public stamp. Hidden until the numbers actually load,
        because a flex with a zero in it is worse than no flex. -->
   <div class="gsPool" id="gsPool" hidden>
-    <div class="gpk">The pool</div>
-    <p class="gpj">We're a mining corp with a threat scoring machine. Nobody's proud of how
-      that happened.</p>
-    <p class="gpn">It's watching <b id="gpRows">0</b> corp-less killers right now. The top
-      <b>150</b> of them have <b id="gpSolo">0</b> solo kills between them.</p>
-    <p class="gpg">Solo means nobody came to help. They didn't need it.</p>
-    <p class="gpc">That's the room you'd be walking into.</p>
+    <div class="gpk">The invite list</div>
+    <p class="gph">150 names and <b id="gpSolo">0</b> solo kills.</p>
+    <p class="gpn">GSS scored <b id="gpRows">0</b> pilots. We're inviting the top 150.
+      The name at the top has <b id="gpTop">0</b> on their own. We read it twice, out of respect.</p>
+    <p class="gpg">Solo means nobody came to help. They were fine.</p>
+    <p class="gpc">None of them fly for us yet. We're a mining corp with a spreadsheet and a very
+      specific mailing list. Figures go up without us.</p>
   </div>
 
   <div class="gsClose">
@@ -138,6 +141,7 @@
       if (rows < 50 || solo < 1000) return;   // board mid-rebuild or broken: say nothing
       document.getElementById("gpRows").textContent = rows.toLocaleString();
       document.getElementById("gpSolo").textContent = solo.toLocaleString();
+      document.getElementById("gpTop").textContent = (Number(d.top_solo) || 0).toLocaleString();
       el.hidden = false;
     })
     .catch(function () {});
