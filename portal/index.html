@@ -321,8 +321,29 @@
   /* MAIN EVENT. Elevated on purpose (Kyle 2026-07-29) but kept inside the existing palette:
      a full ore border plus a lift, not a new colour language. The glow is a wide, very low
      alpha spread so it reads as raised rather than neon. */
-  .refcard.main{ border:1px solid var(--ore); border-left-width:3px; background:var(--steel-2, var(--steel));
-    box-shadow:0 0 0 1px rgba(70,255,94,.07), 0 14px 38px -22px rgba(70,255,94,.5); }
+  .refcard.main{ position:relative; border:1px solid var(--ore); border-left-width:3px;
+    background:var(--steel-2, var(--steel));
+    box-shadow:0 0 0 1px rgba(70,255,94,.09), 0 0 34px -14px rgba(70,255,94,.42),
+               0 16px 44px -26px rgba(70,255,94,.55);
+    animation:refbreath 7s ease-in-out infinite; }
+  /* the halo sits OUTSIDE the border on its own layer, so the lift never touches
+     the text contrast inside the card */
+  .refcard.main::after{ content:""; position:absolute; inset:-1px; pointer-events:none;
+    border:1px solid rgba(70,255,94,.16); }
+  @keyframes refbreath{
+    0%,100%{ box-shadow:0 0 0 1px rgba(70,255,94,.09), 0 0 30px -16px rgba(70,255,94,.38),
+                        0 16px 44px -26px rgba(70,255,94,.5); }
+    50%    { box-shadow:0 0 0 1px rgba(70,255,94,.13), 0 0 42px -12px rgba(70,255,94,.55),
+                        0 16px 44px -26px rgba(70,255,94,.6); } }
+  @media(prefers-reduced-motion:reduce){ .refcard.main{ animation:none; } }
+  /* the prize stack */
+  .mevstack{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:11px 0 10px; }
+  .mvp{ background:var(--black); border:1px solid var(--line-soft); padding:9px 10px; text-align:center; }
+  .mvp b{ display:block; font-family:var(--display); font-weight:700; font-size:15px; color:var(--ore);
+          letter-spacing:.02em; }
+  .mvp span{ display:block; font-family:var(--mono); font-size:9px; letter-spacing:.1em;
+             text-transform:uppercase; color:var(--muted); margin-top:3px; }
+  @media(max-width:420px){ .mevstack{ grid-template-columns:1fr; } }
   .mev{ margin:-4px 0 16px; padding:0 0 15px; border-bottom:1px solid var(--line-soft); }
   .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .mevtag{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.34em;
@@ -2461,8 +2482,14 @@ function renderEventBoard(){
       '<span class="mevclock">' + esc(eventClock(b.ends_at)) + '</span>' +
     '</div>' +
     '<div class="mevname">Certified Goblin Dealer</div>' +
-    '<div class="mevprize"><b>500M ISK</b> and the title, to whoever brings in the most. ' +
-      'Resets every month, so the title keeps moving.</div>';
+    /* THE STACK, stated as three things you win rather than one sentence you skim.
+       Matches the announcement exactly: money, rank, medal. */
+    '<div class="mevstack">' +
+      '<div class="mvp"><b>500M</b><span>ISK</span></div>' +
+      '<div class="mvp"><b>Rank up</b><span>a real promotion</span></div>' +
+      '<div class="mvp"><b>&#129689; Medal</b><span>on your record, forever</span></div>' +
+    '</div>' +
+    '<div class="mevprize">Most goblins brought home wins it. Resets every month, so the title keeps moving.</div>';
   if (b.board && b.board.length){
     h += '<div class="mevboard">' + b.board.map(function(row){
       return '<div class="mevrow' + (row.me ? ' me' : '') + (row.rank === 1 ? ' lead' : '') + '">' +
@@ -2487,8 +2514,8 @@ function renderReferral(){
     /* Relaxed and human (Kyle 2026-07-29). The previous version leaned on what you LOSE by not
        referring, which read as a guilt pitch. Nobody forwards a link because they feel bad. */
     '<div class="rs">Know somebody still mining on their own? Send them this. ' +
-      'They show up tagged as yours.</div>' +
-    '<div class="rs2">Most of us are here because somebody thought to ask. That is the whole system.</div>' +
+      'They show up tagged as yours, automatically.</div>' +
+    '<div class="rs2">Most of us are here because somebody thought to ask.</div>' +
     '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
       '<button class="refbtn" id="refCopy">copy</button></div>' +
     '<div class="refstat">' + ((r.referred||0)
