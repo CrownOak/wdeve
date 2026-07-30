@@ -42,6 +42,13 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); }
 /* the one header band: everything at one height, wraps as a unit on phones */
 .toggle{ flex-wrap:wrap; row-gap:8px; }
+/* GOBSEC heads-up, the quiet card under the scout */
+.gsbside{ margin-top:10px; background:var(--steel); border:1px solid var(--line-soft);
+          border-left:3px solid #ff4757; padding:10px 12px; }
+.gsbside .gk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+              color:var(--muted); display:flex; gap:8px; align-items:baseline; }
+.gsbside .gl{ font-size:12px; line-height:1.55; color:var(--silver-dim); margin-top:5px; }
+.gsbside .gw{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:5px; }
 .howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
   font-size:11.5px; text-decoration:underline dotted; padding:0; }
 .howtomini button:hover{ color:var(--ore); }
@@ -413,32 +420,33 @@ tr.haulrow{ cursor:pointer; }
     <h1>FLEET COMMAND</h1>
     <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
   </header>
-  <!-- GOBSEC stance banner: renders ONLY when the stance is not ROUTINE (member session
-       required; logged-out visitors and quiet days see nothing). One line, one color. -->
-  <div id="stanceBanner" style="display:none;max-width:1180px;margin:10px auto 0;padding:9px 14px;
-       font-family:var(--mono,monospace);font-size:12px;letter-spacing:.04em;background:var(--steel,#14171a);
-       border:1px solid rgba(255,71,87,.4);border-left:3px solid #ff4757;color:#ff8a93"></div>
+  <!-- GOBSEC heads-up: fetch here, render into the scout column's #stanceSide
+       card (not top and center — the ledger is the star of this page). Stance
+       palette shared with board/desk/portal: ESCORT amber · HUNT red ·
+       STAND DOWN steel blue. Quiet days render nothing. -->
   <script>
   (function(){
-    fetch("/api/gobsec/brief",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; })
+    function hesc(v){ return String(v==null?"":v).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+    fetch("/api/gobsec/brief",{credentials:"same-origin",cache:"no-store"}).then(function(r){ return r.ok?r.json():null; })
       .then(function(b){
         if (!b || !b.ok) return;
         var st = b.stance || {}; var p = st.key || b.posture || "ROUTINE";
         if (p === "ROUTINE") return;
-        var el = document.getElementById("stanceBanner");
-        // stance palette, same language as the board / desk / portal:
-        // ESCORT amber · HUNT red · STAND DOWN steel blue
-        var tone = p === "ESCORT" ? ["rgba(233,196,106,.45)", "#e9c46a", "#e9c46a"]
-                 : p === "STAND DOWN" ? ["rgba(143,183,201,.45)", "#8fb7c9", "#8fb7c9"]
-                 : ["rgba(255,71,87,.4)", "#ff4757", "#ff8a93"];
-        el.style.borderColor = tone[0]; el.style.borderLeftColor = tone[1]; el.style.color = tone[2];
-        var clock = (p === "HUNT" && st.until)
-          ? " · " + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + "m left" : "";
-        // a nudge, not an order: lowercase state, the caring line does the talking
-        el.textContent = "GOBSEC, a heads up · " + p.toLowerCase() + clock + " — "
-          + (st.member || "worth a glance at the board before you undock.")
-          + (st.why ? " (" + st.why + ")" : "");
-        el.style.display = "block";
+        function paint(){
+          var el = document.getElementById("stanceSide");
+          if (!el){ document.addEventListener("DOMContentLoaded", paint, { once:true }); return; }
+          var tone = p === "ESCORT" ? "#e9c46a" : p === "STAND DOWN" ? "#8fb7c9" : "#ff4757";
+          var clock = (p === "HUNT" && st.until)
+            ? " · " + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + "m left" : "";
+          el.style.borderLeftColor = tone;
+          el.innerHTML =
+            '<div class="gk"><b style="color:' + tone + '">GOBSEC</b><span>a heads up · ' + hesc(p.toLowerCase()) + clock + '</span></div>' +
+            '<div class="gl">' + hesc(st.member || "worth a glance at the board before you undock.") + '</div>' +
+            (st.why ? '<div class="gw">(' + hesc(st.why) + ')</div>' : '');
+          el.style.display = "";
+        }
+        paint();
       }).catch(function(){});
   })();
   </script>
@@ -545,6 +553,10 @@ tr.haulrow{ cursor:pointer; }
                 <div id="scfoot" class="scfoot" data-i18n-skip></div>
               </div>
             </div>
+            <!-- GOBSEC heads-up: ambient, in the awareness column where road talk
+                 belongs (Kyle 7/29: not top and center). Renders only when the
+                 stance is not ROUTINE; quiet days show nothing at all. -->
+            <div id="stanceSide" class="gsbside" style="display:none"></div>
           </div>
           <div class="fcol">
             <div id="opstatus" class="opstatus" style="display:none" data-i18n-skip></div>
