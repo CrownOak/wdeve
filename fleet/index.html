@@ -40,6 +40,9 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
   cursor:pointer; font-size:16px; line-height:1; padding:2px; }
 .howtox:hover{ filter:brightness(1.25); }
 .howtomini{ font-family:var(--mono); font-size:11.5px; color:var(--muted); }
+.qsafe{ font-family:var(--mono); font-size:11.5px; line-height:1.6; color:var(--ore);
+        background:var(--steel); border:1px solid rgba(70,255,94,.35); border-left:3px solid var(--ore);
+        padding:9px 12px; margin:0 0 10px; }
 /* the one header band: everything at one height, wraps as a unit on phones */
 .toggle{ flex-wrap:wrap; row-gap:8px; }
 .orcaask{ margin-top:10px; background:var(--steel); border:1px solid var(--line-soft);
@@ -1257,11 +1260,38 @@ tr.haulrow{ cursor:pointer; }
 
   // ---------- unsent drop queue ----------
   function loadOutbox(){ try{ (JSON.parse(lsGet(LS_QUEUE)||"[]")||[]).forEach(function(p){
-    outbox.push({p:p, state:"unsent"}); }); }catch(e){} }
-  function saveOutbox(){ lsSet(LS_QUEUE, JSON.stringify(
-    outbox.filter(function(o){ return o.state==="unsent"; }).map(function(o){ return o.p; }))); }
-  function flushOutbox(){ for(var i=0;i<outbox.length;i++){
-    if(outbox[i].state==="unsent") sendDrop(outbox[i]); } }
+    // anything we recover was queued and never confirmed: retry it, but check the
+    // board first in case it landed and only the answer was lost
+    outbox.push({p:p, state:"unsent", recovered:true}); }); }catch(e){} }
+  /* SAVE EVERY QUEUED DROP, not just the idle ones. The old version persisted only
+     state==="unsent", so a drop that was IN FLIGHT when the tab closed was never written
+     and was gone for good — the ore was already scooped, so the member could not re-paste
+     it either. A drop leaves this queue on CONFIRMED SUCCESS and nothing else. */
+  function saveOutbox(){ lsSet(LS_QUEUE, JSON.stringify(outbox.map(function(o){ return o.p; }))); }
+  /* RECOVERED drops (restored from storage after a crash or a closed tab) might already
+     have landed: the send could have reached the worker with the answer lost in transit.
+     Before the first retry, once the round is loaded, drop anything the server already
+     shows for this pilot with the same line count, units and m3. Losing a drop is worse
+     than a duplicate, so the tie goes to sending — this only removes an EXACT match. */
+  function reconcileRecovered(){
+    if(!P || !P.entries || !outbox.length) return;
+    for(var i=outbox.length-1;i>=0;i--){
+      var o=outbox[i];
+      if(!o.recovered || o.state==="sending") continue;
+      var hit=(P.entries||[]).some(function(e){
+        return e.who===o.p.who && e.n===o.p.n
+            && dupNear(e.units,o.p.units) && dupNear(e.m3||0,o.p.m3||0);
+      });
+      o.recovered=false;                      // checked once, then it is a normal queue item
+      if(hit){ outbox.splice(i,1); saveOutbox();
+        toast("One saved drop was already on the board. Not sending it twice."); }
+    }
+    renderFeed();
+  }
+  function flushOutbox(){
+    reconcileRecovered();
+    for(var i=0;i<outbox.length;i++){
+      if(outbox[i].state==="unsent") sendDrop(outbox[i]); } }
   function dmsg(m){ el("dmsg").textContent=m||""; }
   // Only these rejections are worth retrying: frozen lifts on /reopen, full lifts on
   // /reset. Any other 4xx is permanent — retrying it forever would wedge the queue
@@ -1279,7 +1309,11 @@ tr.haulrow{ cursor:pointer; }
         if(d&&d.error==="frozen") dmsg("Fleet is finishing. Drops are frozen.");
         else if(d&&d.error==="round full") dmsg("Round full — fleet command has to reset for the next op.");
         renderFeed(); }
-    }).catch(function(){ o.state="unsent"; saveOutbox(); renderFeed(); });
+    }).catch(function(){
+      // network died mid send. It is SAVED; the next tick retries it on its own.
+      o.state="unsent"; saveOutbox(); renderFeed();
+      dmsg("Saved. The connection dropped, so it will send itself when you are back.");
+    });
   }
   // ---------- double-entry guard (QOL v2, warn never block) ----------
   // A near-identical drop from this pilot moments ago is usually a second click,
@@ -1752,16 +1786,20 @@ tr.haulrow{ cursor:pointer; }
       ? "Not in the price table (count 0 ISK): "+un.slice(0,8).join(", ")+(un.length>8?" …":"")
       : "Some pasted lines are not in the price table and count 0 ISK.";
     if(!rows.length){ box.innerHTML="<div class='empty'>No drops yet.</div>"; return; }
-    var h="<table><thead><tr><th>TIME</th><th>WHO</th><th>LINES</th><th>UNITS</th><th>M&sup3;</th><th>VALUE</th><th></th></tr></thead><tbody>";
+    var qn=outbox.length;
+    var h = qn ? ("<div class='qsafe'>&#128190; <b>"+qn+" drop"+(qn===1?"":"s")+" saved on this device.</b> "
+      + "They send themselves, and they survive a reload or a crash. Do not paste them again, "
+      + "and do not worry about the ore being gone.</div>") : "";
+    h+="<table><thead><tr><th>TIME</th><th>WHO</th><th>LINES</th><th>UNITS</th><th>M&sup3;</th><th>VALUE</th><th></th></tr></thead><tbody>";
     rows.forEach(function(r){
       var badge=(r.unmatched||0)>0 ? "<span class='ub'>"+r.unmatched+" not priced</span>" : "";
       if(r.pend){
-        var qdel=r.state==="unsent" ? " <button class='xdel' data-qdel='"+r.qi+"' title='discard this unsent drop'>&times;</button>" : "";
+        var qdel=r.state==="unsent" ? " <button class='xdel' data-qdel='"+r.qi+"' title='discard this drop, it will never be sent'>&times;</button>" : "";
         h+="<tr class='pend'><td class='num'>"+hhmm(r.at)+"</td><td class='who'>"+esc(r.who)+"</td>"
           +"<td>"+(r.n||0)+badge+"</td><td class='num'>"+(r.units||0).toLocaleString()+"</td>"
           +"<td class='num'>"+m3fmt(r.m3||0)+"</td>"
           +"<td class='num'>"+isk(r.jita88)+"</td><td><span class='pstate'>"
-          +(r.state==="sending"?"sending":"unsent — retry")+"</span>"+qdel+"</td></tr>";
+          +(r.state==="sending"?"sending":"saved, sending itself")+"</span>"+qdel+"</td></tr>";
         return;
       }
       // your own rows get reassign (move to your next pilot) + delete. "Mine" =
