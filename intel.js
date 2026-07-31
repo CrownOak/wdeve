@@ -2,7 +2,7 @@
    BONKINTEL.mount(el) injects the workspace and starts it. Spine elements are
    lazy: nothing heavy loads until a lens asks for it (spec v1.1, red team F1). */
 (function(){
-var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="thecall"></div>\n  <div id="youare"></div>\n  <div id="statetiles"></div>\n  <div class="askline">Or ask about anyone.</div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="status"></div>\n  <div id="out"></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
+var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="thecall"></div>\n  <div id="youare"></div>\n  <div id="statetiles"></div>\n  <div class="askline">Or ask about anyone.</div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="trailbar"></div>\n  <div id="status"></div>\n  <div id="out"></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
 window.BONKINTEL={mount:function(root){
   if(!root) return; root.innerHTML=MARKUP;
 
@@ -141,7 +141,7 @@ function toggleWatch(t,id,name){
 }
 function addRecent(t,id,name){
   var r=(lsGet(LSR)||[]).filter(function(x){ return !(x.t===t&&x.id===id); });
-  r.unshift({t:t,id:id,n:name}); lsSet(LSR,r.slice(0,8)); renderChips();
+  r.unshift({t:t,id:id,n:name}); lsSet(LSR,r.slice(0,8)); renderChips(); nameTrail(t,id,name);
 }
 function renderChips(){
   var h="", w=getWatch(), r=lsGet(LSR)||[];
@@ -190,11 +190,12 @@ function notFound(raw){
 }
 
 /* ---- the file ---- */
-function loadTarget(t,id){
+function loadTarget(t,id,force){
   cur={t:t,id:id};
-  try{ history.replaceState(null,"","?t="+t+"&id="+id); }catch(e){}
+  pushTrail(t,id);
+  try{ history.pushState({t:t,id:id},"","?t="+t+"&id="+id); }catch(e){}
   srcS={}; paintStatus();
-  var ck=LSD+t+":"+id, cached=lsGet(ck);
+  var ck=LSD+t+":"+id, cached=force?null:lsGet(ck);
   if(cached&&cached.digest){
     renderDigest(cached.digest,Date.now()-cached.ts);
     if(Date.now()-cached.ts<600000){ addRecent(t,id,cached.digest.name); return; }
@@ -1381,6 +1382,9 @@ document.addEventListener("keydown",function(e){
   if(e.key==="/"&&!typing){ e.preventDefault(); if(q){ q.focus(); q.select(); } return; }
   if(e.key==="Escape"&&typing&&t===q){ q.value=""; return; }
   if(typing) return;
+  if(e.key==="["){ trailBack(); return; }
+  if(e.key==="]"){ trailFwd(); return; }
+  if(e.key==="s"){ syncNow(true); return; }
   var pane={h:"hot",o:"ours",w:"watch"}[e.key];
   if(pane){
     var b=document.querySelector("#rsw button[data-r='"+pane+"']");
@@ -1640,6 +1644,103 @@ function renderFights(D){
   });
 }
 /* ==== END LENS: THE FIGHT ==== */
+
+/* ==== THE TRAIL ====
+   Intel work is comparison: you read a pilot, then his corp, then the system he
+   dies in, then back to the pilot. Losing the last thing you looked at is the
+   single most annoying thing a console can do, so every target you open stays in
+   a strip you can flip through. Flipping back is instant because the digest is
+   already cached, which is what makes this worth having rather than a nicety. */
+var TRAIL=[], TPOS=-1, TRAILQUIET=false;
+function pushTrail(t,id){
+  if(TRAILQUIET) return;
+  var here=TRAIL[TPOS];
+  if(here&&here.t===t&&here.id===id) return;
+  TRAIL=TRAIL.slice(0,TPOS+1);
+  TRAIL.push({t:t,id:id,n:null});
+  TPOS=TRAIL.length-1;
+  if(TRAIL.length>24){ TRAIL.shift(); TPOS--; }
+  paintTrail();
+}
+function nameTrail(t,id,name){
+  var hit=false;
+  TRAIL.forEach(function(x){ if(x.t===t&&x.id===id&&!x.n){ x.n=name; hit=true; } });
+  if(hit) paintTrail();
+}
+function goTrail(i){
+  if(i<0||i>=TRAIL.length||i===TPOS) return;
+  TPOS=i; TRAILQUIET=true;
+  loadTarget(TRAIL[i].t,TRAIL[i].id);
+  TRAILQUIET=false; paintTrail();
+}
+function trailBack(){ goTrail(TPOS-1); }
+function trailFwd(){ goTrail(TPOS+1); }
+var TYPEWORD={char:"pilot",corp:"corp",alli:"alliance",sys:"system"};
+function paintTrail(){
+  var el=document.getElementById("trailbar"); if(!el) return;
+  if(TRAIL.length<1){ el.innerHTML=""; return; }
+  var h="<div class='trail'>";
+  h+="<button class='tnav' id='tback'"+(TPOS<=0?" disabled":"")+" title='back  [ '>&#8592;</button>";
+  h+="<button class='tnav' id='tfwd'"+(TPOS>=TRAIL.length-1?" disabled":"")+" title='forward  ] '>&#8594;</button>";
+  h+="<span class='tsep'></span>";
+  TRAIL.forEach(function(x,i){
+    h+="<button class='tchip"+(i===TPOS?" on":"")+"' data-i='"+i+"' title='"+esc(TYPEWORD[x.t]||x.t)+"'>"
+      +esc(x.n||("#"+x.id))+"</button>";
+  });
+  h+="<span class='tsync' id='tsync'></span></div>";
+  el.innerHTML=h;
+  var b=document.getElementById("tback"), f=document.getElementById("tfwd");
+  if(b) b.addEventListener("click",trailBack);
+  if(f) f.addEventListener("click",trailFwd);
+  el.querySelectorAll(".tchip").forEach(function(c){
+    c.addEventListener("click",function(){ goTrail(+c.getAttribute("data-i")); });
+  });
+  paintSync();
+}
+/* the browser's own back button should do what the arrows do */
+window.addEventListener("popstate",function(e){
+  var st=e.state;
+  if(st&&st.t&&st.id){ TRAILQUIET=true; loadTarget(st.t,st.id); TRAILQUIET=false;
+    for(var i=0;i<TRAIL.length;i++) if(TRAIL[i].t===st.t&&TRAIL[i].id===st.id){ TPOS=i; break; }
+    paintTrail(); }
+});
+
+/* ==== SYNC ====
+   Two different clocks, deliberately. The LIVE layer (what is dying right now,
+   where you are, the call) refreshes itself every five minutes because it is one
+   cheap ESI call and it is worthless when stale. The open dossier does NOT
+   refresh on a timer: a pilot's lifetime killboard does not move in five minutes,
+   and refetching killboards on a loop is rude to zKillboard for no gain. It shows
+   how old it is and syncs when you ask. */
+var LASTSYNC=Date.now(), SYNCING=false;
+function paintSync(){
+  var el=document.getElementById("tsync"); if(!el) return;
+  var mins=Math.floor((Date.now()-LASTSYNC)/60000);
+  el.innerHTML="<button class='syncb"+(SYNCING?" spin":"")+"' id='syncbtn' title='refresh the live layer, and this file'>"
+    +(SYNCING?"syncing":"sync")+"</button><span class='syncage'>"
+    +(mins<1?"just now":mins+"m ago")+"</span>";
+  var b=document.getElementById("syncbtn");
+  if(b) b.addEventListener("click",function(){ syncNow(true); });
+}
+function syncNow(alsoTarget){
+  if(SYNCING) return;
+  SYNCING=true; paintSync();
+  ESIACT=null;                 /* force the shared activity feed to refetch */
+  CALLST.near=null;
+  var jobs=[refreshHud(),Promise.resolve(findNearestFight()),Promise.resolve(paintYouAre())];
+  if(alsoTarget&&cur){ try{ lsSet(LSD+cur.t+":"+cur.id,null); }catch(e){} loadTarget(cur.t,cur.id,true); }
+  Promise.all(jobs.map(function(j){ return Promise.resolve(j).catch(function(){}); })).then(function(){
+    LASTSYNC=Date.now(); SYNCING=false; paintSync();
+  });
+  setTimeout(function(){ if(SYNCING){ SYNCING=false; LASTSYNC=Date.now(); paintSync(); } },12000);
+}
+setInterval(function(){
+  if(document.visibilityState!=="visible") return;
+  ESIACT=null; CALLST.near=null;
+  refreshHud(); findNearestFight(); paintYouAre();
+  LASTSYNC=Date.now(); paintSync();
+},300000);
+setInterval(paintSync,60000);
 
 }};
 })();

@@ -259,3 +259,25 @@ button.linkish:hover{ color:var(--gob,#ff4757); }
 .fcounter{ border-left:2px solid var(--gob,#ff4757); padding:2px 0 2px 11px; margin-top:10px; }
 .fcounter .fck{ font-family:var(--mono); font-size:9px; letter-spacing:.2em; color:var(--muted); display:block; margin-bottom:4px; }
 .fcounter div{ font-size:13px; color:var(--silver-dim); line-height:1.6; }
+
+/* ==== THE TRAIL + SYNC ==== */
+.trail{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:0 0 10px;
+  padding-bottom:9px; border-bottom:1px solid var(--line-soft); }
+.tnav{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+  font-family:var(--mono); font-size:12px; line-height:1; padding:5px 9px; cursor:pointer; }
+.tnav:hover:not([disabled]){ border-color:var(--ore); color:var(--ore); }
+.tnav[disabled]{ opacity:.3; cursor:default; }
+.tsep{ width:1px; height:16px; background:var(--line); margin:0 3px; }
+.tchip{ background:transparent; border:1px solid var(--line-soft); color:var(--silver-dim);
+  font-family:var(--mono); font-size:11px; padding:4px 9px; cursor:pointer; max-width:180px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tchip:hover{ border-color:var(--ore); color:var(--ore); }
+.tchip.on{ border-color:var(--ore); color:var(--ore); background:rgba(70,255,94,.07); }
+.tsync{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+.syncb{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+  padding:4px 11px; cursor:pointer; }
+.syncb:hover{ border-color:var(--ore); color:var(--ore); }
+.syncb.spin{ color:var(--ore); border-color:var(--ore); }
+.syncage{ font-family:var(--mono); font-size:10px; color:var(--muted); }
+@media(max-width:620px){ .tchip{ max-width:110px; } .tsync{ margin-left:0; } }
