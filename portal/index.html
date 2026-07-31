@@ -278,6 +278,21 @@
   .medrow.mlock .medx .flav, .medrow.mlock .medx .earn{ color:var(--muted); }
   @media(prefers-reduced-motion: reduce){ .medrow .medx, .medrow .mcar{ transition:none; } }
 
+
+  /* BEFORE YOU UNDOCK: the intel console's one useful line, where the miners are.
+     Absent when it has nothing to say, rather than reassuring. */
+  .undock{ border:1px solid var(--line); border-left:3px solid var(--ore); background:var(--steel);
+    padding:11px 14px; margin:0 0 14px; }
+  .undock.warm{ border-left-color:var(--amber); }
+  .undock.hot{ border-left-color:var(--gob,#ff4757); }
+  .undock .uk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.22em; color:var(--muted); }
+  .undock .uv{ font-size:14px; color:var(--silver); line-height:1.55; margin-top:5px; }
+  .undock .uv b{ color:var(--ore); font-weight:600; }
+  .undock.warm .uv b{ color:var(--amber); }
+  .undock.hot .uv b{ color:var(--gob,#ff4757); }
+  .undock .us{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; }
+  .undock .us a{ color:var(--silver-dim); }
+  .undock .us a:hover{ color:var(--ore); }
   /* ---------- rail event cards ---------- */
   .revt{ display:block; background:var(--black); border:1px solid var(--line-soft);
          border-left:3px solid var(--amber); padding:10px 12px; margin:0 0 12px; text-decoration:none; }
@@ -1258,6 +1273,7 @@
       <!-- rail comes AFTER main in the DOM so the mobile stack order is right by default,
            with no order: override for somebody to break later -->
       <aside class="prail">
+        <div id="undockLine"></div>
         <div id="hundredWrap"></div>
         <div id="gssBriefWrap"></div>
         <div id="goalStripWrap"></div>
@@ -4458,6 +4474,7 @@ function renderFoot(){
 })();
 </script>
 <script src="/nav.js?v=21"></script>
+<script src="/intel-undock.js?v=1"></script>
 <script>
 window.BONK_TOUR = {
   id: "portal", accountKey: null, readyWhen: "#panelIdentity",
