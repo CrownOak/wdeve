@@ -48,6 +48,33 @@
   .rrow .rv{ white-space:nowrap; font-size:11px; }
   .rrow .rs{ white-space:nowrap; color:var(--muted); font-size:10px; }
   .rnote{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:8px; line-height:1.5; }
+  /* THE AREA: one system centred, its gates as equal length stems. Hop a gate and the
+     map recentres. Costs nothing per hop: the graph and the kill feed are already in hand. */
+  .mapwrap{ border:1px solid var(--line); background:var(--black); overflow:hidden; position:relative; }
+  .mapwrap svg{ display:block; width:100%; height:auto; transition:opacity .17s ease; }
+  .mapwrap.fade svg{ opacity:0; }
+  .mnode{ cursor:pointer; }
+  .mnode circle{ transition:stroke .15s, fill .15s; }
+  .mnode:hover circle{ stroke:var(--silver); }
+  .mn{ font-family:var(--mono); font-size:10px; fill:var(--silver); pointer-events:none; }
+  .mn.ctr{ font-size:14px; font-family:var(--display); font-weight:700; }
+  .ms{ font-family:var(--mono); font-size:8px; fill:var(--muted); pointer-events:none; }
+  .mk{ font-family:var(--mono); font-size:9px; font-weight:700; pointer-events:none; }
+  .mstem{ stroke:var(--line); stroke-width:1.5; }
+  .mstem.hot{ stroke:rgba(255,71,87,.55); stroke-width:2; }
+  .mstem.road{ stroke:rgba(70,255,94,.4); stroke-dasharray:3 3; }
+  .maphud{ display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:1px;
+    background:var(--line); border:1px solid var(--line); border-top:0; }
+  .maphud div{ background:var(--steel); padding:8px 11px; }
+  .maphud .k{ font-family:var(--mono); font-size:8.5px; letter-spacing:.16em; color:var(--muted); }
+  .maphud .v{ font-family:var(--mono); font-size:14px; color:var(--silver); margin-top:2px; }
+  .maphud .v.hot{ color:var(--gob,#ff4757); }
+  .maphud .v.ok{ color:var(--ore); }
+  .maptrail{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px; }
+  .maptrail button{ font-family:var(--mono); font-size:10.5px; background:transparent;
+    border:1px solid var(--line); color:var(--silver-dim); padding:3px 9px; cursor:pointer; }
+  .maptrail button:hover{ border-color:var(--gob,#ff4757); color:var(--gob,#ff4757); }
+  .maptrail .sep{ color:var(--muted); font-family:var(--mono); font-size:10px; }
   /* THE WEB: crews as rings around the system, sized by what they kill.
      Residents sit close, visitors sit out where they come from. */
   .webwrap{ border:1px solid var(--line); background:var(--black); margin-top:10px; overflow:hidden; }
@@ -588,6 +615,107 @@ function compute(D){
    whether the camp is warm right now. Our own additions on top: how far it is
    from home, whether it sits on our roads, what is left to mine, and the
    neighbours, because a quiet system next to a hot one is not quiet. */
+/* ================= THE AREA MAP =================
+   One system in the middle, every gate a stem of the same length so the picture is
+   about connection rather than distance. Click a stem and it becomes the middle: the
+   old view fades, the new neighbourhood fades in. Walking it costs nothing, because
+   the jump graph and the universe kill feed are both already loaded and every system
+   in New Eden is in them. The trail remembers where you came from. */
+var MAP={id:null,trail:[]};
+function secOf(sec){ return sec>=0.45?["hs","var(--ore)"]:sec>0?["ls","var(--amber)"]:["ns","var(--gob,#ff4757)"]; }
+function areaNode(S,A,ix){
+  var row=S.d.sys[ix], id=row[1], k=(A&&A.k[id])||{};
+  return {ix:ix,id:id,n:row[0],sec:row[2],reg:S.d.regions[row[3]],
+          kills:(k.ship_kills||0)+(k.pod_kills||0), npc:k.npc_kills||0,
+          jumps:(A&&A.j[id])||0, road:!!OUR_SYS[id], gates:(row[4]||[]).length};
+}
+function paintMap(sysId,animate){
+  var wrap=document.getElementById("mapwrap"); if(!wrap) return;
+  Promise.all([loadSysGraph(),esiActivity()]).then(function(res){
+    var S=res[0], A=res[1];
+    if(!S||!S.d){ wrap.innerHTML="<div class='rnote' style='padding:14px'>The star map did not load.</div>"; return; }
+    var ix=S.byId[sysId]; if(ix==null) return;
+    MAP.id=sysId;
+    var c=areaNode(S,A,ix);
+    var nbs=(S.d.sys[ix][4]||[]).map(function(n){ return areaNode(S,A,n); });
+    var W=760,H=470,cx=W/2,cy=H/2,R=155;
+    var s="<svg viewBox='0 0 "+W+" "+H+"' preserveAspectRatio='xMidYMid meet'>";
+    /* stems first so nodes sit on top */
+    nbs.forEach(function(n,i){
+      var ang=(-Math.PI/2)+(i*2*Math.PI/Math.max(1,nbs.length));
+      n.x=cx+Math.cos(ang)*R; n.y=cy+Math.sin(ang)*R;
+      s+="<line class='mstem"+(n.kills>0?" hot":"")+(n.road?" road":"")+"' x1='"+cx+"' y1='"+cy+"' x2='"+n.x+"' y2='"+n.y+"'/>";
+    });
+    var cc=secOf(c.sec);
+    s+="<circle cx='"+cx+"' cy='"+cy+"' r='40' fill='#0c0e10' stroke='"+cc[1]+"' stroke-width='2'/>";
+    s+="<g class='mnode' data-open='"+c.id+"'><circle cx='"+cx+"' cy='"+cy+"' r='40' fill='transparent' stroke='transparent'/>"
+      +"<title>Open the file on "+esc(c.n)+"</title></g>";
+    s+="<text class='mn ctr' x='"+cx+"' y='"+(cy-2)+"' text-anchor='middle'>"+esc(c.n)+"</text>";
+    s+="<text class='ms' x='"+cx+"' y='"+(cy+12)+"' text-anchor='middle'>"+c.sec.toFixed(1)+" &#183; "+esc(c.reg||"")+"</text>";
+    if(c.kills) s+="<text class='mk' x='"+cx+"' y='"+(cy+26)+"' text-anchor='middle' fill='"+"var(--gob,#ff4757)"+"'>"+c.kills+" killed</text>";
+    nbs.forEach(function(n){
+      var sc=secOf(n.sec), r=n.kills>0?22:18;
+      s+="<g class='mnode' data-hop='"+n.id+"'>"
+        +"<circle cx='"+n.x+"' cy='"+n.y+"' r='"+r+"' fill='"+(n.kills>0?"rgba(255,71,87,.14)":"#101214")+"' stroke='"+sc[1]+"' stroke-width='"+(n.road?2:1.4)+"'/>"
+        +"<title>"+esc(n.n)+" &#183; "+n.sec.toFixed(1)+" &#183; "+n.gates+" gates &#183; "+(n.kills?n.kills+" killed this hour":"quiet")+"</title></g>";
+      s+="<text class='mn' x='"+n.x+"' y='"+(n.y+r+13)+"' text-anchor='middle'>"+esc(n.n)+"</text>";
+      s+="<text class='ms' x='"+n.x+"' y='"+(n.y+r+23)+"' text-anchor='middle'>"+n.sec.toFixed(1)+(n.road?" &#183; our road":"")+"</text>";
+      if(n.kills) s+="<text class='mk' x='"+n.x+"' y='"+(n.y+4)+"' text-anchor='middle' fill='var(--gob,#ff4757)'>"+n.kills+"</text>";
+    });
+    s+="</svg>";
+    function swap(){
+      wrap.innerHTML=s;
+      wrap.querySelectorAll("[data-hop]").forEach(function(g){
+        g.addEventListener("click",function(){
+          MAP.trail.push(sysId); if(MAP.trail.length>8) MAP.trail.shift();
+          paintMap(+g.getAttribute("data-hop"),true);
+        });
+      });
+      wrap.querySelectorAll("[data-open]").forEach(function(g){
+        g.addEventListener("click",function(){ loadTarget("sys",+g.getAttribute("data-open")); });
+      });
+      paintAreaHud(c,nbs);
+      wrap.classList.remove("fade");
+    }
+    if(animate){ wrap.classList.add("fade"); setTimeout(swap,170); } else swap();
+  });
+}
+function paintAreaHud(c,nbs){
+  var hud=document.getElementById("maphud"); if(!hud) return;
+  var areaKills=c.kills+nbs.reduce(function(a,n){ return a+n.kills; },0);
+  var hottest=nbs.slice().sort(function(a,b){ return b.kills-a.kills; })[0];
+  var ls=nbs.filter(function(n){ return n.sec<0.45; }).length;
+  var roads=nbs.filter(function(n){ return n.road; }).length+(c.road?1:0);
+  var h="";
+  h+="<div><div class='k'>GATES</div><div class='v'>"+nbs.length+"</div></div>";
+  h+="<div><div class='k'>KILLED IN AREA</div><div class='v"+(areaKills?" hot":" ok")+"'>"+areaKills+"</div></div>";
+  h+="<div><div class='k'>HOTTEST GATE</div><div class='v"+(hottest&&hottest.kills?" hot":"")+"' style='font-size:12px'>"
+    +(hottest&&hottest.kills?esc(hottest.n)+" "+hottest.kills:"all quiet")+"</div></div>";
+  h+="<div><div class='k'>WAY OUT</div><div class='v' style='font-size:12px'>"+(ls===nbs.length&&nbs.length?"none in highsec":(nbs.length-ls)+" highsec")+"</div></div>";
+  h+="<div><div class='k'>TRAFFIC</div><div class='v'>"+c.jumps+"</div></div>";
+  if(roads) h+="<div><div class='k'>OUR ROADS</div><div class='v ok'>"+roads+"</div></div>";
+  hud.innerHTML=h;
+  /* the trail: where you walked in from, newest last, each one a way back */
+  var tr=document.getElementById("maptrail");
+  if(!tr) return;
+  if(!MAP.trail.length){ tr.innerHTML=""; return; }
+  loadSysGraph().then(function(S){
+    var hops=MAP.trail.slice(-5).map(function(id){
+      var ix=S.byId[id]; return {id:id,n:ix!=null?S.d.sys[ix][0]:("system "+id)};
+    });
+    tr.innerHTML="<span class='sep'>walked in from</span>"
+      +hops.map(function(x){ return "<button data-back='"+x.id+"'>"+esc(x.n)+"</button>"; }).join("<span class='sep'>&#8594;</span>");
+    tr.querySelectorAll("[data-back]").forEach(function(b){
+      b.addEventListener("click",function(){
+        var id=+b.getAttribute("data-back");
+        var at=MAP.trail.lastIndexOf(id);
+        if(at>=0) MAP.trail=MAP.trail.slice(0,at);
+        paintMap(id,true);
+      });
+    });
+  });
+}
+
 var WEBSRC={id:null,name:null,mails:null};
 var SYSG=null;
 function loadSysGraph(){
@@ -834,6 +962,10 @@ function renderSystem(D,ageMs,partial){
     h+="</tbody></table></div>";
   }
   h+="</div></div>";
+  /* the area, walkable: gates as equal stems, hop one and it recentres */
+  h+="<div class='sec'><div class='shead'><b>THE AREA</b><span class='samp'>click a gate to walk it</span></div>"
+    +"<div class='mapwrap' id='mapwrap'><div class='rnote' style='padding:18px'>drawing the map&hellip;</div></div>"
+    +"<div class='maphud' id='maphud'></div><div class='maptrail' id='maptrail'></div></div>";
   /* the deep read, on request */
   h+="<div class='sec'><div class='shead'><b>READ BETWEEN THE LINES</b><span class='samp'>goes four layers deep</span></div>"
     +"<div class='verd'>Who is actually working this system, whether they are a crew or just a banner, "
@@ -1116,6 +1248,9 @@ function wireSystem(D){
   if(sb) sb.addEventListener("click",function(){ toggleWatch("sys",D.id,D.name); renderSystem(D,0); });
   var wb=document.getElementById("webgo");
   if(wb) wb.addEventListener("click",function(){ runWeb(D); });
+  /* a new system resets the walk; the map starts centred on the file you opened */
+  if(MAP.id!==D.id) MAP.trail=[];
+  if(document.getElementById("mapwrap")) paintMap(D.id,false);
   out.querySelectorAll(".pplc[data-id]").forEach(function(b){
     b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
   });
