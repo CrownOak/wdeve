@@ -836,6 +836,29 @@
 .gs-mine b{color:var(--ore);letter-spacing:.08em;margin-right:8px;}
 .gs-mine span{color:var(--silver);font-weight:700;}
 .gs-mine i{display:block;font-style:normal;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5;}
+  /* YOUR NEXT TRIP. The one member-facing instruction, so it gets the weight. Ore green
+     border and the ore name at display size; everything under it is quiet supporting text. */
+  .trip{ margin:0 0 12px; padding:15px 17px; background:var(--black);
+    border:1px solid var(--ore); border-left-width:3px; }
+  .trip-h{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .trip-h .tk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); }
+  .trip-h .tb{ font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.14em;
+    color:#04140a; background:var(--ore); padding:3px 8px; }
+  .trip-ore{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+    font-size:26px; line-height:1.1; color:var(--ore); margin:9px 0 6px; }
+  .trip-why{ font-size:13px; line-height:1.6; color:var(--silver-dim); }
+  .trip-why b{ color:var(--silver); }
+  .trip-rows{ margin-top:11px; border-top:1px solid var(--line-soft); }
+  .trip-rows div{ display:grid; grid-template-columns:74px minmax(0,1fr); gap:12px;
+    padding:7px 0; border-bottom:1px solid var(--line-soft); align-items:baseline; }
+  .trip-rows div:last-child{ border-bottom:0; }
+  .trip-rows span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted); }
+  .trip-rows b{ font-weight:400; font-size:12.5px; line-height:1.5; color:var(--silver-dim); }
+  .trip-age{ margin-top:9px; font-family:var(--mono); font-size:9.5px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--muted); }
+  .trip-age.old{ color:var(--amber); }
+  @media(max-width:520px){ .trip-rows div{ grid-template-columns:1fr; gap:3px; } }
   /* WHAT TO MINE: the order, in ore and in places, not in chemistry */
   .mine2{ margin-top:10px; padding:13px 15px; background:var(--black); border:1px solid var(--ore);
     border-left-width:3px; }
@@ -1721,6 +1744,48 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
 /* THE GOAL STRIP — the one dictated corp goal, a bar every goblin watches move.
    Progress comes counted from the worker (industry_contributions of the goal
    item since the dictate); nothing is computed client-side but the percent. */
+/* YOUR NEXT TRIP. The member half of the Mohas card, and the numbers are no longer
+   guessed: works_stock_plan.py computes which ore closes the 30 day gap, how many units
+   and m3 that is, and how many fleet nights it represents, and the portal now reads it.
+   The whole point is that a member is handed ONE trip, not a spreadsheet: the ore, why it
+   matters in plain language, and what a night's worth looks like. Everything else the plan
+   knows (module bills, margins) is stripped at ingest and never reaches this page. */
+function renderNextTrip(plan){
+  if (!plan || !plan.ore_plan_30d) return '';
+  var names = Object.keys(plan.ore_plan_30d);
+  if (!names.length) return '';
+  var ore = names[0], r = plan.ore_plan_30d[ore] || {};
+  var m3 = Number(r.m3) || 0, units = Number(r.units) || 0;
+  if (m3 <= 0) return '';
+  // the mineral this actually fixes, and how much runway is left on it
+  var gap = plan.gap_30d || {}, dos = plan.days_of_stock || {};
+  var min = Object.keys(gap)[0] || null;
+  var days = min && dos[min] != null ? Math.round(dos[min]) : null;
+  var NIGHT = 23000;                     // one Orca-boosted fleet night, the plan's own figure
+  var nights = Number(plan.fleet_nights) || (m3 / NIGHT);
+  var loc = ORE_WHERE[String(ore).toLowerCase()] || ORE_WHERE_DEFAULT;
+  var age = plan.generated ? Math.floor((Date.now() - Date.parse(plan.generated)) / 86400000) : null;
+
+  return '<div class="trip">' +
+    '<div class="trip-h"><span class="tk">Your next trip</span>' +
+      '<span class="tb">' + esc(loc.band) + '</span></div>' +
+    '<div class="trip-ore" data-i18n-skip>' + esc(String(ore).toUpperCase()) + '</div>' +
+    (min && days != null
+      ? '<div class="trip-why">It refines into ' + esc(min) + ', and we have about <b>' + days +
+        ' days</b> of that left. Nothing else on the board is closer to running out.</div>'
+      : '<div class="trip-why">This is what the factory is short of right now.</div>') +
+    '<div class="trip-rows">' +
+      '<div><span>Where</span><b>' + esc(loc.where) + '</b></div>' +
+      '<div><span>A night</span><b>about ' + Math.round(NIGHT/1000) + 'k m&#179;. ' +
+        (nights >= 2 ? Math.round(nights) + ' of those covers the whole gap.' : 'One trip covers it.') +
+        '</b></div>' +
+      '<div><span>After</span><b>Drop it at the Den. Buyback pays as always.</b></div>' +
+    '</div>' +
+    (age != null && age >= 2
+      ? '<div class="trip-age' + (age >= 7 ? ' old' : '') + '">Worked out from the hangar ' +
+        age + ' days ago</div>' : '') +
+  '</div>';
+}
 /* WHERE THE ROCK LIVES.
    Nobody should have to know a Mexallon from a shoe to take an order. The hangar board
    speaks minerals because that is what the factory burns; this speaks ORE and PLACE,
@@ -2016,7 +2081,10 @@ function renderWorks(){
             + ' <i>&rarr; '+esc(o.min||'')+'</i>'+(pri?' <b>PRIORITY</b>':(o.role&&o.role!=='staple'?' <u>'+esc(o.role)+'</u>':''))+'</span>'; }).join('')
         + '</div>' + (g && g.oreNote ? '<div class="gs-note">'+esc(g.oreNote)+'</div>' : '')
       : '';
-    feedSec = '<div class="wk-lines"><div class="wkcol-h">The feed &middot; ore doctrine + hangar runway</div>'
+    /* The trip goes FIRST: it is the answer, and the doctrine chips and the runway board
+       below it are the working that supports it. A member who reads one thing reads this. */
+    feedSec = '<div class="wk-lines"><div class="wkcol-h">The feed &middot; your trip, then the working</div>'
+      + renderNextTrip(S.works && S.works.plan)
       + oreRow + (g ? (whatToMine(g, co) || '') + renderHangar(g) : '') + '</div>';
   }
   return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
