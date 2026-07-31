@@ -1983,6 +1983,26 @@ async function secSettings(){
     +(ISADMIN?'<button class="effp" data-preset="88">88%</button><button class="effp" data-preset="90">90%</button>'
       +'<button class="inv" id="st_save">Save the rate</button>':'<span class="rowmeta">read only at your clearance</span>')
     +"</div></div>";
+  /* THE BASIS KNOBS. This is the number the entire payout rests on, and until now it
+     could only be moved by hand-editing D1. Two INDEPENDENT families (Kyle 2026-07-31:
+     "bring the other ore out of the variable and into its own") so lowering one can never
+     drag the other with it. Admin only, because moving this changes what every goblin is
+     paid for every rock from the moment it saves. */
+  h+='<div class="panel" style="border-color:rgba(70,255,94,.35)"><div class="ptitle">The basis '
+    +'<span class="pn">what we credit ore at, before the buyback rate</span></div>'
+    +'<div class="rowmeta" style="margin-bottom:12px">Payout = refined value &times; <b>basis</b> &times; buyback rate. '
+    +'Every surface reads these: /refine, the fleet ledger, the portal. They cannot disagree.</div>'
+    +'<div id="bs_wrap" class="frm">'
+      +'<div><label>Empire ore</label><input id="bs_emp" type="number" min="20" max="95" step="0.5"'+(ISADMIN?"":" disabled")+'></div>'
+      +'<div><label>Null / high end ore</label><input id="bs_nul" type="number" min="20" max="95" step="0.5"'+(ISADMIN?"":" disabled")+'></div>'
+    +'</div>'
+    +'<div class="rowmeta" id="bs_fam" style="margin-top:8px"></div>'
+    +'<div class="rowmeta" id="bs_eff" style="margin-top:10px;padding:9px 11px;background:#0b0d0e;border-left:2px solid var(--ore)"></div>'
+    +(ISADMIN?'<div style="margin-top:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+       +'<button class="inv" id="bs_save">Save the basis</button>'
+       +'<span class="qmeta" id="bs_msg"></span></div>'
+     :'<span class="rowmeta">read only at your clearance</span>')
+    +"</div>";
   const gm=s.goal_metric||"off";
   h+='<div class="panel"><div class="ptitle">Corp goal <span class="pn">one number the whole corp pushes this month</span></div>'
     +'<div class="rowmeta" style="margin-bottom:10px">Shows on every member dashboard. One source per goal, fleet numbers and in game ledger numbers never mix.</div>'
@@ -2081,6 +2101,55 @@ async function secSettings(){
       });
     });
   });
+  /* THE BASIS: load live, preview before you commit. The preview matters more than the
+     inputs do — a bare "0.56 -> 0.68" tells an admin nothing, whereas "1B of refined ore
+     pays 504M, was 504M, now 612M" is the actual decision. Reads the same public
+     /api/basis every valuing surface reads, so this panel cannot show a number the ledger
+     is not already using. */
+  (function(){
+    var emp=document.getElementById("bs_emp"), nul=document.getElementById("bs_nul"),
+        eff=document.getElementById("bs_eff"), fam=document.getElementById("bs_fam");
+    if(!emp||!nul) return;
+    var live=null;
+    function pct(x){ return (Math.round(x*1000)/10).toFixed(1)+"%"; }
+    function paint(){
+      if(!live) return;
+      var e=Number(emp.value)/100, n=Number(nul.value)/100;
+      var rate=(function(){ var r=Number(document.getElementById("st_rate") && document.getElementById("st_rate").value);
+        return isFinite(r)&&r>0 ? r/100 : 0.90; })();
+      function line(label, now, was){
+        var pay=Math.round(1e9*now*rate), old=Math.round(1e9*was*rate);
+        var d=pay-old;
+        return "<div><b>"+label+"</b> 1B of refined ore pays <b>"+(pay/1e6).toFixed(0)+"M</b>"
+          + (d ? " <span style='color:"+(d>0?"var(--ore)":"var(--red)")+"'>("
+                 + (d>0?"+":"") + (d/1e6).toFixed(0) + "M vs live)</span>" : " (unchanged)")
+          + "</div>";
+      }
+      eff.innerHTML = (isFinite(e)&&isFinite(n))
+        ? line("Empire", e, live.empire) + line("Null", n, live.null)
+          + "<div style='margin-top:6px;opacity:.75'>at the current buyback rate of "+pct(rate)+"</div>"
+        : "enter a number between 20 and 95";
+    }
+    fetch("/api/basis").then(function(r){ return r.json(); }).then(function(b){
+      if(!b||!b.ok) throw 0;
+      live=b; emp.value=(b.empire*100).toFixed(1); nul.value=(b.null*100).toFixed(1);
+      fam.innerHTML = "Null rate applies to: <b>"+ (b.nullGroups||[]).map(function(g){return g;}).join(", ") +"</b>"
+        + (b.on ? "" : " &middot; <b style='color:var(--red)'>BASIS IS OFF — everything is paying the null rate</b>");
+      paint();
+    }).catch(function(){ eff.textContent="could not read the live basis"; });
+    emp.addEventListener("input", paint); nul.addEventListener("input", paint);
+    var sv=document.getElementById("bs_save");
+    if(sv) sv.addEventListener("click", function(){
+      var btn=this;
+      busy(btn, async function(){
+        var e=Number(emp.value)/100, n=Number(nul.value)/100;
+        if(!(e>=0.20&&e<=0.95)||!(n>=0.20&&n<=0.95)){ toast("Basis lives between 20 and 95 percent.", true); return; }
+        var r=await api("/api/admin/basis",{empire:e, null:n});
+        toast(r&&r.unchanged ? "Nothing changed." : "Basis saved. Every surface reads it on next load.");
+        secSettings();
+      });
+    });
+  })();
   if(ISADMIN){
     m.querySelectorAll("[data-preset]").forEach(function(b){
       b.addEventListener("click", function(){ document.getElementById("st_rate").value=this.getAttribute("data-preset"); });
