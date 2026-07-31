@@ -1750,13 +1750,52 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
    The whole point is that a member is handed ONE trip, not a spreadsheet: the ore, why it
    matters in plain language, and what a night's worth looks like. Everything else the plan
    knows (module bills, margins) is stripped at ingest and never reaches this page. */
-function renderNextTrip(plan){
-  if (!plan || !plan.ore_plan_30d) return '';
-  var names = Object.keys(plan.ore_plan_30d);
-  if (!names.length) return '';
+/* mineral -> the core ore that makes it. Reuses the same coreOres list whatToMine reads,
+   which means a mineral nothing can mine (Nocxium, bought at Amarr) falls out on its own
+   instead of needing a second hardcoded BOUGHT set that could drift from the worker's. */
+function tripOreFor(co, min){
+  for (var i=0;i<(co||[]).length;i++)
+    if (String(co[i].min||'').toLowerCase() === String(min||'').toLowerCase()) return co[i];
+  return null;
+}
+/* THE COVERED STATE. When the hangar holds more than 30 days of everything the gap is
+   empty and this card used to render NOTHING, so the member's one instruction just
+   disappeared with no explanation. A full factory is good news and has to SAY so: name
+   the mineral that binds first anyway, and take the urgency out of the copy rather than
+   taking the card away. */
+function renderTripCovered(plan, co){
+  var dos = plan.days_of_stock || {};
+  var mins = Object.keys(dos).filter(function(m){ return dos[m] != null && isFinite(Number(dos[m])); });
+  if (!mins.length) return '';
+  mins.sort(function(a,b){ return Number(dos[a]) - Number(dos[b]); });
+  var pick = null, mineral = null, days = null;
+  for (var i=0;i<mins.length && !pick;i++){
+    var o = tripOreFor(co, mins[i]);
+    if (o){ pick = o; mineral = mins[i]; days = Math.round(Number(dos[mins[i]])); }
+  }
+  if (!pick) return '';
+  var loc = ORE_WHERE[String(pick.ore||'').toLowerCase()] || ORE_WHERE_DEFAULT;
+  return '<div class="trip">' +
+    '<div class="trip-h"><span class="tk">Your next trip</span>' +
+      '<span class="tb">' + esc(loc.band) + '</span></div>' +
+    '<div class="trip-ore" data-i18n-skip>' + esc(String(pick.ore).toUpperCase()) + '</div>' +
+    '<div class="trip-why">The factory is fed. Nothing runs out inside 30 days, so this is not a ' +
+      'rescue: ' + esc(mineral) + ' is simply the first thing we run down, in about <b>' + days +
+      ' days</b>.</div>' +
+    '<div class="trip-rows">' +
+      '<div><span>Where</span><b>' + esc(loc.where) + '</b></div>' +
+      '<div><span>A night</span><b>About 23k m&#179;. There is no gap to close, so there is no rush on it.</b></div>' +
+      '<div><span>After</span><b>Drop it at the Den. Buyback pays as always.</b></div>' +
+    '</div>' +
+  '</div>';
+}
+function renderNextTrip(plan, co){
+  if (!plan) return '';
+  var names = plan.ore_plan_30d ? Object.keys(plan.ore_plan_30d) : [];
+  if (!names.length) return renderTripCovered(plan, co);
   var ore = names[0], r = plan.ore_plan_30d[ore] || {};
   var m3 = Number(r.m3) || 0, units = Number(r.units) || 0;
-  if (m3 <= 0) return '';
+  if (m3 <= 0) return renderTripCovered(plan, co);
   // the mineral this actually fixes, and how much runway is left on it
   var gap = plan.gap_30d || {}, dos = plan.days_of_stock || {};
   var min = Object.keys(gap)[0] || null;
@@ -2084,7 +2123,7 @@ function renderWorks(){
     /* The trip goes FIRST: it is the answer, and the doctrine chips and the runway board
        below it are the working that supports it. A member who reads one thing reads this. */
     feedSec = '<div class="wk-lines"><div class="wkcol-h">The feed &middot; your trip, then the working</div>'
-      + renderNextTrip(S.works && S.works.plan)
+      + renderNextTrip(S.works && S.works.plan, co)
       + oreRow + (g ? (whatToMine(g, co) || '') + renderHangar(g) : '') + '</div>';
   }
   return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
