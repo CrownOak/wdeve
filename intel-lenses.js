@@ -2,7 +2,7 @@
    Own module so it can carry its own helpers without colliding with the
    dossier engine's scope. BONKLENS.mount(el) injects the panes and starts. */
 (function(){
-var MARKUP='<div class="modes">\n      <button data-m="local" class="on">Local</button>\n      <button data-m="grid">Grid</button>\n      <button data-m="roam">Roam</button>\n      <button data-m="war">Warzone</button>\n      <button data-m="road">Corridor</button>\n    </div>\n\n    <!-- ---------------- LOCAL ---------------- -->\n    <div class="pane on" id="p-local">\n      <div class="row2">\n        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste the names from local, one per line.&#10;Anything we cannot match gets shown back to you so you can see why."></textarea>\n        <div class="ctl">\n          <input id="lsys" type="text" placeholder="system (optional)" autocomplete="off" spellcheck="false">\n          <button class="gobtn" id="lgo">Read the room</button>\n          <button class="btn" id="lmore" style="display:none">Read the rest</button>\n          <div class="hint">You get the dangerous ones first, with what they fly and who they fly\n          with. This is killboard history, not who is online right now.</div>\n        </div>\n      </div>\n      <div class="status" id="lstatus"></div>\n      <div id="lout"><div class="empty">Paste local and read the room.</div></div>\n    </div>\n\n    <!-- ---------------- GRID ---------------- -->\n    <div class="pane" id="p-grid">\n      <div class="row2">\n        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;The hull names are the part that matters."></textarea>\n        <div class="ctl">\n          <button class="gobtn" id="ggo">Read the grid</button>\n          <div class="hint">How many hulls, how much logi, who can hold you down, and whether\n          you can leave.</div>\n        </div>\n      </div>\n      <div class="status" id="gstatus"></div>\n      <div id="gout"><div class="empty">Paste what you see on grid.</div></div>\n    </div>\n\n    <!-- ---------------- ROAM ---------------- -->\n    <div class="pane" id="p-roam">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="rhome" type="text" value="Mohas" placeholder="home system" autocomplete="off" spellcheck="false" style="width:150px">\n          <input id="rjumps" type="number" value="8" min="1" max="15" style="width:80px" title="max jumps from home">\n          <span class="toggle" id="rsec">\n            <button data-s="any" class="on">any</button>\n            <button data-s="hs">high</button>\n            <button data-s="ls">low</button>\n            <button data-s="ns">null</button>\n          </span>\n          <button class="gobtn" id="rgo">Find the fight</button>\n        </div>\n      </div>\n      <div class="hint">Where ships are actually dying right now, inside your jump range. Rats dying\n      does not count.</div>\n      <div class="status" id="rstatus"></div>\n      <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>\n    </div>\n\n    <!-- ---------------- WARZONE ---------------- -->\n    <div class="pane" id="p-war">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <span class="toggle" id="wfront">\n            <button data-w="500003:500002" class="on">Amarr v Minmatar</button>\n            <button data-w="500001:500004">Caldari v Gallente</button>\n            <button data-w="500011:0">Angel insurgency</button>\n            <button data-w="500010:0">Guristas insurgency</button>\n          </span>\n          <input id="whome" type="text" value="Mohas" placeholder="home" autocomplete="off" spellcheck="false" style="width:130px">\n          <button class="gobtn" id="wgo">Read the front</button>\n        </div>\n      </div>\n      <div class="hint">The Amarr and Minmatar front is the closest one to us, about eight jumps.\n      Systems marked flipping are being taken right now, and that is where the fights are.</div>\n      <div class="status" id="wstatus"></div>\n      <div id="wout"><div class="empty">Pick a front and read it.</div></div>\n    </div>\n\n    <!-- ---------------- CORRIDOR ---------------- -->\n    <div class="pane" id="p-road">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <button class="gobtn" id="dgo">Read the road</button>\n          <span class="cnt" id="droad"></span>\n        </div>\n      </div>\n      <div class="hint">Home to the pocket, hop by hop, live. The standing orders on each system\n      are the ones from the Watchtower. Chokepoints never read better than sketchy while anything\n      is dying there.</div>\n      <div class="status" id="dstatus"></div>\n      <div id="dout"><div class="empty">Read the road before the fleet undocks.</div></div>\n    </div>';
+var MARKUP='<div class="modes">\n      <button data-m="local" class="on">Local</button>\n      <button data-m="grid">Grid</button>\n      <button data-m="roam">Roam</button>\n      <button data-m="war">Warzone</button>\n      <button data-m="road">Corridor</button>\n      <button data-m="rocks">Rocks</button>\n      <button data-m="log">Our Log</button>\n    </div>\n\n    <!-- ---------------- LOCAL ---------------- -->\n    <div class="pane on" id="p-local">\n      <div class="row2">\n        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste the names from local, one per line.&#10;Anything we cannot match gets shown back to you so you can see why."></textarea>\n        <div class="ctl">\n          <input id="lsys" type="text" placeholder="system (optional)" autocomplete="off" spellcheck="false">\n          <button class="gobtn" id="lgo">Read the room</button>\n          <button class="btn" id="lmore" style="display:none">Read the rest</button>\n          <div class="hint">You get the dangerous ones first, with what they fly and who they fly\n          with. This is killboard history, not who is online right now.</div>\n        </div>\n      </div>\n      <div class="status" id="lstatus"></div>\n      <div id="lout"><div class="empty">Paste local and read the room.</div></div>\n    </div>\n\n    <!-- ---------------- GRID ---------------- -->\n    <div class="pane" id="p-grid">\n      <div class="row2">\n        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;The hull names are the part that matters."></textarea>\n        <div class="ctl">\n          <button class="gobtn" id="ggo">Read the grid</button>\n          <div class="hint">How many hulls, how much logi, who can hold you down, and whether\n          you can leave.</div>\n        </div>\n      </div>\n      <div class="status" id="gstatus"></div>\n      <div id="gout"><div class="empty">Paste what you see on grid.</div></div>\n    </div>\n\n    <!-- ---------------- ROAM ---------------- -->\n    <div class="pane" id="p-roam">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="rhome" type="text" value="Mohas" placeholder="home system" autocomplete="off" spellcheck="false" style="width:150px">\n          <input id="rjumps" type="number" value="8" min="1" max="15" style="width:80px" title="max jumps from home">\n          <span class="toggle" id="rsec">\n            <button data-s="any" class="on">any</button>\n            <button data-s="hs">high</button>\n            <button data-s="ls">low</button>\n            <button data-s="ns">null</button>\n          </span>\n          <button class="gobtn" id="rgo">Find the fight</button>\n        </div>\n      </div>\n      <div class="hint">Where ships are actually dying right now, inside your jump range. Rats dying\n      does not count.</div>\n      <div class="status" id="rstatus"></div>\n      <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>\n    </div>\n\n    <!-- ---------------- WARZONE ---------------- -->\n    <div class="pane" id="p-war">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <span class="toggle" id="wfront">\n            <button data-w="500003:500002" class="on">Amarr v Minmatar</button>\n            <button data-w="500001:500004">Caldari v Gallente</button>\n            <button data-w="500011:0">Angel insurgency</button>\n            <button data-w="500010:0">Guristas insurgency</button>\n          </span>\n          <input id="whome" type="text" value="Mohas" placeholder="home" autocomplete="off" spellcheck="false" style="width:130px">\n          <button class="gobtn" id="wgo">Read the front</button>\n        </div>\n      </div>\n      <div class="hint">The Amarr and Minmatar front is the closest one to us, about eight jumps.\n      Systems marked flipping are being taken right now, and that is where the fights are.</div>\n      <div class="status" id="wstatus"></div>\n      <div id="wout"><div class="empty">Pick a front and read it.</div></div>\n    </div>\n\n    <!-- ---------------- CORRIDOR ---------------- -->\n    <div class="pane" id="p-road">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <button class="gobtn" id="dgo">Read the road</button>\n          <span class="cnt" id="droad"></span>\n        </div>\n      </div>\n      <div class="hint">Home to the pocket, hop by hop, live. The standing orders on each system\n      are the ones from the Watchtower. Chokepoints never read better than sketchy while anything\n      is dying there.</div>\n      <div class="status" id="dstatus"></div>\n      <div id="dout"><div class="empty">Read the road before the fleet undocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-rocks">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="kreg" list="kregs" placeholder="region" value="Derelik" autocomplete="off" style="width:180px">\n          <datalist id="kregs"></datalist>\n          <input id="khome" value="Mohas" placeholder="home" autocomplete="off" style="width:130px">\n          <button class="gobtn" id="kgo">Find rocks</button>\n        </div>\n      </div>\n      <div class="hint">Belts never move, so they are baked. The danger beside them is live.</div>\n      <div class="status" id="kstatus"></div>\n      <div id="kout"><div class="empty">Pick a region and find the rocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-log">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;gap:10px;align-items:center">\n          <button class="gobtn" id="ogo">Read our log</button>\n        </div>\n      </div>\n      <div class="hint">What we killed and what we lost, live, not from a bake.</div>\n      <div class="status" id="ostatus"></div>\n      <div id="oout"><div class="empty">Read the log.</div></div>\n    </div>';
 window.BONKLENS={mount:function(root){
   if(!root) return; root.innerHTML=MARKUP;
 
@@ -81,7 +81,7 @@ function setMode(m){
   mode=m; gen++;              /* the entered mode takes the head of the chain */
   var bs=document.querySelectorAll(".modes button");
   for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i].getAttribute("data-m")===m);
-  ["local","grid","roam","war","road"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
+  ["local","grid","roam","war","road","rocks","log"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
   try{ history.replaceState(null,"","?m="+m); }catch(e){}
 }
 document.querySelector(".modes").addEventListener("click",function(e){
@@ -730,7 +730,110 @@ $("dgo").addEventListener("click",readRoad);
 
 /* deep link ?m= */
 (function(){ var m=new URLSearchParams(location.search).get("m");
-  if(m&&["local","grid","roam","war","road"].indexOf(m)>=0&&m!=="local") setMode(m); })();
+  if(m&&["local","grid","roam","war","road","rocks","log"].indexOf(m)>=0&&m!=="local") setMode(m); })();
+
+/* ==== LENS: ROCKS ==== belts are baked because they never move; the danger beside
+   them is live. The mining half of the same map the fighters read. */
+var BELTS=null;
+function loadBelts(){
+  if(BELTS) return Promise.resolve(BELTS);
+  return fetch("/lowsec/belts.json").then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){ BELTS=d||{regions:{}}; return BELTS; })
+    .catch(function(){ BELTS={regions:{}}; return BELTS; });
+}
+function findRocks(){
+  var g=++gen; parked.rocks=false;
+  var reg=($("kreg").value||"Derelik").trim(), home=($("khome").value||"Mohas").trim().toLowerCase();
+  $("kstatus").textContent="reading belts...";
+  Promise.all([loadBelts(),loadSys(),
+    fetch(ESI+"/universe/system_kills/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
+  ]).then(function(res){
+    if(g!==gen) return;
+    var B=res[0],S=res[1],kills=res[2];
+    var dl=$("kregs");
+    if(dl&&!dl.childNodes.length) dl.innerHTML=Object.keys(B.regions||{}).sort().map(function(r){ return "<option value='"+esc(r)+"'>"; }).join("");
+    var rows=(B.regions||{})[reg];
+    if(!rows){ $("kstatus").innerHTML="<span class='bad'>no region called "+esc(reg)+"</span>"; return; }
+    $("kstatus").innerHTML=["belts ok","kills "+(kills?"ok":"<span class='bad'>down</span>")].join(" &middot; ");
+    var kBy={}; (kills||[]).forEach(function(k){ kBy[k.system_id]=k; });
+    var hi=S.byName?S.byName[home]:null, dist=(hi!=null)?bfs(S,hi,15):{};
+    var out=rows.filter(function(r){ return (r.b||0)>0; }).map(function(r){
+      var ix=S.byName?S.byName[String(r.n).toLowerCase()]:null;
+      var id=(ix!=null)?S.d.sys[ix][1]:null, k=id?kBy[id]:null;
+      return {n:r.n,sec:r.s,belts:r.b,moons:r.m,st:r.st,id:id,
+              j:(ix!=null&&dist[ix]!=null)?dist[ix]:null,
+              kills:k?((k.ship_kills||0)+(k.pod_kills||0)):0};
+    });
+    out.sort(function(a,b){ return (a.kills-b.kills)||(b.belts-a.belts)||((a.j==null?99:a.j)-(b.j==null?99:b.j)); });
+    var quiet=out.filter(function(r){ return !r.kills; }).length;
+    var h="<div class='verdict'><span class='vl'>THE ROCKS</span><div class='vt'>"
+      +esc(reg)+": "+out.length+" systems with belts, "+quiet+" with nothing dying in them this hour."
+      +(out[0]?" Most rock in the quiet is <b style='color:var(--gs)'>"+esc(out[0].n)+"</b>"
+        +(out[0].j!=null?", "+out[0].j+" jumps out":"")+".":"")+"</div></div>";
+    h+="<div class='sect'><table class='dt'><thead><tr><th>SYSTEM</th><th>SEC</th><th class='num'>BELTS</th>"
+      +"<th class='num'>MOONS</th><th class='num'>STATIONS</th><th class='num'>KILLS/HR</th><th class='num'>JUMPS</th></tr></thead><tbody>";
+    out.slice(0,40).forEach(function(r){
+      var cls=r.sec>=0.45?"none":r.sec>0?"ghost":"killer";
+      h+="<tr><td>"+(r.id?"<a href='/briefing/?t=sys&id="+r.id+"'>"+esc(r.n)+"</a>":esc(r.n))+"</td>"
+        +"<td><span class='band b-"+cls+"'>"+(r.sec!=null?Number(r.sec).toFixed(1):"")+"</span></td>"
+        +"<td class='num'>"+r.belts+"</td><td class='num'>"+(r.moons||"")+"</td><td class='num'>"+(r.st||"")+"</td>"
+        +"<td class='num'"+(r.kills?" style='color:var(--gs)'":"")+">"+(r.kills||"")+"</td>"
+        +"<td class='num'>"+(r.j!=null?r.j:"")+"</td></tr>";
+    });
+    h+="</tbody></table></div>";
+    $("kout").innerHTML=h;
+  }).catch(function(e){ if(g===gen) $("kstatus").innerHTML="<span class='bad'>"+esc(String(e))+"</span>"; });
+}
+$("kgo").addEventListener("click",findRocks);
+/* ==== END LENS: ROCKS ==== */
+
+/* ==== LENS: OUR LOG ==== read live off zkill instead of the encrypted bake, so it is
+   never stale and needs no generator. The losses are the half that teaches. */
+function readLog(){
+  var g=++gen; parked.log=false;
+  $("ostatus").textContent="reading...";
+  Promise.all([
+    zk("/kills/allianceID/"+OUR_ALLI+"/").catch(function(){ return []; }),
+    zk("/losses/allianceID/"+OUR_ALLI+"/").catch(function(){ return []; })
+  ]).then(function(res){
+    if(g!==gen) return;
+    var k=(res[0]||[]).filter(Boolean), l=(res[1]||[]).filter(Boolean);
+    $("ostatus").innerHTML="kills "+k.length+" &middot; losses "+l.length;
+    var rows=[];
+    k.forEach(function(m){ rows.push({k:1,m:m}); });
+    l.forEach(function(m){ rows.push({k:0,m:m}); });
+    rows.sort(function(a,b){ return a.m.killmail_time<b.m.killmail_time?1:-1; });
+    var ids=[];
+    rows.slice(0,40).forEach(function(r){
+      var v=r.m.victim||{}; ids.push(v.ship_type_id); if(v.character_id) ids.push(v.character_id);
+      ids.push(r.m.solar_system_id);
+    });
+    return resolveNames(ids).then(function(map){
+      var iskLost=l.reduce(function(a,m){ return a+((m.zkb||{}).totalValue||0); },0);
+      var iskKilled=k.reduce(function(a,m){ return a+((m.zkb||{}).totalValue||0); },0);
+      var h="<div class='verdict'><span class='vl'>OUR LOG</span><div class='vt'>"
+        +k.length+" killed, "+l.length+" lost on the board right now. "
+        +(iskLost>iskKilled?"We are paying more than we are taking.":"We are taking more than we are paying.")
+        +"</div></div>";
+      h+="<div class='flags'><span class='flag ok'>"+isk(iskKilled)+" destroyed</span>"
+        +"<span class='flag'>"+isk(iskLost)+" lost</span></div>";
+      h+="<div class='sect'><table class='dt'><thead><tr><th></th><th>SHIP</th><th>PILOT</th><th>SYSTEM</th><th class='num'>VALUE</th><th>WHEN</th><th></th></tr></thead><tbody>";
+      rows.slice(0,40).forEach(function(r){
+        var m=r.m,v=m.victim||{};
+        h+="<tr><td><span class='band "+(r.k?"b-ours'>KILL":"b-killer'>LOSS")+"</span></td>"
+          +"<td>"+esc(nameOf(map,v.ship_type_id))+"</td>"
+          +"<td>"+(v.character_id?esc(nameOf(map,v.character_id)):"<span style='color:var(--muted)'>structure</span>")+"</td>"
+          +"<td><a href='/briefing/?t=sys&id="+m.solar_system_id+"'>"+esc(nameOf(map,m.solar_system_id))+"</a></td>"
+          +"<td class='num'>"+isk((m.zkb||{}).totalValue)+"</td><td>"+ago(m.killmail_time)+"</td>"
+          +"<td><a href='https://zkillboard.com/kill/"+m.killmail_id+"/' target='_blank' rel='noopener'>mail</a></td></tr>";
+      });
+      h+="</tbody></table></div>";
+      $("oout").innerHTML=h;
+    });
+  }).catch(function(e){ if(g===gen) $("ostatus").innerHTML="<span class='bad'>"+esc(String(e))+"</span>"; });
+}
+$("ogo").addEventListener("click",readLog);
+/* ==== END LENS: OUR LOG ==== */
 
 }};
 })();
