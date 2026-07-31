@@ -241,3 +241,21 @@
 /* the search stops being the headline and becomes the follow up question */
 .askline{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--muted);
   border-top:1px solid var(--line-soft); padding-top:14px; margin-top:4px; }
+
+/* ==== THE FIGHT ==== */
+.fight{ border:1px solid var(--line); background:var(--steel); padding:12px 14px; margin:0 0 10px; }
+.fight .fh{ display:flex; align-items:baseline; gap:12px; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.1em; color:var(--muted); }
+.fight .fh .fn{ color:var(--gob,#ff4757); font-weight:700; }
+.fight .fv{ font-size:14.5px; color:var(--silver); line-height:1.55; margin:7px 0 9px; }
+.fight .fv b{ color:var(--silver); font-weight:700; }
+.ftl{ display:flex; align-items:flex-end; gap:1px; height:24px; margin:0 0 10px;
+  border-bottom:1px solid var(--line-soft); }
+.ftl i{ flex:1 1 auto; min-width:2px; background:rgba(255,71,87,.55); display:block; }
+table.fst td{ font-size:12px; }
+button.linkish{ background:transparent; border:0; padding:0; cursor:pointer; font:inherit;
+  color:var(--silver); text-align:left; }
+button.linkish:hover{ color:var(--gob,#ff4757); }
+.fcounter{ border-left:2px solid var(--gob,#ff4757); padding:2px 0 2px 11px; margin-top:10px; }
+.fcounter .fck{ font-family:var(--mono); font-size:9px; letter-spacing:.2em; color:var(--muted); display:block; margin-bottom:4px; }
+.fcounter div{ font-size:13px; color:var(--silver-dim); line-height:1.6; }

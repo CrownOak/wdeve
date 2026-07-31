@@ -364,14 +364,10 @@ $("lgo").addEventListener("click",readRoom);
 $("lmore").addEventListener("click",function(){ if(LS_STATE){ LS_STATE.cap+=40; runPilots(gen); } });
 
 /* ================= GRID ================= */
-var ROLES=[
-  [/Interceptor|Interdictor|Heavy Interdiction/i,"TACKLE"],
-  [/Logistics|Force Auxiliary/i,"LOGI"],
-  [/Recon Ship|Electronic Attack|Black Ops|Covert Ops|Stealth Bomber/i,"EWAR"],
-  [/Carrier|Dreadnought|Titan|Supercarrier|Capital Industrial/i,"CAPITAL"],
-  [/Mining Barge|Exhumer|Hauler|Freighter|Capsule|Shuttle|Corvette|Expedition Frigate|Industrial|Deep Space Transport|Blockade Runner/i,"SOFT"],
-  [/Mobile |Structure|Citadel|Engineering|Refinery/i,"STRUCTURE"]
-];
+/* the role table is shared (see /intel-roles.js): the grid lens and the fight
+   reader must never disagree about what a hull does. Fallback keeps this module
+   standalone if it is ever mounted without the shared file. */
+var ROLEMAP=window.BONKROLES||{of:function(){return "DPS";},counters:function(){return [];}};
 var NAME2TYPE=null;
 function buildNameIndex(){
   if(NAME2TYPE) return Promise.resolve(NAME2TYPE);
@@ -406,9 +402,7 @@ function readGrid(){
       var grp=GRP[T2G[hit]]; if(!grp) { unknown.push(t); return; }
       var gname=grp[0];
       counts[gname]=(counts[gname]||0)+1; total++;
-      var role="DPS";
-      for(var r=0;r<ROLES.length;r++) if(ROLES[r][0].test(gname)){ role=ROLES[r][1]; break; }
-      roles[role]++;
+      roles[ROLEMAP.of(gname)]++;
     });
     $("gstatus").textContent=total+" hulls identified"+(unknown.length?", "+unknown.length+" lines not hulls":"");
     if(!total){

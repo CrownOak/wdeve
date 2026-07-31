@@ -661,6 +661,9 @@ function renderSystem(D,ageMs,partial){
     });
     h+="</tbody></table></div>";
   }
+  /* the fights: the mails are already in memory, so this costs nothing */
+  h+="<div class='sec'><div class='shead'><b>THE FIGHTS</b><span class='samp'>clustered from the same killmails</span></div>"
+    +"<div id='fightsout'></div></div>";
   /* danger clock */
   if(hours){
     var mx=Math.max.apply(null,hours)||1;
@@ -990,6 +993,7 @@ function webSvg(D,clist){
 function wireSystem(D){
   var sb=document.getElementById("starb");
   if(sb) sb.addEventListener("click",function(){ toggleWatch("sys",D.id,D.name); renderSystem(D,0); });
+  if(document.getElementById("fightsout")) renderFights(D);
   var wb=document.getElementById("webgo");
   if(wb) wb.addEventListener("click",function(){ runWeb(D); });
   /* a new system resets the walk; the map starts centred on the file you opened */
@@ -1449,6 +1453,153 @@ function findNearestFight(){
     if(best){ CALLST.near=best; paintCall(); }
   }).catch(function(){});
 }
+
+/* ==== LENS: THE FIGHT ====
+   A killboard shreds an engagement into unrelated rows. Two hundred mails in one
+   system were never two hundred duels: they were a handful of fights, and the
+   question worth answering is what happened in each one and what it would do to us.
+   Costs nothing: the mails are already in memory from the system read.
+   Spec: Downloads/BONK-THE-FIGHT-SPEC.md */
+var FIGHT_GAP=20*60*1000, FIGHT_MIN=3;
+function clusterFights(mails){
+  var m=(mails||[]).filter(Boolean).slice().sort(function(a,b){ return a.killmail_time<b.killmail_time?-1:1; });
+  var out=[],cur=[];
+  m.forEach(function(k){
+    if(!cur.length){ cur=[k]; return; }
+    var gap=new Date(k.killmail_time)-new Date(cur[cur.length-1].killmail_time);
+    if(gap<=FIGHT_GAP) cur.push(k); else { out.push(cur); cur=[k]; }
+  });
+  if(cur.length) out.push(cur);
+  var fights=out.filter(function(c){ return c.length>=FIGHT_MIN; });
+  return {fights:fights.sort(function(a,b){ return b.length-a.length; }), dropped:out.length-fights.length};
+}
+/* DR-FIGHT-1: headcounts are UNIQUE PILOTS, never appearances. Counting attacker
+   rows reported 641 of one hull in a 181 kill fight, because a pilot on fifty mails
+   counts fifty times. DR-FIGHT-2: one kill credited per side per mail, or a ninety
+   man blob books ninety kills. */
+function buildFight(cluster){
+  var sides={}, first=new Date(cluster[0].killmail_time), last=new Date(cluster[cluster.length-1].killmail_time);
+  function side(id){ return sides[id]||(sides[id]={id:id,kills:0,losses:0,iskLost:0,pilots:{},hulls:{}}); }
+  cluster.forEach(function(m){
+    var v=m.victim||{}, vo=v.alliance_id||v.corporation_id||0;
+    if(vo){ var S=side(vo); S.losses++; S.iskLost+=((m.zkb||{}).totalValue||0);
+      if(v.character_id) S.pilots[v.character_id]=1;
+      if(v.character_id&&v.ship_type_id) S.hulls[v.character_id+":"+v.ship_type_id]=v.ship_type_id; }
+    var credited={};
+    (m.attackers||[]).forEach(function(a){
+      var ao=a.alliance_id||a.corporation_id||0; if(!ao) return;
+      var A=side(ao);
+      if(a.character_id) A.pilots[a.character_id]=1;
+      if(a.character_id&&a.ship_type_id) A.hulls[a.character_id+":"+a.ship_type_id]=a.ship_type_id;
+      if(!credited[ao]){ A.kills++; credited[ao]=1; }
+    });
+  });
+  var list=Object.keys(sides).map(function(k){
+    var S=sides[k], hulls={};
+    Object.keys(S.hulls).forEach(function(key){ var t=S.hulls[key]; hulls[t]=(hulls[t]||0)+1; });
+    var roles={TACKLE:0,LOGI:0,EWAR:0,CAPITAL:0,DPS:0,SOFT:0,STRUCTURE:0};
+    Object.keys(hulls).forEach(function(t){
+      var g=GRP[T2G[t]]; if(!g) return;
+      roles[(window.BONKROLES?window.BONKROLES.of(g[0]):"DPS")]+=hulls[t];
+    });
+    return {id:+k,kills:S.kills,losses:S.losses,iskLost:S.iskLost,
+            n:Object.keys(S.pilots).length,hulls:hulls,roles:roles,
+            firstSeen:null};
+  }).sort(function(a,b){ return b.n-a.n; });
+  /* when did each side turn up: a side that arrives late and loses nothing is a
+     third party cleaning up, which is a different story from two sides grinding */
+  list.forEach(function(S){
+    for(var i=0;i<cluster.length;i++){
+      var m=cluster[i], v=m.victim||{};
+      var inIt=((v.alliance_id||v.corporation_id)===S.id)
+        ||(m.attackers||[]).some(function(a){ return (a.alliance_id||a.corporation_id)===S.id; });
+      if(inIt){ S.firstSeen=new Date(m.killmail_time); break; }
+    }
+  });
+  return {sides:list,start:first,end:last,mins:Math.max(1,Math.round((last-first)/60000)),
+          kills:cluster.length,cluster:cluster};
+}
+function fightVerdict(F){
+  var s=F.sides; if(!s.length) return "Nothing readable here.";
+  var loser=s.slice().sort(function(a,b){ return b.losses-a.losses; })[0];
+  var winner=s.slice().sort(function(a,b){ return b.kills-a.kills||a.losses-b.losses; })[0];
+  var third=s.filter(function(x){
+    return x!==winner&&x.kills>0&&x.losses===0&&x.firstSeen&&
+      (x.firstSeen-F.start)>((F.end-F.start)*0.25);
+  })[0];
+  var out=[];
+  if(!winner||!loser||winner===loser) out.push("One sided. "+(loser?nameOf(FMAP,loser.id):"Somebody")+" just died here.");
+  else if(loser.n<=1) out.push("That was not a fight, that was a gank.");
+  else if(winner.iskLost*3<loser.iskLost) out.push("<b>"+esc(nameOf(FMAP,winner.id))+"</b> rolled <b>"+esc(nameOf(FMAP,loser.id))+"</b>.");
+  else if(winner.losses>0) out.push("<b>"+esc(nameOf(FMAP,winner.id))+"</b> took it, and paid "+isk(winner.iskLost)+" doing it.");
+  else out.push("<b>"+esc(nameOf(FMAP,winner.id))+"</b> took it clean.");
+  if(third) out.push("<b>"+esc(nameOf(FMAP,third.id))+"</b> turned up late with "+third.n+" and lost nothing. That is a third party cleaning up.");
+  return out.join(" ");
+}
+var FMAP={};
+function timelineStrip(F){
+  var buckets=[],i,per=Math.max(1,Math.ceil(F.mins/40));
+  for(i=0;i<Math.ceil(F.mins/per)+1;i++) buckets[i]=0;
+  F.cluster.forEach(function(m){
+    var b=Math.floor((new Date(m.killmail_time)-F.start)/60000/per);
+    buckets[b]=(buckets[b]||0)+1;
+  });
+  var mx=Math.max.apply(null,buckets)||1;
+  return "<div class='ftl' title='kills over the "+F.mins+" minutes of this fight'>"
+    +buckets.map(function(v){ return "<i style='height:"+Math.max(2,Math.round(v/mx*22))+"px'></i>"; }).join("")
+    +"</div>";
+}
+function renderFights(D){
+  var host=document.getElementById("fightsout"); if(!host) return;
+  if(!WEBSRC.mails||WEBSRC.id!==D.id){ host.innerHTML="<div class='verd'>The killmails are not loaded for this system.</div>"; return; }
+  var C=clusterFights(WEBSRC.mails);
+  if(!C.fights.length){
+    host.innerHTML="<div class='verd'>No engagement in this window. "
+      +(C.dropped?C.dropped+" one off kills, which is traffic rather than a fight.":"Nothing at all.")+"</div>";
+    return;
+  }
+  var built=C.fights.slice(0,6).map(buildFight);
+  var ids=[];
+  built.forEach(function(F){ F.sides.slice(0,4).forEach(function(S){ ids.push(S.id); });
+    F.sides.slice(0,4).forEach(function(S){ Object.keys(S.hulls).slice(0,40).forEach(function(t){ ids.push(+t); }); }); });
+  resolveNames(ids).then(function(map){
+    FMAP=map;
+    var h="<div class='verd'>"+C.fights.length+" engagement"+(C.fights.length===1?"":"s")+" in the last "
+      +WEBSRC.mails.length+" killmails"+(C.dropped?", plus "+C.dropped+" one off kills that are traffic rather than fights":"")+".</div>";
+    built.forEach(function(F,ix){
+      var top=F.sides.slice(0,4);
+      h+="<div class='fight'><div class='fh'><span class='fn'>"+F.kills+" kills</span>"
+        +"<span class='fm'>"+F.mins+" min</span>"
+        +"<span class='fw'>"+ago(F.cluster[F.cluster.length-1].killmail_time)+"</span></div>";
+      h+="<div class='fv'>"+fightVerdict(F)+"</div>";
+      h+=timelineStrip(F);
+      h+="<table class='btbl fst'><thead><tr><th>SIDE</th><th class='num'>PILOTS</th><th class='num'>KILLS</th>"
+        +"<th class='num'>LOST</th><th>FLEW</th></tr></thead><tbody>";
+      top.forEach(function(S){
+        var hulls=Object.keys(S.hulls).map(function(t){ return {t:+t,c:S.hulls[t]}; })
+          .sort(function(a,b){ return b.c-a.c; }).slice(0,3)
+          .map(function(x){ return esc(nameOf(map,x.t))+" &times;"+x.c; }).join(", ");
+        h+="<tr><td><button class='linkish' data-t='"+(S.id>99000000?"alli":"corp")+"' data-id='"+S.id+"'>"
+          +esc(nameOf(map,S.id))+"</button></td>"
+          +"<td class='num'>"+S.n+"</td><td class='num'>"+S.kills+"</td><td class='num'>"+S.losses+"</td>"
+          +"<td>"+hulls+"</td></tr>";
+      });
+      h+="</tbody></table>";
+      var wn=F.sides.slice().sort(function(a,b){ return b.kills-a.kills||a.losses-b.losses; })[0];
+      if(wn){
+        var lines=window.BONKROLES?window.BONKROLES.counters(wn.roles,wn.n):[];
+        if(lines.length) h+="<div class='fcounter'><span class='fck'>IF YOU MEET THIS</span>"
+          +lines.map(function(l){ return "<div>"+esc(l)+"</div>"; }).join("")+"</div>";
+      }
+      h+="</div>";
+    });
+    host.innerHTML=h;
+    host.querySelectorAll(".linkish[data-id]").forEach(function(b){
+      b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
+    });
+  });
+}
+/* ==== END LENS: THE FIGHT ==== */
 
 }};
 })();
