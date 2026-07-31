@@ -3593,7 +3593,8 @@ function renderChars(){
     '<input id="altIgn" type="text" placeholder="ALT CHARACTER IGN" maxlength="64">' +
     '<button class="gobtn" id="altAdd">Add alt</button></div>' +
     '<div class="formerr" id="charErr"></div>' +
-    '<div class="pnote">Every pilot you fly lives here. The alts mine, the payout character gets the check.</div>';
+    '<div class="pnote">Every pilot you fly lives here. The alts mine, the payout character gets the check. ' +
+    'Need another one? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">Start a character</a> and it lands with a million skillpoints.</div>';
   el.innerHTML = html;
 
   $("altAdd").addEventListener("click", addAlt);
