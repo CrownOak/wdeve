@@ -55,8 +55,11 @@
 .bktab tr:last-child td{ border-bottom:0; }
 .bktab td+td, .bktab th+th{ padding-left:14px; }
 /* the P&L waterfall: one bar, revenue split into where it goes */
-.bkbar{ display:flex; height:20px; border:1px solid var(--line-soft); background:var(--black); overflow:hidden; }
+.bkbar{ display:flex; height:20px; border:1px solid var(--line-soft); background:var(--black);
+        overflow:hidden; position:relative; }
 .bkbar i{ display:block; height:100%; }
+/* where revenue runs out, drawn only when the costs are longer than the bar of income */
+.bkbar u{ position:absolute; top:-1px; bottom:-1px; width:0; border-left:2px dashed var(--amber); }
 .bkkey{ display:flex; flex-wrap:wrap; gap:12px; margin-top:9px; font-family:var(--mono); font-size:11px; color:var(--muted); }
 .bkkey span{ display:flex; align-items:center; gap:5px; }
 .bkkey b{ width:9px; height:9px; display:inline-block; }
@@ -2518,7 +2521,16 @@ function bkWorks(sc){
   if(!sc) return "";
   const rev=Number(sc.revenue_day)||0;
   const profit=Number(sc.profit_day)||0;
-  const pct=function(v){ return rev>0 ? 100*(Number(v)||0)/rev : 0; };
+  /* Scale the bar to whichever side is LONGER. Dividing by revenue looks right only while
+     the lines make money: a losing scenario has costs over 100% of revenue, the segments
+     overflow, and overflow:hidden silently crops the fixed costs so the bar UNDERSTATES the
+     loss. Normalising to max(revenue, costs) keeps every segment truthful and lets a dashed
+     marker show where the income actually ran out. */
+  const costs=(Number(sc.buyback_out)||0)+(Number(sc.nocxium_cost)||0)
+             +(Number(sc.friction)||0)+(Number(sc.fixed_day)||0);
+  const denom=Math.max(rev,costs)||1;
+  const short=costs>rev;
+  const pct=function(v){ return 100*(Number(v)||0)/denom; };
   let h='<div class="ptitle">'+esc(sc.label||"scenario")
     +'<span class="pn">'+fmtN(sc.lines)+" lines &middot; "+fmtIsk(rev)+" revenue a day</span></div>";
   h+='<div class="bkbar">'
@@ -2527,13 +2539,15 @@ function bkWorks(sc){
     + bkSeg(pct(sc.friction), BKC.friction, "sales tax and broker")
     + bkSeg(pct(sc.fixed_day), BKC.fixed, "fuel and freight")
     + bkSeg(Math.max(0,pct(profit)), "var(--ore)", "corp profit")
+    + (short ? '<u style="left:'+(100*rev/denom).toFixed(2)+'%" title="revenue ends here"></u>' : "")
     + "</div>";
   h+='<div class="bkkey">'
     + bkKey(BKC.buyback,"buyback "+fmtIsk(sc.buyback_out))
     + (Number(sc.nocxium_cost)>0 ? bkKey(BKC.nocx,"nocxium "+fmtIsk(sc.nocxium_cost)) : "")
     + bkKey(BKC.friction,"tax + broker "+fmtIsk(sc.friction))
     + bkKey(BKC.fixed,"fuel + freight "+fmtIsk(sc.fixed_day))
-    + bkKey("var(--ore)","profit "+fmtIsk(profit))
+    + (profit>=0 ? bkKey("var(--ore)","profit "+fmtIsk(profit)) : "")
+    + (short ? '<span><b style="background:transparent;border-left:2px dashed var(--amber);width:2px"></b>revenue ends here</span>' : "")
     + "</div>";
   if(profit>=0){
     h+='<div class="bkline">Keeps <em>'+fmtIsk(profit)+" a day</em> at "+sig(Math.abs(Number(sc.margin_pct)||0))
