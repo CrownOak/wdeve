@@ -113,6 +113,17 @@
   .gsb .gst.HOT{ color:#ff4757; border-color:#ff4757; }
   .gsb .gst.WARM{ color:var(--amber); border-color:var(--amber); }
   .gsb .gst.QUIET{ color:var(--ore); border-color:rgba(70,255,94,.35); }
+  /* WHERE IT WENT WRONG, as rows (Kyle 2026-07-31: "just give me the data").
+     These used to be smuggled into the middle of a sentence, which is the one place a
+     hauler cannot scan them from. Name, distance, body count. */
+  .gsb .ghotk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.16em; text-transform:uppercase;
+               color:var(--muted); margin:2px 0 1px; }
+  .gsb .ghot{ display:flex; align-items:baseline; gap:8px; font-family:var(--mono); font-size:11.5px;
+              padding:3px 0; border-top:1px solid var(--line-soft); color:var(--silver); }
+  .gsb .ghot .n{ flex:1 1 auto; letter-spacing:.03em; }
+  .gsb .ghot .j{ color:var(--muted); font-size:10px; }
+  .gsb .ghot .k{ font-weight:700; font-size:9px; letter-spacing:.1em; padding:1px 6px;
+                 border:1px solid #ff4757; color:#ff4757; font-variant-numeric:tabular-nums; }
   .gsb .gsay{ font-family:var(--mono); font-size:10.5px; color:var(--silver-dim); line-height:1.6;
               border-top:1px solid var(--line-soft); padding-top:8px; margin-top:2px; }
   .gsb .glink{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); text-decoration:none;
@@ -934,6 +945,75 @@
   .asy-off{ color:var(--red); }
   .asy-test{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
     color:var(--amber); border:1px solid var(--amber); padding:1px 6px; margin-left:8px; }
+  /* ═══ THE FLOOR ═══
+     What a member sees of the works. NOT a report on it.
+     The old board published the blueprint program and a two column build queue, which
+     told everyone exactly what we own and made a real factory look like a short list.
+     A member does not need the inventory; they need to feel the place running. So this
+     is deliberately ATMOSPHERE: bays that fill and reset on their own clocks, gears at
+     different speeds, a belt that never stops. The only NUMBER on it is the true count
+     of hot lines, because a fake counter is a lie and a spinning gear is a mood. */
+  .flr{ position:relative; overflow:hidden; border:1px solid var(--line-soft);
+        background:linear-gradient(180deg, rgba(70,255,94,.045), rgba(0,0,0,0) 60%), var(--black);
+        padding:12px 13px 13px; }
+  .flr::after{ /* furnace bloom */
+    content:''; position:absolute; left:50%; top:-70px; width:280px; height:150px; margin-left:-140px;
+    background:radial-gradient(closest-side, rgba(70,255,94,.16), rgba(70,255,94,0));
+    animation:flrheat 5.5s ease-in-out infinite; pointer-events:none; }
+  @keyframes flrheat{ 0%,100%{ opacity:.5; transform:scale(1); } 50%{ opacity:1; transform:scale(1.18); } }
+  .flr-hd{ position:relative; display:flex; align-items:center; gap:8px; font-family:var(--mono);
+           font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ore); }
+  .flr-dot{ width:7px; height:7px; background:var(--ore); border-radius:50%; flex:0 0 auto;
+            animation:flrpulse 1.5s ease-in-out infinite; }
+  @keyframes flrpulse{ 0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(70,255,94,.55); }
+                       70%{ opacity:.55; box-shadow:0 0 0 7px rgba(70,255,94,0); } }
+  .flr-n{ margin-left:auto; color:var(--muted); letter-spacing:.08em; }
+  /* the bays: each one fills on its own clock and flashes as it lands */
+  .flr-bays{ position:relative; display:grid; grid-template-columns:repeat(8,1fr); gap:5px; margin:11px 0 9px; }
+  @media(max-width:520px){ .flr-bays{ grid-template-columns:repeat(4,1fr); } }
+  .flr-bay{ height:26px; background:rgba(255,255,255,.035); border:1px solid var(--line-soft);
+            position:relative; overflow:hidden; }
+  .flr-bay i{ position:absolute; left:0; bottom:0; width:100%; height:0%; display:block;
+              background:linear-gradient(180deg, rgba(140,255,160,.95), rgba(70,255,94,.28));
+              box-shadow:0 -1px 5px rgba(70,255,94,.55);
+              animation:flrfill 3.4s linear infinite; }
+  @keyframes flrfill{ 0%{ height:4%; opacity:.9; } 82%{ height:100%; opacity:.9; }
+                      88%{ height:100%; opacity:1; filter:brightness(2.4); }
+                      92%{ height:100%; opacity:.25; filter:brightness(1); }
+                      100%{ height:4%; opacity:.9; } }
+  /* a light passes over the floor, the way a gantry lamp would */
+  .flr-sweep{ position:absolute; inset:0; pointer-events:none;
+              background:linear-gradient(105deg, rgba(255,255,255,0) 42%, rgba(200,255,210,.09) 50%,
+                                          rgba(255,255,255,0) 58%);
+              background-size:260% 100%; animation:flrsweep 6.5s linear infinite; }
+  @keyframes flrsweep{ from{ background-position:140% 0; } to{ background-position:-40% 0; } }
+  /* gears, three speeds, one against the grain */
+  .flr-gears{ position:relative; display:flex; gap:16px; align-items:center; justify-content:center;
+              color:var(--ore); line-height:1; margin-top:2px; }
+  .flr-gear{ display:inline-block; font-size:19px; opacity:.75; animation:flrspin 3.6s linear infinite; }
+  .flr-gear:nth-child(2){ animation-duration:2.1s; animation-direction:reverse; font-size:25px; opacity:1;
+                          text-shadow:0 0 9px rgba(70,255,94,.6); }
+  .flr-gear:nth-child(3){ animation-duration:5.2s; font-size:16px; opacity:.6; }
+  @keyframes flrspin{ to{ transform:rotate(360deg); } }
+  /* the belt never stops */
+  .flr-belt{ position:relative; height:16px; margin-top:9px; border-top:1px solid var(--line-soft);
+             border-bottom:1px solid var(--line-soft); overflow:hidden;
+             background-image:repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 9px);
+             animation:flrbelt .55s linear infinite; }
+  @keyframes flrbelt{ to{ background-position:9px 0; } }
+  .flr-part{ position:absolute; top:4px; width:7px; height:7px; background:var(--ore); opacity:.9;
+             animation:flrpart 4.2s linear infinite; }
+  @keyframes flrpart{ from{ left:-10px; } to{ left:104%; } }
+  @media(prefers-reduced-motion:reduce){
+    /* hold the picture, drop the movement: still reads as a busy floor, standing still */
+    .flr::after, .flr-dot, .flr-gear, .flr-belt, .flr-part, .flr-sweep{ animation:none; }
+    .flr-sweep{ display:none; }
+    .flr-bay i{ animation:none; height:60%; }
+    .flr-bay:nth-child(2n) i{ height:30%; } .flr-bay:nth-child(3n) i{ height:85%; }
+  }
+  .flr-cold .flr-dot{ background:var(--muted); animation:none; }
+  .flr-cold .flr-hd{ color:var(--muted); }
+  .flr-cold .flr-bay i, .flr-cold .flr-part, .flr-cold::after{ animation:none; opacity:.18; }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -1963,9 +2043,13 @@ function renderGoal(){
   }
   if (f && f.mine)
     h += drow('Mine', esc(String(f.mine.ore).toUpperCase()), esc(f.mine.reason));
-  if (f && f.build){
+  /* THE BUILD CALL IS OFFICER ONLY (Kyle 2026-07-31: "the foreman shouldnt mention our
+     BPs"). Naming the module told every member which blueprint we hold and which one is
+     worth the most to us, on the most-read surface in the portal. Officers keep it because
+     they decide what runs; members get the floor and the mine call. */
+  if (off && f && f.build){
     var br = esc(f.build.reason);
-    if (off && f.build.officer){
+    if (f.build.officer){
       var o = f.build.officer;
       br += '<span class="fro"> &middot; ' + (o.unit_profit/1e6).toFixed(1) + 'M/unit &middot; '
           + o.margin + '% &middot; ' + (o.slot_hour/1e6).toFixed(1) + 'M/slot hr</span>';
@@ -2043,10 +2127,20 @@ function renderGssBrief(){
   var wire24 = wire.filter(function(k){ return (k.ts||0) > now - 86400000; }).length;
   var verdict, hot = false;
   if (!d){ verdict = "Reading the wire…"; }
-  else if (p !== "ROUTINE"){ hot = (p !== "STAND DOWN"); verdict = stance.member || "Check with an officer before the next run."; }
-  else if (wire24 >= 12){ hot = true; verdict = "Busy corridor today. " + wire24 + " kills on the wire. Fly like it."; }
-  else if (!brief && !wire.length){ verdict = "The wire is quiet or the wire is down. Either way, mine aligned."; }
-  else { verdict = "Quiet on the road. Normal operations."; }
+  else if (p !== "ROUTINE"){ hot = (p !== "STAND DOWN"); verdict = stance.member || "Ask an officer before the next run."; }
+  else if (wire24 >= 12){ hot = true; verdict = "Busy road. " + wire24 + " kills on the wire in 24h."; }
+  else if (!brief && !wire.length){ verdict = "No eyes on the wire. Mine aligned."; }
+  else { verdict = "Road is quiet. Normal ops."; }
+
+  /* The systems the stance is REACTING to, as scannable rows rather than a clause. */
+  var hotRows = "";
+  if (stance.hot && stance.hot.length){
+    hotRows = '<div class="ghotk">Died near home &middot; 24h</div>'
+      + stance.hot.map(function(s){
+          return '<div class="ghot"><span class="n" data-i18n-skip>' + esc(s.name) + '</span>'
+            + '<span class="j">' + (s.jumps === 0 ? "home" : s.jumps + "j") + '</span>'
+            + '<span class="k">' + (Number(s.kills) || 0) + '</span></div>'; }).join('');
+  }
 
   var home = gsbHeat(wire, [GSS_HOME]), door = gsbHeat(wire, [GSS_DOOR]), corr = gsbHeat(wire, GSS_CORRIDOR);
   function chip(label, sys, h){
@@ -2067,6 +2161,7 @@ function renderGssBrief(){
       '<div class="gpost ' + esc(p.replace(/\s/g, "")) + '">' + esc(p) + '</div>' +
       word +
       '<div class="gv' + (hot ? " hot" : "") + '">' + verdict + '</div>' +
+      hotRows +
       chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
       '<div class="gsig">Somebody&rsquo;s gotta undock.</div>' +
       '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
@@ -2110,14 +2205,41 @@ function renderWorks(){
       'current number. Days of stock recalculate the moment this saves.</div>' +
     '</div>'
   ) : '';
+  /* THE BLUEPRINT PROGRAM IS OFFICER EYES ONLY (Kyle 2026-07-31).
+     It used to render for every member, which published the exact contents of our
+     blueprint hangar to anyone with a login, and read as a short list rather than a
+     factory. Officers still get the whole board because they have to run it. */
   var linesGrid = '';
-  if (w && w.lines && w.lines.length){
-    linesGrid = '<div class="wk-lines"><div class="wkcol-h">The lines &middot; blueprint program</div><div class="gs-linegrid">'
+  if (off && w && w.lines && w.lines.length){
+    linesGrid = '<div class="wk-lines"><div class="wkcol-h">The lines &middot; blueprint program &middot; officers</div><div class="gs-linegrid">'
       + w.lines.map(function(r){
         return '<span class="gs-line gs-l-'+esc(r.status)+'"'+(r.note?' title="'+esc(r.note)+'"':'')+' data-i18n-skip>'+esc(r.item)
           + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
       + '</div></div>';
   }
+  /* THE FLOOR: what the member gets instead. One line turning is enough to light the
+     whole thing up, which is the point — the works runs continuously, and a member
+     should feel that rather than audit it. */
+  var running = (w.lines||[]).filter(function(r){ return r.status==='running'; }).length;
+  var hot = (w.lines||[]).filter(function(r){ return r.status==='running' || r.status==='ready'; }).length;
+  var live = running > 0 || ((w.building||[]).length > 0);
+  var bays = '', parts = '';
+  for (var bi=0; bi<8; bi++)
+    bays += '<div class="flr-bay"><i style="animation-duration:' + (2.6 + bi*0.42).toFixed(2)
+          + 's;animation-delay:-' + (bi*0.77).toFixed(2) + 's"></i></div>';
+  for (var pi=0; pi<6; pi++)
+    parts += '<span class="flr-part" style="animation-duration:' + (3.6 + pi*0.31).toFixed(2)
+           + 's;animation-delay:-' + (pi*0.7).toFixed(2) + 's"></span>';
+  var floor = '<div class="flr' + (live ? '' : ' flr-cold') + '" data-i18n-skip>'
+    + '<div class="flr-hd"><span class="flr-dot"></span>'
+    + (live ? 'The floor is turning' : 'Banked heat')
+    + '<span class="flr-n">' + (hot ? hot + ' lines hot' : 'lines cold') + '</span></div>'
+    + '<div class="flr-bays">' + bays + '</div>'
+    + '<div class="flr-gears"><span class="flr-gear">&#9881;</span><span class="flr-gear">&#9881;</span>'
+    + '<span class="flr-gear">&#9881;</span></div>'
+    + '<div class="flr-belt">' + parts + '</div>'
+    + '<span class="flr-sweep"></span>'
+    + '</div>';
   /* THE FEED: the detail the Foreman compresses. Ore doctrine chips, the full
      mine call (where, how much), and the hangar runway all live HERE now, off
      the rail — the sidebar directs, the board explains (FOREMAN spec law 2). */
@@ -2136,9 +2258,15 @@ function renderWorks(){
       + renderNextTrip(S.works && S.works.plan, co)
       + oreRow + (g ? (whatToMine(g, co) || '') + renderHangar(g) : '') + '</div>';
   }
-  return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works &middot; build queue</div>' +
-    '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now</div>'+buildRows+'</div>' +
-    '<div class="wkcol"><div class="wkcol-h">What we need</div>'+needRows+'</div></div>' + linesGrid + feedSec + addForm + '</div>';
+  /* The queue columns move behind the officer gate with the blueprint program: a member
+     reading "nothing on the line right now" learns only that the board is thin, which is
+     the opposite of true and the opposite of useful. They get the floor. */
+  var queue = off
+    ? '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now &middot; officers</div>'+buildRows+'</div>' +
+      '<div class="wkcol"><div class="wkcol-h">What we need &middot; officers</div>'+needRows+'</div></div>'
+    : '';
+  return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works</div>' +
+    floor + queue + linesGrid + feedSec + addForm + '</div>';
 }
 /* THE ASSAY ore board. Officer/GSS only while we test — the endpoint enforces it too,
    this just avoids rendering an empty card for members. When it opens to everyone the
