@@ -157,6 +157,7 @@ var cur=null, whoami={loggedIn:false,role:null};
 
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
 function isk(v){ if(v==null||!isFinite(v)) return "0"; var a=Math.abs(v);
+  if(a>=1e12) return (v/1e12).toFixed(2)+"T";
   if(a>=1e9) return (v/1e9).toFixed(2)+"B"; if(a>=1e6) return (v/1e6).toFixed(1)+"M";
   if(a>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
 function pct(v){ return isFinite(v)?Math.round(v*100)+"%":"0%"; }
@@ -643,6 +644,7 @@ function renderSystem(D,ageMs,partial){
     +"</div><div class='idsub'>";
   var bits=[];
   if(D.jMohas!=null) bits.push(D.jMohas+" jumps from Mohas");
+  else if(D.jRens==null) bits.push("more than 12 jumps from home");
   if(D.jRens!=null) bits.push(D.jRens+" from Rens");
   if(D.belts) bits.push(D.belts.b+" belts &middot; "+D.belts.m+" moons"+(D.belts.st?" &middot; "+D.belts.st+" stations":""));
   h+=bits.join(" &middot; ")+"</div>";
