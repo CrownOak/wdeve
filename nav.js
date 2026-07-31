@@ -40,6 +40,7 @@
     ["Market",      BASE + "market/",         "MARKET", false],
     ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
     ["Ore Calc",    BASE + "refine/",         "MARKET", false],
+  ["Survey Scan", BASE + "survey/",         "MARKET", false],
     ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
     ["Workbench",   BASE + "tools/",          "MARKET", false]
   ];
