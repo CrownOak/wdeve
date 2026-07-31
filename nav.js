@@ -40,6 +40,7 @@
     ["CLASSIFIED",  BASE + "bonk-prospects/", "INTEL",  false],
     ["REDACTED",    BASE + "alliance/",       "INTEL",  false],
     ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
+    ["COMBAT DESK", BASE + "gobsec/desk/",    "INTEL",  false],
     ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
     ["Market",      BASE + "market/",         "MARKET", false],
     ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
