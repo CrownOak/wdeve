@@ -1774,14 +1774,24 @@ function renderTripCovered(plan, co){
     if (o){ pick = o; mineral = mins[i]; days = Math.round(Number(dos[mins[i]])); }
   }
   if (!pick) return '';
+  /* Same law whatToMine follows: an officer's tag OUTRANKS the arithmetic, and it has to
+     say so out loud. Without this the rail could say "mine Plagioclase, an officer called
+     it" while this card said Scordite, and a member reading one screen would get two
+     different orders with no way to tell which one is the corp speaking. */
+  var tagged = (co || []).filter(function(o){ return o.role === 'priority'; })[0];
+  var byOfficer = false;
+  if (tagged && String(tagged.ore) !== String(pick.ore)){ pick = tagged; byOfficer = true; }
   var loc = ORE_WHERE[String(pick.ore||'').toLowerCase()] || ORE_WHERE_DEFAULT;
   return '<div class="trip">' +
     '<div class="trip-h"><span class="tk">Your next trip</span>' +
       '<span class="tb">' + esc(loc.band) + '</span></div>' +
     '<div class="trip-ore" data-i18n-skip>' + esc(String(pick.ore).toUpperCase()) + '</div>' +
-    '<div class="trip-why">The factory is fed. Nothing runs out inside 30 days, so this is not a ' +
-      'rescue: ' + esc(mineral) + ' is simply the first thing we run down, in about <b>' + days +
-      ' days</b>.</div>' +
+    (byOfficer
+      ? '<div class="trip-why">An officer called this one. The factory is fed either way, so ' +
+        'there is no gap riding on it.</div>'
+      : '<div class="trip-why">The factory is fed. Nothing runs out inside 30 days, so this is not a ' +
+        'rescue: ' + esc(mineral) + ' is simply the first thing we run down, in about <b>' + days +
+        ' days</b>.</div>') +
     '<div class="trip-rows">' +
       '<div><span>Where</span><b>' + esc(loc.where) + '</b></div>' +
       '<div><span>A night</span><b>About 23k m&#179;. There is no gap to close, so there is no rush on it.</b></div>' +
