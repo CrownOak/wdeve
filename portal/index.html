@@ -365,43 +365,56 @@
     50%    { box-shadow:0 0 0 1px rgba(70,255,94,.13), 0 0 42px -12px rgba(70,255,94,.55),
                         0 16px 44px -26px rgba(70,255,94,.6); } }
   @media(prefers-reduced-motion:reduce){ .refcard.main{ animation:none; } }
-  /* the prize stack */
-  .mevstack{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:11px 0 10px; }
-  .mvp{ background:var(--black); border:1px solid var(--line-soft); padding:9px 10px; text-align:center; }
-  .mvp b{ display:block; font-family:var(--display); font-weight:700; font-size:15px; color:var(--ore);
-          letter-spacing:.02em; }
-  .mvp span{ display:block; font-family:var(--mono); font-size:9px; letter-spacing:.1em;
-             text-transform:uppercase; color:var(--muted); margin-top:3px; }
-  @media(max-width:420px){ .mevstack{ grid-template-columns:1fr; } }
-  .mev{ margin:-4px 0 16px; padding:0 0 15px; border-bottom:1px solid var(--line-soft); }
+  /* THE MAIN EVENT, tightened (Kyle 2026-07-31: "it is a huge section... consolidate that
+     space, make better use of the interface, still special but shrink it down and present
+     the data in a more meaningful way").
+     What ate the height: three big cards to say three words, a sentence restating the
+     deadline already in the clock, a legend under the board and a paragraph under that.
+     Same information, a third of the room: prize is a chip row, the rules ride the column
+     labels, and the deadline lives in the clock only. */
+  .mevstack{ display:flex; flex-wrap:wrap; gap:6px; margin:9px 0 0; }
+  .mvp{ display:flex; align-items:baseline; gap:5px; background:var(--black);
+        border:1px solid var(--line-soft); padding:4px 9px; }
+  .mvp b{ font-family:var(--display); font-weight:700; font-size:13px; color:var(--ore); letter-spacing:.02em; }
+  .mvp span{ font-family:var(--mono); font-size:8.5px; letter-spacing:.09em;
+             text-transform:uppercase; color:var(--muted); }
+  .mev{ margin:-4px 0 13px; padding:0 0 12px; border-bottom:1px solid var(--line-soft); }
   .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
   .mevtag{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.34em;
     text-transform:uppercase; color:#04140a; background:var(--ore); padding:4px 9px; }
-  .mevclock{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--muted); }
+  .mevclock{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); }
+  .mevclock b{ color:var(--ore); font-weight:700; }
   .mevname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
-    font-size:21px; line-height:1.15; color:var(--silver); margin-top:11px; }
-  .mevprize{ font-size:13px; line-height:1.55; color:var(--silver-dim); margin-top:6px; }
-  .mevprize b{ color:var(--ore); }
-  .mevboard{ margin-top:13px; }
-  .mevrow{ display:grid; grid-template-columns:22px minmax(0,1fr) 42px 46px; gap:10px; align-items:baseline;
-    padding:5px 7px; border-bottom:1px solid var(--line-soft); }
+    font-size:17px; line-height:1.15; color:var(--silver); margin-top:9px; }
+  .mevboard{ margin-top:11px; }
+  .mevhd, .mevrow{ display:grid; grid-template-columns:18px minmax(0,1fr) 52px 44px; gap:9px;
+    align-items:baseline; padding:4px 6px; }
+  .mevhd{ padding-bottom:3px; border-bottom:1px solid var(--line-soft); }
+  .mevhd span{ font-family:var(--mono); font-size:8.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted); text-align:right; }
+  .mevhd span:first-child, .mevhd span:nth-child(2){ text-align:left; }
+  .mevrow{ border-bottom:1px solid var(--line-soft); }
   .mevrow.lead{ background:rgba(70,255,94,.06); }
   .mevrow.me{ box-shadow:inset 2px 0 0 var(--ore); }
   .mevrow .mvr{ font-family:var(--mono); font-size:11px; color:var(--muted); }
   .mevrow .mvn{ font-size:13px; color:var(--silver); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .mevrow.lead .mvn{ color:var(--ore); font-weight:600; }
-  .mevrow .mvh{ font-family:var(--mono); font-size:12.5px; color:var(--ore); text-align:right; }
-  .mevrow .mvj{ font-family:var(--mono); font-size:12.5px; color:var(--muted); text-align:right; }
-  .mevkey{ display:grid; grid-template-columns:22px minmax(0,1fr) 42px 46px; gap:10px; padding:5px 7px 0; }
-  .mevkey span{ grid-column:3; font-family:var(--mono); font-size:9px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--muted); text-align:right; }
-  .mevkey span + span{ grid-column:4; }
-  .mevfoot{ margin-top:9px; font-size:11px; line-height:1.5; color:var(--muted); }
-  .mevempty{ margin-top:12px; font-size:12.5px; color:var(--muted); }
+  .mevrow .mvj{ font-family:var(--mono); font-size:13.5px; color:var(--ore); text-align:right;
+                font-variant-numeric:tabular-nums; }
+  .mevrow .mvh{ font-family:var(--mono); font-size:12px; color:var(--muted); text-align:right;
+                font-variant-numeric:tabular-nums; }
+  .mevfoot{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.03em;
+            line-height:1.5; color:var(--muted); }
+  .mevempty{ margin-top:11px; font-size:12.5px; color:var(--muted); }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-                font-size:13px; color:var(--ore); }
-  .refcard .rs{ font-size:13px; color:var(--silver); line-height:1.55; margin-top:7px; }
-  .refcard .rs2{ font-size:12px; color:var(--silver-dim); line-height:1.55; margin-top:7px; }
+                font-size:12.5px; color:var(--ore); }
+  .refcard .rs{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
+  /* the link block: label sits ON the row instead of a sentence above and below it */
+  .refl{ margin-top:9px; }
+  .refl-k{ font-family:var(--mono); font-size:8.5px; letter-spacing:.11em; text-transform:uppercase;
+           color:var(--muted); margin-bottom:3px; }
+  .reffoot{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:11px;
+            padding-top:9px; border-top:1px solid var(--line-soft); }
   .reflink{ display:flex; gap:6px; margin-top:10px; }
   .reflink input{ flex:1; min-width:0; background:var(--black); border:1px solid var(--line); color:var(--silver);
                   font-family:var(--mono); font-size:11px; padding:7px 8px; }
@@ -971,8 +984,14 @@
   /* the bays: each one fills on its own clock and flashes as it lands */
   .flr-bays{ position:relative; display:grid; grid-template-columns:repeat(8,1fr); gap:5px; margin:11px 0 9px; }
   @media(max-width:520px){ .flr-bays{ grid-template-columns:repeat(4,1fr); } }
-  .flr-bay{ height:26px; background:rgba(255,255,255,.035); border:1px solid var(--line-soft);
+  .flr-bay{ height:34px; background:rgba(255,255,255,.035); border:1px solid var(--line-soft);
             position:relative; overflow:hidden; }
+  /* the pour: a bright band riding the top of the fill, so a bay reads as being POURED
+     into rather than as a progress bar creeping up */
+  .flr-bay::before{ content:''; position:absolute; left:0; right:0; top:0; height:2px;
+                    background:linear-gradient(90deg, transparent, rgba(190,255,205,.9), transparent);
+                    opacity:0; animation:flrpour 3.4s linear infinite; }
+  @keyframes flrpour{ 0%,74%{ opacity:0; } 80%{ opacity:.9; } 90%{ opacity:.9; } 96%,100%{ opacity:0; } }
   .flr-bay i{ position:absolute; left:0; bottom:0; width:100%; height:0%; display:block;
               background:linear-gradient(180deg, rgba(140,255,160,.95), rgba(70,255,94,.28));
               box-shadow:0 -1px 5px rgba(70,255,94,.55);
@@ -1014,6 +1033,26 @@
   .flr-cold .flr-dot{ background:var(--muted); animation:none; }
   .flr-cold .flr-hd{ color:var(--muted); }
   .flr-cold .flr-bay i, .flr-cold .flr-part, .flr-cold::after{ animation:none; opacity:.18; }
+  /* THE LINES, officer summary. Replaced a 27 chip wall that listed every blueprint at
+     ME0 and told an officer nothing they could act on, plus two hand maintained lists
+     that had been empty long enough to read as "nothing on the line right now" under a
+     factory doing 24M a day. Four facts: how many turn, what turns, what should turn
+     next, what is binding. */
+  .wkstats{ display:flex; gap:16px; flex-wrap:wrap; margin:0 0 8px; }
+  .wkstat{ font-family:var(--mono); font-size:9.5px; letter-spacing:.09em; text-transform:uppercase;
+           color:var(--muted); }
+  .wkstat b{ display:inline-block; color:var(--silver); font-size:16px; margin-right:5px;
+             font-variant-numeric:tabular-nums; }
+  .wkstat.on b{ color:var(--ore); }
+  .wkl{ display:flex; gap:9px; align-items:baseline; flex-wrap:wrap; padding:5px 0;
+        border-top:1px solid var(--line-soft); font-size:12.5px; }
+  .wkl-k{ flex:0 0 62px; font-family:var(--mono); font-size:9px; letter-spacing:.1em;
+          text-transform:uppercase; color:var(--muted); }
+  .wkl-v{ color:var(--silver-dim); min-width:0; }
+  .wkl-v.hi{ color:var(--ore); font-weight:600; }
+  .wkl-v.dim{ color:var(--muted); }
+  .wkl-m{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-left:auto;
+          white-space:nowrap; }
   /* THE WORKS — build queue board */
   .works{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore); margin:0 0 12px; padding:13px 15px; }
   .wkhead{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:14px; color:var(--silver); margin-bottom:11px; }
@@ -2167,6 +2206,92 @@ function renderGssBrief(){
       '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
     '</div>';
 }
+/* Compact ISK, local to the works board. */
+function wIsk(n){
+  n = Number(n) || 0; var a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(1) + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(1) + "M";
+  if (a >= 1e3) return Math.round(n/1e3) + "k";
+  return String(Math.round(n));
+}
+/* THE LINES: four facts, not an inventory. */
+function worksLines(w){
+  var lines = (w && w.lines) || [];
+  if (!lines.length) return '';
+  var dead = function(r){ return /no seller/i.test(r.note || ''); };
+  var running = lines.filter(function(r){ return r.status === 'running'; });
+  var ready   = lines.filter(function(r){ return r.status === 'ready'; });
+  var gone    = lines.filter(function(r){ return r.status === 'need' && dead(r); });
+
+  /* What we HOLD and are not turning. ⚠️ RANKED ON PROFIT WE CAN ACTUALLY FEED, not on
+     the headline number. Straight daily_profit nominates Strip Miner I at 22.4M/day, and
+     running it flat out wants 1.3M Megacyte a month against the 56k in the hangar: two
+     days of cover. Telling an officer to "start next: Strip Miner I" would be confidently
+     wrong. So each candidate is checked against the mineral snapshot first, and the top
+     earner we CANNOT feed is reported as blocked instead of hidden. */
+  var stock = (S.assay && S.assay.stock && S.assay.stock.minerals) || null;
+  function coverDays(r){
+    if (!stock || !r.bill || !r.bill.length) return null;
+    var rate = Number(r.build_day) || 0;
+    if (rate <= 0) return null;
+    var min = null;
+    for (var i = 0; i < r.bill.length; i++){
+      var need = (Number(r.bill[i].qty) || 0) * rate;
+      if (need <= 0) continue;
+      var have = Number(stock[r.bill[i].m]) || 0;
+      var d = have / need;
+      if (min === null || d < min) min = d;
+    }
+    return min;
+  }
+  var MIN_COVER = 30;   // a month of feed before we call something "start next"
+  var best = null, blocked = null;
+  var ab = (S.assay && S.assay.build && S.assay.build.rows) || [];
+  if (ab.length){
+    var isRunning = {}, isHeld = {};
+    running.forEach(function(r){ isRunning[String(r.item).toLowerCase()] = 1; });
+    ready.concat(running).forEach(function(r){ isHeld[String(r.item).toLowerCase()] = 1; });
+    ab.forEach(function(r){
+      var k = String(r.name || '').toLowerCase();
+      if (!isHeld[k] || isRunning[k]) return;
+      var cov = coverDays(r);
+      r._cover = cov;
+      if (cov !== null && cov < MIN_COVER){
+        if (!blocked || (r.daily_profit || 0) > (blocked.daily_profit || 0)) blocked = r;
+        return;
+      }
+      if (!best || (r.daily_profit || 0) > (best.daily_profit || 0)) best = r;
+    });
+  }
+  var f = (w && w.foreman) || {};
+  function stat(n, label, cls){
+    return '<span class="wkstat' + (cls ? ' ' + cls : '') + '"><b>' + n + '</b>' + label + '</span>';
+  }
+  function row(k, v, cls, meta){
+    return '<div class="wkl"><span class="wkl-k">' + k + '</span>'
+      + '<span class="wkl-v' + (cls ? ' ' + cls : '') + '" data-i18n-skip>' + v + '</span>'
+      + (meta ? '<span class="wkl-m">' + meta + '</span>' : '') + '</div>';
+  }
+  var h = '<div class="wk-lines"><div class="wkcol-h">The lines &middot; officers</div>'
+    + '<div class="wkstats">' + stat(running.length, 'turning', 'on')
+    + stat(ready.length, 'held, idle') + stat(gone.length, 'no seller') + '</div>';
+  if (running.length)
+    h += row('Turning', running.map(function(r){ return esc(r.item); }).join(' &middot; '));
+  if (best)
+    h += row('Start next', esc(best.name), 'hi',
+             wIsk(best.daily_profit) + '/day &middot; ' + Math.round(best.margin || 0) + '% &middot; '
+             + Math.round(best.ourore || 0) + '% our ore');
+  if (blocked)
+    h += row('Blocked', esc(blocked.name), 'dim',
+             wIsk(blocked.daily_profit) + '/day &middot; only '
+             + (blocked._cover < 1 ? '<1' : Math.round(blocked._cover)) + 'd of feed');
+  if (f.short)
+    h += row('Binding', esc(f.short.mineral), '',
+             '~' + f.short.days + 'd &middot; ' + esc(f.short.fix));
+  if (gone.length)
+    h += row('Cannot get', gone.map(function(r){ return esc(r.item); }).join(' &middot; '), 'dim');
+  return h + '</div>';
+}
 function renderWorks(){
   var w = S.works;
   var off = isOfficer();
@@ -2174,25 +2299,7 @@ function renderWorks(){
   // members keep the board whenever ANYTHING renders on it (the feed moved here
   // from the rail, so empty manual lists must not blank the whole panel)
   if (!off && !(w.building||[]).length && !(w.need||[]).length && !(w.lines||[]).length && !w.goal) return '';
-  function bchip(st){ return '<span class="wk-st wk-'+esc(st)+'">'+esc(st)+'</span>'; }
-  function ctl(r, adv){ return off ? '<span class="wk-ctl"><button class="wk-b" onclick="worksAdvance('+r.id+')" title="'+adv+'">'+(adv==='mark sourced'?'&#10003;':'&#8250;')+'</button><button class="wk-b" onclick="worksRemove('+r.id+')" title="remove">&times;</button></span>' : ''; }
-  function brow(r){
-    var q = r.qty!=null ? ' <span class="wk-q">x'+r.qty+'</span>' : '';
-    return '<div class="wk-row wk-row-'+esc(r.status)+'"><div class="wk-line"><span class="wk-item">'+esc(r.item)+q+'</span>'+bchip(r.status)+ctl(r,'advance')+'</div>'+
-      (r.note?'<div class="wk-note">'+esc(r.note)+'</div>':'')+'</div>';
-  }
-  function nrow(r){
-    var q = r.qty!=null ? ' <span class="wk-q">'+Number(r.qty).toLocaleString()+'</span>' : '';
-    var srcd = r.status==='sourced' ? '<span class="wk-st wk-sourced">sourced</span>' : '';
-    return '<div class="wk-row wk-need-'+esc(r.status)+'"><div class="wk-line"><span class="wk-item">'+esc(r.item)+q+'</span>'+srcd+ctl(r,'mark sourced')+'</div>'+
-      (r.note?'<div class="wk-note">'+esc(r.note)+'</div>':'')+'</div>';
-  }
-  var buildRows = (w.building||[]).map(brow).join('') || '<div class="wk-empty">nothing on the line right now</div>';
-  var needRows = (w.need||[]).map(nrow).join('') || '<div class="wk-empty">we have what we need</div>';
   var addForm = off ? (
-    '<div class="wk-add"><select id="wkSec"><option value="building">Building</option><option value="need">Need</option></select>' +
-    '<input id="wkItem" placeholder="item"><input id="wkQty" placeholder="qty" inputmode="numeric">' +
-    '<input id="wkNote" placeholder="note (optional)"><button class="wk-addbtn" onclick="worksAdd()">add</button><span class="wk-err" id="wkErr"></span></div>' +
     /* The hangar paste. The stock-set endpoint has existed since the goal card shipped with
        NO UI anywhere, which is why corp state was being updated by hand outside the portal.
        It merges, so a partial paste never wipes the rest. */
@@ -2205,18 +2312,14 @@ function renderWorks(){
       'current number. Days of stock recalculate the moment this saves.</div>' +
     '</div>'
   ) : '';
-  /* THE BLUEPRINT PROGRAM IS OFFICER EYES ONLY (Kyle 2026-07-31).
-     It used to render for every member, which published the exact contents of our
-     blueprint hangar to anyone with a login, and read as a short list rather than a
-     factory. Officers still get the whole board because they have to run it. */
-  var linesGrid = '';
-  if (off && w && w.lines && w.lines.length){
-    linesGrid = '<div class="wk-lines"><div class="wkcol-h">The lines &middot; blueprint program &middot; officers</div><div class="gs-linegrid">'
-      + w.lines.map(function(r){
-        return '<span class="gs-line gs-l-'+esc(r.status)+'"'+(r.note?' title="'+esc(r.note)+'"':'')+' data-i18n-skip>'+esc(r.item)
-          + '<i>'+esc(r.status)+(r.me!=null?' &middot; ME'+r.me:'')+'</i></span>'; }).join('')
-      + '</div></div>';
-  }
+  /* THE LINES, officer summary (Kyle 2026-07-31: "too much data... consolidate it, clean
+     it up, make it meaningful, not a wall of text but key section").
+     The blueprint program is officer eyes only either way, but listing 27 chips at ME0 was
+     not information, it was an inventory. An officer needs four things: how many turn, what
+     is turning, what we hold that SHOULD be turning and is not, and what is binding. The
+     "start next" line is ranked by the assay's own daily profit, so this panel never
+     disagrees with the ranked board below it. */
+  var linesGrid = off ? worksLines(w) : '';
   /* THE FLOOR: what the member gets instead. One line turning is enough to light the
      whole thing up, which is the point — the works runs continuously, and a member
      should feel that rather than audit it. */
@@ -2258,15 +2361,13 @@ function renderWorks(){
       + renderNextTrip(S.works && S.works.plan, co)
       + oreRow + (g ? (whatToMine(g, co) || '') + renderHangar(g) : '') + '</div>';
   }
-  /* The queue columns move behind the officer gate with the blueprint program: a member
-     reading "nothing on the line right now" learns only that the board is thin, which is
-     the opposite of true and the opposite of useful. They get the floor. */
-  var queue = off
-    ? '<div class="wkcols"><div class="wkcol"><div class="wkcol-h">Building now &middot; officers</div>'+buildRows+'</div>' +
-      '<div class="wkcol"><div class="wkcol-h">What we need &middot; officers</div>'+needRows+'</div></div>'
-    : '';
+  /* THE BUILD QUEUE IS GONE (Kyle 2026-07-31: "what we need officers.. like what is that
+     even"). Two hand maintained lists nobody had touched in weeks, rendering "nothing on
+     the line right now" and "we have what we need" above a factory clearing 24M a day.
+     A list that is always empty is not a feature, it is a lie with a heading. The real
+     queue lives in the blueprint program and the assay ranking. */
   return '<div class="works" id="worksboard"><div class="wkhead">&#127981; The Works</div>' +
-    floor + queue + linesGrid + feedSec + addForm + '</div>';
+    floor + linesGrid + feedSec + addForm + '</div>';
 }
 /* THE ASSAY ore board. Officer/GSS only while we test — the endpoint enforces it too,
    this just avoids rendering an empty card for members. When it opens to everyone the
@@ -2747,30 +2848,38 @@ function eventClock(endsAt){
 function renderEventBoard(){
   var b = S.refBoard;
   if (!b || !b.ok) return "";
+  /* The deadline is stated ONCE, in the clock, instead of once in the clock and again in
+     a sentence underneath it. JOINED leads the columns because joined is what wins. */
+  var ends = "";
+  try {
+    var dt = new Date(b.ends_at);
+    if (isFinite(dt.getTime()))
+      ends = " &middot; to " + dt.getUTCDate() + " "
+        + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][dt.getUTCMonth()];
+  } catch(e){}
   var h = '<div class="mev">' +
     '<div class="mevtop">' +
       '<span class="mevtag">Main event</span>' +
-      '<span class="mevclock">' + esc(eventClock(b.ends_at)) + '</span>' +
+      '<span class="mevclock"><b>' + esc(eventClock(b.ends_at)) + '</b>' + ends + '</span>' +
     '</div>' +
     '<div class="mevname">Certified Goblin Dealer</div>' +
-    /* THE STACK, stated as three things you win rather than one sentence you skim.
-       Matches the announcement exactly: money, rank, medal. */
     '<div class="mevstack">' +
       '<div class="mvp"><b>500M</b><span>ISK</span></div>' +
-      '<div class="mvp"><b>Rank up</b><span>a real promotion</span></div>' +
-      '<div class="mvp"><b>&#129689; Medal</b><span>on your record, forever</span></div>' +
-    '</div>' +
-    '<div class="mevprize">Most goblins brought home wins it. Runs to <b>31 August</b>, and everybody starts at zero.</div>';
+      '<div class="mvp"><b>Rank up</b><span>promotion</span></div>' +
+      '<div class="mvp"><b>&#129689;</b><span>medal, forever</span></div>' +
+    '</div>';
   if (b.board && b.board.length){
-    h += '<div class="mevboard">' + b.board.map(function(row){
-      return '<div class="mevrow' + (row.me ? ' me' : '') + (row.rank === 1 ? ' lead' : '') + '">' +
-        '<span class="mvr">' + row.rank + '</span>' +
-        '<span class="mvn" data-i18n-skip>' + esc(row.ign) + '</span>' +
-        '<span class="mvh">' + row.held + '</span>' +
-        '<span class="mvj">' + row.joined + '</span></div>';
-    }).join("") +
-    '<div class="mevkey"><span>held</span><span>joined</span></div>' +
-      '<div class="mevfoot">Joined is what wins it. Held (still here 14 days after approval) is the quality check, and it settles ties.</div></div>';
+    h += '<div class="mevboard">' +
+      '<div class="mevhd"><span></span><span>everybody starts at zero</span>' +
+        '<span>joined</span><span>held</span></div>' +
+      b.board.map(function(row){
+        return '<div class="mevrow' + (row.me ? ' me' : '') + (row.rank === 1 ? ' lead' : '') + '">' +
+          '<span class="mvr">' + row.rank + '</span>' +
+          '<span class="mvn" data-i18n-skip>' + esc(row.ign) + '</span>' +
+          '<span class="mvj">' + row.joined + '</span>' +
+          '<span class="mvh">' + row.held + '</span></div>';
+      }).join("") +
+      '<div class="mevfoot">joined wins &middot; held = still here at 14 days, breaks ties</div></div>';
   } else {
     h += '<div class="mevempty">Nobody on the board yet. First one up sets the pace.</div>';
   }
@@ -2814,26 +2923,26 @@ function renderReferral(){
   if (!r || !r.url || isAlly()){ el.innerHTML = ""; return; }
   el.innerHTML = '<div class="refcard main">' + renderEventBoard() +
     '<div class="rt">&#129689; Bring a friend</div>' +
-    /* Relaxed and human (Kyle 2026-07-29). The previous version leaned on what you LOSE by not
-       referring, which read as a guilt pitch. Nobody forwards a link because they feel bad. */
-    '<div class="rs">Know somebody still mining on their own? Send them this. ' +
-      'They show up tagged as yours, automatically.</div>' +
-    '<div class="rs2">Most of us are here because somebody thought to ask.</div>' +
-    '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
-      '<button class="refbtn" id="refCopy">copy</button></div>' +
+    /* Relaxed and human (Kyle 2026-07-29), and now SHORT (Kyle 2026-07-31). Two sentences
+       of setup plus a caption under each link was four lines of prose wrapped around two
+       inputs. The label on the row says what the link is; the one line that stayed is the
+       one that is actually the pitch. */
+    '<div class="rs">Most of us are here because somebody thought to ask.</div>' +
+    '<div class="refl"><div class="refl-k">Your link &middot; they arrive tagged as yours</div>' +
+      '<div class="reflink"><input id="refUrl" readonly value="' + esc(r.url) + '">' +
+      '<button class="refbtn" id="refCopy">copy</button></div></div>' +
     /* THE ALT DOOR. Plenty of good pilots are happy where their main lives and will
        still park a combat alt with us. That is a real recruit, it counts the same,
        and it asks nobody to leave their friends. Every member gets their own. */
     (r.gobsec_url
-      ? '<div class="refalt"><div class="ral">Recruiting a combat alt? Send this one instead</div>' +
+      ? '<div class="refl"><div class="refl-k">Combat alt &middot; GOBSEC door, their main stays put</div>' +
         '<div class="reflink"><input id="refUrlG" readonly value="' + esc(r.gobsec_url) + '">' +
-        '<button class="refbtn alt" id="refCopyG">copy</button></div>' +
-        '<div class="ras">Goes to the GOBSEC door. Their main stays where it is.</div></div>'
+        '<button class="refbtn alt" id="refCopyG">copy</button></div></div>'
       : '') +
-    '<div class="refstat">' + ((r.referred||0)
+    '<div class="reffoot"><span class="refstat">' + ((r.referred||0)
       ? ('<b>' + r.referred + '</b> referred &middot; <b>' + (r.joined||0) + '</b> in the door')
-      : 'No one yet. Whenever you are ready.') + '</div>' +
-    '<button class="refrot" id="refRot">get a fresh link</button>' +
+      : 'No one yet. Whenever you are ready.') + '</span>' +
+    '<button class="refrot" id="refRot">fresh link</button></div>' +
   '</div>';
   var c = $("refCopy");
   if (c) c.onclick = function(){
