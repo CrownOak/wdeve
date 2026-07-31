@@ -98,13 +98,13 @@
     <!-- ---------------- LOCAL ---------------- -->
     <div class="pane on" id="p-local">
       <div class="row2">
-        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste local. Names, one per line, tabs are fine.&#10;Anything that does not resolve gets shown back to you, so a bad paste looks like a bad paste."></textarea>
+        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste the names from local, one per line.&#10;Anything we cannot match gets shown back to you so you can see why."></textarea>
         <div class="ctl">
           <input id="lsys" type="text" placeholder="system (optional)" autocomplete="off" spellcheck="false">
           <button class="gobtn" id="lgo">Read the room</button>
           <button class="btn" id="lmore" style="display:none">Read the rest</button>
-          <div class="hint">Three calls answer the room. The pilots stream in after,
-          dangerous first. Nothing here is live: it is what the killboard already knows.</div>
+          <div class="hint">You get the dangerous ones first, with what they fly and who they fly
+          with. This is killboard history, not who is online right now.</div>
         </div>
       </div>
       <div class="status" id="lstatus"></div>
@@ -114,11 +114,11 @@
     <!-- ---------------- GRID ---------------- -->
     <div class="pane" id="p-grid">
       <div class="row2">
-        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;Hull names are what matter. Owners get read too if they are in the paste."></textarea>
+        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;The hull names are the part that matters."></textarea>
         <div class="ctl">
           <button class="gobtn" id="ggo">Read the grid</button>
-          <div class="hint">Counts the hulls, names the shape, and says what it does to you.
-          Anything it cannot identify is listed rather than dropped.</div>
+          <div class="hint">How many hulls, how much logi, who can hold you down, and whether
+          you can leave.</div>
         </div>
       </div>
       <div class="status" id="gstatus"></div>
@@ -140,8 +140,8 @@
           <button class="gobtn" id="rgo">Find the fight</button>
         </div>
       </div>
-      <div class="hint">Live universe kills crossed with our own 24 hour corridor feed, ranked inside
-      your jump range. NPC kills never count: rats dying is not a fight.</div>
+      <div class="hint">Where ships are actually dying right now, inside your jump range. Rats dying
+      does not count.</div>
       <div class="status" id="rstatus"></div>
       <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>
     </div>
@@ -160,9 +160,8 @@
           <button class="gobtn" id="wgo">Read the front</button>
         </div>
       </div>
-      <div class="hint">The frontline nearest us is Amarr against Minmatar, which runs through Devoid
-      and Heimatar, a few jumps off our own road. Contested percentage is victory points against the
-      threshold; a system whose occupier is not its owner is being taken right now.</div>
+      <div class="hint">The Amarr and Minmatar front is the closest one to us, about eight jumps.
+      Systems marked flipping are being taken right now, and that is where the fights are.</div>
       <div class="status" id="wstatus"></div>
       <div id="wout"><div class="empty">Pick a front and read it.</div></div>
     </div>
