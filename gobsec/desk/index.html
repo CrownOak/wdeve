@@ -93,6 +93,7 @@
       <button data-m="grid">Grid</button>
       <button data-m="roam">Roam</button>
       <button data-m="war">Warzone</button>
+      <button data-m="road">Corridor</button>
     </div>
 
     <!-- ---------------- LOCAL ---------------- -->
@@ -164,6 +165,21 @@
       Systems marked flipping are being taken right now, and that is where the fights are.</div>
       <div class="status" id="wstatus"></div>
       <div id="wout"><div class="empty">Pick a front and read it.</div></div>
+    </div>
+
+    <!-- ---------------- CORRIDOR ---------------- -->
+    <div class="pane" id="p-road">
+      <div class="row2" style="align-items:flex-end">
+        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">
+          <button class="gobtn" id="dgo">Read the road</button>
+          <span class="cnt" id="droad"></span>
+        </div>
+      </div>
+      <div class="hint">Home to the pocket, hop by hop, live. The standing orders on each system
+      are the ones from the Watchtower. Chokepoints never read better than sketchy while anything
+      is dying there.</div>
+      <div class="status" id="dstatus"></div>
+      <div id="dout"><div class="empty">Read the road before the fleet undocks.</div></div>
     </div>
 
     <div class="foot">ASSUME NOTHING</div>
@@ -250,7 +266,7 @@ function setMode(m){
   mode=m; gen++;              /* the entered mode takes the head of the chain */
   var bs=document.querySelectorAll(".modes button");
   for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i].getAttribute("data-m")===m);
-  ["local","grid","roam","war"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
+  ["local","grid","roam","war","road"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
   try{ history.replaceState(null,"","?m="+m); }catch(e){}
 }
 document.querySelector(".modes").addEventListener("click",function(e){
@@ -792,9 +808,114 @@ function readFront(){
 }
 $("wgo").addEventListener("click",readFront);
 
+/* ================= CORRIDOR =================
+   The Watchtower's core read, computed live instead of baked: home to the pocket,
+   hop by hop, with the standing orders carried across from notes.yml because that
+   doctrine is hand written and worth more than any number on the page. The tier
+   rules are the Cartel Map's, unchanged: NPC kills never raise a tier (rats dying
+   is not a fight) and a chokepoint never reads better than SKETCHY while anything
+   is dying there. The habits scrubber and the geographic map stay on /cartel/,
+   which keeps recording the ring history this cannot rebuild. */
+var ROAD=[
+  {id:30000031,n:"Mohas",home:true,note:"The rock. Home base, refinery site, where the ore comes to die properly."},
+  {id:30000035,n:"Nimambal",note:"First hop out. Quiet highsec, but it is the on-ramp. Glance at it before every run."},
+  {id:30000114,n:"Ubtes",note:"Last real highsec before the drop. Top off, tank up, this is where the ride gets honest."},
+  {id:30000117,n:"Khabi",choke:true,note:"THE DOOR. Lowsec mouth into the Wildlands. Eyes here first, always. If Khabi is hot, the run is off, no debate."},
+  {id:30000943,n:"7Q-8Z2",choke:true,note:"The null mouth. First truesec system. Pods die here at camps. Two pods this hour and you wait or you go home."},
+  {id:30000944,n:"SUR-F7",note:"Deep run. No stations, no friends, no reason to linger. Pass through, do not park."},
+  {id:30000945,n:"OK-6XN",note:"One hop from the money. If this is clear, U3K is probably clear. If this is hot, U3K is a trap with your name on it."},
+  {id:30000948,n:"U3K-4A",pocket:true,note:"THE POCKET. 30 belts of the good stuff. This is why we do any of it. Mine rich, watch local, align out, live to haul."}
+];
+function tierOf(hop){
+  var k=hop.ship||0, p=hop.pod||0;
+  if(hop.choke&&(k+p)>0) return k+p>=4||p>=2?["NOPE","b-killer"]:["SKETCHY","b-ghost"];
+  if(k+p>=5) return ["NOPE","b-killer"];
+  if(k+p>=2) return ["HOT","b-fighter"];
+  if(k+p===1) return ["SKETCHY","b-ghost"];
+  if(hop.seen===false) return ["NO EYES","b-unread"];
+  return ["CALM","b-none"];
+}
+function readRoad(){
+  var g=++gen; parked.road=false;
+  $("dstatus").textContent="reading the road...";
+  Promise.all([
+    fetch(ESI+"/universe/system_kills/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
+    fetch(TRIPWIRE+"/region").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
+    loadSys()
+  ]).then(function(res){
+    if(g!==gen) return;
+    var kills=res[0], ours=res[1], S=res[2];
+    $("dstatus").innerHTML=["esi "+(kills?"ok":"<span class='bad'>down</span>"),
+      "our feed "+(ours?ours.length+" kills 24h":"<span class='bad'>down</span>")].join(" &middot; ");
+    var kBy={}; (kills||[]).forEach(function(k){ kBy[k.system_id]=k; });
+    var oBy={}; (ours||[]).forEach(function(k){ oBy[k.sysId]=(oBy[k.sysId]||0)+1; });
+    var hops=ROAD.map(function(r){
+      var k=kBy[r.id], ix=S.byId?S.byId[r.id]:null, row=(ix!=null&&S.d)?S.d.sys[ix]:null;
+      return {id:r.id,n:r.n,note:r.note,choke:r.choke,home:r.home,pocket:r.pocket,
+              sec:row?row[2]:null,ix:ix,
+              ship:k?(k.ship_kills||0):0,pod:k?(k.pod_kills||0):0,
+              seen:kills?true:false, ours24:oBy[r.id]||0};
+    });
+    /* nearest highsec: the answer to "where do I run", computed off the same graph */
+    hops.forEach(function(h){
+      h.exit=null;
+      if(h.ix==null||!S.d||h.sec>=0.45) return;
+      var seen={},q=[[h.ix,0]]; seen[h.ix]=1;
+      while(q.length){
+        var cur=q.shift(); if(cur[1]>6) break;
+        var nb=S.d.sys[cur[0]][4]||[];
+        for(var i=0;i<nb.length;i++){
+          if(seen[nb[i]]) continue; seen[nb[i]]=1;
+          var row=S.d.sys[nb[i]];
+          if(row[2]>=0.45){ h.exit={n:row[0],j:cur[1]+1}; q.length=0; break; }
+          q.push([nb[i],cur[1]+1]);
+        }
+      }
+    });
+    /* the sentence that decides whether the fleet undocks */
+    var worst=null,clear=0;
+    for(var i=0;i<hops.length;i++){
+      var t=tierOf(hops[i])[0];
+      if(t==="NOPE"||t==="HOT"){ worst=hops[i]; break; }
+      clear++;
+    }
+    var h="<div class='verdict'><span class='vl'>THE ROAD</span><div class='vt'>";
+    if(!worst) h+="Clear road, all "+hops.length+" hops. Go make some ore.";
+    else h+="Clear for "+clear+" hop"+(clear===1?"":"s")+", then <b style='color:var(--gs)'>"+esc(worst.n)+"</b> is "
+      +tierOf(worst)[0]+". "+(worst.choke?"That one is a chokepoint, so it is the whole run.":"Route around it or wait it out.");
+    h+="</div></div>";
+    var hot=hops.filter(function(x){ return x.ship+x.pod>0; }).length;
+    h+="<div class='flags'><span class='flag mut'>"+hops.length+" hops</span>"
+      +(hot?"<span class='flag'>"+hot+" with kills this hour</span>":"<span class='flag ok'>nothing dying on the road</span>")
+      +"<span class='flag mut'>"+hops.reduce(function(a,x){ return a+x.ours24; },0)+" on our feed 24h</span></div>";
+    h+="<div class='sect'><table class='dt'><thead><tr><th></th><th>SYSTEM</th><th>SEC</th><th>READ</th>"
+      +"<th class='num'>SHIPS</th><th class='num'>PODS</th><th class='num'>OUR 24H</th><th>NEAREST HIGHSEC</th></tr></thead><tbody>";
+    hops.forEach(function(x,i){
+      var t=tierOf(x);
+      h+="<tr"+(x.choke?" class='filed'":"")+"><td class='num' style='color:var(--muted)'>"+(i+1)+"</td>"
+        +"<td><a href='/briefing/?t=sys&id="+x.id+"' title='open the system file'>"+esc(x.n)+"</a>"
+        +(x.home?" <span class='band b-ours'>HOME</span>":"")
+        +(x.pocket?" <span class='band b-ghost'>POCKET</span>":"")
+        +(x.choke?" <span class='band b-killer'>CHOKE</span>":"")+"</td>"
+        +"<td>"+(x.sec!=null?x.sec.toFixed(1):"")+"</td>"
+        +"<td><span class='band "+t[1]+"'>"+t[0]+"</span></td>"
+        +"<td class='num'>"+(x.ship||"")+"</td><td class='num'>"+(x.pod||"")+"</td>"
+        +"<td class='num'>"+(x.ours24||"")+"</td>"
+        +"<td>"+(x.exit?esc(x.exit.n)+" "+x.exit.j+"j":(x.sec>=0.45?"<span style='color:var(--ore)'>you are in it</span>":""))+"</td></tr>";
+      h+="<tr><td></td><td colspan='7' style='padding-top:0;border-top:0;color:var(--muted);font-size:11.5px'>"+esc(x.note)+"</td></tr>";
+    });
+    h+="</tbody></table></div>";
+    h+="<div class='hint' style='margin-top:14px'>The habits view, the geographic map and the route checker "
+      +"live on the <a href='/cartel/' style='color:var(--gs)'>Watchtower</a>, which is also what records the "
+      +"ring history this reads against.</div>";
+    $("dout").innerHTML=h;
+  }).catch(function(e){ if(g===gen) $("dstatus").innerHTML="<span class='bad'>"+esc(String(e))+"</span>"; });
+}
+$("dgo").addEventListener("click",readRoad);
+
 /* deep link ?m= */
 (function(){ var m=new URLSearchParams(location.search).get("m");
-  if(m&&["local","grid","roam","war"].indexOf(m)>=0&&m!=="local") setMode(m); })();
+  if(m&&["local","grid","roam","war","road"].indexOf(m)>=0&&m!=="local") setMode(m); })();
 })();
 </script>
 </body></html>
