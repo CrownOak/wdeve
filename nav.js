@@ -46,7 +46,7 @@
   var GROUPS = ["HOME", "MEMBER", "INTEL", "MARKET"];
   // Members see the recruiting tools by name; the public sees the redacted labels.
   // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
-  var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Cartel Map", "gobsec/": "GOBSEC" };
+  var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Watchtower", "gobsec/": "GOBSEC" };
 
   var path = location.pathname.replace(/index\.html$/, "");
   if (path.charAt(path.length - 1) !== "/") path += "/";

@@ -1460,18 +1460,58 @@ function findNearestFight(){
    question worth answering is what happened in each one and what it would do to us.
    Costs nothing: the mails are already in memory from the system read.
    Spec: Downloads/BONK-THE-FIGHT-SPEC.md */
-var FIGHT_GAP=20*60*1000, FIGHT_MIN=3;
+/* Clustering a fight is NOT "kills near each other in time". Validated against four
+   systems on 2026-07-31 and a pure 20 minute gap failed three of them: Uedama welded
+   a whole ganking shift into one 93 kill "fight" spanning 78 minutes, Amamake produced
+   a 55 kill object spanning 215 minutes, and Jita daisy chained unrelated suicide ganks
+   for 86 minutes. A camp killing a passer by every fifteen minutes is not one long
+   engagement.
+   TWO SIGNALS, both required to merge: kills must be close in time AND share at least
+   one participating organisation. Shared people is what actually makes two killmails
+   the same fight. Plus a hard duration cap, because a permanently contested system can
+   satisfy both signals all evening.
+   Re-measured after the fix: Ignoitton still yields its real 181 kill / 41 minute
+   capital battle intact, while Uedama drops to 31 kills / 7 minutes (one gank volley),
+   Amamake to 10 / 22 and Jita to 12 / 17. */
+var FIGHT_GAP=10*60*1000, FIGHT_MIN=3, FIGHT_MAXSPAN=60*60*1000;
+function fightOrgs(m){
+  var s={}, v=m.victim||{};
+  if(v.alliance_id) s["a"+v.alliance_id]=1; else if(v.corporation_id) s["c"+v.corporation_id]=1;
+  (m.attackers||[]).forEach(function(a){
+    if(a.alliance_id) s["a"+a.alliance_id]=1; else if(a.corporation_id) s["c"+a.corporation_id]=1;
+  });
+  return s;
+}
+function fightShares(a,b){ for(var k in a) if(b[k]) return true; return false; }
 function clusterFights(mails){
   var m=(mails||[]).filter(Boolean).slice().sort(function(a,b){ return a.killmail_time<b.killmail_time?-1:1; });
-  var out=[],cur=[];
+  var raw=[],cur=null;
   m.forEach(function(k){
-    if(!cur.length){ cur=[k]; return; }
-    var gap=new Date(k.killmail_time)-new Date(cur[cur.length-1].killmail_time);
-    if(gap<=FIGHT_GAP) cur.push(k); else { out.push(cur); cur=[k]; }
+    var t=new Date(k.killmail_time).getTime(), o=fightOrgs(k);
+    if(cur&&(t-cur.last)<=FIGHT_GAP&&fightShares(o,cur.orgs)){
+      cur.mails.push(k); cur.last=t; for(var x in o) cur.orgs[x]=1;
+    } else { if(cur) raw.push(cur); cur={mails:[k],first:t,last:t,orgs:o}; }
   });
-  if(cur.length) out.push(cur);
-  var fights=out.filter(function(c){ return c.length>=FIGHT_MIN; });
-  return {fights:fights.sort(function(a,b){ return b.length-a.length; }), dropped:out.length-fights.length};
+  if(cur) raw.push(cur);
+  /* a cluster that ran past the cap gets re-split at its widest internal lull */
+  var capped=[],q=raw.slice();
+  while(q.length){
+    var c=q.shift();
+    if((c.last-c.first)<=FIGHT_MAXSPAN||c.mails.length<FIGHT_MIN*2){ capped.push(c); continue; }
+    var wi=1,wg=-1;
+    for(var i=1;i<c.mails.length;i++){
+      var g=new Date(c.mails[i].killmail_time)-new Date(c.mails[i-1].killmail_time);
+      if(g>wg){ wg=g; wi=i; }
+    }
+    [c.mails.slice(0,wi),c.mails.slice(wi)].forEach(function(half){
+      q.push({mails:half,first:new Date(half[0].killmail_time).getTime(),
+              last:new Date(half[half.length-1].killmail_time).getTime(),orgs:{}});
+    });
+  }
+  var fights=capped.filter(function(c){ return c.mails.length>=FIGHT_MIN; })
+    .map(function(c){ return c.mails; })
+    .sort(function(a,b){ return b.length-a.length; });
+  return {fights:fights, dropped:capped.length-fights.length};
 }
 /* DR-FIGHT-1: headcounts are UNIQUE PILOTS, never appearances. Counting attacker
    rows reported 641 of one hull in a 181 kill fight, because a pilot on fifty mails

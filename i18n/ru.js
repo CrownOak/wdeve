@@ -37,7 +37,7 @@ window.BONK_RU = {
 "Reprocess": "Переработка",
 "Workbench": "Верстак",
 "Alliance": "Альянс",
-"Cartel Map": "Карта картеля",
+"Watchtower": "Карта картеля",
 "CLASSIFIED": "СЕКРЕТНО",
 "REDACTED": "ВЫМАРАНО",
 "WATCHTOWER": "WATCHTOWER",
@@ -1263,7 +1263,7 @@ window.BONK_RU = {
 "Wrong password.": "Неверный пароль.",
 "password": "пароль",
 "BONK - Corp Kill Log": "BONK · Корповый кил-лог",
-"BONK · Cartel Map": "BONK · Карта картеля",
+"BONK · Watchtower": "BONK · Карта картеля",
 
 /* ================ ROUND 2 (2026-07-19): deep tool coverage ================ */
 
