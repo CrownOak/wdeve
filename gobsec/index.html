@@ -5,6 +5,7 @@
 <title>GOBSEC — Goblin State Security</title>
 <link rel="stylesheet" href="/common.css?v=7">
 <link rel="stylesheet" href="/intel.css?v=1">
+<link rel="stylesheet" href="/intel-lenses.css?v=1">
 <style>
   /* THE GOBSEC DESK. Three surfaces, each a whole page. This is not a menu: every card
      carries live state, so a pilot knows whether they need to open it before they do.
@@ -183,6 +184,7 @@
     <!-- ==== THE WORKSPACE: one input, the right answer. Engine is /intel.js ==== -->
     <div class="wsline">One box. Paste a name, a system, or a whole local list.</div>
     <div id="intelroot"></div>
+    <div id="lensroot"></div>
 
     <div class="deckmini">
       <a href="/gobsec/board/">The Board</a>
@@ -434,7 +436,9 @@ async function fillHud(who){
 })();
 </script>
 <script src="/intel.js?v=1"></script>
+<script src="/intel-lenses.js?v=1"></script>
 <script>/* the workspace only renders for a cleared session; the checkpoint above
    still guards the door and the honeypot is untouched. */
-try{ BONKINTEL.mount(document.getElementById("intelroot")); }catch(e){}</script>
+try{ BONKINTEL.mount(document.getElementById("intelroot")); }catch(e){}
+try{ BONKLENS.mount(document.getElementById("lensroot")); }catch(e){}</script>
 </body></html>
