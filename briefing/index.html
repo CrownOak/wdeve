@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK - PVP Briefing</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  .btop{ display:flex; gap:12px; margin:2px 0 8px; }
+  #q{ flex:1; min-width:0; }
+  .bhelp{ color:var(--muted); font-family:var(--mono); font-size:11px; line-height:1.6; margin-bottom:10px; }
+  #chips{ display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 10px; }
+  .chip{ font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; color:var(--silver-dim);
+    border:1px solid var(--line); padding:5px 10px; cursor:pointer; background:transparent; }
+  .chip:hover{ color:var(--ore); border-color:var(--ore); }
+  .chip.watch{ color:var(--amber); border-color:rgba(233,196,106,.35); }
+  .chip.watch:hover{ color:var(--amber); border-color:var(--amber); }
+  #status{ font-family:var(--mono); font-size:11px; color:var(--muted); min-height:15px; margin:0 0 12px; }
+  #status .bad{ color:var(--red); }
+  .mwait,.bempty{ color:var(--muted); font-family:var(--mono); font-size:12px; padding:22px 4px; }
+  .verr{ color:var(--red); font-family:var(--mono); font-size:12.5px; padding:14px 4px; }
+  .verr a{ color:var(--red); }
+  .cachech{ font-family:var(--mono); font-size:10.5px; color:var(--amber); border:1px solid rgba(233,196,106,.35);
+    padding:2px 8px; margin-left:10px; vertical-align:3px; }
+  /* identity card */
+  .idcard{ display:flex; gap:18px; align-items:flex-start; border:1px solid var(--line);
+    background:var(--steel); padding:16px 18px; }
+  .idcard img.pic{ width:96px; height:96px; flex:none; border:1px solid var(--line); background:var(--black); }
+  .idmain{ flex:1; min-width:0; }
+  .idname{ font-family:var(--display); font-weight:700; font-size:25px; color:var(--silver);
+    letter-spacing:.02em; line-height:1.15; display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+  .idname .tick2{ font-family:var(--mono); font-size:13px; color:var(--muted); }
+  .idsub{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); margin-top:6px; line-height:1.7; }
+  .idsub a{ color:var(--silver-dim); }
+  .idacts{ margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .selfline{ font-family:var(--mono); font-size:11.5px; color:var(--ore); margin-top:8px; }
+  .dchip{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; padding:4px 10px; border:1px solid; }
+  .dchip.d0{ color:var(--muted); border-color:var(--line); }
+  .dchip.d1{ color:var(--amber); border-color:rgba(233,196,106,.4); }
+  .dchip.d2{ color:var(--orange); border-color:rgba(255,157,92,.4); }
+  .dchip.d3{ color:var(--gob,#ff4757); border-color:rgba(255,71,87,.45); }
+  .starb{ background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--mono);
+    font-size:11px; padding:4px 10px; cursor:pointer; }
+  .starb.on{ color:var(--amber); border-color:rgba(233,196,106,.4); }
+  .starb:hover{ border-color:var(--amber); color:var(--amber); }
+  /* hunt line */
+  .huntline{ border:1px solid var(--line); border-left:3px solid var(--gob,#ff4757);
+    background:var(--steel); padding:12px 16px; margin-top:12px; font-size:14.5px;
+    color:var(--silver); line-height:1.6; }
+  .huntline .hl{ font-family:var(--mono); font-size:10px; letter-spacing:.22em; color:var(--muted); display:block; margin-bottom:4px; }
+  /* stat tiles */
+  .stats{ display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:12px; }
+  .stt{ border:1px solid var(--line); background:var(--steel); padding:10px 12px; }
+  .stt .k{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; color:var(--muted); }
+  .stt .v{ font-family:var(--display); font-weight:700; font-size:20px; color:var(--silver); margin-top:3px; }
+  .stt .v.bad{ color:var(--red); }
+  .stt .v.good{ color:var(--ore); }
+  /* sections */
+  .sec{ margin-top:24px; }
+  .shead{ font-family:var(--mono); font-size:10.5px; letter-spacing:.24em; color:var(--muted);
+    border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:10px; }
+  .shead b{ color:var(--silver-dim); letter-spacing:.24em; }
+  .samp{ float:right; letter-spacing:.04em; text-transform:none; }
+  .verd{ color:var(--silver-dim); font-size:13.5px; line-height:1.6; margin:8px 0 10px; }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .clsrow{ display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px;
+    color:var(--silver-dim); padding:3px 0; }
+  .clsrow .bar{ height:8px; background:var(--steel-3); min-width:2px; }
+  .clsrow .bar.soft{ background:var(--gob,#ff4757); opacity:.75; }
+  .clsrow .n{ color:var(--muted); }
+  .modl{ display:flex; flex-wrap:wrap; gap:8px; }
+  .modc{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); border:1px solid var(--line); padding:5px 10px; }
+  .modc b{ color:var(--silver); font-weight:600; }
+  .ppl{ display:flex; flex-wrap:wrap; gap:8px; }
+  .pplc{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11.5px;
+    color:var(--silver-dim); border:1px solid var(--line); padding:4px 10px 4px 4px; cursor:pointer; background:transparent; }
+  .pplc img{ width:26px; height:26px; display:block; }
+  .pplc:hover{ color:var(--ore); border-color:var(--ore); }
+  .pplc .n{ color:var(--muted); }
+  /* heatmap */
+  .hmwrap{ overflow-x:auto; }
+  .hm{ min-width:560px; }
+  .hmrow{ display:grid; grid-template-columns:36px repeat(24,1fr); gap:2px; margin-bottom:2px; }
+  .hmc{ height:15px; background:var(--steel-2); }
+  .hmd{ font-family:var(--mono); font-size:9.5px; color:var(--muted); line-height:15px; }
+  .hmx{ font-family:var(--mono); font-size:9px; color:var(--muted); text-align:center; line-height:14px; }
+  .hmleg{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:6px; display:flex; gap:14px; align-items:center; }
+  /* grounds + telemetry tables */
+  table.btbl{ width:100%; border-collapse:collapse; }
+  table.btbl th{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; color:var(--muted);
+    text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.btbl td{ font-size:12.5px; color:var(--silver-dim); padding:6px 8px; border-bottom:1px solid var(--line-soft); }
+  table.btbl td.num, table.btbl th.num{ text-align:right; font-family:var(--mono); }
+  .secb{ font-family:var(--mono); }
+  .secb.hs{ color:var(--ore); } .secb.ls{ color:var(--amber); } .secb.ns{ color:var(--gob,#ff4757); }
+  .kch{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; padding:2px 7px; border:1px solid; }
+  .kch.k{ color:var(--ore); border-color:rgba(70,255,94,.4); }
+  .kch.l{ color:var(--red); border-color:rgba(240,129,122,.4); }
+  .roadchip{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; padding:5px 11px;
+    border:1px solid rgba(255,71,87,.5); color:var(--gob,#ff4757); display:inline-block; margin-bottom:10px; }
+  .roadchip.rg{ border-color:rgba(233,196,106,.4); color:var(--amber); }
+  .telewho a{ color:var(--silver-dim); text-decoration:none; }
+  .telewho a:hover{ color:var(--ore); }
+  .zlink{ font-family:var(--mono); font-size:11px; }
+  .zlink a{ color:var(--muted); }
+  .zlink a:hover{ color:var(--ore); }
+  .docl{ display:flex; flex-wrap:wrap; gap:10px; }
+  .docc{ display:flex; align-items:center; gap:10px; border:1px solid var(--line); padding:6px 12px 6px 6px; }
+  .docc img{ width:44px; height:44px; display:block; background:var(--black); }
+  .docc .dn{ font-family:var(--mono); font-size:12px; color:var(--silver); }
+  .docc .dk{ font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+  .gsslink{ font-family:var(--mono); font-size:11px; color:var(--gob,#ff4757); border:1px solid rgba(255,71,87,.4); padding:4px 10px; text-decoration:none; }
+  @media(max-width:860px){ .stats{ grid-template-columns:repeat(3,1fr); } .grid2{ grid-template-columns:1fr; } }
+  @media(max-width:560px){ .btop{ flex-direction:column; } .stats{ grid-template-columns:repeat(2,1fr); } .idcard{ flex-direction:column; } }
+</style></head>
+<body>
+  <header class="bnhead">
+    <div class="bnover">BIG ROCK ENERGY [BONK]</div>
+    <h1>PVP BRIEFING</h1>
+    <div class="sub">any pilot, corp or alliance &middot; how they fight, when they hunt, how to break them &middot; assume nothing, there is always a file</div>
+  </header>
+  <div class="wrap" data-i18n-skip>
+    <div class="btop">
+      <input id="q" type="text" placeholder="Pilot, corp or alliance name. A zkill link works too." autocomplete="off" spellcheck="false">
+      <button id="go" class="gobtn">Pull the file</button>
+    </div>
+    <div class="bhelp">Exact in game spelling. We read the public killboard and write the briefing: prey profile,
+    gang habits, tank guess, fleet network, hunting grounds, and the hours they actually undock.</div>
+    <div id="chips"></div>
+    <div id="status"></div>
+    <div id="out"><div class="bempty">Type a name and pull the file. We'll tell you how they fight, when they hunt, and how to break them.</div></div>
+  </div>
+  <footer>Built from public killmails via zKillboard and public ESI, at the moment you ask. History, not live
+  tracking: no online status, no locations, no authenticated data, and nothing here that the killboard does not
+  already show. Numbers labeled danger and the top lists are zKillboard's own. Sections read from recent
+  killmails say how many they read, and lifetime numbers come from the stats record. EVE Online and all related
+  materials are property of CCP hf. This site is not affiliated with CCP hf or zKillboard.</footer>
+<script src="/nav.js?v=18"></script>
+<script>
+(function(){
+var GRP={"25":["Frigate",0],"26":["Cruiser",0],"27":["Battleship",0],"28":["Hauler",1],"29":["Capsule",1],"30":["Titan",0],"31":["Shuttle",1],"237":["Corvette",1],"324":["Assault Frigate",0],"358":["Heavy Assault Cruiser",0],"380":["Deep Space Transport",1],"419":["Combat Battlecruiser",0],"420":["Destroyer",0],"463":["Mining Barge",1],"485":["Dreadnought",0],"513":["Freighter",1],"540":["Command Ship",0],"541":["Interdictor",0],"543":["Exhumer",1],"547":["Carrier",0],"659":["Supercarrier",0],"830":["Covert Ops",0],"831":["Interceptor",0],"832":["Logistics",0],"833":["Force Recon Ship",0],"834":["Stealth Bomber",0],"883":["Capital Industrial Ship",1],"893":["Electronic Attack Ship",0],"894":["Heavy Interdiction Cruiser",0],"898":["Black Ops",0],"900":["Marauder",0],"902":["Jump Freighter",1],"906":["Combat Recon Ship",0],"941":["Industrial Command Ship",1],"963":["Strategic Cruiser",0],"1022":["Prototype Exploration Ship",1],"1201":["Attack Battlecruiser",0],"1202":["Blockade Runner",1],"1246":["Mobile Depot",1],"1249":["Mobile Cyno Inhibitor",1],"1250":["Mobile Tractor Unit",1],"1283":["Expedition Frigate",1],"1305":["Tactical Destroyer",0],"1527":["Logistics Frigate",0],"1534":["Command Destroyer",0],"1538":["Force Auxiliary",0],"1972":["Flag Cruiser",0],"4594":["Lancer Dreadnought",0],"4902":["Expedition Command Ship",0],"5087":["Special Edition Yachts",0],"5120":["Command Carrier",0]};
+var T2G={"582":25,"583":25,"584":25,"585":25,"586":25,"587":25,"588":237,"589":25,"590":25,"591":25,"592":25,"593":25,"594":25,"596":237,"597":25,"598":25,"599":25,"601":237,"602":25,"603":25,"605":25,"606":237,"607":25,"608":25,"609":25,"615":237,"617":237,"620":26,"621":26,"622":26,"623":26,"624":26,"625":26,"626":26,"627":26,"628":26,"629":26,"630":26,"631":26,"632":26,"633":26,"634":26,"635":5087,"638":27,"639":27,"640":27,"641":27,"642":27,"643":27,"644":27,"645":27,"648":28,"649":28,"650":28,"651":28,"652":28,"653":28,"654":28,"655":28,"656":28,"657":28,"670":29,"671":30,"672":31,"1944":28,"2006":26,"2078":1022,"2161":25,"2834":324,"2836":358,"2863":28,"2998":28,"3514":659,"3516":324,"3518":358,"3532":25,"3756":419,"3764":30,"3766":25,"4302":1201,"4306":1201,"4308":1201,"4310":1201,"4363":28,"4388":28,"11011":26,"11129":31,"11132":31,"11134":31,"11172":830,"11174":893,"11176":831,"11178":831,"11182":830,"11184":831,"11186":831,"11188":830,"11190":893,"11192":830,"11194":893,"11196":831,"11198":831,"11200":831,"11202":831,"11365":324,"11371":324,"11377":834,"11379":324,"11381":324,"11387":893,"11393":324,"11400":324,"11567":30,"11936":27,"11938":27,"11940":25,"11942":25,"11957":833,"11959":906,"11961":906,"11963":833,"11965":833,"11969":833,"11971":906,"11978":832,"11985":832,"11987":832,"11989":832,"11993":358,"11995":894,"11999":358,"12003":358,"12005":358,"12011":358,"12013":894,"12015":358,"12017":894,"12019":358,"12021":894,"12023":358,"12032":834,"12034":834,"12038":834,"12042":324,"12044":324,"12729":1202,"12731":380,"12733":1202,"12735":1202,"12743":1202,"12745":380,"12747":380,"12753":380,"13202":27,"16227":419,"16229":419,"16231":419,"16233":419,"16236":420,"16238":420,"16240":420,"16242":420,"17476":463,"17478":463,"17480":463,"17619":25,"17634":26,"17636":27,"17703":25,"17709":26,"17713":26,"17715":26,"17718":26,"17720":26,"17722":26,"17726":27,"17728":27,"17732":27,"17736":27,"17738":27,"17740":27,"17812":25,"17841":25,"17843":26,"17918":27,"17920":27,"17922":26,"17924":25,"17926":25,"17928":25,"17930":25,"17932":25,"19720":485,"19722":485,"19724":485,"19726":485,"19744":28,"20125":906,"20183":513,"20185":513,"20187":513,"20189":513,"21097":31,"21628":31,"22428":898,"22430":898,"22436":898,"22440":898,"22442":540,"22444":540,"22446":540,"22448":540,"22452":541,"22456":541,"22460":541,"22464":541,"22466":540,"22468":540,"22470":540,"22474":540,"22544":543,"22546":543,"22548":543,"22852":659,"23757":547,"23773":30,"23911":547,"23913":659,"23915":547,"23917":659,"23919":659,"24483":547,"24688":27,"24690":27,"24692":27,"24694":27,"24696":419,"24698":419,"24700":419,"24702":419,"26840":27,"26842":27,"28352":883,"28606":941,"28659":900,"28661":900,"28665":900,"28710":900,"28844":902,"28846":902,"28848":902,"28850":902,"29248":25,"29266":31,"29336":26,"29337":26,"29340":26,"29344":26,"29984":963,"29986":963,"29988":963,"29990":963,"30842":31,"32207":324,"32209":358,"32305":27,"32307":27,"32309":27,"32311":27,"32788":324,"32790":832,"32811":28,"32872":420,"32874":420,"32876":420,"32878":420,"32880":25,"33079":237,"33081":237,"33083":237,"33151":419,"33153":419,"33155":419,"33157":419,"33328":29,"33395":833,"33397":830,"33468":25,"33470":26,"33472":27,"33474":1246,"33475":1250,"33476":1249,"33513":31,"33520":1246,"33522":1246,"33553":26,"33673":831,"33675":833,"33697":1283,"33700":1250,"33702":1250,"33816":25,"33818":26,"33820":27,"34317":1305,"34328":513,"34496":31,"34562":1305,"34590":5087,"34828":1305,"35683":1305,"35779":831,"35781":894,"37135":1283,"37453":25,"37454":25,"37455":25,"37456":25,"37457":1527,"37458":1527,"37459":1527,"37460":1527,"37480":1534,"37481":1534,"37482":1534,"37483":1534,"37604":1538,"37605":1538,"37606":1538,"37607":1538,"42124":485,"42125":659,"42126":30,"42241":30,"42242":1538,"42243":485,"42244":941,"42245":832,"42246":830,"42685":420,"44993":830,"44995":833,"44996":898,"45530":834,"45531":833,"45534":1972,"45645":1538,"45647":485,"45649":30,"47269":25,"47270":26,"47271":27,"47466":27,"48635":833,"48636":830,"49710":420,"49711":419,"49712":26,"49713":832,"52250":324,"52252":358,"52254":1534,"52907":485,"54731":25,"54732":26,"54733":27,"56701":1250,"60764":894,"60765":893,"64034":31,"72811":419,"72812":419,"72869":419,"72872":419,"72903":25,"72904":25,"72907":25,"72913":25,"73787":485,"73789":420,"73790":485,"73792":485,"73793":485,"73794":420,"73795":420,"73796":420,"74141":324,"74316":358,"77114":25,"77281":4594,"77283":4594,"77284":4594,"77288":4594,"77726":358,"78333":420,"78366":419,"78367":420,"78369":419,"78414":324,"78576":30,"81008":28,"81040":513,"81046":1202,"81047":380,"81951":1250,"85062":830,"85086":419,"85087":420,"85229":833,"85236":898,"87381":485,"88001":900,"89240":420,"89607":4902,"89647":420,"89648":25,"89649":1534,"89807":1201,"89808":1305,"91174":420,"91775":420,"91849":420,"91857":420,"91858":420,"92282":5087,"92283":5087,"92284":5087,"92822":5120,"92823":5120,"92824":5120,"92825":5120};
+var SOFT_T={"32880": 1};
+var ZK="https://zkillboard.com/api", ESI="https://esi.evetech.net/latest", IMG="https://images.evetech.net";
+var TPATH={char:"characterID",corp:"corporationID",alli:"allianceID"};
+var TZW={char:"character",corp:"corporation",alli:"alliance"};
+var OUR_ALLI=99015148;
+var OUR_CORPS={98342394:1,98840038:1,98838780:1,98807741:1};
+var OUR_SYS={30000031:1,30000035:1,30000114:1,30000117:1,30000943:1,30000944:1,30000945:1,30000948:1,30002510:1};
+var OUR_REG={"Derelik":1,"Devoid":1,"Great Wildlands":1};
+var RENS=30002510;
+var LSD="bonk_brief_v1::", LSR="bonk_brief_recent_v1", LSW="bonk_brief_watch_v1";
+
+var q=document.getElementById("q"), go=document.getElementById("go"),
+    out=document.getElementById("out"), st=document.getElementById("status"),
+    chipsEl=document.getElementById("chips");
+var cur=null, whoami={loggedIn:false,role:null};
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+function isk(v){ if(v==null||!isFinite(v)) return "0"; var a=Math.abs(v);
+  if(a>=1e9) return (v/1e9).toFixed(2)+"B"; if(a>=1e6) return (v/1e6).toFixed(1)+"M";
+  if(a>=1e3) return (v/1e3).toFixed(0)+"k"; return String(Math.round(v)); }
+function pct(v){ return isFinite(v)?Math.round(v*100)+"%":"0%"; }
+function ago(iso){ var s=(Date.now()-new Date(iso).getTime())/1000; if(!isFinite(s)||s<0) s=0;
+  if(s<3600) return Math.max(1,Math.round(s/60))+"m ago"; if(s<172800) return Math.round(s/3600)+"h ago";
+  return Math.round(s/86400)+"d ago"; }
+function wait(ms){ return new Promise(function(res){ setTimeout(res,ms); }); }
+function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+/* ---- zkill: serialized, 350ms manners, keeps going after a failure ---- */
+var zkChain=Promise.resolve();
+function zkGet(path){
+  var p=zkChain.then(function(){ return wait(350); }).then(function(){
+    return fetch(ZK+path,{headers:{"Accept":"application/json"}}).then(function(r){
+      if(!r.ok) throw "http "+r.status; return r.json(); });
+  });
+  zkChain=p.catch(function(){});
+  return p;
+}
+function postJson(url,body){
+  return fetch(url,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){ if(!r.ok) throw r.status; return r.json(); });
+}
+/* names: bulk id resolve with binary split so one dead id cannot sink the batch */
+function resolveNames(ids){
+  var uniq=[], seen={};
+  ids.forEach(function(i){ i=+i; if(i>0&&!seen[i]){ seen[i]=1; uniq.push(i); } });
+  var outMap={};
+  function attempt(list){
+    if(!list.length) return Promise.resolve();
+    return postJson(ESI+"/universe/names/?datasource=tranquility",list)
+      .then(function(a){ a.forEach(function(x){ outMap[x.id]=x; }); })
+      .catch(function(){
+        if(list.length===1){ outMap[list[0]]={id:list[0],name:"Unknown",category:"unknown"}; return; }
+        var mid=list.length>>1;
+        return attempt(list.slice(0,mid)).then(function(){ return attempt(list.slice(mid)); });
+      });
+  }
+  var chunks=[]; for(var i=0;i<uniq.length;i+=900) chunks.push(uniq.slice(i,i+900));
+  return chunks.reduce(function(p,c){ return p.then(function(){ return attempt(c); }); },Promise.resolve())
+    .then(function(){ return outMap; });
+}
+function nameOf(map,id){ var e=map[id]; return e?e.name:"Unknown"; }
+
+/* ---- belts.json: system name -> region, lazy, best effort ---- */
+var beltsIdx=null;
+var beltsP=fetch("/lowsec/belts.json").then(function(r){ return r.ok?r.json():null; }).then(function(d){
+  beltsIdx={};
+  if(d&&d.regions) for(var reg in d.regions){ var l=d.regions[reg]; for(var i2=0;i2<l.length;i2++) beltsIdx[l[i2].n]=reg; }
+}).catch(function(){ beltsIdx={}; });
+function regionOf(sysName){ return (beltsIdx&&beltsIdx[sysName])||null; }
+
+fetch("/api/whoami",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; })
+  .then(function(d){ if(d) whoami=d; }).catch(function(){});
+
+/* ---- status strip: every source reports, silence never reads as peace ---- */
+var srcS={};
+function paintStatus(){
+  var order=["stats","kills","losses","names"], h=[];
+  order.forEach(function(k){ if(srcS[k]) h.push(k+" "+(/^(ok|\d)/.test(srcS[k])?srcS[k]:"<span class='bad'>"+esc(srcS[k])+"</span>")); });
+  st.innerHTML=h.join(" &middot; ");
+}
+
+/* ---- classifiers ---- */
+function bandDanger(d){ d=+d||0;
+  if(d>=75) return ["HARD TARGET","d3"]; if(d>=50) return ["DANGEROUS","d2"];
+  if(d>=25) return ["MODERATE","d1"]; return ["LOW THREAT","d0"]; }
+function secBand(s){ s=+s; if(s>=0.45) return ["hs",s.toFixed(1)]; if(s>0) return ["ls",s.toFixed(1)]; return ["ns",s.toFixed(1)]; }
+function groupOf(tid){ var g=T2G[tid]; return g?{gid:g,name:GRP[g][0],soft:(SOFT_T[tid]||GRP[g][1])?1:0}:{gid:0,name:"Other",soft:0}; }
+function preyVerdict(softPct,nk){
+  if(!nk) return null;
+  if(softPct>=0.6) return "They shoot people who can't shoot back. Noted.";
+  if(softPct>=0.25) return "Mixed hunter. Soft targets when offered, fights when not.";
+  return "Combat hunters. They're here for the fight.";
+}
+function engageClass(avgGang,soloPct){
+  if(avgGang<1.5&&soloPct>=0.4) return ["SOLO ARTIST","Confident alone. Check for the bait alt anyway."];
+  if(avgGang<3) return ["RUNS A PARTNER","Travels in a pair. Count to two before you tackle."];
+  if(avgGang<8) return ["SMALL GANG","If you can see one, there are more you can't."];
+  return ["FLEET CREW","Fleet fighter. You won't catch one alone, and you won't want to."];
+}
+var RE_SH=/Shield Extender|Shield Booster|Shield Hardener|Invulnerability|Multispectrum Shield|Shield Boost Amplifier|Shield Flux/i;
+var RE_AR=/Steel Plates|Armor Repairer|Membrane|Energized|Armor Hardener|Adaptive Nano|Layered Plating/i;
+var RE_HU=/Bulkhead|Hull Repairer/i;
+function tankVerdict(mods){ /* mods: [{name,n}] */
+  var sh=0,ar=0,hu=0;
+  mods.forEach(function(m){ if(RE_SH.test(m.name)) sh+=m.n; else if(RE_AR.test(m.name)) ar+=m.n; else if(RE_HU.test(m.name)) hu+=m.n; });
+  if(!sh&&!ar&&!hu) return ["MIXED OR UNKNOWN","No clear tank pattern. Read the fit on the mail before you commit."];
+  if(sh>=ar&&sh>=hu) return ["SHIELD TANK","Shield tanked. Hit EM first and neut the cap."];
+  if(ar>=hu) return ["ARMOR TANK","Armor tanked. Explosive damage, and they're the slow kind."];
+  return ["HULL TANK","Hull tanked. That's a choice. Shoot whatever you like."];
+}
+function peakWindow(mat){ /* mat: 7x24 counts -> {a,b,tz,total} or null */
+  var hours=[],h,d,best=-1,bi=0,t=0;
+  for(h=0;h<24;h++){ hours[h]=0; for(d=0;d<7;d++) hours[h]+=mat[d][h]; t+=hours[h]; }
+  if(!t) return null;
+  for(h=0;h<24;h++){ var s=0; for(var k=0;k<4;k++) s+=hours[(h+k)%24]; if(s>best){ best=s; bi=h; } }
+  var c=(bi+2)%24, tz=(c>=22||c<7)?"USTZ":(c>=14?"EUTZ":"AUTZ");
+  return {a:bi,b:(bi+4)%24,tz:tz};
+}
+function hh(n){ return (n<10?"0":"")+n+":00"; }
+
+/* ---- watchlist + recents ---- */
+function watchKey(t,id){ return t+":"+id; }
+function getWatch(){ return lsGet(LSW)||[]; }
+function isWatched(t,id){ return getWatch().some(function(w){ return w.t===t&&w.id===id; }); }
+function toggleWatch(t,id,name){
+  var w=getWatch().filter(function(x){ return !(x.t===t&&x.id===id); });
+  if(w.length===getWatch().length) w.unshift({t:t,id:id,n:name});
+  lsSet(LSW,w.slice(0,12)); renderChips();
+}
+function addRecent(t,id,name){
+  var r=(lsGet(LSR)||[]).filter(function(x){ return !(x.t===t&&x.id===id); });
+  r.unshift({t:t,id:id,n:name}); lsSet(LSR,r.slice(0,8)); renderChips();
+}
+function renderChips(){
+  var h="", w=getWatch(), r=lsGet(LSR)||[];
+  w.forEach(function(x){ h+="<button class='chip watch' data-t='"+x.t+"' data-id='"+x.id+"' title='On your watchlist. Stored in this browser only.'>&#9733; "+esc(x.n)+"</button>"; });
+  r.forEach(function(x){ if(!isWatched(x.t,x.id)) h+="<button class='chip' data-t='"+x.t+"' data-id='"+x.id+"'>"+esc(x.n)+"</button>"; });
+  chipsEl.innerHTML=h;
+}
+chipsEl.addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest(".chip"):null; if(!b) return;
+  loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id"));
+});
+
+/* ---- resolver ---- */
+function run(){
+  var raw=(q.value||"").trim(); if(!raw) return;
+  var m=raw.match(/zkillboard\.com\/(character|corporation|alliance)\/(\d+)/);
+  if(m){ loadTarget(m[1]==="character"?"char":m[1]==="corporation"?"corp":"alli",+m[2]); return; }
+  if(/^\d+$/.test(raw)){
+    out.innerHTML="<div class='mwait'>resolving id...</div>";
+    resolveNames([+raw]).then(function(map){
+      var e=map[+raw], c=e&&e.category;
+      if(c==="character") loadTarget("char",+raw);
+      else if(c==="corporation") loadTarget("corp",+raw);
+      else if(c==="alliance") loadTarget("alli",+raw);
+      else notFound(raw);
+    });
+    return;
+  }
+  out.innerHTML="<div class='mwait'>resolving name...</div>";
+  postJson(ESI+"/universe/ids/?datasource=tranquility",[raw]).then(function(d){
+    var hits=[];
+    (d.characters||[]).forEach(function(x){ hits.push({t:"char",id:x.id,n:x.name,l:"PILOT"}); });
+    (d.corporations||[]).forEach(function(x){ hits.push({t:"corp",id:x.id,n:x.name,l:"CORP"}); });
+    (d.alliances||[]).forEach(function(x){ hits.push({t:"alli",id:x.id,n:x.name,l:"ALLIANCE"}); });
+    if(!hits.length){ notFound(raw); return; }
+    if(hits.length===1){ loadTarget(hits[0].t,hits[0].id); return; }
+    var h="<div class='bempty'>More than one match. Which one?</div><div class='ppl'>";
+    hits.forEach(function(x){ h+="<button class='pplc' data-t='"+x.t+"' data-id='"+x.id+"'><span>"+esc(x.n)+"</span><span class='n'>"+x.l+"</span></button>"; });
+    out.innerHTML=h+"</div>";
+    out.querySelectorAll(".pplc").forEach(function(b){ b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); }); });
+  }).catch(function(){ notFound(raw); });
+}
+function notFound(raw){
+  out.innerHTML="<div class='verr'>No such name. EVE wants exact spelling. <a href='https://zkillboard.com/search/"+encodeURIComponent(raw)+"/' target='_blank' rel='noopener'>Search zkillboard instead</a>.</div>";
+}
+
+/* ---- the file ---- */
+function loadTarget(t,id){
+  cur={t:t,id:id};
+  try{ history.replaceState(null,"","?t="+t+"&id="+id); }catch(e){}
+  srcS={}; paintStatus();
+  var ck=LSD+t+":"+id, cached=lsGet(ck);
+  if(cached&&cached.digest){
+    renderDigest(cached.digest,Date.now()-cached.ts);
+    if(Date.now()-cached.ts<600000){ addRecent(t,id,cached.digest.name); return; }
+  } else out.innerHTML="<div class='mwait'>pulling the file...</div>";
+  buildDigest(t,id).then(function(D){
+    if(!cur||cur.t!==t||cur.id!==id) return;
+    renderDigest(D,0); lsSet(ck,{ts:Date.now(),digest:D});
+    addRecent(t,id,D.name);
+  }).catch(function(e){
+    if(!cur||cur.t!==t||cur.id!==id) return;
+    if(cached&&cached.digest) return; /* stale file already on screen, status strip has the story */
+    out.innerHTML="<div class='verr'>zKill isn't answering ("+esc(String(e))+"). The file's on their desk: "
+      +"<a href='https://zkillboard.com/"+TZW[t]+"/"+id+"/' target='_blank' rel='noopener'>read it there</a>.</div>";
+  });
+}
+
+function fitted(flag){ return (flag>=11&&flag<=34)||(flag>=92&&flag<=98)||(flag>=125&&flag<=132); }
+
+function buildDigest(t,id){
+  var D={v:1,t:t,id:id,ts:Date.now()};
+  srcS.stats="..."; paintStatus();
+  return zkGet("/stats/"+TPATH[t]+"/"+id+"/").then(function(s){
+    srcS.stats="ok"; paintStatus();
+    s=s||{};
+    var info=s.info||{};
+    D.name=info.name||("#"+id); D.ticker=info.ticker||""; D.members=info.memberCount||0;
+    D.corps=info.corpCount||0; D.founded=info.date_founded||null;
+    D.myCorp=info.corporationID||null; D.myAlli=info.allianceID||null;
+    D.sd=s.shipsDestroyed||0; D.sl=s.shipsLost||0;
+    D.ikd=s.iskDestroyed||0; D.ikl=s.iskLost||0;
+    D.soloK=s.soloKills||0; D.soloL=s.soloLosses||0;
+    D.danger=s.dangerRatio||0; D.gang=s.gangRatio||0; D.avgGang=s.avgGangSize||0;
+    var mat=[],d2,h2,act=s.activity||{};
+    for(d2=0;d2<7;d2++){ mat[d2]=[]; var row=act[String(d2)]||{}; for(h2=0;h2<24;h2++) mat[d2][h2]=+row[String(h2)]||0; }
+    D.mat=mat; D.matMax=+act.max||0;
+    D.top={};
+    (s.topLists||[]).forEach(function(tl){
+      if(tl.type==="solarSystem") D.top.sys=(tl.values||[]).slice(0,6);
+      if(tl.type==="shipType") D.top.ship=(tl.values||[]).slice(0,6);
+    });
+    D.allTimeShips=[];
+    if(t==="char") (s.topAllTime||[]).forEach(function(ta){ if(ta.type==="ship") D.allTimeShips=(ta.data||ta.values||[]).slice(0,5); });
+    renderDigest(D,0,true);
+    srcS.kills="..."; paintStatus();
+    return zkGet("/kills/"+TPATH[t]+"/"+id+"/").catch(function(e){ srcS.kills=String(e); return []; });
+  }).then(function(k1){
+    k1=(k1||[]).filter(Boolean);
+    var p=Promise.resolve([]);
+    if(k1.length===200) p=zkGet("/kills/"+TPATH[t]+"/"+id+"/page/2/").catch(function(){ return []; });
+    return p.then(function(k2){ return k1.concat((k2||[]).filter(Boolean)); });
+  }).then(function(kills){
+    D.kills=kills; if(srcS.kills==="...") srcS.kills=String(kills.length); paintStatus();
+    srcS.losses="..."; paintStatus();
+    return zkGet("/losses/"+TPATH[t]+"/"+id+"/").catch(function(e){ srcS.losses=String(e); return []; });
+  }).then(function(l1){
+    l1=(l1||[]).filter(Boolean);
+    var p=Promise.resolve([]);
+    if(l1.length===200) p=zkGet("/losses/"+TPATH[t]+"/"+id+"/page/2/").catch(function(){ return []; });
+    return p.then(function(l2){ return l1.concat((l2||[]).filter(Boolean)); });
+  }).then(function(losses){
+    D.losses=losses; if(srcS.losses==="...") srcS.losses=String(losses.length); paintStatus();
+    return compute(D);
+  });
+}
+
+function compute(D){
+  var t=D.t, id=D.id, kills=D.kills||[], losses=D.losses||[];
+  D.nk=kills.length; D.nl=losses.length;
+  function inOrg(a){
+    if(t==="corp") return a.corporation_id===id;
+    if(t==="alli") return a.alliance_id===id;
+    return a.character_id===id;
+  }
+  /* prey */
+  var prey={}, soft=0, tot=0;
+  kills.forEach(function(m){
+    var g=groupOf(m.victim&&m.victim.ship_type_id);
+    prey[g.name]=(prey[g.name]||0)+1; tot++; if(g.soft) soft++;
+  });
+  D.prey=Object.keys(prey).map(function(n){ return {n:n,c:prey[n]}; }).sort(function(a,b){ return b.c-a.c; }).slice(0,8);
+  D.softPct=tot?soft/tot:0;
+  /* engagement */
+  var largest=0;
+  kills.forEach(function(m){ if(m.attackers&&m.attackers.length>largest) largest=m.attackers.length; });
+  D.largest=largest;
+  /* fleet net + members + victims */
+  var net={}, mem={}, vic={};
+  kills.forEach(function(m){
+    (m.attackers||[]).forEach(function(a){
+      if(!a.character_id) return;
+      if(t==="char"){ if(a.character_id!==id) net[a.character_id]=(net[a.character_id]||0)+1; }
+      else if(inOrg(a)) mem[a.character_id]=(mem[a.character_id]||0)+1;
+      else net[a.character_id]=(net[a.character_id]||0)+1;
+    });
+    if(m.victim&&m.victim.character_id) vic[m.victim.character_id]=(vic[m.victim.character_id]||0)+1;
+  });
+  function topOf(o,n){ return Object.keys(o).map(function(k){ return {id:+k,c:o[k]}; }).sort(function(a,b){ return b.c-a.c; }).slice(0,n); }
+  D.net=topOf(net,8); D.mem=topOf(mem,8); D.vic=topOf(vic,6);
+  /* nemeses + modules from losses */
+  var nem={}, mods={};
+  losses.forEach(function(m){
+    (m.attackers||[]).forEach(function(a){ if(a.character_id) nem[a.character_id]=(nem[a.character_id]||0)+(a.final_blow?2:1); });
+    ((m.victim&&m.victim.items)||[]).forEach(function(it){ if(fitted(it.flag)) mods[it.item_type_id]=(mods[it.item_type_id]||0)+1; });
+  });
+  D.nem=topOf(nem,6);
+  D.mods=topOf(mods,20);
+  /* telemetry: newest 30 of both sides merged */
+  var tele=[];
+  kills.forEach(function(m){ tele.push({k:1,t:m.killmail_time,kid:m.killmail_id,ship:m.victim&&m.victim.ship_type_id,who:m.victim&&m.victim.character_id,sys:m.solar_system_id,att:(m.attackers||[]).length,val:m.zkb&&m.zkb.totalValue}); });
+  losses.forEach(function(m){
+    var fb=null; (m.attackers||[]).some(function(a){ if(a.final_blow&&a.character_id){ fb=a.character_id; return true; } return false; });
+    tele.push({k:0,t:m.killmail_time,kid:m.killmail_id,ship:m.victim&&m.victim.ship_type_id,who:m.victim&&m.victim.character_id,sys:m.solar_system_id,att:(m.attackers||[]).length,fb:fb,val:m.zkb&&m.zkb.totalValue});
+  });
+  tele.sort(function(a,b){ return a.t<b.t?1:-1; });
+  D.tele=tele.slice(0,30);
+  /* roads: recent systems seen anywhere */
+  var roads={};
+  tele.forEach(function(r){ if(OUR_SYS[r.sys]) roads[r.sys]=1; });
+  (D.top.sys||[]).forEach(function(s2){ if(OUR_SYS[s2.solarSystemID]) roads[s2.solarSystemID]=1; });
+  D.roadIds=Object.keys(roads).map(Number);
+  /* resolve every id we plan to print */
+  var ids=[];
+  D.net.forEach(function(x){ ids.push(x.id); }); D.mem.forEach(function(x){ ids.push(x.id); });
+  D.vic.forEach(function(x){ ids.push(x.id); }); D.nem.forEach(function(x){ ids.push(x.id); });
+  D.mods.forEach(function(x){ ids.push(x.id); });
+  D.allTimeShips.forEach(function(x){ ids.push(x.shipTypeID); });
+  D.tele.forEach(function(r){ ids.push(r.ship); if(r.who) ids.push(r.who); if(r.fb) ids.push(r.fb); ids.push(r.sys); });
+  D.roadIds.forEach(function(x){ ids.push(x); });
+  if(D.myCorp) ids.push(D.myCorp); if(D.myAlli) ids.push(D.myAlli);
+  srcS.names="..."; paintStatus();
+  return resolveNames(ids).then(function(map){
+    srcS.names="ok"; paintStatus();
+    function nm(x){ return nameOf(map,x); }
+    D.net.forEach(function(x){ x.n=nm(x.id); }); D.mem.forEach(function(x){ x.n=nm(x.id); });
+    D.vic.forEach(function(x){ x.n=nm(x.id); }); D.nem.forEach(function(x){ x.n=nm(x.id); });
+    D.mods=D.mods.map(function(x){ return {name:nm(x.id),n:x.c}; });
+    D.allTimeShips.forEach(function(x){ x.n=nm(x.shipTypeID); });
+    D.tele.forEach(function(r){ r.shipN=nm(r.ship); r.whoN=r.who?nm(r.who):null; r.fbN=r.fb?nm(r.fb):null; r.sysN=nm(r.sys); });
+    D.roadNames=D.roadIds.map(nm);
+    D.corpN=D.myCorp?nm(D.myCorp):null; D.alliN=D.myAlli?nm(D.myAlli):null;
+    D.tank=tankVerdict(D.mods);
+    /* jumps from Rens to their top recent system, shortest route */
+    var top1=(D.top.sys&&D.top.sys[0])||null;
+    var rp=Promise.resolve(null);
+    if(top1&&top1.solarSystemID) rp=fetch(ESI+"/route/"+RENS+"/"+top1.solarSystemID+"/?datasource=tranquility")
+      .then(function(r){ return r.ok?r.json():null; }).then(function(a){ return a?a.length-1:null; }).catch(function(){ return null; });
+    return beltsP.then(function(){ return rp; }).then(function(jumps){
+      D.jumps=jumps;
+      (D.top.sys||[]).forEach(function(s2){ s2.region=regionOf(s2.solarSystemName); });
+      delete D.kills; delete D.losses; /* digest stays small enough to cache */
+      return D;
+    });
+  });
+}
+
+/* ---- render ---- */
+function zlink(kid){ return "<span class='zlink'><a href='https://zkillboard.com/kill/"+kid+"/' target='_blank' rel='noopener'>mail</a></span>"; }
+function pchip(x){ return "<button class='pplc' data-t='char' data-id='"+x.id+"'><img loading='lazy' src='"+IMG+"/characters/"+x.id+"/portrait?size=32' onerror='this.style.display=\"none\"' alt=''><span>"+esc(x.n)+"</span><span class='n'>&times;"+x.c+"</span></button>"; }
+
+function renderDigest(D,ageMs,partial){
+  var self=(D.t==="alli"&&D.id===OUR_ALLI)||(D.t==="corp"&&OUR_CORPS[D.id]);
+  var db=bandDanger(D.danger);
+  var pic=D.t==="char"?IMG+"/characters/"+D.id+"/portrait?size=128":D.t==="corp"?IMG+"/corporations/"+D.id+"/logo?size=128":IMG+"/alliances/"+D.id+"/logo?size=128";
+  var kd=D.sl?(D.sd/D.sl):D.sd, eff=(D.ikd+D.ikl)?D.ikd/(D.ikd+D.ikl):0;
+  var soloPct=D.sd?D.soloK/D.sd:0;
+  var h="";
+  /* identity */
+  h+="<div class='idcard'><img class='pic' src='"+pic+"' onerror='this.style.visibility=\"hidden\"' alt=''>";
+  h+="<div class='idmain'><div class='idname'>"+esc(D.name)
+    +(D.ticker?"<span class='tick2'>["+esc(D.ticker)+"]</span>":"")
+    +"<span class='dchip "+db[1]+"' title='zKillboard&#39;s own danger number, shown as is.'>"+db[0]+" &middot; zkill danger "+Math.round(D.danger)+"</span>"
+    +(ageMs>60000?"<span class='cachech'>cached "+Math.round(ageMs/60000)+"m ago &middot; refreshing</span>":"")
+    +"</div><div class='idsub'>";
+  if(D.t==="char") h+=(D.corpN?esc(D.corpN):"")+(D.alliN?" &middot; "+esc(D.alliN):"");
+  if(D.t==="corp") h+=(D.members?D.members+" members":"")+(D.alliN?" &middot; "+esc(D.alliN):"");
+  if(D.t==="alli") h+=(D.corps?D.corps+" corps":"")+(D.members?" &middot; "+D.members+" members":"")+(D.founded?" &middot; since "+String(D.founded).slice(0,10):"");
+  if(D.gang>=80) h+=" &middot; almost never alone";
+  h+="</div>";
+  if(self) h+="<div class='selfline'>That's us. The killboard undersells it. Somebody's gotta undock.</div>";
+  h+="<div class='idacts'><button class='starb"+(isWatched(D.t,D.id)?" on":"")+"' id='starb'>"+(isWatched(D.t,D.id)?"&#9733; watching":"&#9734; watch")+"</button>"
+    +"<span class='zlink'><a href='https://zkillboard.com/"+TZW[D.t]+"/"+D.id+"/' target='_blank' rel='noopener'>full record on zKillboard &#8599;</a></span>";
+  if(whoami&&(whoami.role==="officer"||whoami.role==="admin"||whoami.gss)) h+="<a class='gsslink' href='/portal/intel/'>GSS: open the workbench file &#8594;</a>";
+  h+="</div></div></div>";
+  /* hunt line */
+  var pw=D.matMax?peakWindow(D.mat):null;
+  if(D.sd||D.sl){
+    var hl;
+    if(!D.sd) hl="Not much of a hunter. "+D.sl+" losses say they undock anyway.";
+    else{
+      hl=pw?("Most active "+hh(pw.a)+" to "+hh(pw.b)+" EVE ("+pw.tz+" prime). "):"";
+      var ts2=(D.top.sys&&D.top.sys[0])||null, tsh=(D.top.ship&&D.top.ship[0])||null;
+      if(ts2){ var rg=ts2.region||regionOf(ts2.solarSystemName); hl+="Hunts around "+esc(ts2.solarSystemName)+(rg?" ("+esc(rg)+")":"")+". "; }
+      if(tsh&&tsh.shipName) hl+="Favors the "+esc(tsh.shipName)+".";
+    }
+    if(hl) h+="<div class='huntline'><span class='hl'>HUNT INTEL</span>"+hl+"</div>";
+  }
+  /* stat tiles */
+  h+="<div class='stats'>"
+    +"<div class='stt'><div class='k'>DESTROYED</div><div class='v'>"+D.sd+"</div></div>"
+    +"<div class='stt'><div class='k'>LOST</div><div class='v'>"+D.sl+"</div></div>"
+    +"<div class='stt'><div class='k'>K/D</div><div class='v "+(kd>=2?"good":kd<0.5?"bad":"")+"'>"+(kd>=99?"99+":kd.toFixed(1))+"</div></div>"
+    +"<div class='stt'><div class='k'>ISK DESTROYED</div><div class='v'>"+isk(D.ikd)+"</div></div>"
+    +"<div class='stt'><div class='k'>ISK EFFICIENCY</div><div class='v "+(eff>=0.75?"good":eff<0.35?"bad":"")+"'>"+pct(eff)+"</div></div>"
+    +"<div class='stt'><div class='k'>SOLO KILLS</div><div class='v'>"+D.soloK+(D.sd?" <span style='font-size:12px;color:var(--muted)'>("+pct(soloPct)+")</span>":"")+"</div></div>"
+    +"</div>";
+  if(!D.sd&&!D.sl){
+    h+="<div class='sec'><div class='verd'>No killmails. Either harmless, or careful. Assume careful.</div></div>";
+    out.innerHTML=h; wireDigest(D); return;
+  }
+  if(partial){
+    h+="<div class='sec'><div class='mwait'>reading the killmails...</div></div>";
+    out.innerHTML=h; wireDigest(D); return;
+  }
+  var sampChip="reading the last "+D.nk+" kills / "+D.nl+" losses";
+  /* prey + engagement */
+  h+="<div class='sec grid2'><div>";
+  h+="<div class='shead'><b>WHAT THEY HUNT</b> &middot; PREY PROFILE<span class='samp'>"+sampChip+"</span></div>";
+  var pv=preyVerdict(D.softPct,D.nk);
+  if(!D.nk) h+="<div class='verd'>No kills on record"+(D.nl?", "+D.nl+" losses though":"")+".</div>";
+  else{
+    h+="<div class='verd'>"+Math.round(D.softPct*100)+"% soft targets. "+esc(pv||"")+"</div>";
+    var mx=D.prey.length?D.prey[0].c:1;
+    D.prey.forEach(function(p){
+      var g2=null; for(var gk in GRP){ if(GRP[gk][0]===p.n){ g2=GRP[gk]; break; } }
+      var isSoft=g2?g2[1]:0;
+      h+="<div class='clsrow'><span style='min-width:150px'>"+esc(p.n)+"</span><span class='bar"+(isSoft?" soft":"")+"' style='width:"+Math.max(3,Math.round(p.c/mx*160))+"px'></span><span class='n'>&times;"+p.c+"</span></div>";
+    });
+  }
+  h+="</div><div>";
+  h+="<div class='shead'><b>HOW THEY FIGHT</b> &middot; ENGAGEMENT PROFILE</div>";
+  var ec=engageClass(D.avgGang,soloPct);
+  h+="<div class='verd'><b style='color:var(--silver)'>"+ec[0]+"</b>. "+ec[1]+"</div>";
+  h+="<div class='clsrow'><span style='min-width:150px'>avg gang size</span><b>"+(D.avgGang?D.avgGang.toFixed(1):"?")+"</b></div>";
+  h+="<div class='clsrow'><span style='min-width:150px'>largest recent gang</span><b>"+(D.largest||0)+"</b></div>";
+  h+="<div class='clsrow'><span style='min-width:150px'>solo share of kills</span><b>"+pct(soloPct)+"</b></div>";
+  h+="<div class='clsrow'><span style='min-width:150px'>gang ratio (zkill)</span><b>"+Math.round(D.gang)+"%</b></div>";
+  h+="</div></div>";
+  /* tank */
+  h+="<div class='sec'><div class='shead'><b>HOW TO BREAK THEM</b> &middot; TYPICAL FIT<span class='samp'>from "+D.nl+" losses</span></div>";
+  if(!D.nl) h+="<div class='verd'>No losses on record. Whatever they fly, they bring it home. Respect that.</div>";
+  else{
+    h+="<div class='verd'><b style='color:var(--silver)'>"+D.tank[0]+"</b>. "+D.tank[1]+"</div><div class='modl'>";
+    D.mods.slice(0,8).forEach(function(m){ h+="<span class='modc'>"+esc(m.name)+" <b>&times;"+m.n+"</b></span>"; });
+    h+="</div>";
+  }
+  h+="</div>";
+  /* people */
+  h+="<div class='sec grid2'><div>";
+  h+="<div class='shead'><b>WHO FLIES WITH THEM</b>"+(D.t==="char"?" &middot; ON THEIR KILLS":" &middot; OUTSIDE THE ORG")+"</div>";
+  h+=D.net.length?"<div class='ppl'>"+D.net.map(pchip).join("")+"</div>":"<div class='verd'>Nobody twice. Loners, or careful.</div>";
+  if(D.t!=="char"){
+    h+="<div class='shead' style='margin-top:16px'><b>ACTIVE MEMBERS</b> &middot; CONFIRMED ON KILLS</div>";
+    h+=D.mem.length?"<div class='ppl'>"+D.mem.map(pchip).join("")+"</div>":"<div class='verd'>No member has landed on a kill lately.</div>";
+  }
+  h+="</div><div>";
+  h+="<div class='shead'><b>PREFERRED VICTIMS</b></div>";
+  h+=D.vic.length?"<div class='ppl'>"+D.vic.map(pchip).join("")+"</div>":"<div class='verd'>Nobody twice.</div>";
+  h+="<div class='shead' style='margin-top:16px'><b>NEMESES</b> &middot; WHO KILLS THEM</div>";
+  h+=D.nem.length?"<div class='ppl'>"+D.nem.map(pchip).join("")+"</div>":"<div class='verd'>Nobody owns them yet.</div>";
+  h+="</div></div>";
+  /* heatmap */
+  if(D.matMax>0){
+    h+="<div class='sec'><div class='shead'><b>WHEN</b> &middot; ACTIVITY, HOUR &times; WEEKDAY, EVE TIME</div><div class='hmwrap'><div class='hm'>";
+    var days=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+    h+="<div class='hmrow'><span class='hmd'></span>";
+    for(var hx=0;hx<24;hx++) h+="<span class='hmx'>"+(hx%3===0?(hx<10?"0":"")+hx:"")+"</span>";
+    h+="</div>";
+    for(var dd=0;dd<7;dd++){
+      h+="<div class='hmrow'><span class='hmd'>"+days[dd]+"</span>";
+      for(var hy=0;hy<24;hy++){
+        var n3=D.mat[dd][hy], a3=n3?(0.12+0.85*n3/D.matMax):0;
+        h+="<span class='hmc' title='"+days[dd]+" "+hh(hy)+" &middot; "+n3+" kills'"+(n3?" style='background:rgba(255,71,87,"+a3.toFixed(2)+")'":"")+"></span>";
+      }
+      h+="</div>";
+    }
+    h+="</div></div><div class='hmleg'><span>COLD</span><span style='width:60px;height:8px;background:linear-gradient(90deg,var(--steel-2),rgba(255,71,87,.95))'></span><span>HOT</span>"
+      +(pw?"<span>peak "+hh(pw.a)+" to "+hh(pw.b)+" EVE &middot; "+pw.tz+" prime</span>":"")+"</div></div>";
+  }
+  /* grounds */
+  h+="<div class='sec'><div class='shead'><b>WHERE</b> &middot; HUNTING GROUNDS</div>";
+  if(whoami&&whoami.loggedIn&&D.roadNames&&D.roadNames.length)
+    h+="<span class='roadchip' title='This one hunts where we work. Worth knowing before you haul.'>WORKS OUR ROADS &middot; "+D.roadNames.map(esc).join(", ")+"</span><br>";
+  else if(whoami&&whoami.loggedIn&&(D.top.sys||[]).some(function(s3){ return OUR_REG[s3.region||""]; }))
+    h+="<span class='roadchip rg'>operates in our regions</span><br>";
+  if(D.top.sys&&D.top.sys.length){
+    h+="<table class='btbl'><thead><tr><th>SYSTEM</th><th>SEC</th><th>REGION</th><th class='num'>KILLS</th></tr></thead><tbody>";
+    D.top.sys.forEach(function(s4){
+      var sb=secBand(s4.solarSystemSecurity);
+      h+="<tr><td>"+esc(s4.solarSystemName)+(OUR_SYS[s4.solarSystemID]&&whoami.loggedIn?" <span class='roadchip' style='padding:1px 6px;font-size:9.5px'>OUR ROAD</span>":"")+"</td>"
+        +"<td class='secb "+sb[0]+"'>"+sb[1]+"</td><td>"+esc(s4.region||regionOf(s4.solarSystemName)||"")+"</td><td class='num'>"+(s4.kills||0)+"</td></tr>";
+    });
+    h+="</tbody></table>";
+    if(D.jumps!=null) h+="<div class='verd' style='margin-top:8px'>Their top system is "+D.jumps+" jumps from Rens.</div>";
+    else if(D.top.sys[0]&&!(D.top.sys[0].region||regionOf(D.top.sys[0].solarSystemName))) h+="<div class='verd' style='margin-top:8px'>No gate route from Rens. Wormhole business.</div>";
+  } else h+="<div class='verd'>Nothing recent. They hunt somewhere the killboard hasn't seen lately.</div>";
+  h+="</div>";
+  /* doctrine */
+  if((D.top.ship&&D.top.ship.length)||D.allTimeShips.length){
+    h+="<div class='sec'><div class='shead'><b>SHIP DOCTRINE</b> &middot; MOST FLOWN ON KILLS</div><div class='docl'>";
+    (D.top.ship||[]).forEach(function(s5){
+      h+="<span class='docc'><img loading='lazy' src='"+IMG+"/types/"+s5.shipTypeID+"/render?size=64' onerror='this.style.display=\"none\"' alt=''><span><div class='dn'>"+esc(s5.shipName||"?")+"</div><div class='dk'>&times;"+(s5.kills||0)+" recent</div></span></span>";
+    });
+    D.allTimeShips.forEach(function(s6){
+      h+="<span class='docc'><img loading='lazy' src='"+IMG+"/types/"+s6.shipTypeID+"/render?size=64' onerror='this.style.display=\"none\"' alt=''><span><div class='dn'>"+esc(s6.n||"?")+"</div><div class='dk'>&times;"+(s6.kills||0)+" all time</div></span></span>";
+    });
+    h+="</div></div>";
+  }
+  /* telemetry */
+  if(D.tele&&D.tele.length){
+    h+="<div class='sec'><div class='shead'><b>RECENT COMBAT TELEMETRY</b><span class='samp'>"+sampChip+"</span></div>";
+    h+="<table class='btbl'><thead><tr><th></th><th>SHIP</th><th>PILOT</th><th>SYSTEM</th><th>GANG</th><th class='num'>VALUE</th><th>WHEN</th><th></th></tr></thead><tbody>";
+    D.tele.forEach(function(r){
+      h+="<tr><td><span class='kch "+(r.k?"k":"l")+"'>"+(r.k?"KILL":"LOSS")+"</span></td>"
+        +"<td>"+esc(r.shipN||"?")+"</td>"
+        +"<td class='telewho'>"+(r.whoN?esc(r.whoN):"<span class='n'>no pilot</span>")+(r.k===0&&r.fbN?" <span style='color:var(--muted)'>&middot; final blow "+esc(r.fbN)+"</span>":"")+"</td>"
+        +"<td>"+esc(r.sysN||"?")+"</td>"
+        +"<td>"+(r.att<=1?"SOLO":r.att+" on it")+"</td>"
+        +"<td class='num'>"+isk(r.val)+"</td><td>"+ago(r.t)+"</td><td>"+zlink(r.kid)+"</td></tr>";
+    });
+    h+="</tbody></table></div>";
+  }
+  out.innerHTML=h;
+  wireDigest(D);
+}
+function wireDigest(D){
+  var sb=document.getElementById("starb");
+  if(sb) sb.addEventListener("click",function(){ toggleWatch(D.t,D.id,D.name); renderDigest(D,0); });
+  out.querySelectorAll(".pplc[data-id]").forEach(function(b){
+    b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
+  });
+}
+
+go.addEventListener("click",run);
+q.addEventListener("keydown",function(e){ if(e.key==="Enter") run(); });
+renderChips();
+/* deep links: ?t=char|corp|alli&id=N, or ?q=Name */
+(function(){
+  var sp=new URLSearchParams(location.search);
+  var t=sp.get("t"), id=+sp.get("id"), qq=sp.get("q");
+  if(t&&TPATH[t]&&id>0) loadTarget(t,id);
+  else if(qq){ q.value=qq; run(); }
+})();
+})();
+</script>
+</body></html>

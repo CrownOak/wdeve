@@ -36,6 +36,7 @@
     ["Radar",       BASE + "lowsec/",         "INTEL",  false],
     ["Kills",       BASE + "kills/",          "INTEL",  false],
     ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
+    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false],
     ["CLASSIFIED",  BASE + "bonk-prospects/", "INTEL",  false],
     ["REDACTED",    BASE + "alliance/",       "INTEL",  false],
     ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
