@@ -4,6 +4,7 @@
 <meta name="robots" content="noindex, nofollow">
 <title>GOBSEC — Goblin State Security</title>
 <link rel="stylesheet" href="/common.css?v=7">
+<link rel="stylesheet" href="/intel.css?v=1">
 <style>
   /* THE GOBSEC DESK. Three surfaces, each a whole page. This is not a menu: every card
      carries live state, so a pilot knows whether they need to open it before they do.
@@ -41,6 +42,13 @@
   @keyframes recblink{ 0%,100%{opacity:.25} 50%{opacity:1} }
   .stamp2{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--line); }
 
+  .wsline{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted);
+           margin:0 0 10px; }
+  .deckmini{ display:flex; flex-wrap:wrap; gap:8px; margin:26px 0 0;
+             border-top:1px solid var(--line-soft); padding-top:14px; }
+  .deckmini a{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+               color:var(--silver-dim); text-decoration:none; border:1px solid var(--line); padding:6px 12px; }
+  .deckmini a:hover{ border-color:var(--gs); color:var(--gs); }
   /* the desk */
   .who{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
         color:var(--muted); text-align:right; margin:0 0 14px; }
@@ -172,58 +180,27 @@
       <div id="hudSug"></div>
       <div id="hudPlay"></div>
     </div>
-    <div class="deck">
-      <a class="tool" href="/gobsec/board/">
-        <div class="num">01</div>
-        <div class="tn">The Board</div>
-        <div class="td">Is anything happening, where are we supposed to be, what do we fly, and
-          who is out there. Read it for eight seconds before you undock.</div>
-        <div class="tstate" id="stBoard">reading the wire&hellip;</div>
-        <div class="go">Open &#9656;</div>
-      </a>
+    <!-- ==== THE WORKSPACE: one input, the right answer. Engine is /intel.js ==== -->
+    <div class="wsline">One box. Paste a name, a system, or a whole local list.</div>
+    <div id="intelroot"></div>
 
-      <a class="tool" href="/gobsec/finder/">
-        <div class="num">02</div>
-        <div class="tn">The Finder</div>
-        <div class="td">Corp-less killers ranked by how they kill and how close they are to home,
-          with the mail written for each one. The list we recruit from.</div>
-        <div class="tstate" id="stFinder">counting the board&hellip;</div>
-        <div class="go">Open &#9656;</div>
-      </a>
-
-      <a class="tool" href="/cartel/">
-        <div class="num">03</div>
-        <div class="tn">The Watchtower</div>
-        <div class="td">The Cartel Map. The corridor drawn as terrain: who taxes which ring, where
-          the camps sit, and who is dying on the road right now.</div>
-        <div class="tstate" id="stCartel">reading the corridor&hellip;</div>
-        <div class="go">Open &#9656;</div>
-      </a>
-
-      <a class="tool" href="/gobsec/desk/">
-        <div class="num">04</div>
-        <div class="tn">The Combat Desk</div>
-        <div class="td">Paste local and know the room in two seconds. What is on grid and what it does
-          to you. Where the fight is tonight. The files cross-check themselves.</div>
-        <div class="tstate" id="stDesk">three reads, one desk</div>
-        <div class="go">Open &#9656;</div>
-      </a>
-
-      <a class="tool" id="cardIntel" href="/portal/intel/">
-        <div class="num">05</div>
-        <div class="tn">The Workbench</div>
-        <div class="td">The files. Entities, persons, the graph, region terrain, debriefs and the
-          Derelik danger board. Everything we know about everyone.</div>
-        <div class="tstate" id="stIntel">clearance required</div>
-        <div class="go">Open &#9656;</div>
-      </a>
+    <div class="deckmini">
+      <a href="/gobsec/board/">The Board</a>
+      <a href="/gobsec/desk/">Combat Desk</a>
+      <a href="/gobsec/finder/">The Finder</a>
+      <a href="/cartel/">The Watchtower</a>
+      <a href="/portal/intel/" id="cardIntel">The Workbench</a>
     </div>
     <div class="foot">Assume Nothing</div>
   </div>
 </div>
 <script>
 var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
-function $(i){ return document.getElementById(i); }
+function $(i){ return document.getElementById(i) || _stub(); }
+/* the card deck was replaced by the workspace, so the old per-card state
+   elements no longer exist. A missing node returns a harmless stub: the HUD
+   and the checkpoint must never die because a status line lost its home. */
+var _st=null; function _stub(){ return _st || (_st=document.createElement("span")); }
 function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
 /* no-store: this is a command surface. The worker marks reads max-age=60 for the
@@ -452,8 +429,12 @@ async function fillHud(who){
   };
   /* The workbench holds the hostile files and person dossiers. One gate gets you to the desk;
      the third card still needs clearance, exactly as /portal/intel always has. */
-  if(!who.gss){ var c=$("cardIntel"); c.classList.add("locked"); c.removeAttribute("href"); }
+  if(!who.gss){ var c=document.getElementById("cardIntel"); if(c){ c.classList.add("locked"); c.removeAttribute("href"); } }
   fillHud(who); fillBoard(); fillFinder(); fillIntel(who.gss);
 })();
 </script>
+<script src="/intel.js?v=1"></script>
+<script>/* the workspace only renders for a cleared session; the checkpoint above
+   still guards the door and the honeypot is untouched. */
+try{ BONKINTEL.mount(document.getElementById("intelroot")); }catch(e){}</script>
 </body></html>
