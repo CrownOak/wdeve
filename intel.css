@@ -205,3 +205,15 @@
   .gsslink{ font-family:var(--mono); font-size:11px; color:var(--gob,#ff4757); border:1px solid rgba(255,71,87,.4); padding:4px 10px; text-decoration:none; }
   @media(max-width:860px){ .stats{ grid-template-columns:repeat(3,1fr); } .grid2{ grid-template-columns:1fr; } }
   @media(max-width:560px){ .btop{ flex-direction:column; } .stats{ grid-template-columns:repeat(2,1fr); } .idcard{ flex-direction:column; } }
+
+/* ==== YOU ARE HERE: the member's own position, top of the workspace ==== */
+.youare{ border:1px solid var(--line); border-left:3px solid var(--ore); background:var(--steel);
+  padding:11px 15px; margin:0 0 14px; }
+.youare.hot{ border-left-color:var(--gob,#ff4757); }
+.youare .yk{ font-family:var(--mono); font-size:9px; letter-spacing:.24em; color:var(--muted); }
+.youare .yv{ font-size:15px; color:var(--silver); line-height:1.55; margin-top:4px; }
+.youare .yv b{ color:var(--ore); font-weight:600; }
+.youare .yv b.yhot{ color:var(--gob,#ff4757); }
+.youare .ysub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:5px; }
+.youare .ysub a{ color:var(--silver-dim); }
+.youare .ysub a:hover{ color:var(--ore); }

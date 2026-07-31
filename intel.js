@@ -2,7 +2,7 @@
    BONKINTEL.mount(el) injects the workspace and starts it. Spine elements are
    lazy: nothing heavy loads until a lens asks for it (spec v1.1, red team F1). */
 (function(){
-var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="status"></div>\n  <div id="out"><div class="bempty">Type a name and pull the file. Pilots, corps, alliances and systems all work.</div></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
+var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="youare"></div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="status"></div>\n  <div id="out"><div class="bempty">Type a name and pull the file. Pilots, corps, alliances and systems all work.</div></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
 window.BONKINTEL={mount:function(root){
   if(!root) return; root.innerHTML=MARKUP;
 
@@ -1266,7 +1266,7 @@ function refreshHud(){
     if(ourEl) ourEl.innerHTML=burning.length
       ? "<span class='hot'>"+esc(burning[0].n)+" "+burning[0].k+"</span>"
       : "<span class='calm'>quiet</span>";
-    paintRail();
+    paintRail(); paintDelta();
   });
 }
 refreshHud();
@@ -1282,6 +1282,106 @@ renderChips();
   if(t&&TPATH[t]&&id>0) loadTarget(t,id);
   else if(qq){ q.value=qq; run(); }
 })();
+
+/* ==== YOU ARE HERE ====
+   The one thing a public tool can never do: the member attached their own ESI, so
+   the desk can open with where THEY are and what they are sitting in, and warn them
+   about their own system before they undock. Their data, read for them. If they have
+   not attached, the band simply never appears.
+   Live read on purpose: a cached position confidently tells a goblin they are
+   somewhere they left an hour ago, which is worse than saying nothing. */
+function paintYouAre(){
+  var host=document.getElementById("youare"); if(!host) return;
+  fetch("/api/esi/me/where",{credentials:"same-origin",cache:"no-store"})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){
+      if(!d||!d.ok||!d.attached||!d.chars||!d.chars.length) return;
+      var me=d.chars.filter(function(c){ return c.system_id; })[0];
+      if(!me) return;
+      return Promise.all([loadSysGraph(),esiActivity()]).then(function(res){
+        var S=res[0],A=res[1];
+        var k=(A&&A.k[me.system_id])||{}, live=(k.ship_kills||0)+(k.pod_kills||0);
+        var ix=S&&S.byId?S.byId[me.system_id]:null, row=(ix!=null)?S.d.sys[ix]:null;
+        var sec=row?row[2]:null, reg=row?S.d.regions[row[3]]:null;
+        /* nearest highsec, same walk the corridor lens uses */
+        var exit=null;
+        if(row&&sec<0.45&&S.d){
+          var seen={},q=[[ix,0]]; seen[ix]=1;
+          while(q.length){
+            var cur=q.shift(); if(cur[1]>6) break;
+            var nb=S.d.sys[cur[0]][4]||[];
+            for(var i=0;i<nb.length;i++){
+              if(seen[nb[i]]) continue; seen[nb[i]]=1;
+              var r2=S.d.sys[nb[i]];
+              if(r2[2]>=0.45){ exit={n:r2[0],j:cur[1]+1}; q.length=0; break; }
+              q.push([nb[i],cur[1]+1]);
+            }
+          }
+        }
+        var nbHot=0,nbNames=[];
+        if(row&&S.d) (row[4]||[]).forEach(function(n){
+          var rr=S.d.sys[n], kk=(A&&A.k[rr[1]])||{};
+          var t=(kk.ship_kills||0)+(kk.pod_kills||0);
+          if(t>0){ nbHot+=t; nbNames.push(rr[0]); }
+        });
+        var line;
+        if(live>0) line="You are in <b>"+esc(me.system_name||"somewhere")+"</b> and <b class='yhot'>"+live+"</b> ship"+(live===1?"":"s")+" died here this hour.";
+        else if(nbHot>0) line="You are in <b>"+esc(me.system_name||"somewhere")+"</b>. Quiet here, but <b class='yhot'>"+esc(nbNames[0])+"</b> next door is not.";
+        else line="You are in <b>"+esc(me.system_name||"somewhere")+"</b>. Nothing dying here or next door.";
+        var bits=[];
+        if(me.ship_name) bits.push("flying a "+esc(me.ship_name));
+        if(sec!=null) bits.push(sec.toFixed(1)+(reg?" "+esc(reg):""));
+        if(exit) bits.push("nearest highsec "+esc(exit.n)+" "+exit.j+"j");
+        else if(sec!=null&&sec>=0.45) bits.push("you are in highsec");
+        host.innerHTML="<div class='youare"+(live>0?" hot":"")+"'>"
+          +"<span class='yk'>YOU ARE HERE</span>"
+          +"<div class='yv'>"+line+"</div>"
+          +"<div class='ysub'>"+bits.join(" &middot; ")
+          +" &middot; <a href='?t=sys&id="+me.system_id+"'>open this system</a></div></div>";
+      });
+    }).catch(function(){ /* the band is a bonus; it never breaks the page */ });
+}
+paintYouAre();
+setInterval(function(){ if(document.visibilityState==="visible") paintYouAre(); },120000);
+
+/* ==== WHAT CHANGED SINCE YOU LOOKED ====
+   A dashboard is worth reopening only if it tells you what moved. Pure localStorage,
+   costs nothing, and it is the difference between a page and a habit. */
+var LSSEEN="bonk_intel_seen_v1";
+function deltaLine(){
+  var prev=lsGet(LSSEEN), now={t:Date.now(),hot:{}};
+  (rHot||[]).slice(0,12).forEach(function(s){ now.hot[s.id]=s.k; });
+  (rOurs||[]).forEach(function(s){ if(s.k) now.hot["o"+s.id]=s.k; });
+  lsSet(LSSEEN,now);
+  if(!prev||!prev.t) return null;
+  var mins=Math.round((Date.now()-prev.t)/60000);
+  if(mins<10) return null;
+  var newly=[];
+  (rOurs||[]).forEach(function(s){ if(s.k&&!prev.hot["o"+s.id]) newly.push(s.n); });
+  var since=mins<120?(mins+" minutes"):(Math.round(mins/60)+" hours");
+  if(newly.length) return "Since you looked "+since+" ago, our roads lit up at "+esc(newly.join(", "))+".";
+  return null;
+}
+function paintDelta(){
+  var host=document.getElementById("rNote"); if(!host) return;
+  var d=deltaLine();
+  if(d) host.innerHTML="<span style='color:var(--amber)'>"+d+"</span>";
+}
+
+/* ==== KEYBOARD ====
+   Slash focuses the box, Escape clears it, and the rail panes are one key each.
+   The people who use this most will use it fifty times a night. */
+document.addEventListener("keydown",function(e){
+  var t=e.target, typing=t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA");
+  if(e.key==="/"&&!typing){ e.preventDefault(); if(q){ q.focus(); q.select(); } return; }
+  if(e.key==="Escape"&&typing&&t===q){ q.value=""; return; }
+  if(typing) return;
+  var pane={h:"hot",o:"ours",w:"watch"}[e.key];
+  if(pane){
+    var b=document.querySelector("#rsw button[data-r='"+pane+"']");
+    if(b) b.click();
+  }
+});
 
 }};
 })();
