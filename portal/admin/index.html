@@ -44,6 +44,29 @@
 .tile .v{ font-family:var(--mono); font-size:21px; color:var(--ore); margin-top:4px; font-variant-numeric:tabular-nums; }
 .tile .v.warn{ color:var(--amber); }
 .tile .v.dim{ color:var(--silver-dim); font-size:15px; }
+/* ---- THE BOOKS ---- */
+.bktab{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px;
+        font-variant-numeric:tabular-nums; }
+.bktab th{ text-align:right; font-size:10px; letter-spacing:.07em; text-transform:uppercase;
+           color:var(--muted); font-weight:400; padding:0 0 7px; border-bottom:1px solid var(--line-soft); }
+.bktab th:first-child, .bktab td:first-child{ text-align:left; }
+.bktab td{ text-align:right; padding:7px 0; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+.bktab td.keep{ color:var(--ore); }
+.bktab tr:last-child td{ border-bottom:0; }
+.bktab td+td, .bktab th+th{ padding-left:14px; }
+/* the P&L waterfall: one bar, revenue split into where it goes */
+.bkbar{ display:flex; height:20px; border:1px solid var(--line-soft); background:var(--black); overflow:hidden; }
+.bkbar i{ display:block; height:100%; }
+.bkkey{ display:flex; flex-wrap:wrap; gap:12px; margin-top:9px; font-family:var(--mono); font-size:11px; color:var(--muted); }
+.bkkey span{ display:flex; align-items:center; gap:5px; }
+.bkkey b{ width:9px; height:9px; display:inline-block; }
+.bkline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:10px; line-height:1.65; }
+.bkline em{ font-style:normal; color:var(--ore); }
+.bkline.warnline em{ color:var(--amber); }
+.bkcaveat{ font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.6; margin-top:10px;
+           border-left:2px solid var(--line); padding-left:10px; }
+.bkgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+.bkgrid .panel{ margin:0; }
 /* ---- queue rows ---- */
 .qrow{ display:flex; gap:10px; align-items:center; padding:8px 8px; border-top:1px solid var(--line-soft);
        flex-wrap:wrap; font-size:13.5px; }
@@ -237,6 +260,7 @@ function sig(x){ if(x>=100) return String(Math.round(x)); if(x>=10) return x.toF
 function fmtIsk(n){
   n=Number(n); if(!isFinite(n)) return "0";
   const a=Math.abs(n), s=n<0?"−":"";
+  if(a>=1e12) return s+sig(a/1e12)+"T";
   if(a>=1e9) return s+sig(a/1e9)+"B";
   if(a>=1e6) return s+sig(a/1e6)+"M";
   if(a>=1e3) return s+sig(a/1e3)+"k";
@@ -341,7 +365,7 @@ async function boot(){
 }
 /* ================= router + rail ================= */
 const NAVS=[
-  ["","Command Center"],["members","Members"],["contracts","Contracts"],
+  ["","Command Center"],["books","The Books"],["members","Members"],["contracts","Contracts"],
   ["industry","Industry"],["recruiting","Recruiting"],["events","Events"],
   ["decorations","Decorations"],["reconcile","Reconcile"],
   ["backfill","Backfill"],["audit","Audit"],["settings","Settings"]
@@ -2465,8 +2489,196 @@ async function secIndustry(){
     });
   });
 }
+/* ================= THE BOOKS =================
+   Where the ISK comes from, in one screen. Officer gated at the API, so a member
+   who guesses the hash still gets a 403 and not a margin.
+
+   The three sources are NEVER added together, because they measure different things
+   and two of them overlap:
+     THE SPREAD  = every rock our goblins pulled (their own ESI mining ledgers).
+                   ADDRESSABLE, not booked: a goblin who mines and hauls to Jita
+                   himself is counted here too. It answers "what is the buyback worth
+                   if all of it comes through us".
+     THROUGH THE OPS = what actually came through a corp op and got paid out. REALIZED,
+                   and a subset of the above. Rolling cache, not lifetime.
+     THE WORKS   = the factory P&L. MODELED forward at hub capped rates.
+   Adding the first two would count the same ore twice, so they get separate panels
+   and separate words. */
+const BKC={ buyback:"rgba(70,255,94,.5)", nocx:"rgba(255,196,74,.55)",
+            friction:"rgba(165,175,185,.40)", fixed:"rgba(165,175,185,.20)" };
+function bkSeg(w, color, title){
+  if(!(w>0)) return "";
+  return '<i style="width:'+w.toFixed(2)+'%;background:'+color+'" title="'+esc(title)+'"></i>';
+}
+function bkKey(color, label){
+  return '<span><b style="background:'+color+'"></b>'+esc(label)+"</span>";
+}
+/* One scenario of the works P&L as a single revenue bar plus its verdict line. */
+function bkWorks(sc){
+  if(!sc) return "";
+  const rev=Number(sc.revenue_day)||0;
+  const profit=Number(sc.profit_day)||0;
+  const pct=function(v){ return rev>0 ? 100*(Number(v)||0)/rev : 0; };
+  let h='<div class="ptitle">'+esc(sc.label||"scenario")
+    +'<span class="pn">'+fmtN(sc.lines)+" lines &middot; "+fmtIsk(rev)+" revenue a day</span></div>";
+  h+='<div class="bkbar">'
+    + bkSeg(pct(sc.buyback_out), BKC.buyback, "buyback to our own miners")
+    + bkSeg(pct(sc.nocxium_cost), BKC.nocx, "nocxium bought off the market")
+    + bkSeg(pct(sc.friction), BKC.friction, "sales tax and broker")
+    + bkSeg(pct(sc.fixed_day), BKC.fixed, "fuel and freight")
+    + bkSeg(Math.max(0,pct(profit)), "var(--ore)", "corp profit")
+    + "</div>";
+  h+='<div class="bkkey">'
+    + bkKey(BKC.buyback,"buyback "+fmtIsk(sc.buyback_out))
+    + (Number(sc.nocxium_cost)>0 ? bkKey(BKC.nocx,"nocxium "+fmtIsk(sc.nocxium_cost)) : "")
+    + bkKey(BKC.friction,"tax + broker "+fmtIsk(sc.friction))
+    + bkKey(BKC.fixed,"fuel + freight "+fmtIsk(sc.fixed_day))
+    + bkKey("var(--ore)","profit "+fmtIsk(profit))
+    + "</div>";
+  if(profit>=0){
+    h+='<div class="bkline">Keeps <em>'+fmtIsk(profit)+" a day</em> at "+sig(Math.abs(Number(sc.margin_pct)||0))
+      +"% of revenue, and puts <em>"+fmtIsk(sc.buyback_out)+"</em> a day into goblin wallets on the way. "
+      +"The ecosystem moves <em>"+fmtIsk(sc.ecosystem_day)+"</em> a day.</div>";
+  }else{
+    h+='<div class="bkline warnline">Loses <em>'+fmtIsk(Math.abs(profit))+" a day</em>. "
+      +"Fuel and freight are <em>"+fmtIsk(sc.fixed_day)+"</em> whether the lines run or not, "
+      +"and "+fmtIsk(sc.revenue_day)+" of revenue cannot carry them. "
+      +"This is a scale problem, not a margin problem.</div>";
+  }
+  h+='<div class="bkline">Feeding it costs <em>'+fmtN(sc.m3_day)+" m³ a day</em>, about "
+    +sig(Number(sc.fleet_nights_week)||0)+" Orca fleet nights a week.</div>";
+  return h;
+}
+async function secBooks(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("The Books","where the ISK actually comes from &middot; officers only")+skel(5);
+  let j;
+  try{ j=await api("/api/works/outlook"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("The Books","where the ISK actually comes from")
+      +napPanel("The books", e.message)
+      +'<button class="inv" onclick="secBooks()">Try again</button>'+footLine();
+    return;
+  }
+  const flow=j.flow, fleet=j.fleet, works=j.works, fund=j.fund||{}, ind=j.industry||{};
+  const basis=j.basis||{}, rec=Number(j.refine_recovery)||0, bb=Number(j.bb_rate)||0;
+  const d30=flow?flow.d30:null;
+  const full=works?works.full:null;
+  let h=head("The Books","where the ISK actually comes from &middot; officers only");
+
+  /* headline */
+  h+='<div class="pulse">';
+  h+=tile("Rock pulled, 30d", d30?fmtIsk(d30.gross):"…", d30?"":"dim");
+  h+=tile("We would pay", d30?fmtIsk(d30.payout):"…", d30?"":"dim");
+  h+=tile("The spread, 30d", d30?fmtIsk(d30.take):"…", d30?"":"dim");
+  h+=tile("Our cut of the rock", d30&&d30.take_pct!=null?sig(d30.take_pct)+"%":"…", d30?"":"dim");
+  h+=tile("Paid out on ops, 30d", fleet?fmtIsk(fleet.d30.payout):"napping", fleet?"":"dim");
+  h+=tile("Works profit, a day", full?fmtIsk(full.profit_day):"no run", full?(Number(full.profit_day)<0?"warn":""):"dim");
+  h+=tile("Station fund", fund.target?fmtIsk(fund.raised):"off", fund.target?"":"dim");
+  h+=tile("Industry counted", fmtIsk(ind.counted_isk));
+  h+="</div>";
+
+  /* the spread */
+  if(!flow){
+    h+=napPanel("The spread","No price data, so the rock cannot be valued. The refinery blob is unreachable.");
+  }else{
+    h+='<div class="panel"><div class="ptitle">The spread'
+      +'<span class="pn">every rock our goblins pulled, priced today at basis '
+      +sig(basis.empire!=null?basis.empire:0)+"</span></div>";
+    h+='<table class="bktab"><thead><tr><th>Month</th><th>Goblins</th><th>Rock value</th>'
+      +"<th>We pay</th><th>We keep</th><th>Our cut</th></tr></thead><tbody>";
+    (flow.months||[]).forEach(function(r){
+      h+="<tr><td>"+esc(r.mo)+"</td><td>"+fmtN(r.miners)+"</td><td>"+fmtIsk(r.gross)+"</td>"
+        +"<td>"+fmtIsk(r.payout)+'</td><td class="keep">'+fmtIsk(r.take)+"</td><td>"
+        +(r.take_pct!=null?sig(r.take_pct)+"%":"&mdash;")+"</td></tr>";
+    });
+    h+="</tbody></table>";
+    const first=(flow.months||[])[0], last=(flow.months||[])[(flow.months||[]).length-1];
+    if(first && last && first!==last){
+      h+='<div class="bkline">'+esc(first.mo)+" was <em>"+fmtIsk(first.gross)+"</em> of rock from "
+        +fmtN(first.miners)+" goblins. "+esc(last.mo)+" is <em>"+fmtIsk(last.gross)+"</em> from "
+        +fmtN(last.miners)+".</div>";
+    }
+    h+='<div class="bkcaveat">This is what our goblins pulled out of the ground, not what we bought. '
+      +"A goblin who mines and hauls to Jita himself is in this table too, so read it as the size of the "
+      +"prize and not as income. We keep "+(d30&&d30.take_pct!=null?sig(d30.take_pct):"?")+"% because we pay "
+      +sig((basis.empire||0)*bb*100)+"% of a perfect refine and recover "+sig(rec*100)+"%. "
+      +"The months are all priced at TODAY's basis on purpose: the stored value of the older rows was "
+      +"written at the basis of the day, and adding those would make a basis change look like goblins mining harder."
+      +(flow.all&&flow.all.unmatched_types?" "+fmtN(flow.all.unmatched_types)+" ore types could not be priced and are left out rather than counted as zero.":"")
+      +(flow.prices_stale?" ⚠ Prices are stale, served from the last good pull.":"")
+      +"</div></div>";
+  }
+
+  /* realized + the pot, side by side */
+  h+='<div class="bkgrid">';
+  h+='<div class="panel"><div class="ptitle">Through the ops<span class="pn">what we actually bought</span></div>';
+  if(!fleet){
+    h+='<div class="nap">The fleet ledger is napping. Numbers back soon.</div>';
+  }else{
+    const fwd = (basis.empire&&bb) ? rec/(basis.empire*bb) : null;
+    h+='<div class="bkline">Paid out <em>'+fmtIsk(fleet.d30.payout)+"</em> across "+fmtN(fleet.d30.ops)
+      +" ops in 30 days, for "+fmtN(fleet.d30.m3)+" m³ of rock.</div>";
+    if(fwd){
+      h+='<div class="bkline">At today\'s basis every <em>1B</em> we pay out comes back as <em>'
+        +sig(fwd)+"B</em> of minerals, so that haul is worth about <em>"
+        +fmtIsk(fleet.d30.payout*(fwd-1))+"</em> to the corp.</div>";
+    }
+    h+='<div class="bkcaveat">Forward rate, not history: these ops were paid at the basis in force on the '
+      +"night they ran. The archive holds the "+fmtN(fleet.cached_ops)
+      +" newest ops only, so this is a window and never a lifetime total.</div>";
+  }
+  h+="</div>";
+
+  h+='<div class="panel"><div class="ptitle">The pot<span class="pn">ISK an officer confirmed against the wallet</span></div>';
+  if(fund.target){
+    const pc=Math.max(0,Math.min(100,Number(fund.pct)||0));
+    h+='<div style="display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;font-family:var(--mono)">'
+      +'<span style="font-size:20px;color:var(--ore);font-variant-numeric:tabular-nums">'+fmtIsk(fund.raised)+"</span>"
+      +'<span class="qmeta">of '+fmtIsk(fund.target)+" for "+esc(fund.name||"the structure")+"</span>"
+      +'<span class="qmeta" style="margin-left:auto">'+pc+"%</span></div>"
+      +'<div class="prog" style="margin-top:8px"><i style="width:'+pc+'%"></i></div>';
+    if(Number(fund.raised)>Number(fund.target)){
+      h+='<div class="bkline">Over target by <em>'+fmtIsk(Number(fund.raised)-Number(fund.target))
+        +"</em> across "+fmtN(fund.contributions)+" contributions. Pick the next structure.</div>";
+    }else{
+      h+='<div class="bkline">'+fmtN(fund.contributions)+" contributions in. <em>"
+        +fmtIsk(Number(fund.target)-Number(fund.raised))+"</em> to go.</div>";
+    }
+    if(Number(fund.pending_n)>0){
+      h+='<div class="bkline warnline"><em>'+fmtN(fund.pending_n)+" waiting on you</em> to confirm, worth "
+        +fmtIsk(fund.pending_isk)+".</div>";
+    }
+  }else{
+    h+='<div class="nap">No campaign running. Start one in Settings.</div>';
+  }
+  h+='<div class="bkline">Industry contributions counted: <em>'+fmtIsk(ind.counted_isk)+"</em> over "
+    +fmtN(ind.counted_n)+" jobs."+(Number(ind.pending_n)>0?" "+fmtN(ind.pending_n)+" pending review.":"")+"</div>";
+  h+="</div></div>";
+
+  /* the works */
+  if(!works){
+    h+=napPanel("The works","No run yet. The works-econ generator writes this daily.");
+  }else{
+    const stale=Number(j.works_stale_days);
+    h+='<div class="panel"><div class="ptitle">The works'
+      +'<span class="pn">modeled forward at hub capped rates &middot; '
+      +(isFinite(stale)?(stale<=0?"computed today":stale+" days old"):"age unknown")+"</span></div>";
+    if(isFinite(stale) && stale>=3){
+      h+='<div class="bkline warnline">⚠ <em>'+stale+" days old.</em> The daily generator may not be firing.</div>";
+    }
+    h+=bkWorks(works.full);
+    if(works.phase1){ h+='<div style="margin-top:18px">'+bkWorks(works.phase1)+"</div>"; }
+    h+='<div class="bkcaveat">Modeled, not booked: this is what a day of production would pay if every line '
+      +"ran at the rate the hub can absorb. The buyback line inside it is the same ISK the spread panel "
+      +"counts, seen from the factory side, so do not add the two.</div></div>";
+  }
+  h+=footLine();
+  m.innerHTML=h;
+}
 /* ================= registry + boot ================= */
-const SECTIONS={ "":secOverview, members:secMembers, contracts:secContracts,
+const SECTIONS={ "":secOverview, books:secBooks, members:secMembers, contracts:secContracts,
   industry:secIndustry, recruiting:secRecruiting, events:secEvents,
   decorations:secDecorations, reconcile:secReconcile,
   backfill:secBackfill, audit:secAudit, settings:secSettings };

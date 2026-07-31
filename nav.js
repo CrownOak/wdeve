@@ -33,7 +33,7 @@
     ["Portal",      BASE + "portal/",         "MEMBER", true ],
     ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
     ["Decorations", BASE + "decorations/",    "MEMBER", false],
-    ["Radar",       BASE + "lowsec/",         "INTEL",  false],
+    ["Lowsec Radar", BASE + "lowsec/",        "INTEL",  false],
     ["Kills",       BASE + "kills/",          "INTEL",  false],
     ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
     ["PVP Briefing", BASE + "briefing/",      "INTEL",  false],
