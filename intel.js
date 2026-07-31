@@ -2,7 +2,7 @@
    BONKINTEL.mount(el) injects the workspace and starts it. Spine elements are
    lazy: nothing heavy loads until a lens asks for it (spec v1.1, red team F1). */
 (function(){
-var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="youare"></div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="status"></div>\n  <div id="out"><div class="bempty">Type a name and pull the file. Pilots, corps, alliances and systems all work.</div></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
+var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="thecall"></div>\n  <div id="youare"></div>\n  <div id="statetiles"></div>\n  <div class="askline">Or ask about anyone.</div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="status"></div>\n  <div id="out"></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
 window.BONKINTEL={mount:function(root){
   if(!root) return; root.innerHTML=MARKUP;
 
@@ -1266,10 +1266,11 @@ function refreshHud(){
     if(ourEl) ourEl.innerHTML=burning.length
       ? "<span class='hot'>"+esc(burning[0].n)+" "+burning[0].k+"</span>"
       : "<span class='calm'>quiet</span>";
-    paintRail(); paintDelta();
+    paintRail(); paintDelta(); paintCall();
   });
 }
 refreshHud();
+findNearestFight();
 setInterval(function(){ if(document.visibilityState==="visible") refreshHud(); },180000);
 
 go.addEventListener("click",run);
@@ -1382,6 +1383,72 @@ document.addEventListener("keydown",function(e){
     if(b) b.click();
   }
 });
+
+/* ==== THE CALL ====
+   A dashboard that opens with an empty box makes every visit cost a decision. This
+   opens with the answer to the question most people came to ask: is anything
+   happening, and should I undock. Two stages on purpose. The first paint uses the
+   activity feed the rail already fetched, so it is instant. The distance work needs
+   the jump graph, which is lazy, so it arrives a moment later and sharpens the line
+   rather than delaying it. */
+var CALLST={near:null};
+function callSentence(){
+  var ours=(rOurs||[]).filter(function(s){ return s.k>0; });
+  var top=(rHot||[])[0];
+  if(ours.length){
+    var w=ours[0];
+    return {tone:"hot", text:"<b class='chot'>"+esc(w.n)+"</b> is hot, "+w.k+" dead there this hour. That is our road."};
+  }
+  if(CALLST.near&&CALLST.near.j!=null){
+    return {tone:"calm", text:"Roads are clear. Nearest fight is <b>"+esc(CALLST.near.n)+"</b>, "
+      +CALLST.near.j+" jump"+(CALLST.near.j===1?"":"s")+" out, "+CALLST.near.k+" dead this hour."};
+  }
+  if(top) return {tone:"calm", text:"Roads are clear. Loudest system in New Eden is <b>"+esc(top.n)+"</b> with "+top.k+"."};
+  return {tone:"calm", text:"Nothing on our roads. Quiet everywhere we can see."};
+}
+function paintCall(){
+  var host=document.getElementById("thecall"); if(!host) return;
+  if(!rHot.length&&!rOurs.length){ host.innerHTML="<div class='call'><div class='ct'>reading the map&hellip;</div></div>"; return; }
+  var c=callSentence();
+  host.innerHTML="<div class='call "+c.tone+"'><span class='ck'>THE CALL</span><div class='ct'>"+c.text+"</div></div>";
+  paintTiles();
+}
+/* the three states worth knowing without asking, in the order you would ask them */
+function paintTiles(){
+  var host=document.getElementById("statetiles"); if(!host) return;
+  var ours=(rOurs||[]).filter(function(s){ return s.k>0; });
+  var oursV=ours.length?(esc(ours[0].n)+" "+ours[0].k):"quiet";
+  var neTotal=(rHot||[]).reduce(function(a,s){ return a+s.k; },0);
+  var near=CALLST.near;
+  host.innerHTML=
+    "<div class='tiles'>"
+    +"<div class='tile"+(ours.length?" bad":" good")+"'><div class='tk'>OUR ROADS</div><div class='tv'>"+oursV+"</div></div>"
+    +"<div class='tile'><div class='tk'>NEAREST FIGHT</div><div class='tv'>"
+      +(near?esc(near.n)+" <small>"+near.j+"j</small>":"&mdash;")+"</div></div>"
+    +"<div class='tile'><div class='tk'>NEW EDEN, THIS HOUR</div><div class='tv'>"+neTotal+" <small>dead</small></div></div>"
+    +"</div>";
+}
+/* the distance half: lazy graph, then sharpen */
+function findNearestFight(){
+  Promise.all([loadSysGraph(),esiActivity()]).then(function(res){
+    var S=res[0],A=res[1];
+    if(!S||!S.d) return;
+    var home=S.byName?S.byName["mohas"]:null; if(home==null) return;
+    var dist={},q=[home],seen={}; seen[home]=1; dist[home]=0;
+    while(q.length){
+      var cur=q.shift(); if(dist[cur]>=10) continue;
+      (S.d.sys[cur][4]||[]).forEach(function(n){ if(!seen[n]){ seen[n]=1; dist[n]=dist[cur]+1; q.push(n); } });
+    }
+    var best=null;
+    Object.keys(dist).forEach(function(ix){
+      var row=S.d.sys[ix], k=A.k[row[1]]||{};
+      var t=(k.ship_kills||0)+(k.pod_kills||0);
+      if(t<=0) return;
+      if(!best||dist[ix]<best.j||(dist[ix]===best.j&&t>best.k)) best={n:row[0],id:row[1],j:dist[ix],k:t};
+    });
+    if(best){ CALLST.near=best; paintCall(); }
+  }).catch(function(){});
+}
 
 }};
 })();

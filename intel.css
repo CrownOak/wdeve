@@ -217,3 +217,27 @@
 .youare .ysub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:5px; }
 .youare .ysub a{ color:var(--silver-dim); }
 .youare .ysub a:hover{ color:var(--ore); }
+
+/* ==== THE DEFAULT VIEW ====
+   One dominant element per screen. The call is the biggest thing on the page because
+   it is the only thing most visits need; everything else is available, not shouted. */
+.call{ border:1px solid var(--line); border-left:3px solid var(--ore); background:var(--steel);
+  padding:16px 20px 18px; margin:0 0 12px; }
+.call.hot{ border-left-color:var(--gob,#ff4757); }
+.call .ck{ font-family:var(--mono); font-size:9px; letter-spacing:.26em; color:var(--muted); }
+.call .ct{ font-family:var(--display); font-weight:700; font-size:23px; line-height:1.35;
+  color:var(--silver); margin-top:6px; letter-spacing:.01em; }
+.call .ct b{ color:var(--ore); }
+.call .ct b.chot{ color:var(--gob,#ff4757); }
+@media(max-width:620px){ .call .ct{ font-size:18px; } }
+/* the three states, read left to right in the order you would ask them */
+.tiles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:0 0 16px; }
+.tile{ border:1px solid var(--line); background:var(--steel); padding:10px 13px; }
+.tile .tk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.18em; color:var(--muted); }
+.tile .tv{ font-family:var(--display); font-weight:700; font-size:19px; color:var(--silver); margin-top:3px; }
+.tile .tv small{ font-family:var(--mono); font-size:10.5px; font-weight:400; color:var(--muted); letter-spacing:.04em; }
+.tile.bad .tv{ color:var(--gob,#ff4757); }
+.tile.good .tv{ color:var(--ore); }
+/* the search stops being the headline and becomes the follow up question */
+.askline{ font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--muted);
+  border-top:1px solid var(--line-soft); padding-top:14px; margin-top:4px; }
