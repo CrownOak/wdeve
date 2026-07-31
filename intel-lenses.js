@@ -82,7 +82,13 @@ function setMode(m){
   var bs=document.querySelectorAll(".modes button");
   for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i].getAttribute("data-m")===m);
   ["local","grid","roam","war","road","rocks","log"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
-  try{ history.replaceState(null,"","?m="+m); }catch(e){}
+  /* preserve params this module does not own: the dossier engine writes t and id
+     on the same page and the two were wiping each other. */
+  try{
+    var u=new URL(location.href);
+    u.searchParams.set("m",m);
+    history.replaceState(history.state,"",u.pathname+u.search);
+  }catch(e){}
 }
 document.querySelector(".modes").addEventListener("click",function(e){
   var b=e.target.closest?e.target.closest("button[data-m]"):null; if(b) setMode(b.getAttribute("data-m"));

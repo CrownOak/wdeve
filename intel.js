@@ -40,7 +40,23 @@ function ago(iso){ var s=(Date.now()-new Date(iso).getTime())/1000; if(!isFinite
   return Math.round(s/86400)+"d ago"; }
 function wait(ms){ return new Promise(function(res){ setTimeout(res,ms); }); }
 function lsGet(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
-function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+function lsSet(k,v){
+  try{ localStorage.setItem(k,JSON.stringify(v)); return true; }
+  catch(e){
+    /* storage is full. Swallowing this kills the cache invisibly and every read
+       goes back to hammering zkill, so drop the oldest half of our own digests
+       and try once more. */
+    try{
+      var mine=[];
+      for(var i=0;i<localStorage.length;i++){
+        var kk=localStorage.key(i);
+        if(kk&&(kk.indexOf(LSD)===0||kk.indexOf("bonk_desk_v1::")===0)) mine.push(kk);
+      }
+      mine.slice(0,Math.max(1,Math.floor(mine.length/2))).forEach(function(kk){ localStorage.removeItem(kk); });
+      localStorage.setItem(k,JSON.stringify(v)); return true;
+    }catch(e2){ return false; }
+  }
+}
 
 /* ---- zkill: serialized, 350ms manners, keeps going after a failure ---- */
 var zkChain=Promise.resolve();
@@ -198,7 +214,11 @@ function notFound(raw){
 function loadTarget(t,id,force){
   cur={t:t,id:id};
   pushTrail(t,id);
-  try{ history.pushState({t:t,id:id},"","?t="+t+"&id="+id); }catch(e){}
+  try{
+    var u=new URL(location.href);
+    u.searchParams.set("t",t); u.searchParams.set("id",id); u.searchParams.delete("q");
+    history.pushState({t:t,id:id},"",u.pathname+u.search);
+  }catch(e){}
   srcS={}; paintStatus();
   var ck=LSD+t+":"+id, cached=force?null:lsGet(ck);
   if(cached&&cached.digest){
@@ -778,7 +798,16 @@ function renderSystem(D,ageMs,partial){
 function runWeb(D){
   var btn=document.getElementById("webgo"), host=document.getElementById("webout");
   if(!btn||!host) return;
-  if(!WEBSRC.mails||WEBSRC.id!==D.id){ host.innerHTML="<div class='verd'>The killmails are not loaded. Pull the system again.</div>"; return; }
+  if(!WEBSRC.mails||WEBSRC.id!==D.id){
+    host.innerHTML="<div class='mwait'>reading the killmails...</div>";
+    btn.disabled=true;
+    ensureMails(D.id).then(function(list){
+      btn.disabled=false;
+      if(!list||!list.length){ host.innerHTML="<div class='verd'>Could not read the killmails for this system.</div>"; return; }
+      runWeb(D);
+    });
+    return;
+  }
   btn.disabled=true; btn.textContent="reading...";
   var mails=WEBSRC.mails;
   /* L1: attackers tallied, plus who shares a mail with whom. Cap the clique at 15 so a
@@ -1598,9 +1627,30 @@ function timelineStrip(F){
     +buckets.map(function(v){ return "<i style='height:"+Math.max(2,Math.round(v/mx*22))+"px'></i>"; }).join("")
     +"</div>";
 }
+/* The mails are memory only (they are far too big for localStorage) while the digest
+   caches for ten minutes. So a revisit renders from cache without ever fetching them.
+   Rather than tell the reader the tool is empty, go and get them. */
+function ensureMails(id){
+  if(WEBSRC.mails&&WEBSRC.id===id) return Promise.resolve(WEBSRC.mails);
+  if(WEBSRC.pending&&WEBSRC.pendingId===id) return WEBSRC.pending;
+  WEBSRC.pendingId=id;
+  WEBSRC.pending=zkGet("/kills/systemID/"+id+"/").then(function(list){
+    list=(list||[]).filter(Boolean);
+    WEBSRC={id:id,name:WEBSRC.name,mails:list};
+    return list;
+  }).catch(function(){ WEBSRC.pending=null; return null; });
+  return WEBSRC.pending;
+}
 function renderFights(D){
   var host=document.getElementById("fightsout"); if(!host) return;
-  if(!WEBSRC.mails||WEBSRC.id!==D.id){ host.innerHTML="<div class='verd'>The killmails are not loaded for this system.</div>"; return; }
+  if(!WEBSRC.mails||WEBSRC.id!==D.id){
+    host.innerHTML="<div class='mwait'>reading the killmails...</div>";
+    ensureMails(D.id).then(function(list){
+      if(!list||!list.length){ host.innerHTML="<div class='verd'>Could not read the killmails for this system.</div>"; return; }
+      if(cur&&cur.t==="sys"&&cur.id===D.id) renderFights(D);
+    });
+    return;
+  }
   var C=clusterFights(WEBSRC.mails);
   if(!C.fights.length){
     host.innerHTML="<div class='verd'>No engagement in this window. "
