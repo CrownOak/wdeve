@@ -92,6 +92,7 @@
       <button data-m="local" class="on">Local</button>
       <button data-m="grid">Grid</button>
       <button data-m="roam">Roam</button>
+      <button data-m="war">Warzone</button>
     </div>
 
     <!-- ---------------- LOCAL ---------------- -->
@@ -143,6 +144,27 @@
       your jump range. NPC kills never count: rats dying is not a fight.</div>
       <div class="status" id="rstatus"></div>
       <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>
+    </div>
+
+    <!-- ---------------- WARZONE ---------------- -->
+    <div class="pane" id="p-war">
+      <div class="row2" style="align-items:flex-end">
+        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">
+          <span class="toggle" id="wfront">
+            <button data-w="500003:500002" class="on">Amarr v Minmatar</button>
+            <button data-w="500001:500004">Caldari v Gallente</button>
+            <button data-w="500011:0">Angel insurgency</button>
+            <button data-w="500010:0">Guristas insurgency</button>
+          </span>
+          <input id="whome" type="text" value="Mohas" placeholder="home" autocomplete="off" spellcheck="false" style="width:130px">
+          <button class="gobtn" id="wgo">Read the front</button>
+        </div>
+      </div>
+      <div class="hint">The frontline nearest us is Amarr against Minmatar, which runs through Devoid
+      and Heimatar, a few jumps off our own road. Contested percentage is victory points against the
+      threshold; a system whose occupier is not its owner is being taken right now.</div>
+      <div class="status" id="wstatus"></div>
+      <div id="wout"><div class="empty">Pick a front and read it.</div></div>
     </div>
 
     <div class="foot">ASSUME NOTHING</div>
@@ -229,7 +251,7 @@ function setMode(m){
   mode=m; gen++;              /* the entered mode takes the head of the chain */
   var bs=document.querySelectorAll(".modes button");
   for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i].getAttribute("data-m")===m);
-  ["local","grid","roam"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
+  ["local","grid","roam","war"].forEach(function(k){ $("p-"+k).classList.toggle("on",k===m); });
   try{ history.replaceState(null,"","?m="+m); }catch(e){}
 }
 document.querySelector(".modes").addEventListener("click",function(e){
@@ -675,9 +697,105 @@ function findFight(){
 }
 $("rgo").addEventListener("click",findFight);
 
+/* ================= WARZONE =================
+   Faction warfare is the one place in the game that publishes where the fight is
+   supposed to be. ESI gives owner, occupier and victory points per frontline
+   system; a system whose OCCUPIER is not its OWNER is mid flip, which is the
+   loudest content signal on the map. Live kills come from the same universe feed
+   ROAM uses. The Amarr front runs through Devoid, a few jumps off our road. */
+var FACT={500001:"Caldari State",500002:"Minmatar Republic",500003:"Amarr Empire",
+          500004:"Gallente Federation",500010:"Guristas Pirates",500011:"Angel Cartel"};
+var wfront="500003:500002";
+$("wfront").addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest("button[data-w]"):null; if(!b) return;
+  wfront=b.getAttribute("data-w");
+  var bs=$("wfront").querySelectorAll("button");
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i]===b);
+});
+function readFront(){
+  var g=++gen; parked.war=false;
+  var pair=wfront.split(":").map(Number), A=pair[0], B=pair[1];
+  var home=($("whome").value||"Mohas").trim().toLowerCase();
+  $("wstatus").textContent="reading the front...";
+  Promise.all([
+    fetch(ESI+"/fw/systems/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
+    fetch(ESI+"/fw/stats/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
+    fetch(ESI+"/universe/system_kills/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
+    loadSys()
+  ]).then(function(res){
+    if(g!==gen) return;
+    var sys=res[0], stats=res[1], kills=res[2], S=res[3];
+    if(!sys){ $("wstatus").innerHTML="<span class='bad'>ESI faction warfare feed is down</span>"; return; }
+    $("wstatus").innerHTML=["fw "+sys.length+" systems","kills "+(kills?"ok":"<span class='bad'>down</span>"),
+      "stats "+(stats?"ok":"<span class='bad'>down</span>")].join(" &middot; ");
+    var kBy={}; (kills||[]).forEach(function(k){ kBy[k.system_id]=k; });
+    var hi=S.byName[home], dist=hi!=null?bfs(S,hi,15):{};
+    /* the front we asked for: either a faction pair, or one pirate militia everywhere it sits */
+    var rows=sys.filter(function(s){
+      if(B) return [A,B].indexOf(s.owner_faction_id)>=0||[A,B].indexOf(s.occupier_faction_id)>=0;
+      return s.owner_faction_id===A||s.occupier_faction_id===A;
+    }).map(function(s){
+      var ix=S.byId[s.solar_system_id], row=ix!=null?S.d.sys[ix]:null;
+      var k=kBy[s.solar_system_id]||{};
+      var live=(k.ship_kills||0)+(k.pod_kills||0)*2;
+      var pct=s.victory_points_threshold?Math.round((s.victory_points/s.victory_points_threshold)*100):0;
+      var flip=s.occupier_faction_id&&s.owner_faction_id!==s.occupier_faction_id;
+      return {id:s.solar_system_id,n:row?row[0]:("system "+s.solar_system_id),
+              sec:row?row[2]:0,reg:row?S.d.regions[row[3]]:"",
+              j:(ix!=null&&dist[ix]!=null)?dist[ix]:null,
+              own:s.owner_faction_id,occ:s.occupier_faction_id,flip:flip,
+              pct:pct,contested:s.contested,live:live,ship:k.ship_kills||0};
+    });
+    /* danger to you = what is actually dying, then whether it is changing hands,
+       then how close it is. A quiet uncontested system ranks last, correctly. */
+    rows.forEach(function(r){
+      r.score=r.live*10+(r.flip?40:0)+(r.contested==="contested"?15:0)+r.pct*0.2
+             +(r.j!=null?Math.max(0,20-r.j*2):0);
+    });
+    rows.sort(function(a,b){ return b.score-a.score; });
+    var hot=rows.filter(function(r){ return r.live>0; }).length;
+    var flips=rows.filter(function(r){ return r.flip; }).length;
+    var top=rows[0];
+    var h="<div class='verdict'><span class='vl'>THE FRONT</span><div class='vt'>";
+    if(!rows.length) h+="Nothing on that front right now.";
+    else if(top.live>0) h+=esc(top.n)+" is the loudest system on the front, "+top.ship+" ship"+(top.ship===1?"":"s")+" dead this hour"
+      +(top.j!=null?", "+top.j+" jumps out":"")+".";
+    else if(flips) h+=flips+" system"+(flips===1?" is":"s are")+" changing hands, but nothing is dying this hour. The fight is elsewhere.";
+    else h+="The front is quiet. "+rows.length+" systems, nothing burning.";
+    h+="</div></div>";
+    h+="<div class='flags'><span class='flag mut'>"+rows.length+" systems</span>"
+      +(hot?"<span class='flag'>"+hot+" hot</span>":"")
+      +(flips?"<span class='flag amb'>"+flips+" mid flip</span>":"");
+    if(stats){
+      [A,B].forEach(function(f){ if(!f) return;
+        var st=stats.filter(function(x){ return x.faction_id===f; })[0];
+        if(st) h+="<span class='flag mut'>"+esc(FACT[f]||f)+": "+st.systems_controlled+" systems, "+(st.kills&&st.kills.yesterday||0)+" kills yesterday</span>";
+      });
+    }
+    h+="</div>";
+    h+="<div class='sect'><table class='dt'><thead><tr><th>SYSTEM</th><th>SEC</th><th>REGION</th>"
+      +"<th>HELD BY</th><th>CONTESTED</th><th class='num'>KILLS/HR</th><th class='num'>JUMPS</th><th></th></tr></thead><tbody>";
+    rows.slice(0,40).forEach(function(r){
+      var cls=r.sec>=0.45?"none":r.sec>0?"ghost":"killer";
+      h+="<tr"+(r.flip?" class='filed'":"")+"><td><a href='/briefing/?t=sys&id="+r.id+"' title='open the system file'>"+esc(r.n)+"</a></td>"
+        +"<td><span class='band b-"+cls+"'>"+r.sec.toFixed(1)+"</span></td>"
+        +"<td>"+esc(r.reg||"")+"</td>"
+        +"<td>"+esc((FACT[r.occ]||"").replace(/ (Empire|Republic|State|Federation|Pirates|Cartel)$/,""))
+          +(r.flip?" <span class='band b-ghost'>flipping</span>":"")+"</td>"
+        +"<td>"+(r.contested==="contested"?r.pct+"%":"<span style='color:var(--muted)'>quiet</span>")+"</td>"
+        +"<td class='num'>"+(r.ship||"")+"</td>"
+        +"<td class='num'>"+(r.j!=null?r.j:"")+"</td>"
+        +"<td><a href='/cartel/?from="+encodeURIComponent($("whome").value||"Mohas")+"&to="+encodeURIComponent(r.n)+"'>road</a></td></tr>";
+    });
+    h+="</tbody></table></div>";
+    $("wout").innerHTML=h;
+  }).catch(function(e){ if(g===gen) $("wstatus").innerHTML="<span class='bad'>"+esc(String(e))+"</span>"; });
+}
+$("wgo").addEventListener("click",readFront);
+
 /* deep link ?m= */
 (function(){ var m=new URLSearchParams(location.search).get("m");
-  if(m&&["local","grid","roam"].indexOf(m)>=0&&m!=="local") setMode(m); })();
+  if(m&&["local","grid","roam","war"].indexOf(m)>=0&&m!=="local") setMode(m); })();
 })();
 </script>
 </body></html>
