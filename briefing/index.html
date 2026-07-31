@@ -1029,6 +1029,100 @@ function wireDigest(D){
   });
 }
 
+/* ================= THE SIDEKICK =================
+   A heads up display that keeps reading while you work. Left side is whatever file
+   you pulled; right side is New Eden burning in real time. Three panes: where it is
+   hottest, what is happening on our own roads, and the files you keep coming back to.
+   Every row loads into the left. Refreshes every three minutes, and only while the
+   tab is visible, because nobody needs us polling a background tab. */
+var rPane="hot", rHot=[], rOurs=[];
+function hudRow(name,val,sub,t,id){
+  return "<button class='rrow' data-t='"+t+"' data-id='"+id+"'><span class='rn'>"+esc(name)+"</span>"
+    +(sub?"<span class='rs'>"+esc(sub)+"</span>":"")+"<span class='rv'>"+val+"</span></button>";
+}
+function paintRail(){
+  var el=document.getElementById("rlist"), note=document.getElementById("rNote"),
+      title=document.getElementById("rTitle");
+  if(!el) return;
+  var h="";
+  if(rPane==="hot"){
+    title.textContent="WHERE IT IS BURNING";
+    if(!rHot.length) h="<div class='rnote'>Nothing is dying anywhere. That cannot be right, check back.</div>";
+    else rHot.slice(0,12).forEach(function(s){
+      h+=hudRow(s.n,"<span style='color:var(--gob,#ff4757)'>"+s.k+"</span>",s.sec,"sys",s.id);
+    });
+    note.textContent="Ship and pod kills in the last hour, live from ESI.";
+  } else if(rPane==="ours"){
+    title.textContent="OUR ROADS";
+    if(!rOurs.length) h="<div class='rnote'>Quiet on our roads. Long may it last.</div>";
+    else rOurs.forEach(function(s){
+      h+=hudRow(s.n,s.k?("<span style='color:var(--gob,#ff4757)'>"+s.k+"</span>"):"<span style='color:var(--ore)'>0</span>",s.sec,"sys",s.id);
+    });
+    note.textContent="The corridor and both homes. Live kills this hour.";
+  } else {
+    title.textContent="YOUR FILES";
+    var w=getWatch(), r=(lsGet(LSR)||[]);
+    w.forEach(function(x){ h+=hudRow("★ "+x.n,"",x.t==="sys"?"system":x.t,x.t,x.id); });
+    r.forEach(function(x){ if(!isWatched(x.t,x.id)) h+=hudRow(x.n,"",x.t==="sys"?"system":x.t,x.t,x.id); });
+    if(!h) h="<div class='rnote'>Nothing yet. Star a file and it lives here.</div>";
+    note.textContent="Watchlist first, then what you pulled recently.";
+  }
+  el.innerHTML=h;
+  el.querySelectorAll(".rrow").forEach(function(b){
+    b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
+  });
+}
+document.getElementById("rsw").addEventListener("click",function(e){
+  var b=e.target.closest?e.target.closest("button[data-r]"):null; if(!b) return;
+  rPane=b.getAttribute("data-r");
+  var bs=document.getElementById("rsw").querySelectorAll("button");
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle("on",bs[i]===b);
+  paintRail();
+});
+function refreshHud(){
+  Promise.all([loadSysGraph(),
+    fetch(ESI+"/universe/system_kills/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })
+  ]).then(function(res){
+    var S=res[0], kills=res[1];
+    var ships=document.getElementById("hudShips"), pods=document.getElementById("hudPods"),
+        hotEl=document.getElementById("hudHot"), ourEl=document.getElementById("hudOurs");
+    /* a dead feed says so. It must never read as a quiet universe. */
+    if(!kills){
+      if(ships) ships.innerHTML="&mdash; <small>feed down</small>";
+      if(hotEl) hotEl.textContent="no eyes";
+      return;
+    }
+    var ts=0,tp=0,list=[];
+    kills.forEach(function(k){
+      var s=k.ship_kills||0,p=k.pod_kills||0; ts+=s; tp+=p;
+      if(s+p>0&&S&&S.d){
+        var ix=S.byId[k.system_id];
+        if(ix!=null) list.push({id:k.system_id,n:S.d.sys[ix][0],sec:S.d.sys[ix][2].toFixed(1),k:s+p});
+      }
+    });
+    list.sort(function(a,b){ return b.k-a.k; });
+    rHot=list;
+    if(ships) ships.innerHTML=ts.toLocaleString()+" <small>ships</small>";
+    if(pods) pods.textContent=tp.toLocaleString();
+    if(hotEl&&list[0]) hotEl.innerHTML="<a href='?t=sys&id="+list[0].id+"' class='hot'>"+esc(list[0].n)+"</a> <span style='color:var(--muted)'>"+list[0].k+"</span>";
+    var kBy={}; kills.forEach(function(k){ kBy[k.system_id]=k; });
+    rOurs=[];
+    if(S&&S.d) Object.keys(OUR_SYS).forEach(function(sid){
+      var ix=S.byId[sid]; if(ix==null) return;
+      var k=kBy[+sid];
+      rOurs.push({id:+sid,n:S.d.sys[ix][0],sec:S.d.sys[ix][2].toFixed(1),k:k?((k.ship_kills||0)+(k.pod_kills||0)):0});
+    });
+    rOurs.sort(function(a,b){ return b.k-a.k; });
+    var burning=rOurs.filter(function(s){ return s.k>0; });
+    if(ourEl) ourEl.innerHTML=burning.length
+      ? "<span class='hot'>"+esc(burning[0].n)+" "+burning[0].k+"</span>"
+      : "<span class='calm'>quiet</span>";
+    paintRail();
+  });
+}
+refreshHud();
+setInterval(function(){ if(document.visibilityState==="visible") refreshHud(); },180000);
+
 go.addEventListener("click",run);
 q.addEventListener("keydown",function(e){ if(e.key==="Enter") run(); });
 renderChips();
