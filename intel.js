@@ -1425,7 +1425,7 @@ function paintTiles(){
     +"<div class='tile"+(ours.length?" bad":" good")+"'><div class='tk'>OUR ROADS</div><div class='tv'>"+oursV+"</div></div>"
     +"<div class='tile'><div class='tk'>NEAREST FIGHT</div><div class='tv'>"
       +(near?esc(near.n)+" <small>"+near.j+"j</small>":"&mdash;")+"</div></div>"
-    +"<div class='tile'><div class='tk'>NEW EDEN, THIS HOUR</div><div class='tv'>"+neTotal+" <small>dead</small></div></div>"
+    +"<div class='tile'><div class='tk'>NEW EDEN, THIS HOUR</div><div class='tv'>"+neTotal+" <small>ships + pods</small></div></div>"
     +"</div>";
 }
 /* the distance half: lazy graph, then sharpen */
