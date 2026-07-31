@@ -48,6 +48,34 @@
   .rrow .rv{ white-space:nowrap; font-size:11px; }
   .rrow .rs{ white-space:nowrap; color:var(--muted); font-size:10px; }
   .rnote{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:8px; line-height:1.5; }
+  /* THE WEB: crews as rings around the system, sized by what they kill.
+     Residents sit close, visitors sit out where they come from. */
+  .webwrap{ border:1px solid var(--line); background:var(--black); margin-top:10px; overflow:hidden; }
+  .webwrap svg{ display:block; width:100%; height:auto; }
+  .wnode{ cursor:pointer; }
+  .wnode:hover circle{ stroke:var(--gob,#ff4757); stroke-width:2; }
+  .wlbl{ font-family:var(--mono); font-size:9px; fill:var(--silver-dim); pointer-events:none; }
+  .wlbl.big{ font-size:11px; fill:var(--silver); }
+  .wsub{ font-family:var(--mono); font-size:7.5px; fill:var(--muted); pointer-events:none; }
+  .wedge{ stroke:var(--line); fill:none; }
+  .wedge.res{ stroke:rgba(255,71,87,.45); }
+  .readbtn{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    background:transparent; border:1px solid var(--gob,#ff4757); color:var(--gob,#ff4757);
+    padding:8px 16px; cursor:pointer; }
+  .readbtn:hover{ background:var(--gob,#ff4757); color:#12060a; }
+  .readbtn[disabled]{ opacity:.5; cursor:default; }
+  .layer{ border-left:2px solid var(--line); padding:2px 0 2px 14px; margin:10px 0 14px; }
+  .layer .lk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.18em; color:var(--muted); }
+  .layer .lv{ font-size:14px; color:var(--silver); line-height:1.6; margin-top:3px; }
+  .layer.hot{ border-left-color:var(--gob,#ff4757); }
+  .crewcard{ border:1px solid var(--line); background:var(--steel); padding:10px 13px; margin-bottom:9px; }
+  .crewcard .cn{ font-family:var(--display); font-weight:700; font-size:15px; color:var(--silver); }
+  .crewcard .cn .tag{ font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; padding:2px 7px;
+    border:1px solid; margin-left:8px; vertical-align:2px; }
+  .tag.res{ color:var(--gob,#ff4757); border-color:rgba(255,71,87,.45); }
+  .tag.vis{ color:var(--amber); border-color:rgba(233,196,106,.4); }
+  .crewcard .cl{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:5px; line-height:1.6; }
+  .crewcard .cp{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .btop{ display:flex; gap:12px; margin:2px 0 8px; }
   #q{ flex:1; min-width:0; }
   .bhelp{ color:var(--muted); font-family:var(--mono); font-size:11px; line-height:1.6; margin-bottom:10px; }
@@ -560,6 +588,7 @@ function compute(D){
    whether the camp is warm right now. Our own additions on top: how far it is
    from home, whether it sits on our roads, what is left to mine, and the
    neighbours, because a quiet system next to a hot one is not quiet. */
+var WEBSRC={id:null,name:null,mails:null};
 var SYSG=null;
 function loadSysGraph(){
   if(SYSG) return Promise.resolve(SYSG);
@@ -643,6 +672,7 @@ function buildSystem(id){
       }
     });
     function top(o,n){ return Object.keys(o).map(function(k){ return {id:+k,c:o[k]}; }).sort(function(a,b){ return b.c-a.c; }).slice(0,n); }
+    WEBSRC={id:id,name:D.name,mails:list};   /* kept in memory for the deep read, never cached */
     D.resCorps=top(vc,6); D.resAllis=top(va,6); D.tele=tele; D.locFresh=locFresh;
     D.nk=list.length;
     var ids=[];
@@ -804,6 +834,12 @@ function renderSystem(D,ageMs,partial){
     h+="</tbody></table></div>";
   }
   h+="</div></div>";
+  /* the deep read, on request */
+  h+="<div class='sec'><div class='shead'><b>READ BETWEEN THE LINES</b><span class='samp'>goes four layers deep</span></div>"
+    +"<div class='verd'>Who is actually working this system, whether they are a crew or just a banner, "
+    +"and the one that matters: do they live here, or do they come here. Takes about twenty seconds.</div>"
+    +"<button class='readbtn' id='webgo'>read between the lines</button>"
+    +"<div id='webout'></div></div>";
   /* meta */
   if(D.top.ships&&D.top.ships.length){
     h+="<div class='sec'><div class='shead'><b>THE META HERE</b> &middot; MOST FLOWN ON KILLS</div><div class='docl'>";
@@ -843,9 +879,243 @@ function renderSystem(D,ageMs,partial){
   out.innerHTML=h;
   wireSystem(D);
 }
+/* ================= READ BETWEEN THE LINES =================
+   The dossier says what happened here. This says what it MEANS, and it only runs
+   when asked because the last layer costs a call per pilot.
+
+   L1  the mails we already hold -> every attacker, tallied, with who they fly with
+   L2  ONE bulk affiliation call  -> those pilots collapse into crews (alliance else corp)
+   L3  a stats call per top hunter -> their OWN number one system
+   L4  the inference: if a crew's pilots rank THIS system first they live here. If they
+       rank somewhere else first they are visiting, and that somewhere else is where
+       they come from, which is the thing you actually want to know before you undock.
+   Everything it claims, it shows the number for. */
+function runWeb(D){
+  var btn=document.getElementById("webgo"), host=document.getElementById("webout");
+  if(!btn||!host) return;
+  if(!WEBSRC.mails||WEBSRC.id!==D.id){ host.innerHTML="<div class='verd'>The killmails are not loaded. Pull the system again.</div>"; return; }
+  btn.disabled=true; btn.textContent="reading...";
+  var mails=WEBSRC.mails;
+  /* L1: attackers tallied, plus who shares a mail with whom. Cap the clique at 15 so a
+     100 man blob does not make every pilot in it look like everyone's crewmate. */
+  var pilots={}, pairs={};
+  mails.forEach(function(m){
+    var ats=(m.attackers||[]).filter(function(a){ return a.character_id; });
+    var uniq=[],seen={};
+    ats.forEach(function(a){ if(!seen[a.character_id]){ seen[a.character_id]=1; uniq.push(a); } });
+    uniq.forEach(function(a){
+      var p=pilots[a.character_id]||(pilots[a.character_id]={id:a.character_id,n:0,isk:0,hrs:{},ships:{},corp:a.corporation_id,alli:a.alliance_id});
+      p.n++; p.isk+=((m.zkb||{}).totalValue||0);
+      var hr=new Date(m.killmail_time).getUTCHours(); p.hrs[hr]=(p.hrs[hr]||0)+1;
+      if(a.ship_type_id) p.ships[a.ship_type_id]=(p.ships[a.ship_type_id]||0)+1;
+    });
+    if(uniq.length<=15){
+      for(var i=0;i<uniq.length;i++) for(var j=i+1;j<uniq.length;j++){
+        var k=[uniq[i].character_id,uniq[j].character_id].sort().join(":");
+        pairs[k]=(pairs[k]||0)+1;
+      }
+    }
+  });
+  var plist=Object.keys(pilots).map(function(k){ return pilots[k]; }).sort(function(a,b){ return b.n-a.n; });
+  if(!plist.length){ host.innerHTML="<div class='verd'>Nobody killed anything here recently. Nothing to read.</div>"; btn.disabled=false; btn.textContent="read between the lines"; return; }
+  var focus=plist.slice(0,40);
+  host.innerHTML="<div class='mwait'>grouping "+plist.length+" hunters...</div>";
+  /* L2: one call turns 40 pilots into their orgs */
+  postJson(ESI+"/characters/affiliation/?datasource=tranquility",focus.map(function(p){ return p.id; }))
+  .then(function(aff){
+    var by={}; aff.forEach(function(a){ by[a.character_id]=a; });
+    focus.forEach(function(p){ var a=by[p.id]||{}; p.corp=a.corporation_id||p.corp; p.alli=a.alliance_id||p.alli; });
+    var crews={}, loners=0;
+    focus.forEach(function(p){
+      /* an NPC starter corp is not an organisation, it is the absence of one. Grouping
+         Federal Navy Academy as a "crew" would invent a gang out of unaffiliated pilots. */
+      if(!p.alli&&p.corp&&p.corp<2000000){ loners++; return; }
+      var key=(p.alli?"a"+p.alli:"c"+p.corp);
+      var c=crews[key]||(crews[key]={key:key,id:p.alli||p.corp,t:p.alli?"alli":"corp",pilots:[],n:0,isk:0,hrs:{},ships:{}});
+      c.pilots.push(p); c.n+=p.n; c.isk+=p.isk;
+      for(var h in p.hrs) c.hrs[h]=(c.hrs[h]||0)+p.hrs[h];
+      for(var s in p.ships) c.ships[s]=(c.ships[s]||0)+p.ships[s];
+    });
+    var clist=Object.keys(crews).map(function(k){ return crews[k]; }).sort(function(a,b){ return b.n-a.n; }).slice(0,6);
+    clist.loners=loners;
+    /* how tight is each crew: do its own pilots actually appear together */
+    clist.forEach(function(c){
+      var tog=0,tot=0;
+      for(var i=0;i<c.pilots.length;i++) for(var j=i+1;j<c.pilots.length;j++){
+        tot++; var k=[c.pilots[i].id,c.pilots[j].id].sort().join(":"); if(pairs[k]) tog++;
+      }
+      c.tight=tot?tog/tot:0;
+    });
+    var ids=[]; clist.forEach(function(c){ ids.push(c.id); c.pilots.slice(0,8).forEach(function(p){ ids.push(p.id); }); });
+    ids.push(D.id);
+    return resolveNames(ids).then(function(map){
+      clist.forEach(function(c){
+        c.name=nameOf(map,c.id);
+        c.pilots.forEach(function(p){ p.name=nameOf(map,p.id); });
+      });
+      host.innerHTML="<div class='mwait'>reading where "+Math.min(10,focus.length)+" of them actually live...</div>";
+      /* L3: the residency question, one call per top hunter, serialized */
+      var probe=[];
+      clist.forEach(function(c){ c.pilots.slice(0,2).forEach(function(p){ if(probe.length<10) probe.push(p); }); });
+      return probe.reduce(function(chain,p){
+        return chain.then(function(){
+          return statsFor(p.id).then(function(s){
+            if(!s) return;
+            var tl=(s.topLists||[]).filter(function(t){ return t.type==="solarSystem"; })[0];
+            var v=(tl&&tl.values)||[];
+            p.homeId=v[0]?v[0].solarSystemID:null;
+            p.homeN=v[0]?v[0].solarSystemName:null;
+            p.homeKills=v[0]?v[0].kills:0;
+            p.hereRank=null;
+            v.forEach(function(x,ix){ if(x.solarSystemID===D.id&&p.hereRank===null) p.hereRank=ix+1; });
+            p.danger=s.dangerRatio||0; p.lifetime=s.shipsDestroyed||0;
+          }).catch(function(){});
+        });
+      },Promise.resolve()).then(function(){ return {clist:clist,map:map}; });
+    });
+  }).then(function(res){
+    renderWeb(D,res.clist,plist.length);
+    btn.disabled=false; btn.textContent="read it again";
+  }).catch(function(e){
+    host.innerHTML="<div class='verr'>Could not finish the read ("+esc(String(e))+").</div>";
+    btn.disabled=false; btn.textContent="read between the lines";
+  });
+}
+function statsFor(id){
+  var c=lsGet(LSD+"char:"+id);
+  if(c&&c.raw&&Date.now()-c.ts<600000) return Promise.resolve(c.raw);
+  return zkGet("/stats/characterID/"+id+"/").then(function(s){
+    if(s&&s.info) lsSet(LSD+"char:"+id,{ts:Date.now(),raw:s});
+    return s;
+  });
+}
+function crewHours(c){
+  var hrs=[],h; for(h=0;h<24;h++) hrs[h]=c.hrs[h]||0;
+  var best=-1,bi=0;
+  for(h=0;h<24;h++){ var s=hrs[h]+hrs[(h+1)%24]+hrs[(h+2)%24]+hrs[(h+3)%24]; if(s>best){ best=s; bi=h; } }
+  return {a:bi,b:(bi+4)%24};
+}
+function renderWeb(D,clist,totalHunters){
+  var host=document.getElementById("webout");
+  /* the inference */
+  var resident=[],visitor=[];
+  clist.forEach(function(c){
+    var probed=c.pilots.filter(function(p){ return p.homeId; });
+    c.probed=probed.length;
+    c.livesHere=probed.length?probed.filter(function(p){ return p.homeId===D.id; }).length/probed.length:0;
+    c.from=null;
+    if(c.livesHere<0.5&&probed.length){
+      var away=probed.filter(function(p){ return p.homeId!==D.id; })[0];
+      if(away){ c.from=away.homeN; c.fromId=away.homeId; }
+    }
+    (c.livesHere>=0.5?resident:visitor).push(c);
+  });
+  var lead=clist[0], win=lead?crewHours(lead):null;
+  var h="";
+  /* the read, in layers */
+  h+="<div class='layer hot'><div class='lk'>LAYER 1 &middot; WHO IS ACTUALLY HERE</div><div class='lv'>"
+    +totalHunters+" pilots put damage on something here, but "+clist.length+" group"+(clist.length===1?"":"s")
+    +" account for the weight of it. "+(lead?esc(lead.name)+" is the one that matters, "+lead.n+" appearances.":"")
+    +(clist.loners?" "+clist.loners+" of the top names fly in NPC starter corps, which is not a crew, just pilots with no organisation.":"")
+    +"</div></div>";
+  if(lead) h+="<div class='layer'><div class='lk'>LAYER 2 &middot; WHETHER THEY ARE A CREW</div><div class='lv'>"
+    +(lead.tight>=0.5
+      ? esc(lead.name)+" fly together, not just near each other: "+Math.round(lead.tight*100)+"% of their pairs share killmails."
+      : esc(lead.name)+" mostly show up separately ("+Math.round(lead.tight*100)+"% of pairs share a mail), so this reads as several small groups under one banner rather than one gang.")
+    +(win?" Their hours here are "+hh(win.a)+" to "+hh(win.b)+" EVE.":"")
+    +"</div></div>";
+  /* only crews that actually carry weight get named in the read. A single probed pilot
+     from a two mail corp is true and meaningless; it stays in the cards below. */
+  var WEIGHT=20;
+  var resNamed=resident.filter(function(c){ return c.n>=WEIGHT; }), visNamed=visitor.filter(function(c){ return c.from&&c.n>=WEIGHT; });
+  var minor=resident.length-resNamed.length;
+  h+="<div class='layer"+(visNamed.length?" hot":"")+"'><div class='lk'>LAYER 3 &middot; DO THEY LIVE HERE</div><div class='lv'>";
+  if(!resNamed.length&&!visNamed.length) h+="Not enough history on these pilots to say where they live.";
+  else{
+    if(resNamed.length) h+="<b style='color:var(--silver)'>"+esc(resNamed.map(function(c){ return c.name; }).join(", "))+"</b> rank this system first on their own killboard. They live here.";
+    if(visNamed.length) h+=(resNamed.length?" ":"")+"<b style='color:var(--amber)'>"+esc(visNamed.map(function(c){ return c.name; }).join(", "))+"</b> "
+      +(visNamed.length===1?"does":"do")+" not. "+(visNamed.length===1?"They come":"They come")+" from "
+      +esc(visNamed.map(function(c){ return c.from; }).filter(Boolean).join(", "))+".";
+    if(minor>0) h+=" <span style='color:var(--muted)'>("+minor+" smaller group"+(minor===1?"":"s")+" also rank it first, on too few kills to lean on.)</span>";
+  }
+  h+="</div></div>";
+  h+="<div class='layer'><div class='lk'>LAYER 4 &middot; WHAT THAT MEANS</div><div class='lv'>";
+  if(visitor.length&&!resident.length)
+    h+="Nobody who kills here lives here. This is a hunting ground, not a home, so the danger arrives and leaves. "
+      +(win?"Turn up outside "+hh(win.a)+" to "+hh(win.b)+" and it is a different system.":"");
+  else if(resident.length&&visitor.length)
+    h+=esc(resident[0].name)+" holds the ground and "+esc(visitor[0].name)+" visits it. Two different problems: "
+      +"one you can wait out, one you cannot.";
+  else if(resident.length)
+    h+=esc(resident[0].name)+" lives here and kills here. Anything you do in this system is on their doorstep, "
+      +"and they will be back tomorrow.";
+  else h+="Not enough to call it.";
+  h+="</div></div>";
+  /* the web */
+  h+=webSvg(D,clist);
+  /* the crews, with their numbers */
+  h+="<div class='sec'><div class='shead'><b>THE CREWS</b><span class='samp'>ranked by appearances</span></div>";
+  clist.forEach(function(c){
+    var w=crewHours(c);
+    h+="<div class='crewcard'><div class='cn'>"+esc(c.name)
+      +"<span class='tag "+(c.livesHere>=0.5?"res'>LIVES HERE":"vis'>VISITS")+"</span></div>"
+      +"<div class='cl'>"+c.pilots.length+" pilot"+(c.pilots.length===1?"":"s")+" &middot; "+c.n+" appearances &middot; "
+      +isk(c.isk)+" destroyed &middot; busiest "+hh(w.a)+" to "+hh(w.b)
+      +(c.from?" &middot; comes from "+esc(c.from):"")
+      +(c.probed?" &middot; read "+c.probed+" of them":"")+"</div><div class='cp'>";
+    c.pilots.slice(0,8).forEach(function(p){
+      h+="<button class='pplc' data-t='char' data-id='"+p.id+"'><span>"+esc(p.name||("pilot "+p.id))+"</span>"
+        +"<span class='n'>"+p.n+(p.danger?" &middot; d"+Math.round(p.danger):"")+"</span></button>";
+    });
+    h+="</div></div>";
+  });
+  h+="</div>";
+  host.innerHTML=h;
+  host.querySelectorAll(".pplc[data-id]").forEach(function(b){
+    b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
+  });
+  host.querySelectorAll(".wnode[data-id]").forEach(function(g){
+    g.addEventListener("click",function(){ loadTarget(g.getAttribute("data-t"),+g.getAttribute("data-id")); });
+  });
+}
+function webSvg(D,clist){
+  var W=760,H=430,cx=W/2,cy=H/2;
+  var s="<div class='webwrap'><svg viewBox='0 0 "+W+" "+H+"' preserveAspectRatio='xMidYMid meet'>";
+  var maxN=clist.length?clist[0].n:1;
+  s+="<circle cx='"+cx+"' cy='"+cy+"' r='34' fill='#101214' stroke='rgba(255,71,87,.6)' stroke-width='2'/>";
+  s+="<text class='wlbl big' x='"+cx+"' y='"+(cy+4)+"' text-anchor='middle'>"+esc(D.name)+"</text>";
+  clist.forEach(function(c,i){
+    var ang=(-Math.PI/2)+(i*2*Math.PI/Math.max(1,clist.length));
+    var rad=c.livesHere>=0.5?118:172;      /* residents sit close, visitors sit out */
+    var x=cx+Math.cos(ang)*rad, y=cy+Math.sin(ang)*rad;
+    var r=12+Math.round(16*(c.n/maxN));
+    s+="<line class='wedge"+(c.livesHere>=0.5?" res":"")+"' x1='"+cx+"' y1='"+cy+"' x2='"+x+"' y2='"+y+"'/>";
+    s+="<g class='wnode' data-t='"+c.t+"' data-id='"+c.id+"'>"
+      +"<circle cx='"+x+"' cy='"+y+"' r='"+r+"' fill='"+(c.livesHere>=0.5?"rgba(255,71,87,.22)":"rgba(233,196,106,.16)")
+      +"' stroke='"+(c.livesHere>=0.5?"rgba(255,71,87,.7)":"rgba(233,196,106,.6)")+"'/>"
+      +"<title>"+esc(c.name)+" &middot; "+c.n+" appearances</title></g>";
+    var ly=y+r+12;
+    s+="<text class='wlbl' x='"+x+"' y='"+ly+"' text-anchor='middle'>"+esc(c.name.length>22?c.name.slice(0,21)+"…":c.name)+"</text>";
+    s+="<text class='wsub' x='"+x+"' y='"+(ly+10)+"' text-anchor='middle'>"+(c.livesHere>=0.5?"lives here":(c.from?"from "+esc(c.from):"visits"))+"</text>";
+    /* pilots hang off their crew */
+    c.pilots.slice(0,5).forEach(function(p,j){
+      var pa=ang+(j-2)*0.17, pr=rad+r+28;
+      var px=cx+Math.cos(pa)*pr, py=cy+Math.sin(pa)*pr;
+      s+="<line class='wedge' x1='"+x+"' y1='"+y+"' x2='"+px+"' y2='"+py+"'/>";
+      s+="<g class='wnode' data-t='char' data-id='"+p.id+"'><circle cx='"+px+"' cy='"+py+"' r='4' fill='#1d2226' stroke='var(--line)'/>"
+        +"<title>"+esc(p.name||"pilot")+" &middot; "+p.n+" here</title></g>";
+    });
+  });
+  s+="</svg></div>";
+  s+="<div class='rnote' style='margin:6px 2px 0'>Close ring lives here, outer ring travels in. Circle size is how much of the killing they did. Click anything to open its file.</div>";
+  return s;
+}
+
 function wireSystem(D){
   var sb=document.getElementById("starb");
   if(sb) sb.addEventListener("click",function(){ toggleWatch("sys",D.id,D.name); renderSystem(D,0); });
+  var wb=document.getElementById("webgo");
+  if(wb) wb.addEventListener("click",function(){ runWeb(D); });
   out.querySelectorAll(".pplc[data-id]").forEach(function(b){
     b.addEventListener("click",function(){ loadTarget(b.getAttribute("data-t"),+b.getAttribute("data-id")); });
   });
