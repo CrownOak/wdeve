@@ -2813,8 +2813,19 @@ tr.haulrow{ cursor:pointer; }
     // via the switcher. Falls back to the manual gate if not logged in or offline.
     fetch("/api/whoami",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(wd){
       if(!(wd&&wd.loggedIn)){ showGate(true); return; }
-      fetch("/api/unlock?k=bonkfleet",{ credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; }).then(function(u){
-        if(u&&u.ok&&u.key) unlock(u.key); else showGate(true);
+      /* ADMINS OPEN STRAIGHT INTO COMMAND. The worker serves the command token to
+         admin sessions only; anyone else gets null and lands on the member token,
+         exactly as before. Nobody types a password on this page anymore. */
+      var wantCmd = (wd.role === "admin");
+      var chain = wantCmd
+        ? fetch("/api/unlock?k=fleetcmd",{ credentials:"same-origin" })
+            .then(function(r){ return r.ok?r.json():null; })
+            .then(function(c){ return (c&&c.key) ? c : fetch("/api/unlock?k=bonkfleet",{ credentials:"same-origin" })
+                .then(function(r){ return r.ok?r.json():null; }); })
+        : fetch("/api/unlock?k=bonkfleet",{ credentials:"same-origin" })
+            .then(function(r){ return r.ok?r.json():null; });
+      chain.then(function(u){
+        if(u&&u.key) unlock(u.key); else showGate(true);
       }).catch(function(){ showGate(true); });
     }).catch(function(){ showGate(true); });
   }
