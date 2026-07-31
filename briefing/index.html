@@ -5,6 +5,49 @@
 <title>BONK - PVP Briefing</title>
 <link rel="stylesheet" href="/common.css?v=7">
 <style>
+  /* two sides, same as the portal: the file on the left, the sidekick on the right.
+     The rail is sticky and scrolls itself, so it stays with you while a dossier runs long. */
+  .wrap{ max-width:1416px; }
+  .pgrid{ display:grid; grid-template-columns:minmax(0,1fr) clamp(300px,24vw,380px); gap:22px; align-items:start; }
+  .pmain{ min-width:0; }
+  .prail{ min-width:0; position:sticky; top:70px; max-height:calc(100vh - 84px);
+    overflow-y:auto; scrollbar-gutter:stable; }
+  .prail::-webkit-scrollbar{ width:7px; }
+  .prail::-webkit-scrollbar-thumb{ background:var(--line); }
+  .prail::-webkit-scrollbar-track{ background:transparent; }
+  @media(max-width:980px){ .pgrid{ grid-template-columns:1fr; } .prail{ position:static; max-height:none; } }
+  /* the HUD */
+  .hud{ border:1px solid var(--line); border-left:3px solid var(--gob,#ff4757); background:var(--steel);
+    padding:12px 14px; margin:0 0 12px; }
+  .hudk{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; color:var(--muted); }
+  .hudbig{ font-family:var(--display); font-weight:700; font-size:26px; color:var(--silver); line-height:1.1; margin-top:2px; }
+  .hudbig small{ font-family:var(--mono); font-size:11px; color:var(--muted); font-weight:400; letter-spacing:.06em; }
+  .hudrow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+    font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); padding:6px 0;
+    border-top:1px solid var(--line-soft); }
+  .hudrow:first-of-type{ border-top:0; }
+  .hudrow b{ color:var(--silver); font-weight:600; }
+  .hudrow .hot{ color:var(--gob,#ff4757); }
+  .hudrow .calm{ color:var(--ore); }
+  .hudrow a{ color:var(--silver-dim); text-decoration:none; }
+  .hudrow a:hover{ color:var(--gob,#ff4757); }
+  .rblk{ border:1px solid var(--line); background:var(--steel); padding:12px 14px; margin:0 0 12px; }
+  .rhead{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .rhead .rt{ flex:1; font-family:var(--mono); font-size:10px; letter-spacing:.2em; color:var(--muted); }
+  .rsw{ display:flex; gap:5px; }
+  .rsw button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+    font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+    padding:3px 8px; cursor:pointer; }
+  .rsw button.on{ border-color:var(--gob,#ff4757); color:var(--gob,#ff4757); }
+  .rrow{ display:flex; align-items:baseline; gap:8px; padding:6px 2px; border-top:1px solid var(--line-soft);
+    font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); cursor:pointer;
+    background:transparent; border-left:0; border-right:0; border-bottom:0; width:100%; text-align:left; }
+  .rrow:first-of-type{ border-top:0; }
+  .rrow:hover .rn{ color:var(--gob,#ff4757); }
+  .rrow .rn{ flex:1; min-width:0; color:var(--silver); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rrow .rv{ white-space:nowrap; font-size:11px; }
+  .rrow .rs{ white-space:nowrap; color:var(--muted); font-size:10px; }
+  .rnote{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:8px; line-height:1.5; }
   .btop{ display:flex; gap:12px; margin:2px 0 8px; }
   #q{ flex:1; min-width:0; }
   .bhelp{ color:var(--muted); font-family:var(--mono); font-size:11px; line-height:1.6; margin-bottom:10px; }
@@ -119,6 +162,8 @@
     <div class="sub">any pilot, corp or alliance &middot; how they fight, when they hunt, how to break them &middot; assume nothing, there is always a file</div>
   </header>
   <div class="wrap" data-i18n-skip>
+   <div class="pgrid">
+    <div class="pmain">
     <div class="btop">
       <input id="q" type="text" placeholder="Pilot, corp or alliance name. A zkill link works too." autocomplete="off" spellcheck="false">
       <button id="go" class="gobtn">Pull the file</button>
@@ -128,6 +173,31 @@
     <div id="chips"></div>
     <div id="status"></div>
     <div id="out"><div class="bempty">Type a name and pull the file. We'll tell you how they fight, when they hunt, and how to break them.</div></div>
+    </div>
+
+    <!-- the sidekick: what is burning right now, everything one click from its own file -->
+    <aside class="prail">
+      <div class="hud">
+        <div class="hudk">NEW EDEN, THIS HOUR</div>
+        <div class="hudbig" id="hudShips">&mdash; <small>ships</small></div>
+        <div class="hudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>
+        <div class="hudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>
+        <div class="hudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>
+      </div>
+      <div class="rblk">
+        <div class="rhead">
+          <span class="rt" id="rTitle">WHERE IT IS BURNING</span>
+          <span class="rsw" id="rsw">
+            <button data-r="hot" class="on">Hot</button>
+            <button data-r="ours">Ours</button>
+            <button data-r="watch">Watch</button>
+          </span>
+        </div>
+        <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>
+        <div class="rnote" id="rNote">Every row opens its own file.</div>
+      </div>
+    </aside>
+   </div>
   </div>
   <footer>Built from public killmails via zKillboard and public ESI, at the moment you ask. History, not live
   tracking: no online status, no locations, no authenticated data, and nothing here that the killboard does not
