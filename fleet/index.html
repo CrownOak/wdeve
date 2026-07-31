@@ -60,6 +60,40 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
               color:var(--muted); display:flex; gap:8px; align-items:baseline; }
 .gsbside .gl{ font-size:12px; line-height:1.55; color:var(--silver-dim); margin-top:5px; }
 .gsbside .gw{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:5px; }
+/* ROLE BAR (Kyle 2026-07-31): what job you are doing on this op. Not a view
+   toggle — a DECLARATION. Three of the four roles are real server state, so
+   picking one sets a flag as well as changing what the page leads with.
+   Top of the middle column on purpose: .fcol is order:1 at every breakpoint,
+   so this is the first thing on the page on a phone and on a desk alike. */
+.rolebar{ display:flex; gap:6px; align-items:stretch; margin-bottom:10px; flex-wrap:wrap; }
+.rolebar button{ flex:1 1 0; min-width:78px; background:var(--steel); color:var(--muted);
+  border:1px solid var(--line-soft); border-bottom:2px solid transparent; cursor:pointer;
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  padding:8px 6px 7px; line-height:1.35; transition:color .12s, border-color .12s; }
+.rolebar button:hover{ color:var(--silver); }
+.rolebar button .rbg{ display:block; font-size:14px; letter-spacing:0; margin-bottom:2px; }
+.rolebar button.on{ color:var(--ore); border-color:var(--line); border-bottom-color:var(--ore);
+  background:var(--black); }
+/* a role you do not hold yet reads as a door, not a dead button */
+.rolebar button.locked{ color:var(--muted); opacity:.72; }
+.rolebar button.locked .rbg{ opacity:.55; }
+.rolepanel{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+  padding:11px 13px; margin-bottom:10px; }
+.rolepanel.combat{ border-left-color:#ff4757; }
+.rolepanel .rpt{ font-family:var(--display); font-weight:700; font-size:13px; color:var(--silver);
+  display:flex; align-items:baseline; gap:9px; }
+.rolepanel .rpt .rpx{ margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--muted);
+  cursor:pointer; text-decoration:underline dotted; }
+.rolepanel .rpl{ font-size:12px; line-height:1.6; color:var(--silver-dim); margin-top:6px; }
+.rolepanel .rpk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); margin-top:9px; }
+.rolepanel ol{ margin:7px 0 0; padding-left:18px; font-size:12px; line-height:1.7; color:var(--silver-dim); }
+.rolepanel .rpbtn{ margin-top:10px; background:var(--ore); color:#04140a; border:none; cursor:pointer;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; padding:8px 14px; }
+.rolepanel .rpbtn.ghost{ background:none; color:var(--muted); border:1px solid var(--line-soft); }
+.rolepanel .rpok{ font-family:var(--mono); font-size:10.5px; color:var(--ore); margin-top:8px; }
+.rolepanel .hotrow{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:4px; }
+@media(max-width:520px){ .rolebar button{ min-width:0; font-size:9px; } }
 .howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
   font-size:11.5px; text-decoration:underline dotted; padding:0; }
 .howtomini button:hover{ color:var(--ore); }
@@ -501,6 +535,230 @@ tr.haulrow{ cursor:pointer; }
         paint();
       }).catch(function(){});
   })();
+
+  /* ================= THE ROLE BAR (Kyle 2026-07-31) =================
+     "scout / mine / boost ... that could switch the interface", plus the combat
+     role, whose panel is where GOBSEC meets the ledger.
+
+     ⭐ IT IS A DECLARATION, NOT A VIEW TOGGLE. Three of the four are real server
+     state: BOOST is meta.orca (POST /orca), SCOUT is accounts.scout, COMBAT is
+     accounts.gobsec. So one click changes what the page leads with AND sets the
+     flag AND, when you do not hold it, becomes the ask. That is what dissolves
+     "BE THE SCOUT" as a separate empty-state poster: clicking SCOUT without the
+     roster spot IS the recruiting surface, and it fires for anyone curious
+     rather than only when the board happens to be empty.
+
+     ⚠️ A ROLE NEVER HIDES THE PASTE BOX. Scout is a hat, not a career: a
+     Prospect with a chipset mines perfectly well, and the moment the UI makes it
+     either/or we have invented a class of goblin who does not mine. The bar
+     changes emphasis and opens a panel. It removes nothing. */
+  var LS_ROLE = "bonk_fleet_role";
+  var ROLE = "mine", ME = null, meTry = 0, rpBusy = false;
+  var ROLES = [
+    { k:"mine",   g:"&#9935;",   label:"Mine",   need:null },
+    { k:"scout",  g:"&#128225;", label:"Scout",  need:"scout"  },
+    { k:"boost",  g:"&#128011;", label:"Boost",  need:"orca"   },
+    { k:"combat", g:"&#128737;", label:"Combat", need:"gobsec" }
+  ];
+  try { var _r = localStorage.getItem(LS_ROLE); if (_r) ROLE = _r; } catch(e){}
+
+  function holdsRole(k){
+    if (!ME) return false;
+    if (k === "mine") return true;
+    if (k === "scout") return !!ME.scout;
+    if (k === "boost") return !!(ME.orcaFlag || ME.porpoise);
+    if (k === "combat") return !!ME.gobsec;
+    return false;
+  }
+
+  /* One /api/me read, shared with the orca ask. Logged out = no bar at all;
+     the ledger still works on the shared password, and a role you cannot be
+     granted is not worth advertising. */
+  function loadMe(cb){
+    if (ME) { cb && cb(ME); return; }
+    if (meTry++ > 2) { cb && cb(null); return; }
+    fetch("/api/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
+      .then(function(me){
+        if (!me || !me.ok) { cb && cb(null); return; }
+        var a = me.account || {}, o = me.orca || {};
+        ME = { scout: !!a.scout, gobsec: !!a.gobsec, gss: !!a.gss,
+               orcaFlag: !!(o.orca || a.orca), porpoise: !!(o.porpoise || a.porpoise),
+               ign: (me.member && me.member.main_ign) || null };
+        cb && cb(ME);
+      }).catch(function(){ cb && cb(null); });
+  }
+
+  function renderRoleBar(){
+    var bar = el("rolebar"); if (!bar) return;
+    if (!ME) { bar.style.display = "none"; return; }
+    var h = "";
+    for (var i=0;i<ROLES.length;i++){
+      var r = ROLES[i], has = holdsRole(r.k);
+      h += '<button data-role="'+r.k+'" class="'+(ROLE===r.k?"on":"")+(has?"":" locked")+'" '
+         + 'title="'+(has?"":"you are not on this roster yet, tap to ask")+'">'
+         + '<span class="rbg">'+r.g+'</span>'+r.label+'</button>';
+    }
+    bar.innerHTML = h;
+    bar.style.display = "";
+    Array.prototype.forEach.call(bar.querySelectorAll("[data-role]"), function(b){
+      b.onclick = function(){ setRole(b.getAttribute("data-role")); };
+    });
+  }
+
+  function setRole(k){
+    ROLE = k;
+    try { localStorage.setItem(LS_ROLE, k); } catch(e){}
+    renderRoleBar();
+    renderRolePanel();
+  }
+
+  function rpClose(){ var p = el("rolepanel"); if (p) p.style.display = "none"; }
+
+  function renderRolePanel(){
+    var p = el("rolepanel"); if (!p) return;
+    p.className = "rolepanel" + (ROLE === "combat" ? " combat" : "");
+    var has = holdsRole(ROLE);
+
+    if (ROLE === "mine") { p.style.display = "none"; return; }
+
+    /* ---- you do not hold it: the panel IS the ask ---- */
+    if (!has) {
+      if (ROLE === "scout") {
+        p.innerHTML =
+          '<div class="rpt">&#128225; Be the scout<span class="rpx" id="rpClose">close &times;</span></div>' +
+          '<div class="rpl">Somebody flies out, looks at the rocks, and tells everyone which belt is '
+            + 'actually worth the trip. Then gets paid for it when the fleet shows up and eats.</div>' +
+          '<div class="rpk">how it goes</div>' +
+          '<ol><li><b>What you fly.</b> A Venture works. A Prospect works better. You want a survey chipset.</li>' +
+          '<li><b>What you do.</b> Warp a belt, run the scanner, select all, copy.</li>' +
+          '<li><b>Where it goes.</b> Paste it in, press calculate, press file.</li>' +
+          '<li><b>What you get.</b> A line at payout when the fleet mines what you found. '
+            + 'Sites that go unused pay nothing, on purpose.</li></ol>' +
+          '<button class="rpbtn" id="rpAsk">Ask for the scout role</button>' +
+          '<div class="rpok" id="rpOk"></div>';
+      } else if (ROLE === "boost") {
+        p.innerHTML =
+          '<div class="rpt">&#128011; Own compression?<span class="rpx" id="rpClose">close &times;</span></div>' +
+          '<div class="rpl">Fly an Orca or a Porpoise? Then you can run your own fleets: boosts, '
+            + 'compression, and the ledger paying everyone at buyback like always. Flagging it also '
+            + 'keeps you on the roster on a quiet night, because boosters do not paste ore.</div>' +
+          '<button class="rpbtn" data-hull="orca">&#128011; I have an Orca</button> ' +
+          '<button class="rpbtn ghost" data-hull="porpoise">&#128044; I have a Porpoise</button>' +
+          '<div class="rpok" id="rpOk"></div>';
+      } else {
+        p.innerHTML =
+          '<div class="rpt">&#128737; Fly with GOBSEC<span class="rpx" id="rpClose">close &times;</span></div>' +
+          '<div class="rpl">The armed wing. Escort on the haul lane, response when a belt goes loud, '
+            + 'and the reason a barge fleet gets to keep mining while something is going on two jumps out.</div>' +
+          '<div class="rpk">how you get in</div>' +
+          '<div class="rpl">GOBSEC clearance is handed out by an officer, not self served. Speak to one, '
+            + 'or apply through the front door and say you want to shoot things.</div>' +
+          '<a class="rpbtn" href="/apply/gobsec/" style="display:inline-block;text-decoration:none">Apply to GOBSEC</a>' +
+          '<div class="rpok" id="rpOk"></div>';
+      }
+      wireRolePanel();
+      p.style.display = "";
+      return;
+    }
+
+    /* ---- you hold it: the working surface ---- */
+    if (ROLE === "scout") {
+      p.innerHTML =
+        '<div class="rpt">&#128225; Scout<span class="rpx" id="rpClose">close &times;</span></div>' +
+        '<div class="rpl">Find the belt, file it, move on. The board is on the survey tool; '
+          + 'what you file there shows up here when an FC picks it.</div>' +
+        '<a class="rpbtn" href="/survey/" style="display:inline-block;text-decoration:none">Open the survey tool</a>' +
+        '<div class="rpok" id="rpScout">reading your standing&hellip;</div>';
+      wireRolePanel();
+      p.style.display = "";
+      fetch("/api/scout/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
+        .then(function(d){
+          var o = el("rpScout"); if (!o || !d || !d.ok) return;
+          o.textContent = d.filed
+            ? d.filed + " filed · " + d.live + " live · " + d.used + " actually mined"
+              + (d.hit_rate != null ? " (" + d.hit_rate + "% hit rate)" : "")
+            : "nothing filed yet. the first one is the hardest.";
+        }).catch(function(){ var o = el("rpScout"); if (o) o.textContent = ""; });
+      return;
+    }
+
+    if (ROLE === "boost") {
+      p.innerHTML =
+        '<div class="rpt">&#128011; Boosting<span class="rpx" id="rpClose">close &times;</span></div>' +
+        '<div class="rpl">You are flagged as flying the whale, so you stay on the roster all night '
+          + 'without pasting a single rock. Keep the cans coming.</div>' +
+        '<div class="rpok">Roster shows you as boosting. Toggle it off in the roster header if you swap out.</div>';
+      wireRolePanel();
+      p.style.display = "";
+      return;
+    }
+
+    /* COMBAT: this is the GOBSEC integration. /api/gobsec/brief is already
+       needGobsec-gated server side (officer+, accounts.gobsec, or gss_clearance),
+       so the wall is the endpoint and not this button. Miners keep getting the
+       quiet member stance in the scout column; a combat pilot gets the brief. */
+    p.innerHTML =
+      '<div class="rpt">&#128737; GOBSEC<span class="rpx" id="rpClose">close &times;</span></div>' +
+      '<div class="rpl" id="rpCombat">pulling the brief&hellip;</div>';
+    wireRolePanel();
+    p.style.display = "";
+    if (rpBusy) return;
+    rpBusy = true;
+    fetch("/api/gobsec/brief", { credentials:"same-origin", cache:"no-store" })
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(b){
+        rpBusy = false;
+        var box = el("rpCombat"); if (!box) return;
+        if (!b || !b.ok) { box.textContent = "the brief is not answering right now."; return; }
+        var st = b.stance || {}, key = st.key || "ROUTINE";
+        var tone = key === "ESCORT" ? "#e9c46a" : key === "STAND DOWN" ? "#8fb7c9"
+                 : key === "ROUTINE" ? "var(--muted)" : "#ff4757";
+        var h = '<b style="color:' + tone + '">' + esc(key) + '</b>'
+              + (st.why ? ' <span style="color:var(--muted)">(' + esc(st.why) + ')</span>' : '')
+              + '<div style="margin-top:6px">' + esc(st.member || "nothing unusual on the road.") + '</div>';
+        var hot = st.hot || b.hot || [];
+        if (hot.length) {
+          h += '<div class="rpk">where it went wrong lately</div>';
+          for (var i=0;i<hot.length && i<5;i++){
+            var x = hot[i];
+            h += '<div class="hotrow">' + esc(x.name || x.system || "?")
+               + ' &middot; ' + ((x.ship_kills||0) + (x.pod_kills||0)) + ' dead</div>';
+          }
+        }
+        // the honesty line: this is an hourly cache and a gank takes ninety seconds
+        h += '<div class="gw" style="margin-top:8px;color:var(--muted);font-family:var(--mono);font-size:10px">'
+           + 'kill counts refresh on CCP\'s clock, about hourly. Quiet here is not the same as safe now.</div>';
+        box.innerHTML = h;
+      }).catch(function(){ rpBusy = false; var box = el("rpCombat"); if (box) box.textContent = "the brief is not answering right now."; });
+  }
+
+  function wireRolePanel(){
+    var x = el("rpClose"); if (x) x.onclick = rpClose;
+    var ask = el("rpAsk");
+    if (ask) ask.onclick = function(){
+      var o = el("rpOk"); if (o) o.textContent = "Asking an officer…";
+      // no self-serve endpoint for the scout roster by design: an officer grants
+      // it. Until the request queue exists, point at the humans.
+      if (o) o.textContent = "Ask an officer in Discord for the scout roster. It is free, it just is not self serve.";
+    };
+    Array.prototype.forEach.call(document.querySelectorAll("#rolepanel [data-hull]"), function(b){
+      b.onclick = function(){
+        var o = el("rpOk"); if (o) o.textContent = "confirming…";
+        fetch("/api/orca/claim", { method:"POST", credentials:"same-origin",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ hull: b.getAttribute("data-hull"), code: "BONKORCA" }) })
+          .then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.ok) {
+              if (ME) { ME.orcaFlag = ME.orcaFlag || !!d.orca; ME.porpoise = ME.porpoise || !!d.porpoise; }
+              if (o) o.textContent = "Confirmed. You hold fleet rights now.";
+              renderRoleBar(); renderRolePanel();
+            } else if (o) o.textContent = (d && d.error) || "That did not land.";
+          }).catch(function(){ if (o) o.textContent = "That did not land."; });
+      };
+    });
+  }
+
+  loadMe(function(){ renderRoleBar(); renderRolePanel(); });
   </script>
   <div class="wrap">
     <!-- The standing "How it works" wall of text is GONE (Kyle 2026-07-31). The tour already
@@ -610,6 +868,12 @@ tr.haulrow{ cursor:pointer; }
             <div id="stanceSide" class="gsbside" style="display:none"></div>
           </div>
           <div class="fcol">
+            <!-- ROLE BAR + its panel. STATIC per DR-FLEET-12: renderAll replaces
+                 innerHTML on #opstatus/#tiles/#cmdstrip/#feed/#roster every tick,
+                 so these get their own slots and their own render, driven by
+                 state changes rather than by the poll. -->
+            <div id="rolebar" class="rolebar" style="display:none" data-i18n-skip></div>
+            <div id="rolepanel" class="rolepanel" style="display:none" data-i18n-skip></div>
             <div id="opstatus" class="opstatus" style="display:none" data-i18n-skip></div>
             <div id="tiles" class="totline"></div>
             <div id="tipctl" class="tipctl" style="display:none"></div>
