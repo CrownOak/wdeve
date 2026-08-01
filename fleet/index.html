@@ -698,22 +698,35 @@ tr.haulrow{ cursor:pointer; }
 
     /* ---- you hold it: the working surface ---- */
     if (ROLE === "scout") {
+      /* THE SCOUT FILES FROM INSIDE THE OP. No redirect to /survey/: a pilot
+         mid-op has an unsaved paste box, a live poll, a chat log and possibly
+         in-flight drops, and navigating away costs all four.
+         This needs NO pricing engine, because the server prices every filing
+         now (the anti-forgery fix). We send names and quantities; every figure
+         the board ranks on is derived server side. */
       p.innerHTML =
         '<div class="rpt">&#128225; Scout<span class="rpx" id="rpClose">close &times;</span></div>' +
-        '<div class="rpl">Find the belt, file it, move on. The board is on the survey tool; '
-          + 'what you file there shows up here when an FC picks it.</div>' +
-        '<a class="rpbtn" href="/survey/" style="display:inline-block;text-decoration:none">Open the survey tool</a>' +
-        '<div class="rpok" id="rpScout">reading your standing&hellip;</div>';
+        '<div class="rpl">Warp a belt, run the scanner, select all, copy. Paste it here and the '
+          + 'fleet knows where the good rock is. You get a line at payout when an FC picks your site '
+          + 'and the fleet mines it.</div>' +
+        '<div class="rpk">the belt you just scanned</div>' +
+        '<textarea id="scPaste" rows="4" placeholder="Paste your survey scanner window, one rock per line"'
+          + ' style="width:100%;margin-top:6px;background:var(--black);color:var(--silver);'
+          + 'border:1px solid var(--line-soft);font-family:var(--mono);font-size:11.5px;padding:8px"></textarea>' +
+        '<div id="scParsed" class="rpok"></div>' +
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">' +
+          '<input id="scSysIn" placeholder="which system?" style="background:var(--black);color:var(--silver);'
+            + 'border:1px solid var(--line-soft);font-family:var(--mono);font-size:11.5px;padding:7px 9px">' +
+          '<button class="rpbtn" id="scFile" disabled>File this site</button>' +
+        '</div>' +
+        '<div class="rpok" id="scMsg"></div>' +
+        '<div class="rpk">live sites</div><div id="scBoard" class="rpok">reading the board&hellip;</div>' +
+        '<div class="rpok" id="rpScout" style="color:var(--muted)">reading your standing&hellip;</div>';
       wireRolePanel();
       p.style.display = "";
-      fetch("/api/scout/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
-        .then(function(d){
-          var o = rEl("rpScout"); if (!o || !d || !d.ok) return;
-          o.textContent = d.filed
-            ? d.filed + " filed · " + d.live + " live · " + d.used + " actually mined"
-              + (d.hit_rate != null ? " (" + d.hit_rate + "% hit rate)" : "")
-            : "nothing filed yet. the first one is the hardest.";
-        }).catch(function(){ var o = rEl("rpScout"); if (o) o.textContent = ""; });
+      wireScoutFiler();
+      scoutStanding();
+      scoutBoardLoad();
       return;
     }
 
@@ -765,6 +778,127 @@ tr.haulrow{ cursor:pointer; }
            + 'kill counts refresh on CCP\'s clock, about hourly. Quiet here is not the same as safe now.</div>';
         box.innerHTML = h;
       }).catch(function(){ rpBusy = false; var box = rEl("rpCombat"); if (box) box.textContent = "the brief is not answering right now."; });
+  }
+
+  /* The EVE paste shape: "name<tab or spaces>quantity". Same rule as the
+     ledger's parse() at :1016, reimplemented here only because that one lives
+     in script tag 2 and this block is tag 1. This is a PASTE FORMAT reader, not
+     the pricing engine — the engine must not fork and does not: the server
+     prices every filing (bonk-portal scout.js repriceRocks). */
+  function scParse(t){
+    var out = [];
+    String(t || "").split(/\n/).forEach(function(ln){
+      if (!ln.trim()) return;
+      /* A survey line is FIVE tab-separated columns:
+           Veldspar II-Grade | 148,872 | 14,887 m3 | 1,460,000.00 ISK | 8,108 m
+         Name is field 1; quantity is the first field that is a PURE grouped
+         integer. That test rejects "14,887 m3" (unit), "1,460,000.00 ISK"
+         (decimal + unit) and "8,108 m" (unit) by construction, so no other
+         column can ever be misread as the quantity.
+         ⚠️ Do NOT widen this to [\d.,\s]+ — \s matches TAB, so it runs straight
+         across the column boundary and 148,872 + 14,887 becomes 14887214887. */
+      var f = ln.split(/\t+|\s{2,}/);
+      if (f.length < 2) return;
+      var nm = f[0].trim();
+      if (!nm) return;
+      for (var i = 1; i < f.length; i++){
+        var c = f[i].trim();
+        if (!/^\d{1,3}(?:,\d{3})*$|^\d+$/.test(c)) continue;
+        var q = parseInt(c.replace(/,/g, ""), 10);
+        if (q > 0) { out.push({ name: nm, qty: q }); }
+        break;
+      }
+    });
+    return out;
+  }
+
+  var scRows = [];
+  function wireScoutFiler(){
+    var ta = rEl("scPaste"), btn = rEl("scFile"), sys = rEl("scSysIn");
+    if (!ta || !btn) return;
+    scRows = [];
+    btn.disabled = true;   // explicit, not inherited from the markup attribute
+    // prefill the system from where the fleet actually is: the scout is usually
+    // scanning near the op, and a typed system is the thing that goes wrong
+    try { if (sys && !sys.value && P && P.system && P.system.name) sys.value = P.system.name; } catch(e){}
+
+    ta.oninput = function(){
+      scRows = scParse(ta.value);
+      var o = rEl("scParsed");
+      if (o) o.textContent = scRows.length
+        ? scRows.length + " rocks read" + (scRows[0] ? " · biggest line " + scRows[0].name : "")
+        : (ta.value.trim() ? "nothing in that looks like a scan" : "");
+      btn.disabled = scRows.length === 0;
+    };
+
+    btn.onclick = function(){
+      var m = rEl("scMsg"), sname = (sys && sys.value || "").trim();
+      if (!scRows.length) return;
+      if (!sname) { if (m) m.textContent = "which system is this belt in?"; return; }
+      btn.disabled = true; if (m) m.textContent = "filing…";
+      fetch("/api/scout/site", { method:"POST", credentials:"same-origin",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ system: sname, rocks: scRows }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          btn.disabled = false;
+          if (!m) return;
+          if (!d || !d.ok) { m.textContent = (d && d.error) || "that did not file."; return; }
+          if (d.duplicate) { m.textContent = "already on the board, filed within the hour."; return; }
+          // the server priced it; show OUR numbers back, not the client's
+          m.textContent = "filed · " + Math.round(d.pay_per_m3) + " ISK/m³ · "
+            + (d.m3 ? Math.round(d.m3).toLocaleString() + " m³" : "")
+            + (d.life_min ? " · live " + Math.round(d.life_min / 60 * 10) / 10 + "h" : "")
+            + (d.unmatched ? " · " + d.unmatched + " rows we do not know" : "")
+            + (d.corroborated ? " · confirmed in system" : "");
+          ta.value = ""; scRows = []; btn.disabled = true;
+          var pz = rEl("scParsed"); if (pz) pz.textContent = "";
+          scoutBoardLoad(); scoutStanding();
+        })
+        .catch(function(){ btn.disabled = false; if (m) m.textContent = "that did not file."; });
+    };
+  }
+
+  function scoutStanding(){
+    fetch("/api/scout/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){
+        var o = rEl("rpScout"); if (!o) return;
+        if (!d || !d.ok) { o.textContent = ""; return; }
+        o.textContent = d.filed
+          ? d.filed + " filed · " + d.live + " live · " + d.used + " actually mined"
+            + (d.hit_rate != null ? " (" + d.hit_rate + "% hit rate)" : "")
+          : "nothing filed yet. the first one is the hardest.";
+      }).catch(function(){ var o = rEl("rpScout"); if (o) o.textContent = ""; });
+  }
+
+  var scbBusy = false, scbAt = 0;
+  function scoutBoardLoad(){
+    var box = rEl("scBoard"); if (!box) return;
+    if (scbBusy || Date.now() - scbAt < 30000) return;
+    scbBusy = true;
+    fetch("/api/scout/sites", { credentials:"same-origin" })
+      .then(function(r){ return r.status === 401 ? "401" : (r.ok ? r.json() : null); })
+      .then(function(d){
+        scbBusy = false; scbAt = Date.now();
+        var b = rEl("scBoard"); if (!b) return;
+        // never an empty panel with no explanation: that is the silent-absence
+        // failure the role bar already shipped once
+        if (d === "401") { b.textContent = "log into the portal to see filed sites."; return; }
+        if (!d || !d.ok) { b.textContent = "the board is not answering."; return; }
+        if (!d.sites || !d.sites.length) { b.textContent = "nothing filed right now. be the first."; return; }
+        var h = "";
+        for (var i = 0; i < d.sites.length && i < 6; i++){
+          var s = d.sites[i];
+          h += '<div class="hotrow">' + rEsc(s.system) + ' · <b>' + Math.round(s.pay_per_m3) + '</b> ISK/m³ · '
+             + s.rocks + ' rocks · ' + Math.round(s.expires_min) + 'm left'
+             + (s.scout ? ' · ' + rEsc(s.scout) : '')
+             + (s.suspect ? ' · <span style="color:var(--amber)">check this one</span>' : '')
+             + (s.corroborated ? '' : ' · <span style="color:var(--muted)">unverified</span>')
+             + '</div>';
+        }
+        b.innerHTML = h;
+      })
+      .catch(function(){ scbBusy = false; var b = rEl("scBoard"); if (b) b.textContent = "the board is not answering."; });
   }
 
   function wireRolePanel(){
