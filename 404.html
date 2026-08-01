@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>BONK - Nothing in this belt</title>
+<link rel="icon" href="/favicon-32.png">
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+/* Cloudflare Pages serves this with a real 404 for any unmatched path. Before it
+   existed every bogus URL returned 200 and the 1MB homepage, and because the
+   homepage used RELATIVE links a crawler could append path segments forever
+   (/bonkeve/portal/apply/apply/apply/...). Both halves are fixed: links are
+   absolute now, and this page ends the crawl instead of feeding it.
+   Every link below must stay absolute or the trap comes back. */
+body{ background:var(--black); display:flex; align-items:center; justify-content:center;
+  min-height:100vh; margin:0; padding:24px; }
+.box{ max-width:520px; text-align:center; }
+.code{ font-family:var(--mono); font-size:11px; letter-spacing:.24em; color:var(--muted);
+  text-transform:uppercase; }
+h1{ font-size:30px; color:var(--silver); margin:14px 0 10px; letter-spacing:.01em; }
+p{ font-size:15px; color:var(--silver-dim); line-height:1.7; margin:0 auto 26px; max-width:400px; }
+.row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.b{ font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+  padding:11px 18px; border:1px solid var(--line); color:var(--silver-dim); text-decoration:none;
+  transition:border-color .15s, color .15s; }
+.b:hover{ border-color:var(--ore); color:var(--ore); }
+.b.p{ border-color:var(--ore); color:var(--ore); }
+.b.p:hover{ background:rgba(70,255,94,.09); }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="code">404 &middot; empty hold</div>
+  <h1>Nothing in this belt</h1>
+  <p>That page does not exist. Either the rock got mined out or the link was wrong. Happens to the best of us.</p>
+  <div class="row">
+    <a class="b p" href="/">Back to the front</a>
+    <a class="b" href="/apply/">Apply</a>
+    <a class="b" href="/portal/">Member portal</a>
+  </div>
+</div>
+</body>
+</html>
