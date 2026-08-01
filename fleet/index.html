@@ -554,6 +554,13 @@ tr.haulrow{ cursor:pointer; }
      Prospect with a chipset mines perfectly well, and the moment the UI makes it
      either/or we have invented a class of goblin who does not mine. The bar
      changes emphasis and opens a panel. It removes nothing. */
+  /* ⚠️ THIS BLOCK IS IN SCRIPT TAG 1. el() and esc() are defined in script tag 2
+     (chars 68100 and 66114) and DO NOT EXIST HERE — calling them threw
+     ReferenceError inside a promise callback, where nothing caught it, and the
+     whole role bar died silently while the rest of the page kept working.
+     hesc() is the escaper that lives in this block. */
+  function rEl(id){ return document.getElementById(id); }
+  function rEsc(s){ return (typeof hesc === "function") ? hesc(s) : String(s == null ? "" : s); }
   var LS_ROLE = "bonk_fleet_role";
   var ROLE = "mine", ME = null, meTry = 0, rpBusy = false;
   var ROLES = [
@@ -596,7 +603,7 @@ tr.haulrow{ cursor:pointer; }
        before DOMContentLoaded, so without this the very first render found null
        and gave up permanently — the bar never appeared at all. Same guard the
        GOBSEC stance paint() above uses, and for exactly the same reason. */
-    var bar = el("rolebar");
+    var bar = rEl("rolebar");
     if (!bar) {
       document.addEventListener("DOMContentLoaded", function(){ renderRoleBar(); renderRolePanel(); }, { once:true });
       return;
@@ -627,10 +634,10 @@ tr.haulrow{ cursor:pointer; }
     renderRolePanel();
   }
 
-  function rpClose(){ var p = el("rolepanel"); if (p) p.style.display = "none"; }
+  function rpClose(){ var p = rEl("rolepanel"); if (p) p.style.display = "none"; }
 
   function renderRolePanel(){
-    var p = el("rolepanel"); if (!p) return;
+    var p = rEl("rolepanel"); if (!p) return;
     p.className = "rolepanel" + (ROLE === "combat" ? " combat" : "");
     var has = holdsRole(ROLE);
 
@@ -701,12 +708,12 @@ tr.haulrow{ cursor:pointer; }
       p.style.display = "";
       fetch("/api/scout/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
         .then(function(d){
-          var o = el("rpScout"); if (!o || !d || !d.ok) return;
+          var o = rEl("rpScout"); if (!o || !d || !d.ok) return;
           o.textContent = d.filed
             ? d.filed + " filed · " + d.live + " live · " + d.used + " actually mined"
               + (d.hit_rate != null ? " (" + d.hit_rate + "% hit rate)" : "")
             : "nothing filed yet. the first one is the hardest.";
-        }).catch(function(){ var o = el("rpScout"); if (o) o.textContent = ""; });
+        }).catch(function(){ var o = rEl("rpScout"); if (o) o.textContent = ""; });
       return;
     }
 
@@ -736,20 +743,20 @@ tr.haulrow{ cursor:pointer; }
       .then(function(r){ return r.ok?r.json():null; })
       .then(function(b){
         rpBusy = false;
-        var box = el("rpCombat"); if (!box) return;
+        var box = rEl("rpCombat"); if (!box) return;
         if (!b || !b.ok) { box.textContent = "the brief is not answering right now."; return; }
         var st = b.stance || {}, key = st.key || "ROUTINE";
         var tone = key === "ESCORT" ? "#e9c46a" : key === "STAND DOWN" ? "#8fb7c9"
                  : key === "ROUTINE" ? "var(--muted)" : "#ff4757";
-        var h = '<b style="color:' + tone + '">' + esc(key) + '</b>'
-              + (st.why ? ' <span style="color:var(--muted)">(' + esc(st.why) + ')</span>' : '')
-              + '<div style="margin-top:6px">' + esc(st.member || "nothing unusual on the road.") + '</div>';
+        var h = '<b style="color:' + tone + '">' + rEsc(key) + '</b>'
+              + (st.why ? ' <span style="color:var(--muted)">(' + rEsc(st.why) + ')</span>' : '')
+              + '<div style="margin-top:6px">' + rEsc(st.member || "nothing unusual on the road.") + '</div>';
         var hot = st.hot || b.hot || [];
         if (hot.length) {
           h += '<div class="rpk">where it went wrong lately</div>';
           for (var i=0;i<hot.length && i<5;i++){
             var x = hot[i];
-            h += '<div class="hotrow">' + esc(x.name || x.system || "?")
+            h += '<div class="hotrow">' + rEsc(x.name || x.system || "?")
                + ' &middot; ' + ((x.ship_kills||0) + (x.pod_kills||0)) + ' dead</div>';
           }
         }
@@ -757,21 +764,21 @@ tr.haulrow{ cursor:pointer; }
         h += '<div class="gw" style="margin-top:8px;color:var(--muted);font-family:var(--mono);font-size:10px">'
            + 'kill counts refresh on CCP\'s clock, about hourly. Quiet here is not the same as safe now.</div>';
         box.innerHTML = h;
-      }).catch(function(){ rpBusy = false; var box = el("rpCombat"); if (box) box.textContent = "the brief is not answering right now."; });
+      }).catch(function(){ rpBusy = false; var box = rEl("rpCombat"); if (box) box.textContent = "the brief is not answering right now."; });
   }
 
   function wireRolePanel(){
-    var x = el("rpClose"); if (x) x.onclick = rpClose;
-    var ask = el("rpAsk");
+    var x = rEl("rpClose"); if (x) x.onclick = rpClose;
+    var ask = rEl("rpAsk");
     if (ask) ask.onclick = function(){
-      var o = el("rpOk"); if (o) o.textContent = "Asking an officer…";
+      var o = rEl("rpOk"); if (o) o.textContent = "Asking an officer…";
       // no self-serve endpoint for the scout roster by design: an officer grants
       // it. Until the request queue exists, point at the humans.
       if (o) o.textContent = "Ask an officer in Discord for the scout roster. It is free, it just is not self serve.";
     };
     Array.prototype.forEach.call(document.querySelectorAll("#rolepanel [data-hull]"), function(b){
       b.onclick = function(){
-        var o = el("rpOk"); if (o) o.textContent = "confirming…";
+        var o = rEl("rpOk"); if (o) o.textContent = "confirming…";
         fetch("/api/orca/claim", { method:"POST", credentials:"same-origin",
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({ hull: b.getAttribute("data-hull"), code: "BONKORCA" }) })
