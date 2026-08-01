@@ -942,6 +942,122 @@ tr.haulrow{ cursor:pointer; }
     return out;
   }
 
+  /* ================= CALLOUTS =================
+     THE FORMAT THE CORP ACTUALLY USES. Real corp chat, 2026-08-01:
+
+       acg omber in ibaria
+       large kernite and omber in mehatoor
+       AVG OMBER IN SASOUTIKH
+       SMALL KERNITE IN LASHESSih
+       Akes  large omb
+
+     Nobody is running a survey scanner and copying the window. They fly, they
+     look, they type one line. Ore before system or system before ore, ore names
+     abbreviated ("omb"), sizes abbreviated and typo'd ("acg" for avg), casing
+     all over the place, and sometimes no system at all because it is the same
+     one as the line above.
+
+     A tool that only accepts a survey paste serves a workflow this corp does
+     not have. So the box takes BOTH and works out which it is looking at.
+
+     ⚠️ A callout is not a scan and must never pretend to be. It carries no
+     quantities, so it cannot be priced, cannot be ranked on ISK/m3, and cannot
+     be paid the same way. It is a POINTER: go look here. That distinction is
+     load-bearing -- the whole anti-forgery design rests on the server pricing
+     real quantities, and a callout has none to price. */
+  var ORE_ABBR = {
+    omb:"Omber", omber:"Omber", kern:"Kernite", kernite:"Kernite",
+    veld:"Veldspar", veldspar:"Veldspar", scord:"Scordite", scordite:"Scordite",
+    plag:"Plagioclase", plagioclase:"Plagioclase", pyrox:"Pyroxeres", pyroxeres:"Pyroxeres",
+    jasp:"Jaspet", jaspet:"Jaspet", hemo:"Hemorphite", hemorphite:"Hemorphite",
+    hedb:"Hedbergite", hedbergite:"Hedbergite", gneiss:"Gneiss",
+    dark:"Dark Ochre", ochre:"Dark Ochre", spod:"Spodumain", spodumain:"Spodumain",
+    crok:"Crokite", crokite:"Crokite", bist:"Bistot", bistot:"Bistot",
+    ark:"Arkonor", arkonor:"Arkonor", merc:"Mercoxit", mercoxit:"Mercoxit"
+  };
+  // avg is typed "acg" often enough that it is not a typo, it is the spelling
+  var SIZE_WORDS = { small:"small", sm:"small", avg:"avg", acg:"avg", average:"avg",
+                     med:"avg", medium:"avg", large:"large", lg:"large", lrg:"large",
+                     huge:"huge", massive:"huge", enormous:"huge" };
+
+  /* System names come from the same 5,485-row index the route scout already
+     caches, so this costs one localStorage read and no new asset. */
+  var CO_SYS = null;
+  function coSystems(){
+    if (CO_SYS) return CO_SYS;
+    try {
+      var c = JSON.parse(localStorage.getItem("bonk_scout_map") || "null");
+      var rows = (c && c.sys) || (c && c.data && c.data.sys);
+      if (rows && rows.length) {
+        CO_SYS = {};
+        for (var i=0;i<rows.length;i++) CO_SYS[String(rows[i][0]).toLowerCase()] = rows[i][0];
+      }
+    } catch(e){}
+    return CO_SYS;
+  }
+  function coMatchSystem(w){
+    var idx = coSystems(); if (!idx) return null;
+    var k = String(w||"").toLowerCase().replace(/[^a-z0-9-]/g,"");
+    /* ⚠️ MINIMUM THREE CHARACTERS. New Eden has systems called M3-KAQ and Mohas,
+       so a survey row's "m3" and "m" unit columns both matched a real system and
+       a pasted scan filed itself as a callout in nullsec. Short tokens are never
+       worth the collision. */
+    if (k.length < 3) return null;
+    if (idx[k]) return idx[k];
+    /* Scouts typo the tail far more than the head ("LASHESSih" for Lashesih), so
+       score on longest common prefix and break ties on closest length. A bare
+       unique-prefix test is not enough: Lashesih and Lashkai both start "lash",
+       so the real callout resolved to nothing and silently inherited the system
+       from the line above. */
+    var best = null, bestLcp = 0, bestGap = 99;
+    for (var name in idx){
+      var i = 0, mx = Math.min(name.length, k.length);
+      while (i < mx && name.charCodeAt(i) === k.charCodeAt(i)) i++;
+      if (i < 4) continue;                                  // too little agreement to trust
+      var gap = Math.abs(name.length - k.length);
+      if (gap > 3) continue;                                // not a typo, a different system
+      if (i > bestLcp || (i === bestLcp && gap < bestGap)) { best = idx[name]; bestLcp = i; bestGap = gap; }
+    }
+    return best;
+  }
+
+  /* A survey scanner row is not a callout, and must never be read as one: it
+     carries tab-separated columns and unit suffixes, and those units collide
+     with real system names. Detected by SHAPE, so no future token collision can
+     reopen this. */
+  function coLooksLikeScan(ln){
+    if (ln.indexOf("\t") >= 0) return true;
+    return /\bm3\b/i.test(ln) && /\bisk\b/i.test(ln);
+  }
+
+  function scParseCallouts(t){
+    var out = [], lastSys = null;
+    String(t || "").split(/\n/).forEach(function(raw){
+      var ln = raw.trim(); if (!ln) return;
+      if (/^\s*(EVE System|Channel changed|Connection to chat)/i.test(ln)) return;   // chat noise
+      if (coLooksLikeScan(ln)) return;                                               // that is a scan, not a callout
+      // strip a "HH:MM:SS Name >" chat prefix if they pasted the log wholesale
+      ln = ln.replace(/^\[?\d{1,2}:\d{2}(:\d{2})?\]?\s*/, "").replace(/^[^>]{1,40}>\s*/, "");
+      var words = ln.toLowerCase().replace(/[.,;]/g," ").split(/\s+/).filter(Boolean);
+      if (!words.length) return;
+
+      var size = null, ores = [], sys = null;
+      for (var i=0;i<words.length;i++){
+        var w = words[i];
+        if (w === "in" || w === "and" || w === "at") continue;
+        if (SIZE_WORDS[w] && !size) { size = SIZE_WORDS[w]; continue; }
+        if (ORE_ABBR[w]) { if (ores.indexOf(ORE_ABBR[w]) < 0) ores.push(ORE_ABBR[w]); continue; }
+        if (!sys) { var m = coMatchSystem(w); if (m) { sys = m; continue; } }
+      }
+      if (!ores.length) return;                 // no ore named = not a callout
+      if (!sys) sys = lastSys;                  // "large kernite and omb" inherits the line above
+      if (!sys) return;
+      lastSys = sys;
+      out.push({ system: sys, ores: ores, size: size || "avg", raw: ln });
+    });
+    return out;
+  }
+
   var scRows = [];
   var LS_RCPT = "bonk_scout_receipt", scLastReceipt = null;
   try { scLastReceipt = JSON.parse(localStorage.getItem(LS_RCPT) || "null"); } catch(e){}
