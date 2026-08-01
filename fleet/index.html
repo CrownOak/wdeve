@@ -591,7 +591,16 @@ tr.haulrow{ cursor:pointer; }
   }
 
   function renderRoleBar(){
-    var bar = el("rolebar"); if (!bar) return;
+    /* This block lives in the FIRST script tag, which parses ~20k chars before
+       #rolebar exists in the DOM. /api/me is same-origin and routinely resolves
+       before DOMContentLoaded, so without this the very first render found null
+       and gave up permanently — the bar never appeared at all. Same guard the
+       GOBSEC stance paint() above uses, and for exactly the same reason. */
+    var bar = el("rolebar");
+    if (!bar) {
+      document.addEventListener("DOMContentLoaded", function(){ renderRoleBar(); renderRolePanel(); }, { once:true });
+      return;
+    }
     // ME null = unlocked the ledger but not logged into the portal. Show the bar
     // anyway with everything but MINE locked: a silent absence is the worst
     // outcome, because nothing tells you the feature exists or why it is missing.
