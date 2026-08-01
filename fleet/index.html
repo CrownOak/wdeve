@@ -81,6 +81,40 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
   .rolebar button .rlab{ display:none; } .rolebar button .rbg{ margin-right:0; font-size:14px; } }
 .rolepanel{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
   padding:11px 13px; margin-bottom:10px; }
+/* ---- THE ADDITION LAW (spec 4.6h) ----
+   A role is ASSUMED, not switched into: the surface opens rather than appears,
+   and its sections arrive in order rather than all at once. Nothing is ever
+   removed to make room -- the ledger stays exactly where it was, because a
+   miner who picks up scouting has not stopped being a miner. */
+.rolepanel{ overflow:hidden; max-height:0; opacity:0; padding-top:0; padding-bottom:0;
+  border-width:0 0 0 3px; margin-bottom:0;
+  transition:max-height .26s ease, opacity .2s ease .04s, padding .2s ease,
+             margin .2s ease, border-width .2s ease; }
+.rolepanel.opened{ max-height:1400px; opacity:1; padding:11px 13px; margin-bottom:10px;
+  border-width:1px 1px 1px 3px; }
+/* sections arrive in order, so entering a role reads as taking it up */
+.rolepanel.opened > *{ animation:rpin .34s ease both; }
+.rolepanel.opened > *:nth-child(2){ animation-delay:.05s; }
+.rolepanel.opened > *:nth-child(3){ animation-delay:.09s; }
+.rolepanel.opened > *:nth-child(4){ animation-delay:.13s; }
+.rolepanel.opened > *:nth-child(n+5){ animation-delay:.16s; }
+@keyframes rpin{ from{ opacity:0; transform:translateY(-3px); } to{ opacity:1; transform:none; } }
+/* the chip reads as HELD, not as a tab that happens to be current */
+.rolebar button.on{ position:relative; }
+.rolebar button.on::after{ content:""; position:absolute; left:6px; right:6px; bottom:-1px;
+  height:2px; background:var(--ore); }
+@media(prefers-reduced-motion:reduce){
+  .rolepanel{ transition:none; } .rolepanel.opened > *{ animation:none; } }
+/* RECEIPTS: a contribution the corp has repeated back with a number attached.
+   Not a toast. Toasts are for errors and transient state; this stays. */
+.rcpt{ border:1px solid var(--line-soft); border-left:2px solid var(--ore); background:var(--black);
+  padding:8px 11px; margin-top:8px; }
+.rcpt .rck{ font-family:var(--mono); font-size:8.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ore); display:flex; gap:7px; align-items:baseline; }
+.rcpt .rck em{ font-style:normal; color:var(--muted); margin-left:auto; }
+.rcpt .rcv{ font-family:var(--mono); font-size:12px; color:var(--silver); margin-top:4px; line-height:1.5; }
+.rcpt .rcv b{ color:var(--ore); }
+.rcpt .rcn{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
 .rolepanel.combat{ border-left-color:#ff4757; }
 .rolepanel .rpt{ font-family:var(--display); font-weight:700; font-size:13px; color:var(--silver);
   display:flex; align-items:baseline; gap:9px; }
@@ -636,7 +670,7 @@ tr.haulrow{ cursor:pointer; }
   function rEl(id){ return document.getElementById(id); }
   function rEsc(s){ return (typeof hesc === "function") ? hesc(s) : String(s == null ? "" : s); }
   var LS_ROLE = "bonk_fleet_role";
-  var ROLE = "mine", ME = null, meTry = 0, rpBusy = false;
+  var ROLE = "mine", ME = null, meTry = 0, rpBusy = false, ROLE_OPEN = false;
   var ROLES = [
     { k:"mine",   g:"&#9935;",   label:"Mine",   need:null },
     { k:"scout",  g:"&#128225;", label:"Scout",  need:"scout"  },
@@ -679,7 +713,12 @@ tr.haulrow{ cursor:pointer; }
        GOBSEC stance paint() above uses, and for exactly the same reason. */
     var bar = rEl("rolebar");
     if (!bar) {
-      document.addEventListener("DOMContentLoaded", function(){ renderRoleBar(); renderRolePanel(); }, { once:true });
+      // the retry re-renders the CHIPS only. Opening the panel here would
+      // re-create the exact thing the addition law forbids: a surface asserting
+      // a role on load that the goblin did not just ask for.
+      document.addEventListener("DOMContentLoaded", function(){
+        renderRoleBar(); if (ROLE_OPEN) renderRolePanel();
+      }, { once:true });
       return;
     }
     // ME null = unlocked the ledger but not logged into the portal. Show the bar
@@ -688,7 +727,7 @@ tr.haulrow{ cursor:pointer; }
     var h = "";
     for (var i=0;i<ROLES.length;i++){
       var r = ROLES[i], has = holdsRole(r.k);
-      h += '<button data-role="'+r.k+'" class="'+(ROLE===r.k?"on":"")+(has?"":" locked")+'" '
+      h += '<button data-role="'+r.k+'" class="'+((ROLE===r.k && ROLE_OPEN)?"on":"")+(has?"":" locked")+'" '
          + 'title="'+(has ? r.label+" — what you are doing on this op"
                           : ME ? "you are not on this roster yet, tap to ask"
                                : "log into the portal to pick up a role")+'">'
@@ -702,20 +741,30 @@ tr.haulrow{ cursor:pointer; }
   }
 
   function setRole(k){
-    ROLE = k;
+    // tapping the role you already hold puts it down again; the chip still
+    // remembers it, so coming back is one tap and not a re-decision
+    if (ROLE === k && ROLE_OPEN) { rpClose(); return; }
+    ROLE = k; ROLE_OPEN = true;
     try { localStorage.setItem(LS_ROLE, k); } catch(e){}
     renderRoleBar();
     renderRolePanel();
   }
 
-  function rpClose(){ var p = rEl("rolepanel"); if (p) p.style.display = "none"; }
+  /* ADDITION LAW: the panel is never display:none-d out of existence and
+     never removes anything else to make room. It collapses to zero height
+     and the ledger underneath does not move a pixel. */
+  function rpOpen(p){ p.style.display = ""; void p.offsetHeight; p.classList.add("opened"); }
+  function rpClose(){ var p = rEl("rolepanel"); if (p) p.classList.remove("opened"); ROLE_OPEN = false; renderRoleBar(); }
 
   function renderRolePanel(){
     var p = rEl("rolepanel"); if (!p) return;
     p.className = "rolepanel" + (ROLE === "combat" ? " combat" : "");
     var has = holdsRole(ROLE);
 
-    if (ROLE === "mine") { p.style.display = "none"; return; }
+    /* MINE is the ledger, which is already on the page. Assuming it just puts
+       the panel away -- an addition of nothing, rather than a panel that says
+       'you are mining' to someone looking at a mining ledger. */
+    if (ROLE === "mine") { p.classList.remove("opened"); return; }
 
     /* ---- you do not hold it: the panel IS the ask ---- */
     if (!has) {
@@ -729,7 +778,7 @@ tr.haulrow{ cursor:pointer; }
             + 'the portal login gets you the rest of it.</div>' +
           '<a class="rpbtn" href="/portal/" style="display:inline-block;text-decoration:none">Open the portal</a>';
         wireRolePanel();
-        p.style.display = "";
+        rpOpen(p);
         return;
       }
       if (ROLE === "scout") {
@@ -766,7 +815,7 @@ tr.haulrow{ cursor:pointer; }
           '<div class="rpok" id="rpOk"></div>';
       }
       wireRolePanel();
-      p.style.display = "";
+      rpOpen(p);
       return;
     }
 
@@ -792,7 +841,7 @@ tr.haulrow{ cursor:pointer; }
         '<div class="scstep"><i>01</i> scan the belt</div>' +
         '<textarea id="scPaste" rows="4" placeholder="right click the scanner results &rarr; select all &rarr; copy &rarr; paste here"></textarea>' +
         '<div id="scParsed" class="rpok"></div>' +
-        '<div id="scLast" class="sclast" style="display:none"></div>' +
+        '<div id="scLast" class="rcpt" style="display:none"></div>' +
         '<div class="scstep"><i>02</i> name it and file it</div>' +
         '<div class="scfilerow">' +
           '<input id="scSysIn" placeholder="which system is this belt in?">' +
@@ -803,8 +852,9 @@ tr.haulrow{ cursor:pointer; }
         '<div id="scBoard" class="rpok">reading the board&hellip;</div>' +
         '<div class="rpok" id="rpScout" style="display:none"></div>';
       wireRolePanel();
-      p.style.display = "";
+      rpOpen(p);
       wireScoutFiler();
+      paintReceipt();      // your last contribution, still standing
       scoutStanding();
       scoutBoardLoad();
       return;
@@ -817,7 +867,7 @@ tr.haulrow{ cursor:pointer; }
           + 'without pasting a single rock. Keep the cans coming.</div>' +
         '<div class="rpok">Roster shows you as boosting. Toggle it off in the roster header if you swap out.</div>';
       wireRolePanel();
-      p.style.display = "";
+      rpOpen(p);
       return;
     }
 
@@ -829,7 +879,7 @@ tr.haulrow{ cursor:pointer; }
       '<div class="rpt">&#128737; GOBSEC<span class="rpx" id="rpClose">close &times;</span></div>' +
       '<div class="rpl" id="rpCombat">pulling the brief&hellip;</div>';
     wireRolePanel();
-    p.style.display = "";
+    rpOpen(p);
     if (rpBusy) return;
     rpBusy = true;
     fetch("/api/gobsec/brief", { credentials:"same-origin", cache:"no-store" })
@@ -893,6 +943,32 @@ tr.haulrow{ cursor:pointer; }
   }
 
   var scRows = [];
+  var LS_RCPT = "bonk_scout_receipt", scLastReceipt = null;
+  try { scLastReceipt = JSON.parse(localStorage.getItem(LS_RCPT) || "null"); } catch(e){}
+
+  /* The receipt outlives the session on purpose. A goblin who filed a belt last
+     night and comes back should still see that it counted, and what it was
+     worth. Contribution that vanishes on reload was never acknowledged. */
+  function paintReceipt(){
+    var box = rEl("scLast"), r = scLastReceipt;
+    if (!box) return;
+    if (!r) { box.style.display = "none"; return; }
+    var mins = Math.max(0, Math.round((r.life_min || 0) - (Date.now() - (r.at || 0)) / 60000));
+    var alive = mins > 0;
+    box.style.display = "";
+    box.className = "rcpt";
+    box.innerHTML =
+        '<div class="rck"><span>' + (alive ? "filed &middot; on the board" : "filed &middot; expired") + '</span>'
+      +   '<em>' + (alive ? (mins >= 60 ? (mins/60).toFixed(1) + "h left" : mins + "m left") : "ran its course") + '</em></div>'
+      + '<div class="rcv"><b>' + rEsc(r.system) + '</b> &middot; <b>' + r.per_m3 + '</b> ISK/m&sup3;'
+      +   (r.m3 ? ' &middot; ' + Math.round(r.m3).toLocaleString() + ' m&sup3;' : '') + '</div>'
+      + '<div class="rcn">'
+      +   (r.corroborated ? 'confirmed in system' : 'unverified, ESI did not place you there')
+      +   (r.unmatched ? ' &middot; ' + r.unmatched + ' rows we do not recognise' : '')
+      +   (r.repriced ? ' &middot; we re-priced it, your page and ours disagreed' : '')
+      + '</div>';
+  }
+
   function wireScoutFiler(){
     var ta = rEl("scPaste"), btn = rEl("scFile"), sys = rEl("scSysIn");
     if (!ta || !btn) return;
@@ -925,26 +1001,19 @@ tr.haulrow{ cursor:pointer; }
           if (!m) return;
           if (!d || !d.ok) { m.textContent = (d && d.error) || "that did not file."; return; }
           if (d.duplicate) { m.textContent = "already on the board, filed within the hour."; return; }
-          /* LAST SCAN, under the input, showing OUR numbers and not the
-             client's: the server re-priced it, so this is the first place the
-             scout finds out what the corp actually thinks the belt is worth. */
+          /* THE RECEIPT (spec 4.6h.4). A contribution is legitimate when the
+             corp's own tooling repeats it back with a number attached, so this
+             is not a toast: it stays, it carries OUR re-priced numbers, and it
+             survives the next render. It is also the first place the scout
+             learns what the corp actually thinks the belt is worth. */
           m.textContent = "";
-          var last = rEl("scLast");
-          if (last) {
-            last.style.display = "";
-            last.innerHTML =
-                '<div class="slk">last scan &middot; filed</div>'
-              + '<div class="slv"><b>' + rEsc(sname) + '</b> &middot; <b>' + Math.round(d.pay_per_m3)
-              + '</b> ISK/m&sup3;'
-              + (d.m3 ? ' &middot; ' + Math.round(d.m3).toLocaleString() + ' m&sup3;' : '')
-              + (d.life_min ? ' &middot; live ' + (Math.round(d.life_min / 6) / 10) + 'h' : '')
-              + '</div>'
-              + '<div class="slk" style="margin-top:5px">'
-              + (d.corroborated ? 'confirmed in system' : 'unverified &mdash; ESI did not place you there')
-              + (d.unmatched ? ' &middot; ' + d.unmatched + ' rows we do not recognise' : '')
-              + (d.repriced ? ' &middot; we re-priced it, your page and ours disagree' : '')
-              + '</div>';
-          }
+          scLastReceipt = {
+            system: sname, per_m3: Math.round(d.pay_per_m3), m3: d.m3, life_min: d.life_min,
+            corroborated: !!d.corroborated, unmatched: d.unmatched || 0, repriced: !!d.repriced,
+            at: Date.now(),
+          };
+          try { localStorage.setItem(LS_RCPT, JSON.stringify(scLastReceipt)); } catch(e){}
+          paintReceipt();
           ta.value = ""; scRows = []; btn.disabled = true;
           var pz = rEl("scParsed"); if (pz) pz.textContent = "";
           scoutBoardLoad(); scoutStanding();
@@ -1031,7 +1100,10 @@ tr.haulrow{ cursor:pointer; }
     });
   }
 
-  loadMe(function(){ renderRoleBar(); renderRolePanel(); });
+  /* Landing on the page and finding a panel already open is the interface
+     asserting something about you that you did not just say. The chip
+     remembers the role; the surface waits to be asked for it. */
+  loadMe(function(){ renderRoleBar(); });
   </script>
   <div class="wrap">
     <!-- The standing "How it works" wall of text is GONE (Kyle 2026-07-31). The tour already
