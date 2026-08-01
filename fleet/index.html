@@ -96,6 +96,80 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .rolepanel .rpok{ font-family:var(--mono); font-size:10.5px; color:var(--ore); margin-top:8px; }
 .rolepanel .hotrow{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); margin-top:4px; }
 @media(max-width:520px){ .rolebar button{ min-width:0; font-size:9px; } }
+/* SCOUT CALLOUTS in the ledger: a filed belt is an event the fleet should SEE */
+.scsites{ border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+  background:var(--steel); margin-bottom:12px; }
+.scsites .sshead{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted); padding:8px 12px 6px;
+  display:flex; align-items:baseline; gap:8px; }
+.scsites .sshead b{ color:var(--ore); }
+.scrow{ display:grid; grid-template-columns:minmax(0,1.3fr) 82px 1fr 74px auto;
+  gap:10px; align-items:center; padding:8px 12px; border-top:1px solid var(--line-soft);
+  cursor:pointer; font-family:var(--mono); font-size:11.5px; }
+.scrow:hover{ background:var(--black); }
+.scrow .ssys{ color:var(--silver); font-weight:700; overflow:hidden; text-overflow:ellipsis; }
+.scrow .sper{ color:var(--ore); text-align:right; }
+.scrow .smeta{ color:var(--muted); font-size:10.5px; overflow:hidden; text-overflow:ellipsis; }
+.scrow .sage{ color:var(--muted); text-align:right; font-size:10.5px; }
+.scrow.on{ background:var(--black); }
+.scrow .swarn{ color:var(--amber); }
+.ssacc{ background:var(--ore); color:#04140a; border:none; cursor:pointer; font-family:var(--mono);
+  font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; }
+.ssacc.taken{ background:none; color:var(--ore); border:1px solid var(--ore); cursor:default; }
+.sshud{ padding:10px 14px 13px; border-top:1px solid var(--line-soft); background:var(--black); }
+.sshud .shgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px; margin-bottom:10px; }
+.sshud .shgrid div{ border:1px solid var(--line-soft); padding:6px 9px; }
+.sshud .shgrid span{ display:block; font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); }
+.sshud .shgrid b{ display:block; font-family:var(--mono); font-size:13px; color:var(--silver); margin-top:2px; }
+.sshud table{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:11px; }
+.sshud th{ text-align:left; color:var(--muted); font-size:9px; letter-spacing:.08em;
+  text-transform:uppercase; padding:3px 6px; border-bottom:1px solid var(--line-soft); }
+.sshud td{ padding:3px 6px; color:var(--silver-dim); }
+.sshud tr.best td{ color:var(--ore); }
+@media(max-width:700px){ .scrow{ grid-template-columns:1fr 74px auto; }
+  .scrow .smeta, .scrow .sage{ display:none; } }
+/* ---- THE SCOUT CONSOLE: this is the one surface that should feel earned ---- */
+.rolepanel.scoutp{ position:relative; background:
+    linear-gradient(rgba(70,255,94,.014) 50%, transparent 50%) 0 0/100% 3px, var(--steel); }
+.rolepanel.scoutp::before, .rolepanel.scoutp::after{ content:""; position:absolute; width:13px; height:13px;
+  border-color:var(--ore); border-style:solid; opacity:.65; pointer-events:none; }
+.rolepanel.scoutp::before{ top:5px; right:5px; border-width:1px 1px 0 0; }
+.rolepanel.scoutp::after{ bottom:5px; right:5px; border-width:0 1px 1px 0; }
+.schead2{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
+.schead2 .sctitle{ font-family:var(--display); font-weight:700; font-size:13px; color:var(--silver);
+  letter-spacing:.04em; }
+.schead2 .sccall{ margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ore); border:1px solid var(--line-soft); padding:3px 8px; }
+.scstats{ display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin:11px 0 4px; }
+.scstats div{ background:var(--black); border:1px solid var(--line-soft); border-top:2px solid var(--line);
+  padding:7px 9px; }
+.scstats div.hot{ border-top-color:var(--ore); }
+.scstats span{ display:block; font-family:var(--mono); font-size:8.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); }
+.scstats b{ display:block; font-family:var(--mono); font-size:16px; color:var(--silver); margin-top:3px; line-height:1; }
+.scstats div.hot b{ color:var(--ore); }
+.scstep{ display:flex; align-items:center; gap:8px; margin:14px 0 6px;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+.scstep i{ font-style:normal; color:var(--ore); border:1px solid var(--ore); padding:1px 5px; font-size:8.5px; }
+.scstep::after{ content:""; flex:1; height:1px; background:var(--line-soft); }
+#scPaste{ width:100%; background:var(--black); color:var(--silver); border:1px solid var(--line-soft);
+  border-left:2px solid var(--line); font-family:var(--mono); font-size:11.5px; padding:9px 10px;
+  resize:vertical; transition:border-color .15s; }
+#scPaste:focus{ outline:none; border-left-color:var(--ore); border-color:var(--ore); }
+#scPaste::placeholder{ color:var(--muted); }
+.sclast{ margin-top:8px; border:1px solid var(--line-soft); border-left:2px solid var(--ore);
+  background:var(--black); padding:8px 11px; }
+.sclast .slk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); }
+.sclast .slv{ font-family:var(--mono); font-size:12px; color:var(--silver); margin-top:3px; }
+.sclast .slv b{ color:var(--ore); }
+.scfilerow{ display:flex; gap:8px; align-items:center; margin-top:6px; flex-wrap:wrap; }
+#scSysIn{ flex:1 1 150px; background:var(--black); color:var(--silver); border:1px solid var(--line-soft);
+  font-family:var(--mono); font-size:11.5px; padding:8px 10px; }
+#scSysIn:focus{ outline:none; border-color:var(--ore); }
+#scFile:disabled{ background:none; color:var(--muted); border:1px solid var(--line-soft); cursor:default; }
+@media(max-width:560px){ .scstats{ grid-template-columns:repeat(2,1fr); } }
 .howtomini button{ background:none; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono);
   font-size:11.5px; text-decoration:underline dotted; padding:0; }
 .howtomini button:hover{ color:var(--ore); }
@@ -704,24 +778,30 @@ tr.haulrow{ cursor:pointer; }
          This needs NO pricing engine, because the server prices every filing
          now (the anti-forgery fix). We send names and quantities; every figure
          the board ranks on is derived server side. */
+      p.className = "rolepanel scoutp";
       p.innerHTML =
-        '<div class="rpt">&#128225; Scout<span class="rpx" id="rpClose">close &times;</span></div>' +
-        '<div class="rpl">Warp a belt, run the scanner, select all, copy. Paste it here and the '
-          + 'fleet knows where the good rock is. You get a line at payout when an FC picks your site '
-          + 'and the fleet mines it.</div>' +
-        '<div class="rpk">the belt you just scanned</div>' +
-        '<textarea id="scPaste" rows="4" placeholder="Paste your survey scanner window, one rock per line"'
-          + ' style="width:100%;margin-top:6px;background:var(--black);color:var(--silver);'
-          + 'border:1px solid var(--line-soft);font-family:var(--mono);font-size:11.5px;padding:8px"></textarea>' +
+        '<div class="schead2"><span class="sctitle">&#128225; SCOUT NET</span>' +
+          '<span class="sccall" id="scCall">standing by</span>' +
+          '<span class="rpx" id="rpClose" style="margin-left:0">close &times;</span></div>' +
+        '<div class="rpl">Find the belt worth flying to, file it, move on. You get a line at payout '
+          + 'when an FC picks your site and the fleet mines it. Sites nobody uses pay nothing, on purpose.</div>' +
+        '<div class="scstats" id="scStats">' +
+          '<div><span>filed</span><b>&mdash;</b></div><div><span>live</span><b>&mdash;</b></div>' +
+          '<div><span>mined</span><b>&mdash;</b></div><div><span>hit rate</span><b>&mdash;</b></div>' +
+        '</div>' +
+        '<div class="scstep"><i>01</i> scan the belt</div>' +
+        '<textarea id="scPaste" rows="4" placeholder="right click the scanner results &rarr; select all &rarr; copy &rarr; paste here"></textarea>' +
         '<div id="scParsed" class="rpok"></div>' +
-        '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">' +
-          '<input id="scSysIn" placeholder="which system?" style="background:var(--black);color:var(--silver);'
-            + 'border:1px solid var(--line-soft);font-family:var(--mono);font-size:11.5px;padding:7px 9px">' +
+        '<div id="scLast" class="sclast" style="display:none"></div>' +
+        '<div class="scstep"><i>02</i> name it and file it</div>' +
+        '<div class="scfilerow">' +
+          '<input id="scSysIn" placeholder="which system is this belt in?">' +
           '<button class="rpbtn" id="scFile" disabled>File this site</button>' +
         '</div>' +
         '<div class="rpok" id="scMsg"></div>' +
-        '<div class="rpk">live sites</div><div id="scBoard" class="rpok">reading the board&hellip;</div>' +
-        '<div class="rpok" id="rpScout" style="color:var(--muted)">reading your standing&hellip;</div>';
+        '<div class="scstep"><i>03</i> what is on the board</div>' +
+        '<div id="scBoard" class="rpok">reading the board&hellip;</div>' +
+        '<div class="rpok" id="rpScout" style="display:none"></div>';
       wireRolePanel();
       p.style.display = "";
       wireScoutFiler();
@@ -845,12 +925,26 @@ tr.haulrow{ cursor:pointer; }
           if (!m) return;
           if (!d || !d.ok) { m.textContent = (d && d.error) || "that did not file."; return; }
           if (d.duplicate) { m.textContent = "already on the board, filed within the hour."; return; }
-          // the server priced it; show OUR numbers back, not the client's
-          m.textContent = "filed · " + Math.round(d.pay_per_m3) + " ISK/m³ · "
-            + (d.m3 ? Math.round(d.m3).toLocaleString() + " m³" : "")
-            + (d.life_min ? " · live " + Math.round(d.life_min / 60 * 10) / 10 + "h" : "")
-            + (d.unmatched ? " · " + d.unmatched + " rows we do not know" : "")
-            + (d.corroborated ? " · confirmed in system" : "");
+          /* LAST SCAN, under the input, showing OUR numbers and not the
+             client's: the server re-priced it, so this is the first place the
+             scout finds out what the corp actually thinks the belt is worth. */
+          m.textContent = "";
+          var last = rEl("scLast");
+          if (last) {
+            last.style.display = "";
+            last.innerHTML =
+                '<div class="slk">last scan &middot; filed</div>'
+              + '<div class="slv"><b>' + rEsc(sname) + '</b> &middot; <b>' + Math.round(d.pay_per_m3)
+              + '</b> ISK/m&sup3;'
+              + (d.m3 ? ' &middot; ' + Math.round(d.m3).toLocaleString() + ' m&sup3;' : '')
+              + (d.life_min ? ' &middot; live ' + (Math.round(d.life_min / 6) / 10) + 'h' : '')
+              + '</div>'
+              + '<div class="slk" style="margin-top:5px">'
+              + (d.corroborated ? 'confirmed in system' : 'unverified &mdash; ESI did not place you there')
+              + (d.unmatched ? ' &middot; ' + d.unmatched + ' rows we do not recognise' : '')
+              + (d.repriced ? ' &middot; we re-priced it, your page and ours disagree' : '')
+              + '</div>';
+          }
           ta.value = ""; scRows = []; btn.disabled = true;
           var pz = rEl("scParsed"); if (pz) pz.textContent = "";
           scoutBoardLoad(); scoutStanding();
@@ -859,16 +953,26 @@ tr.haulrow{ cursor:pointer; }
     };
   }
 
+  /* Standing as a readout, not a sentence. "actually mined" is the only number
+     that measures a scout: filing a hundred belts nobody touched is not
+     scouting, and the ratio self-polices the board with nothing to farm. */
   function scoutStanding(){
     fetch("/api/scout/me", { credentials:"same-origin" }).then(function(r){ return r.ok?r.json():null; })
       .then(function(d){
-        var o = rEl("rpScout"); if (!o) return;
-        if (!d || !d.ok) { o.textContent = ""; return; }
-        o.textContent = d.filed
-          ? d.filed + " filed · " + d.live + " live · " + d.used + " actually mined"
-            + (d.hit_rate != null ? " (" + d.hit_rate + "% hit rate)" : "")
-          : "nothing filed yet. the first one is the hardest.";
-      }).catch(function(){ var o = rEl("rpScout"); if (o) o.textContent = ""; });
+        var g = rEl("scStats"), c = rEl("scCall");
+        if (!g || !d || !d.ok) return;
+        var hit = d.hit_rate == null ? "—" : d.hit_rate + "%";
+        g.innerHTML =
+            '<div class="' + (d.filed ? "hot" : "") + '"><span>filed</span><b>' + (d.filed || 0) + '</b></div>'
+          + '<div class="' + (d.live ? "hot" : "") + '"><span>live now</span><b>' + (d.live || 0) + '</b></div>'
+          + '<div class="' + (d.used ? "hot" : "") + '"><span>mined</span><b>' + (d.used || 0) + '</b></div>'
+          + '<div class="' + (d.hit_rate >= 50 ? "hot" : "") + '"><span>hit rate</span><b>' + hit + '</b></div>';
+        if (c) {
+          c.textContent = !d.filed ? "no scans yet"
+            : d.used ? "trusted scout"
+            : "on the roster";
+        }
+      }).catch(function(){});
   }
 
   var scbBusy = false, scbAt = 0;
@@ -1050,6 +1154,11 @@ tr.haulrow{ cursor:pointer; }
           <div class="fcol">
             <div id="opstatus" class="opstatus" style="display:none" data-i18n-skip></div>
             <div id="tiles" class="totline"></div>
+            <!-- SCOUT CALLOUTS: filed sites as line items in the ledger itself,
+                 clickable into a HUD of the field. Own static slot per
+                 DR-FLEET-12 -- #tiles/#cmdstrip/#feed are wholesale replaced
+                 every tick and would eat the open dropdown. -->
+            <div id="scoutsites" class="scsites" style="display:none" data-i18n-skip></div>
             <div id="tipctl" class="tipctl" style="display:none"></div>
             <div id="cmdstrip" class="cmd" style="display:none"></div>
             <div id="opannounce" class="announce" style="display:none"></div>
@@ -1938,10 +2047,150 @@ tr.haulrow{ cursor:pointer; }
   function basisNow(){ return (P && P.priceBasis==="jita") ? "jita" : (P && P.priceBasis) ? "rens" : "jita"; }
   function basisLabel(b){ return (b||basisNow())==="jita" ? "Jita" : "Rens"; }
   function opKeys(){ return !!(P && P.trueValue!==undefined); }
+
+  /* ================= SCOUT CALLOUTS IN THE LEDGER =================
+     A filed belt is an event the fleet should SEE, not something buried on
+     another page. Each site is a line item; clicking one opens a HUD of the
+     field it scanned. The FC gets ACCEPT, which sets meta.scout so the goblin
+     who found it takes a line at payout (worker /set-site).
+
+     Own static slot: #tiles/#cmdstrip/#feed are innerHTML-replaced every tick
+     and would eat an open dropdown mid-read. Loader is self-throttled off
+     renderAll like scLoadKills -- no second timer on a page that has none. */
+  var SS_OPEN = null, ssBusy = false, ssAt = 0, SS_CACHE = [], ssDetail = {};
+
+  function ssFmtAge(m){ return m >= 60 ? (m/60).toFixed(1)+"h" : Math.round(m)+"m"; }
+
+  function scoutSitesLoad(force){
+    if (ssBusy) return;
+    if (!force && Date.now() - ssAt < 45000) return;
+    ssBusy = true;
+    fetch("/api/scout/sites", { credentials:"same-origin" })
+      .then(function(r){ return r.status===401 ? "401" : (r.ok ? r.json() : null); })
+      .then(function(d){
+        ssBusy = false; ssAt = Date.now();
+        if (d === "401") { SS_CACHE = "401"; }
+        else if (d && d.ok) { SS_CACHE = d.sites || []; }
+        else { SS_CACHE = null; }
+        renderScoutSites();
+      })
+      .catch(function(){ ssBusy = false; SS_CACHE = null; renderScoutSites(); });
+  }
+
+  function renderScoutSites(){
+    var box = el("scoutsites"); if(!box) return;
+    var accepted = (P && P.scout) ? P.scout : null;
+
+    // logged out of the portal, or the board is down: say so rather than
+    // rendering an empty box that reads as "no sites"
+    if (SS_CACHE === "401"){
+      box.style.display=""; box.innerHTML =
+        '<div class="sshead"><b>&#128225; SCOUT</b><span>log into the portal to see filed sites</span></div>';
+      return;
+    }
+    if (!SS_CACHE || !SS_CACHE.length){
+      if (accepted){
+        box.style.display=""; box.innerHTML =
+          '<div class="sshead"><b>&#128225; SCOUT SITE</b><span>'+esc(accepted.system||"a belt")
+          +' &middot; found by '+esc(accepted.who||"?")+'</span></div>';
+        return;
+      }
+      box.style.display="none"; return;
+    }
+
+    var h = '<div class="sshead"><b>&#128225; SCOUT</b><span>'+SS_CACHE.length
+          +' belt'+(SS_CACHE.length===1?'':'s')+' filed &middot; tap one to see the field</span></div>';
+    for (var i=0;i<SS_CACHE.length && i<8;i++){
+      var s = SS_CACHE[i];
+      var isOn = SS_OPEN === s.id;
+      var mine = accepted && String(accepted.id) === String(s.id);
+      h += '<div class="scrow'+(isOn?' on':'')+'" data-site="'+s.id+'">'
+        +   '<div class="ssys">'+esc(s.system)+(s.corroborated?'':' <span class="swarn" title="ESI did not put the scout in this system">?</span>')+'</div>'
+        +   '<div class="sper">'+Math.round(s.pay_per_m3)+'</div>'
+        +   '<div class="smeta">ISK/m&sup3; &middot; '+s.rocks+' rocks'+(s.top_ore?' &middot; '+esc(s.top_ore):'')
+        +     (s.suspect?' <span class="swarn">&#9888; check</span>':'')+'</div>'
+        +   '<div class="sage">'+ssFmtAge(s.expires_min)+' left</div>'
+        +   '<div>'+(opKeys()
+              ? (mine ? '<button class="ssacc taken" disabled>accepted</button>'
+                      : '<button class="ssacc" data-acc="'+s.id+'">accept</button>')
+              : (mine ? '<span class="sper">&#10003;</span>' : ''))+'</div>'
+        + '</div>';
+      if (isOn) h += '<div class="sshud" id="sshud'+s.id+'">reading the field&hellip;</div>';
+    }
+    box.innerHTML = h; box.style.display="";
+
+    Array.prototype.forEach.call(box.querySelectorAll(".scrow"), function(row){
+      row.onclick = function(ev){
+        if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-acc")) return;
+        var id = parseInt(row.getAttribute("data-site"),10);
+        SS_OPEN = (SS_OPEN === id) ? null : id;
+        renderScoutSites();
+        if (SS_OPEN) ssLoadDetail(SS_OPEN);
+      };
+    });
+    Array.prototype.forEach.call(box.querySelectorAll("[data-acc]"), function(b){
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var id = b.getAttribute("data-acc");
+        var s = null;
+        for (var k=0;k<SS_CACHE.length;k++) if (String(SS_CACHE[k].id)===String(id)) s = SS_CACHE[k];
+        if (!s) return;
+        b.disabled = true; b.textContent = "…";
+        api("POST","/set-site",{ who:s.scout, id:s.id, system:s.system, system_id:s.system_id,
+              per_m3:s.pay_per_m3, rocks:s.rocks, m3:s.m3, top_ore:s.top_ore, by:who })
+          .then(function(d){
+            if (d && d.ok){ toast((s.scout||"the scout")+" gets a line at payout for "+(s.system||"that belt")+"."); tick(); }
+            else { toast((d&&d.error)||"could not accept that site"); b.disabled=false; b.textContent="accept"; }
+          })
+          .catch(function(){ toast("could not accept that site"); b.disabled=false; b.textContent="accept"; });
+      };
+    });
+    if (SS_OPEN && ssDetail[SS_OPEN]) ssPaintDetail(SS_OPEN);
+  }
+
+  function ssLoadDetail(id){
+    if (ssDetail[id]) { ssPaintDetail(id); return; }
+    fetch("/api/scout/site?id="+encodeURIComponent(id), { credentials:"same-origin" })
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){ if (d && d.ok){ ssDetail[id]=d; ssPaintDetail(id); }
+                         else { var m=el("sshud"+id); if(m) m.textContent="could not read that field."; } })
+      .catch(function(){ var m=el("sshud"+id); if(m) m.textContent="could not read that field."; });
+  }
+
+  /* THE HUD: what the scout actually saw. Renders entirely off the
+     /api/scout/site payload, so the ledger line and the board can never
+     disagree -- they read the same row. */
+  function ssPaintDetail(id){
+    var m = el("sshud"+id), d = ssDetail[id]; if(!m||!d) return;
+    var h = '<div class="shgrid">'
+      + '<div><span>pays</span><b>'+Math.round(d.pay_per_m3)+' /m&sup3;</b></div>'
+      + '<div><span>whole belt</span><b>'+isk(d.pay||0)+'</b></div>'
+      + '<div><span>volume</span><b>'+m3fmt(d.m3||0)+' m&sup3;</b></div>'
+      + '<div><span>rocks</span><b>'+(d.rocks||0)+'</b></div>'
+      + '<div><span>scout</span><b>'+esc(d.scout||"?")+'</b></div>'
+      + '<div><span>eyes on it</span><b>'+(d.corroborated?"confirmed":"unverified")+'</b></div>'
+      + '</div>';
+    if (d.unmatched) h += '<div class="swarn" style="font-family:var(--mono);font-size:10.5px;margin-bottom:8px">&#9888; '
+      + d.unmatched + ' pasted rows are not ore we know. treat this one carefully.</div>';
+    var os = d.ores || [];
+    if (os.length){
+      h += '<table><thead><tr><th>ore</th><th>rocks</th><th>units</th><th>m&sup3;</th><th>ISK/m&sup3;</th></tr></thead><tbody>';
+      for (var i=0;i<os.length && i<10;i++){
+        var o = os[i];
+        h += '<tr'+(i===0?' class="best"':'')+'><td>'+esc(o.ore)+'</td><td>'+o.n+'</td><td>'
+           + (o.qty||0).toLocaleString()+'</td><td>'+m3fmt(o.m3||0)+'</td><td>'+o.per_m3+'</td></tr>';
+      }
+      h += '</tbody></table>';
+      h += '<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:7px">'
+         + 'shoot the top row first. priced at our buyback, not the game\'s ISK column.</div>';
+    }
+    m.innerHTML = h;
+  }
   function renderAll(){ if(!P) return;
     if (typeof renderBoard==="function") renderBoard(); // board card stays live
     renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
     renderScoutOrigin();
+    scoutSitesLoad(); renderScoutSites();   // self-throttled 45s, no second timer
     // ambient bubble needs the map + kills even while the card is collapsed;
     // both loaders are guarded (once/session, hourly fresh-check, busy flags)
     if(scOpen || (P.system && P.system.name)){ scLoadMap(); scLoadKills(); }
