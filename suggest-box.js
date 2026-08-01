@@ -1,10 +1,9 @@
 /* THE SUGGESTION BOX. Small block, portal rail.
 
-   The label is deliberate and it is not decoration. It says "anonymous to the
-   corp" and "leadership can see who sent it" because that is exactly what the
-   backend does. Telling a member the box is untraceable while tracing it would
-   cost more trust than the box could ever earn, and it would be found out the
-   first time somebody got a reply that was too well aimed.
+   Genuinely anonymous: the suggestions table has NO author column. Not hidden,
+   not admin-only, absent. Nobody can look up who wrote one because the database
+   was never told. The copy below says that because it is true, and it would be
+   worth nothing if it were not.
 
    Anonymous is the default. Signing is the opt in. */
 (function () {
@@ -33,7 +32,7 @@
     return '<textarea id="sgText" rows="2" maxlength="1200" placeholder="What should we do differently?"></textarea>' +
       '<label class="sgsign"><input type="checkbox" id="sgSign"> put my name on it</label>' +
       '<button class="sgbtn" id="sgGo">Send</button>' +
-      '<div class="sgnote">' + (note || 'Anonymous to the corp. Leadership can see who sent it, so keep it civil.') + '</div>' +
+      '<div class="sgnote">' + (note || 'Genuinely anonymous. We do not store who sent it, so say the real thing.') + '</div>' +
       '<div id="sgList"></div>';
   }
 
