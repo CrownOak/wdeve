@@ -132,6 +132,18 @@
 .tgl .tt{ font-size:13px; color:var(--silver); line-height:1.35; font-weight:400; }
 .tgl .td{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px; }
 .dwacts{ margin-top:14px; }
+/* Offboarding zone. Sits last and reads cold on purpose: red is the only place
+   on this page it appears, so the control cannot be confused with a routine one. */
+.danger{ border:1px solid rgba(255,92,92,.32); background:rgba(255,92,92,.03);
+         padding:14px 16px; margin:26px 0 0; }
+.danger .ptitle{ color:#ff7a7a; }
+.dnbtn,.dngo{ background:transparent; border:1px solid rgba(255,92,92,.5); color:#ff7a7a;
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase;
+  padding:9px 16px; cursor:pointer; transition:background .15s; }
+.dnbtn:hover,.dngo:hover{ background:rgba(255,92,92,.1); }
+.offbox{ display:none; margin-top:4px; }
+.offbox.on{ display:block; }
+.offbox textarea{ min-height:54px; width:100%; }
 .frm textarea#dw_bio{ min-height:60px; }
 #mback{ position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:210; display:none;
         align-items:flex-start; justify-content:center; overflow:auto; padding:40px 14px; }
@@ -1198,8 +1210,74 @@ async function openMemberDrawer(id){
       +'<label class="chk"><input type="checkbox" id="dw_purge"> also purge everything. Characters, avatars, history. This is the airlock. There is no undo.</label>'
       +'</div><div id="dw_danger_out"></div></div>';
   }
+  /* OFF THE BOOKS. Deliberately last, in its own zone, nowhere near Save
+     identity — a destructive control next to a routine one gets misclicked.
+     Two steps: the reason picker is hidden until asked for, and confirming
+     names the goblin out loud so nobody fires the wrong row. Admin only,
+     matching the endpoint, so officers never see a button they cannot use. */
+  if(ISADMIN){
+    const gone=(a.status&&a.status!=="active");
+    h+='<div class="danger"><div class="ptitle">'+(gone?"Off the books":"Ending it")
+      +' <span class="pn">'+(gone?"reinstating puts them straight back on the roster"
+        :"deactivates the account, never deletes it &middot; their ISK history stays")+'</span></div>';
+    if(gone){
+      h+='<div class="nap" style="margin:0 0 10px">This goblin is off the books. They cannot log in and they are off every roster.</div>'
+        +'<button class="dngo" id="dw_reinstate">Put '+esc(displayName)+' back on</button>';
+    }else{
+      h+='<button class="dnbtn" id="dw_off">Take '+esc(displayName)+' off the books</button>'
+        +'<div id="dw_offbox" class="offbox">'
+        +'<div class="tglhead">Why</div><div class="tgls">'
+        +[["quit","They quit","left of their own accord"],
+          ["fired","Removed","we let them go"],
+          ["inactive","Gone quiet","never came back, no drama"]].map(function(r){
+            return '<label class="tgl"><input type="radio" name="dw_why" value="'+r[0]+'">'
+              +'<span class="tt">'+r[1]+'<span class="td">'+r[2]+'</span></span></label>'; }).join("")
+        +'</div>'
+        +'<label class="flabel" style="margin-top:12px">What happened <span class="pn">optional, but this is how we learn</span></label>'
+        +'<textarea id="dw_offnote" placeholder="one line. future you will want this."></textarea>'
+        +'<div class="dwacts"><button class="dngo" id="dw_offgo">Confirm</button> '
+        +'<button class="cmail" id="dw_offno">Cancel</button></div></div>';
+    }
+    h+="</div>";
+  }
   openDrawer(h);
   wireDrawer(aid, chars, main);
+  wireOffboard(aid, displayName);
+}
+
+/* The offboard control. Kept out of wireDrawer so the destructive path is one
+   readable block rather than another branch in a 200-line wiring function. */
+function wireOffboard(aid, displayName){
+  const D=document.getElementById("drawer");
+  const open=D.querySelector("#dw_off"), box=D.querySelector("#dw_offbox");
+  if(open&&box){
+    open.addEventListener("click",function(){ box.classList.add("on"); open.style.display="none"; });
+    D.querySelector("#dw_offno").addEventListener("click",function(){
+      box.classList.remove("on"); open.style.display=""; });
+    D.querySelector("#dw_offgo").addEventListener("click",function(){
+      const why=D.querySelector('input[name="dw_why"]:checked');
+      if(!why){ toast("Pick a reason first"); return; }
+      const btn=D.querySelector("#dw_offgo");
+      busy(btn, async function(){
+        await api("/api/admin/member-status",{method:"POST",body:JSON.stringify({
+          account_id:aid, status:"deactivated", reason:why.value,
+          note:(D.querySelector("#dw_offnote").value||"").slice(0,300) })});
+        toast(displayName+" is off the books");
+        openMemberDrawer(aid);            // repaint: the zone flips to Reinstate
+        if(typeof loadSection==="function") loadSection();
+      });
+    });
+  }
+  const back=D.querySelector("#dw_reinstate");
+  if(back) back.addEventListener("click",function(){
+    busy(back, async function(){
+      await api("/api/admin/member-status",{method:"POST",body:JSON.stringify({
+        account_id:aid, status:"active", reason:"rejoined" })});
+      toast(displayName+" is back on");
+      openMemberDrawer(aid);
+      if(typeof loadSection==="function") loadSection();
+    });
+  });
 }
 function wireDrawer(aid, chars, main){
   const D=document.getElementById("drawer");
