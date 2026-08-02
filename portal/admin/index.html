@@ -108,9 +108,31 @@
 #dback{ position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:110; display:none; }
 #drawer{ position:fixed; top:0; right:0; bottom:0; width:min(720px,100vw); background:var(--black);
          border-left:1px solid var(--line); z-index:120; overflow:auto; padding:18px 20px 70px; display:none; }
-.dclose{ float:right; background:transparent; border:1px solid var(--line); color:var(--silver-dim);
-         font-family:var(--mono); font-size:12px; padding:5px 12px; cursor:pointer; }
+.dclose{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+         font-family:var(--mono); font-size:12px; padding:5px 12px; cursor:pointer; flex:0 0 auto; }
 .dclose:hover{ border-color:var(--ore); color:var(--ore); }
+/* Drawer header. Close used to be float:right emitted BEFORE the name block, so
+   the header slid under it and collided with long names at narrow widths. It is
+   a flex item now, and the bar sticks so Close stays reachable in a long profile. */
+.dwhead{ display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:2px 0 12px;
+         border-bottom:1px solid var(--line-soft); position:sticky; top:-18px; z-index:2;
+         background:var(--black); }
+.dwhead .dwid{ min-width:0; flex:1 1 auto; }
+.dwhead .sechead{ margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* One toggle component. This replaced five copies of the same inline style, which
+   existed only to defeat `.frm label` (block/mono/10.5px) — a flag row is not a
+   field label. Full width, uniform height, one line of what the flag grants. */
+.tglhead{ font-family:var(--mono); font-size:10.5px; letter-spacing:.07em; color:var(--muted);
+          text-transform:uppercase; margin:16px 0 0; }
+.tgls{ display:grid; gap:0; margin:6px 0 0; border-top:1px solid var(--line-soft); }
+.tgl{ display:flex; align-items:flex-start; gap:10px; padding:10px 2px;
+      border-bottom:1px solid var(--line-soft); cursor:pointer; }
+.tgl:hover{ background:var(--steel-2); }
+.tgl input{ margin-top:3px; flex:0 0 auto; }
+.tgl .tt{ font-size:13px; color:var(--silver); line-height:1.35; font-weight:400; }
+.tgl .td{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px; }
+.dwacts{ margin-top:14px; }
+.frm textarea#dw_bio{ min-height:60px; }
 #mback{ position:fixed; inset:0; background:rgba(0,0,0,.62); z-index:210; display:none;
         align-items:flex-start; justify-content:center; overflow:auto; padding:40px 14px; }
 .modal{ background:var(--black); border:1px solid var(--line); width:min(640px,100%); padding:20px 22px 26px; }
@@ -1037,15 +1059,15 @@ async function openMemberDrawer(id){
   const main=chars.find(function(c){return c.is_main;})||chars[0]||null;
   const displayName=(main&&main.ign)||accName(a);
   const curRole=a.role||"member";
-  let h='<button class="dclose" onclick="closeDrawer()">Close ✕</button>';
-  h+='<div style="display:flex;align-items:center;gap:12px;margin:0 0 4px">'
-    +avat(main,44,"lg")
-    +'<div><div class="sechead" style="margin:0">'+esc(displayName)+"</div>"
-    +'<div class="rowmeta">'+esc(curRole)+" &middot; "+fmtN(a.tenure_days)+" days in corp &middot; last login "+esc(ago(a.last_login))+"</div></div></div>";
+  let h='<div class="dwhead">'+avat(main,44,"lg")
+    +'<div class="dwid"><div class="sechead">'+esc(displayName)+"</div>"
+    +'<div class="rowmeta">'+esc(curRole)+" &middot; "+fmtN(a.tenure_days)+" days in corp &middot; last login "+esc(ago(a.last_login))+"</div></div>"
+    +'<button class="dclose" onclick="closeDrawer()">Close ✕</button></div>';
   h+='<div id="dw_annc"></div>';
-  /* stats strip */
+  /* stats strip — page default columns; the old inline minmax(120px) gave 5
+     columns for 4-6 tiles and orphaned the last one onto its own row. */
   const st=stats||{};
-  h+='<div class="pulse" style="grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">'
+  h+='<div class="pulse">'
     +tile("ISK earned", st.lifetimeIsk!=null?fmtIsk(st.lifetimeIsk):"…")
     +tile("Fleet ISK", st.fleet&&st.fleet.isk!=null?fmtIsk(st.fleet.isk):"…")
     +tile("Contract ISK", st.contracts&&st.contracts.isk!=null?fmtIsk(st.contracts.isk):"…")
@@ -1061,14 +1083,23 @@ async function openMemberDrawer(id){
     +(ISADMIN?'<div><label>Role</label><select id="dw_role" data-orig="'+esc(curRole)+'">'
       +["ally","member","officer","admin"].map(function(r){return '<option value="'+r+'"'+(curRole===r?" selected":"")+">"+r+"</option>";}).join("")
       +"</select></div>":"")
-    +(ISADMIN?'<div><label>GSS clearance</label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_gss" type="checkbox" data-orig="'+(a.gss?"1":"0")+'"'+(a.gss?" checked":"")+'> designate to Goblin State Security</label></div>':"")
-    +'<div><label>GOBSEC <span class="pn">the armed wing, walled off</span></label><label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_gobsec" type="checkbox" data-orig="'+(a.gobsec?"1":"0")+'"'+(a.gobsec?" checked":"")+'> &#128737; GOBSEC member (desk, board, finder, hunter intel)</label></div>'
-    +'<div><label>Orca program</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_orca" type="checkbox" data-orig="'+(a.orca?"1":"0")+'"'+(a.orca?" checked":"")+'> &#128011; Orca (fleet rights)</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px"><input id="dw_porp" type="checkbox" data-orig="'+(a.porpoise?"1":"0")+'"'+(a.porpoise?" checked":"")+'> &#128044; Porpoise (fleet rights)</label></div>'
-    +'<div class="wide"><label>Bio</label><textarea id="dw_bio" style="min-height:60px">'+esc(a.bio||"")+"</textarea></div>"
-    +'</div><button class="inv" id="dw_save">Save identity</button> '
-    +'<button class="cmail" id="dw_viewas">View as member</button></div>';
+    +'<div class="wide"><label>Bio</label><textarea id="dw_bio">'+esc(a.bio||"")+"</textarea></div>"
+    +'</div>'
+    /* Flags live below the field grid, not inside it. They are permissions, not
+       identity, and a one-line checkbox sharing an auto-fill row with a two-line
+       pair was what left the holes. Same ids, same ISADMIN gating. */
+    +'<div class="tglhead">Access</div><div class="tgls">'
+    +(ISADMIN?'<label class="tgl"><input id="dw_gss" type="checkbox" data-orig="'+(a.gss?"1":"0")+'"'+(a.gss?" checked":"")+'>'
+      +'<span class="tt">GSS clearance<span class="td">designate to Goblin State Security</span></span></label>':"")
+    +'<label class="tgl"><input id="dw_gobsec" type="checkbox" data-orig="'+(a.gobsec?"1":"0")+'"'+(a.gobsec?" checked":"")+'>'
+      +'<span class="tt">&#128737; GOBSEC<span class="td">the armed wing, walled off &middot; desk, board, finder, hunter intel</span></span></label>'
+    +'<label class="tgl"><input id="dw_orca" type="checkbox" data-orig="'+(a.orca?"1":"0")+'"'+(a.orca?" checked":"")+'>'
+      +'<span class="tt">&#128011; Orca<span class="td">fleet rights</span></span></label>'
+    +'<label class="tgl"><input id="dw_porp" type="checkbox" data-orig="'+(a.porpoise?"1":"0")+'"'+(a.porpoise?" checked":"")+'>'
+      +'<span class="tt">&#128044; Porpoise<span class="td">fleet rights</span></span></label>'
+    +'</div>'
+    +'<div class="dwacts"><button class="inv" id="dw_save">Save identity</button> '
+    +'<button class="cmail" id="dw_viewas">View as member</button></div></div>';
   /* characters */
   h+='<div class="panel"><div class="ptitle">Characters <span class="pn">one main, one payout, the rest grind</span></div><div id="dw_chars">';
   if(!chars.length) h+='<div class="nap">No characters on file. That is a ghost, not a goblin.</div>';
