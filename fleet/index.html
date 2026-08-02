@@ -574,7 +574,20 @@ tr.haulrow{ cursor:pointer; }
     <div class="fcover">BIG ROCK ENERGY [BONK]</div>
     <h1>FLEET COMMAND</h1>
     <div class="sub">paste what you jettison, the ledger runs your tab &middot; fleet command pays out at buyback &middot; prices live from the refinery</div>
+    <!-- two lanes: two ops can run at once. One Haul Log underneath both. -->
+    <div class="lanewrap"><span class="lanelab">FLEET</span><span id="laneTog"></span></div>
   </header>
+  <style>
+    .lanewrap{ display:flex; align-items:center; justify-content:center; gap:9px; margin-top:13px; }
+    .lanelab{ font-family:var(--mono,monospace); font-size:9.5px; letter-spacing:.2em; color:var(--muted,#7a8a80); }
+    #laneTog{ display:inline-flex; border:1px solid var(--line,rgba(150,168,158,.22)); }
+    .lanebtn{ background:transparent; border:0; border-right:1px solid var(--line,rgba(150,168,158,.22));
+      color:var(--muted,#7a8a80); font-family:var(--mono,monospace); font-size:10.5px; letter-spacing:.16em;
+      padding:6px 15px; cursor:pointer; transition:color .15s, background .15s; }
+    .lanebtn:last-child{ border-right:0; }
+    .lanebtn:hover{ color:var(--silver,#c9d4cd); }
+    .lanebtn.on{ color:var(--ore,#46ff5e); background:rgba(70,255,94,.09); }
+  </style>
   <!-- GOBSEC heads-up: fetch here, render into the scout column's #stanceSide
        card (not top and center — the ledger is the star of this page). Stance
        palette shared with board/desk/portal: ESCORT amber · HUNT red ·
@@ -1432,7 +1445,15 @@ tr.haulrow{ cursor:pointer; }
   var WORKER="https://bonk-fleet.kyle-dd7.workers.dev";
   var LS_TOK="bonk_fleet_token", LS_WHO="bonk_fleet_who", LS_CACHE="bonk_fleet_cache",
       LS_PRICES="bonk_fleet_prices", LS_QUEUE="bonk_fleet_queue", LS_PILOTS="bonk_fleet_pilots",
-      LS_CHIPS="bonk_fleet_chips", LS_CHATOPEN="bonk_fleet_chatopen";
+      LS_CHIPS="bonk_fleet_chips", LS_CHATOPEN="bonk_fleet_chatopen", LS_LANE="bonk_fleet_lane";
+
+  /* TWO LANES (2026-08-02). ALPHA is the original ledger and stays the default,
+     so a member who never touches the toggle sees exactly what they always saw.
+     Every request carries ?f=<lane>; the worker keeps one shared Haul Log, so
+     the toggle changes which op you are IN, never which history you can see. */
+  var LANES=["alpha","bravo"];
+  var LANE=(function(){ var v=null; try{ v=localStorage.getItem(LS_LANE); }catch(e){}
+    return LANES.indexOf(v)>=0 ? v : "alpha"; })();
 
   // ---------- helpers (isk/m3fmt/parse lifted from refine; parse is VERBATIM) ----------
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
@@ -1547,10 +1568,32 @@ tr.haulrow{ cursor:pointer; }
                               // null until the fetch lands, and the payout screen stays per-IGN while null
 
   function api(method,path,body){
-    return fetch(WORKER+path,{ method:method,
+    // every call is lane-scoped; /hauls and /haul merge across lanes server-side
+    var sep = path.indexOf("?")>=0 ? "&" : "?";
+    return fetch(WORKER+path+sep+"f="+LANE,{ method:method,
       headers:{ "X-Token":token, "Content-Type":"application/json" },
       body: body?JSON.stringify(body):undefined })
       .then(function(r){ if(r.status===401) throw "unauthorized"; return r.json(); });
+  }
+
+  /* Switching lanes hard-reloads. The page caches the last /sync payload in
+     LS_CACHE, and that cache belongs to whichever lane produced it, so a soft
+     switch would paint ALPHA's entries under BRAVO's header for a tick. Drop
+     the cache and start clean; it costs one reload and removes a whole class
+     of "whose ore is that" bug. */
+  function setLane(l){
+    if(LANES.indexOf(l)<0 || l===LANE) return;
+    try{ localStorage.setItem(LS_LANE,l); localStorage.removeItem(LS_CACHE); }catch(e){}
+    location.reload();
+  }
+  function paintLaneToggle(){
+    var host=el("laneTog"); if(!host) return;
+    host.innerHTML=LANES.map(function(l){
+      return '<button class="lanebtn'+(l===LANE?" on":"")+'" data-lane="'+l+'">'+l.toUpperCase()+'</button>';
+    }).join("");
+    host.querySelectorAll(".lanebtn").forEach(function(b){
+      b.addEventListener("click",function(){ setLane(b.getAttribute("data-lane")); });
+    });
   }
 
   // ---------- prices (AMEND-2): scrape refine's live DATA blob, cache, degrade loudly ----------
@@ -3656,6 +3699,7 @@ tr.haulrow{ cursor:pointer; }
   el("tHauls").onclick=function(){ setTab("hauls"); };
 
   // ---------- boot: prices always; auto-unlock if remembered, else for members ----------
+  paintLaneToggle();   // before unlock: the lane is a page setting, not a session one
   loadOutbox();
   loadPrices();
   (function(){
