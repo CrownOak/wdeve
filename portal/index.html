@@ -330,6 +330,16 @@
   .sgr{ font-size:11.5px; color:var(--silver); border-left:2px solid var(--ore);
     padding-left:9px; margin-top:7px; line-height:1.55; }
   .sgempty{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:10px; }
+  /* officer-only inline reply. The control is gated; the reply it posts is public. */
+  .sgrep{ background:none; border:0; padding:0; cursor:pointer; font-family:var(--mono);
+    font-size:9.5px; color:var(--ore); text-decoration:underline; text-underline-offset:2px; }
+  .sgrep:hover{ color:var(--laser); }
+  .sgbox{ display:none; margin-top:7px; }
+  .sgbox.on{ display:block; }
+  .sgbox textarea{ width:100%; font-size:11.5px; padding:6px 8px; resize:vertical; min-height:38px; }
+  .sgrow2{ display:flex; gap:6px; margin-top:6px; align-items:center; }
+  .sgrow2 select{ font-family:var(--mono); font-size:10px; padding:5px 6px; }
+  .sgsend{ font-size:9.5px !important; padding:5px 11px !important; }
   /* ---------- rail event cards ---------- */
   .revt{ display:block; background:var(--black); border:1px solid var(--line-soft);
          border-left:3px solid var(--amber); padding:10px 12px; margin:0 0 12px; text-decoration:none; }
@@ -4527,7 +4537,7 @@ function renderFoot(){
 </script>
 <script src="/nav.js?v=22"></script>
 <script src="/intel-undock.js?v=1"></script>
-<script src="/suggest-box.js?v=3"></script>
+<script src="/suggest-box.js?v=4"></script>
 <script>
 window.BONK_TOUR = {
   id: "portal", accountKey: null, readyWhen: "#panelIdentity",

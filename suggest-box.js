@@ -36,18 +36,63 @@
       '<div id="sgList"></div>';
   }
 
+  /* Officers get an inline Reply on every row, right here in the rail, so
+     answering does not mean remembering the Command Center exists. The CONTROL
+     is officer-only; the REPLY ITSELF stays public to every member, which is the
+     whole point of the queue (a box that answers in private is an inbox, and an
+     inbox teaches people that talking into it does nothing).
+     Gated on the role whoami already hands us, so no new endpoint. */
+  var ISOFF = false;
+
   function paintList(rows) {
     var el = document.getElementById("sgList");
     if (!el) return;
     if (!rows || !rows.length) { el.innerHTML = '<div class="sgempty">Nothing yet. Be first.</div>'; return; }
     el.innerHTML = rows.slice(0, 5).map(function (r) {
-      return '<div class="sgi">' +
+      return '<div class="sgi" data-id="' + r.id + '">' +
         '<div class="sgb">' + esc(r.body) + '</div>' +
         '<div class="sgm">' + (r.who ? esc(r.who) : 'anonymous') + ' &middot; ' + ago(r.at) +
-        (r.status && r.status !== "open" ? ' &middot; <b>' + esc(r.status) + '</b>' : '') + '</div>' +
+        (r.status && r.status !== "open" ? ' &middot; <b>' + esc(r.status) + '</b>' : '') +
+        (ISOFF ? ' &middot; <button class="sgrep" data-rep="' + r.id + '">' +
+          (r.reply ? 'edit reply' : 'reply') + '</button>' : '') + '</div>' +
         (r.reply ? '<div class="sgr">' + esc(r.reply) + '</div>' : '') +
+        (ISOFF ? '<div class="sgbox" id="sgbox' + r.id + '">' +
+          '<textarea id="sgtxt' + r.id + '" rows="2" maxlength="600" placeholder="everyone sees this">' +
+            esc(r.reply || "") + '</textarea>' +
+          '<div class="sgrow2"><select id="sgst' + r.id + '">' +
+            ["open", "noted", "done", "declined"].map(function (x) {
+              return '<option value="' + x + '"' + (r.status === x ? ' selected' : '') + '>' + x + '</option>';
+            }).join("") + '</select>' +
+          '<button class="sgbtn sgsend" data-send="' + r.id + '">Post</button></div></div>' : "") +
         '</div>';
     }).join("");
+    if (!ISOFF) return;
+    el.querySelectorAll("[data-rep]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var box = document.getElementById("sgbox" + b.getAttribute("data-rep"));
+        if (box) box.classList.toggle("on");
+      });
+    });
+    el.querySelectorAll("[data-send]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-send");
+        b.disabled = true; b.textContent = "posting";
+        fetch("/api/admin/suggestion", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: +id,
+            status: document.getElementById("sgst" + id).value,
+            reply: document.getElementById("sgtxt" + id).value,
+          }),
+        }).then(function (r) { return r.json().catch(function () { return null; }); })
+          .then(function (d) {
+            b.disabled = false; b.textContent = "Post";
+            if (d && d.ok) load();          // repaint: the reply is now public
+            else b.textContent = "failed";
+          }).catch(function () { b.disabled = false; b.textContent = "failed"; });
+      });
+    });
   }
 
   function load() {
@@ -87,6 +132,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.loggedIn) return;      /* logged out members never see the box */
+        ISOFF = d.role === "officer" || d.role === "admin";
         shell(form());
         wire();
         load();
