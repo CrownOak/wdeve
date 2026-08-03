@@ -196,13 +196,17 @@
   var LIM = { ign:40, ships:200, looking_for:500, found_us:200, contact:100, notes:1000 };
 
   var ans = { ign:"", timezone:"", experience:"", activities:[], ships:[], shipsOther:"",
-              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp",
+              looking:[], lookingOther:"", found:"", foundOther:"", contact:"", notes:"", track:"corp", dest:"gobsec",
               killboard:"", fliesNow:[], fliesOther:"", wants:[], wantsOther:"", scale:"", fc:"",
               disclosure:"",
               lang: (window.BONKLANG && window.BONKLANG.lang) || "en" };
   // Ally track can arrive by link (?track=ally) from the gate/tools ally CTAs.
   if (/[?&]track=ally/.test(location.search)) ans.track = "ally";
   if (/[?&]track=gobsec/.test(location.search)) ans.track = "gobsec";
+  /* TWO DOORS on the combat track. ?to=wd files the pilot for Wealthy Dropouts,
+     anything else for GOBSEC itself. Only a corp's own CEO can invite to it and
+     Kyle holds both chairs, so this decides which character sends the invite. */
+  if (/[?&]to=wd/.test(location.search)) ans.dest = "wd";
   // Referral link (?r=TOKEN): opaque, resolved server side. We carry it, we never
   // decode it, and the roster is never fetched to this public page.
   var REFM = location.search.match(/[?&]r=([A-Za-z0-9]{4,32})/);
@@ -821,6 +825,7 @@
     var contact = ans.contact.trim().slice(0, LIM.contact); if (contact) p.contact = contact;
     var notes = ans.notes.trim().slice(0, LIM.notes); if (notes) p.notes = notes;
     p.lang = ans.lang === "ru" ? "ru" : "en";
+    p.dest_corp = ans.dest === "wd" ? "wd" : "gobsec";
     if (REF) p.ref = REF;
     if (ans.refnote) p.ref_note = ans.refnote;
     return p;
