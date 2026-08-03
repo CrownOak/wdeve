@@ -50,9 +50,55 @@
     ["Workbench",   BASE + "tools/",          "MARKET", false],
     ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
     ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
-    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false]
+    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false],
+    // RECRUIT: these came out of the bar in the 12->7 cut and never came back,
+    // while their MEMBER_LABELS entries stayed behind. Restored 2026-08-03 with
+    // a real gate instead of a redacted label. 5th field is the gate.
+    ["Recruiting",  BASE + "bonk-prospects/", "RECRUIT", false, "recruit"],
+    ["Finder",      BASE + "gobsec/finder/",  "RECRUIT", false, "recruit"]
   ];
-  var GROUPS = ["HOME", "MEMBER", "MARKET", "INTEL"];
+  var GROUPS = ["HOME", "MEMBER", "MARKET", "INTEL", "RECRUIT"];
+
+  /* ---- GATED ITEMS ----
+     A gated item renders HIDDEN and is only revealed once /api/whoami comes back
+     with a role that clears it. Hidden-by-default is the only safe direction: the
+     other way round flashes the recruiting tools to every visitor for the length
+     of one fetch, and a screenshot of that flash is exactly what we are avoiding.
+
+     THIS IS MENU HYGIENE, NOT SECURITY. It hides a link. The pages themselves are
+     protected by their own page_lock passwords (bonk-prospects BONKDRAFT,
+     gobsec/finder GOBSTALK) and the portal APIs by needRole on the server. Never
+     treat a hidden nav entry as an access control.
+
+     `recruiter` is read defensively: no such account flag exists yet, so today
+     this resolves to officer and admin only. When the flag ships, this line is
+     already correct and nothing here has to change. */
+  function gateOk(d, gate) {
+    if (!gate) return true;
+    if (!d || !d.loggedIn) return false;
+    if (gate === "recruit") {
+      return d.role === "officer" || d.role === "admin" || d.recruiter === true;
+    }
+    return false;   // unknown gate = closed, never open
+  }
+
+  /* Reveal what the account clears, then hide any group left with nothing in it
+     so we never print a RECRUIT header over empty space. */
+  function applyGates(d) {
+    var gated = bar.querySelectorAll("a[data-gate]");
+    for (var n = 0; n < gated.length; n++) {
+      if (gateOk(d, gated[n].getAttribute("data-gate"))) gated[n].removeAttribute("hidden");
+      else gated[n].setAttribute("hidden", "");
+    }
+    var grps = bar.querySelectorAll(".bn-group");
+    for (var q = 0; q < grps.length; q++) {
+      var links = grps[q].querySelectorAll("a");
+      if (!links.length) continue;                       // language block, leave it
+      var shown = 0;
+      for (var z = 0; z < links.length; z++) if (!links[z].hasAttribute("hidden")) shown++;
+      grps[q].style.display = shown ? "" : "none";
+    }
+  }
   // Members see the recruiting tools by name; the public sees the redacted labels.
   // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
   var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Watchtower", "gobsec/": "GOBSEC" };
@@ -63,8 +109,10 @@
   function linkHtml(it, cls) {
     var rel = it[1].slice(BASE.length); // e.g. "bonk-prospects/"
     var klass = (cls + (current(it[1]) ? " cur" : "")).replace(/^ /, "");
+    // gated items ship hidden and are revealed by applyGates once whoami answers
+    var gate = it[4] ? ' data-gate="' + it[4] + '" hidden' : "";
     return '<a' + (klass ? ' class="' + klass + '"' : "")
-         + ' href="' + ORIGIN + it[1] + '" data-rel="' + rel + '">' + it[0] + '</a>';
+         + ' href="' + ORIGIN + it[1] + '" data-rel="' + rel + '"' + gate + '>' + it[0] + '</a>';
   }
 
   var bar = document.createElement("div");
@@ -101,6 +149,10 @@
   html += '</div>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
+  // Tidy immediately so an all-gated group never prints its header over empty
+  // space in the window before whoami answers, or at all if the call fails.
+  // Closed is the correct failure state, so this runs before any fetch.
+  applyGates(null);
 
   // The toolbelt open/close: click toggles, Escape closes (focus back on the
   // burger), any click outside closes. Links are plain <a> so middle-click and
@@ -298,6 +350,9 @@
     fetch(ORIGIN + BASE + "api/whoami", { credentials: "same-origin" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
+        // recruiting tools appear here or not at all. Runs before anything else
+        // in this handler so a later throw cannot leave a gated link revealed.
+        applyGates(d);
         // account language default (set on the application, or by an explicit
         // toggle while logged in): RU members get the site in Russian by
         // default on any device; an explicit local pick always wins.
