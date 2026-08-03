@@ -192,6 +192,22 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
   var(--line-soft) 0 4px, transparent 4px 8px); }
 .srep .srnote{ font-family:var(--mono); font-size:11px; color:var(--silver); }
 .srep .srnote b{ color:var(--ore); }
+/* THE BALLOT. Inside the report, never on the row: the vote is permanent and
+   you should have read the thing before ruling on it. Big targets, because
+   there is no undo. */
+.srvote{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+.srvote button{ font-family:var(--mono); font-size:12px; line-height:1; padding:6px 11px;
+  background:none; border:1px solid var(--line-soft); color:var(--muted); cursor:pointer;
+  transition:border-color .18s, color .18s; }
+.srvote button:hover:not(:disabled){ border-color:var(--ore); color:var(--ore); }
+/* down never goes red: this is a contribution surface, not a punishment one */
+.srvote button.dn:hover:not(:disabled){ border-color:var(--silver-dim); color:var(--silver-dim); }
+.srvote button:disabled{ opacity:.4; cursor:default; }
+.srvote .srvq{ font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted); }
+.srvote .srvt{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+.srvote .srvt b{ color:var(--ore); }
+.srvote .srvt i{ font-style:normal; color:var(--muted); }
 /* ---- THE LIST: capped, faded, and scrolled instead of endless ----
    A busy night puts 40 belts on this board. Growing the ledger column by five
    screens is not a feature, so the list keeps a ceiling and scrolls INSIDE
@@ -2628,6 +2644,59 @@ tr.haulrow{ cursor:pointer; }
     return m < 60 ? m+"m ago" : (m/60).toFixed(1)+"h ago";
   }
 
+  /* THE BALLOT, rendered off whatever the SERVER chose to send.
+     If you have not voted, there is no tally in the payload to leak, so the
+     blind holds even with devtools open. If you have, the count is all you get:
+     which way YOU voted is not in the database, on purpose. */
+  function ssVoteHtml(id, d){
+    if (d.own) return '<div class="srdiv"></div>'
+      + '<div class="srvote"><span class="srvq">your filing</span></div>';
+    if (d.voted){
+      var v = d.votes || { up:0, down:0 };
+      return '<div class="srdiv"></div><div class="srvote"><span class="srvt">'
+        + '<b>&#9650; ' + (v.up||0) + '</b> &nbsp; <i>&#9660; ' + (v.down||0) + '</i>'
+        + '</span><span class="srvq">ballot closed</span></div>';
+    }
+    // a site the fleet already ate still renders here from the paid ledger line;
+    // the ballot is shut and should say so rather than offering a dead button
+    if (d.closed) return '<div class="srdiv"></div>'
+      + '<div class="srvote"><span class="srvq">ballot closed, site is off the board</span></div>';
+    return '<div class="srdiv"></div><div class="srvote">'
+      + '<button type="button" data-v="1"  data-vid="'+id+'" title="good intel. this is final.">&#9650;</button>'
+      + '<button type="button" class="dn" data-v="-1" data-vid="'+id+'" title="bad intel: the rocks were not as filed. this is final.">&#9660;</button>'
+      + '<span class="srvq">one vote, final, nobody sees who</span></div>';
+  }
+
+  function ssWireVote(id){
+    var box = el("sshud"+id); if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-vid]"), function(b){
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var btns = box.querySelectorAll("[data-vid]");
+        for (var i=0;i<btns.length;i++) btns[i].disabled = true;
+        fetch("/api/scout/vote", { method:"POST", credentials:"same-origin",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ id: id, v: parseInt(b.getAttribute("data-v"),10) }) })
+          .then(function(r){ return r.json(); })
+          .then(function(res){
+            if (res && res.ok){
+              // fold the counts into the cached detail so the reveal survives a repaint
+              ssDetail[id].voted = true; ssDetail[id].votes = res.votes;
+              ssPaintDetail(id);
+            } else {
+              if (res && res.already){ ssDetail[id].voted = true; ssPaintDetail(id); return; }
+              toast((res && res.error) || "could not record that vote");
+              for (var k=0;k<btns.length;k++) btns[k].disabled = false;
+            }
+          })
+          .catch(function(){
+            toast("could not record that vote");
+            for (var k=0;k<btns.length;k++) btns[k].disabled = false;
+          });
+      };
+    });
+  }
+
   function ssPaintDetail(id){
     var m = el("sshud"+id), d = ssDetail[id]; if(!m||!d) return;
 
@@ -2652,6 +2721,7 @@ tr.haulrow{ cursor:pointer; }
     }
     h += '</span></div>';
     if (d.note) h += '<div class="srdiv"></div><div class="srnote"><b>&raquo;</b> ' + esc(d.note) + '</div>';
+    h += ssVoteHtml(id, d);
     h += '</div>';
 
     h += '<div class="shgrid">'
@@ -2677,6 +2747,7 @@ tr.haulrow{ cursor:pointer; }
          + 'shoot the top row first. priced at our buyback, not the game\'s ISK column.</div>';
     }
     m.innerHTML = h;
+    ssWireVote(id);
   }
   function renderAll(){ if(!P) return;
     if (typeof renderBoard==="function") renderBoard(); // board card stays live
