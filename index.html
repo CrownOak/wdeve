@@ -348,7 +348,7 @@
      is why it sits directly under the hero rather than down with the perks. -->
 <section id="hundred">
   <div class="wrap">
-    <div class="hnd-eyebrow">&#129703; A hundred goblins</div>
+    <div class="hnd-eyebrow" id="hundredLabel">&#129703; A hundred goblins</div>
     <div class="hnd-num"><span id="hundredCount">100</span></div>
     <p class="hnd-lede">Not a number. A roster.</p>
     <p class="hnd-body">Some of us have been flying since before half these ships existed. Some
@@ -688,6 +688,19 @@
         // counting past 100 instead of being frozen on the night we celebrated
         var h = document.getElementById("hundredCount");
         if (h) h.textContent = d.member_count;
+        /* ...and so does the LABEL. A hardcoded "A hundred goblins" reads fine at 104 and
+           looks abandoned at 200, so it rolls to the highest milestone actually passed.
+           Steps of 50 mean a milestone sits for a good while instead of churning every
+           week. Falls back to the served text if the pull fails, never to a wrong number. */
+        var lb = document.getElementById("hundredLabel");
+        if (lb) {
+          var MILES = [[100,"A hundred"],[150,"A hundred and fifty"],[200,"Two hundred"],
+                       [250,"Two hundred and fifty"],[300,"Three hundred"],[400,"Four hundred"],
+                       [500,"Five hundred"],[750,"Seven hundred and fifty"],[1000,"A thousand"]];
+          var word = null;
+          for (var i = 0; i < MILES.length; i++) if (d.member_count >= MILES[i][0]) word = MILES[i][1];
+          if (word) lb.innerHTML = "🪧 " + word + " goblins";
+        }
       })
       .catch(function(){});
   })();

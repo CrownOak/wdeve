@@ -2935,11 +2935,12 @@ function renderHundred(){
   el.innerHTML =
     '<div class="hnd">' +
       '<button class="hnd-x" id="hndX" title="dismiss">&times;</button>' +
-      '<div class="hnd-k">&#129703; A hundred goblins</div>' +
+      '<div class="hnd-k" id="hndLabel">&#129703; A hundred goblins</div>' +
       '<div class="hnd-n"><span id="hndCount">100</span></div>' +
-      '<div class="hnd-l">Twelve years to build the machine. Two weeks to fill it.</div>' +
-      '<div class="hnd-b">A corp is the people who show up, and a hundred of you show up. ' +
-        'Whether you have been here twelve years or twelve hours, you are the reason this works.</div>' +
+      '<div class="hnd-l">Not a number. A roster.</div>' +
+      '<div class="hnd-b">Some of us have been flying since before half these ships existed. ' +
+        'Some joined this week. The rock does not care how long you have played, ' +
+        'and neither do we.</div>' +
       '<div class="hnd-c">Almost every one of us is here because somebody thought to ask.</div>' +
     '</div>';
   var x = $("hndX");
@@ -2951,7 +2952,20 @@ function renderHundred(){
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){
       var n = $("hndCount");
-      if (n && d && typeof d.member_count === "number") n.textContent = d.member_count;
+      if (!(d && typeof d.member_count === "number")) return;
+      if (n) n.textContent = d.member_count;
+      /* Label rolls with the count. Hardcoding "A hundred goblins" reads fine at 104 and
+         looks abandoned at 200. Steps of 50 so a milestone sits a good while. Mirrors the
+         same table on the landing page; keep the two in step if either changes. */
+      var lb = $("hndLabel");
+      if (lb) {
+        var MILES = [[100,"A hundred"],[150,"A hundred and fifty"],[200,"Two hundred"],
+                     [250,"Two hundred and fifty"],[300,"Three hundred"],[400,"Four hundred"],
+                     [500,"Five hundred"],[750,"Seven hundred and fifty"],[1000,"A thousand"]];
+        var word = null;
+        for (var i = 0; i < MILES.length; i++) if (d.member_count >= MILES[i][0]) word = MILES[i][1];
+        if (word) lb.innerHTML = "🪧 " + word + " goblins";
+      }
     })
     .catch(function(){});
 }
