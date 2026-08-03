@@ -27,24 +27,32 @@
 
   // [label, href, group, pinned] — pinned items also appear in the panel so the
   // mobile menu (which hides the inline row) always reaches all destinations.
+  // ORDER IS PRIORITY, not alphabet. We are a MINING corp, so the tools that turn
+  // rock into ISK sit above the ones that watch other people. Within MARKET:
+  // Ore Calc first (what is this rock worth, the question every member asks
+  // daily), then Survey Scan and Reprocess which answer the same question at the
+  // belt, then Market/Blueprints/Arbitrage which are the industry layer, then the
+  // Workbench which is where you go when you already know what you want.
+  // MARKET now sits ABOVE INTEL for the same reason: intel serves the mining, not
+  // the other way round.
   var ITEMS = [
     ["Home",        BASE,                     "HOME",   true ],
     ["Apply",       BASE + "apply/",          "HOME",   false],
     ["Portal",      BASE + "portal/",         "MEMBER", true ],
     ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
     ["Decorations", BASE + "decorations/",    "MEMBER", false],
-    ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
-    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false],
-    ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
-    ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
+    ["Ore Calc",    BASE + "refine/",         "MARKET", false],
+    ["Survey Scan", BASE + "survey/",         "MARKET", false],
+    ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
     ["Market",      BASE + "market/",         "MARKET", false],
     ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
-    ["Ore Calc",    BASE + "refine/",         "MARKET", false],
-  ["Survey Scan", BASE + "survey/",         "MARKET", false],
-    ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
-    ["Workbench",   BASE + "tools/",          "MARKET", false]
+    ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
+    ["Workbench",   BASE + "tools/",          "MARKET", false],
+    ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
+    ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
+    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false]
   ];
-  var GROUPS = ["HOME", "MEMBER", "INTEL", "MARKET"];
+  var GROUPS = ["HOME", "MEMBER", "MARKET", "INTEL"];
   // Members see the recruiting tools by name; the public sees the redacted labels.
   // Set once whoami resolves (below); default stays CLASSIFIED/REDACTED for the world.
   var MEMBER_LABELS = { "bonk-prospects/": "Recruiting", "alliance/": "Alliance", "cartel/": "Watchtower", "gobsec/": "GOBSEC" };
