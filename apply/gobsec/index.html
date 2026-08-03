@@ -72,14 +72,6 @@
                      color:var(--silver-dim); }
   @media(max-width:480px){ .gsBegin{ padding:12px 30px; letter-spacing:.22em; } }
 
-/* recruiter-only destination switch. Officer session required, never a URL flag. */
-.gsHire{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
-  margin:0 0 14px; padding:9px 12px; border:1px dashed rgba(255,71,87,.4); background:rgba(255,71,87,.04); }
-.gsHireK{ font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
-.gsHireB{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-  background:transparent; border:1px solid var(--line); color:var(--silver-dim); padding:5px 11px; cursor:pointer; }
-.gsHireB.on{ border-color:#ff4757; color:#ff4757; background:rgba(255,71,87,.1); }
-.gsHireN{ font-family:var(--mono); font-size:9px; color:var(--muted); width:100%; text-align:center; }
 </style></head>
 <body>
 <script src="/nav.js?v=23"></script>
@@ -112,22 +104,11 @@
   <div class="gsPool" id="gsPool" hidden>
     <div class="gpk">The list</div>
     <p class="gph">150 names. <b id="gpSolo">0</b> solo kills.</p>
-    <p class="gpn">We ran the numbers on <b id="gpRows">0</b> pilots and kept 150.
-      Solo means nobody came to help. It didn't matter.</p>
+    <p class="gpn">We ran the numbers on <b id="gpRows">0</b> pilots and kept 150.</p>
     <p class="gpc">If you're on it, you already know.</p>
   </div>
 
   <div class="gsActs">
-    <!-- TWO DOORS. Only a corp's own CEO/director can invite to it, and both chairs
-         are held on different characters, so the recruiter picks the destination
-         BEFORE sending the link. Hidden by default: a recruit should see one door,
-         not an org chart. Revealed only for a logged-in officer or admin. -->
-    <div class="gsHire" id="gsHire" hidden>
-      <span class="gsHireK">Hiring into</span>
-      <button class="gsHireB on" data-dest="gobsec">GOBSEC</button>
-      <button class="gsHireB" data-dest="wd">Wealthy Dropouts</button>
-      <span class="gsHireN" id="gsHireN">invite goes out from Notorious ORE</span>
-    </div>
     <a class="gsBegin" id="gsBegin" href="/apply/?track=gobsec">I'm in</a>
     <div class="gsAlt">or come meet the crew first:
       <a href="https://discord.gg/XjeYXTEcq7" target="_blank" rel="noopener">Discord</a></div>
@@ -159,32 +140,5 @@
     .catch(function () {});
 })();
 </script>
-<script>
-/* The switch is for the recruiter, not the recruit.
-   GATED ON A REAL OFFICER SESSION, not a URL flag. ?hire=1 was not gating: anyone
-   holding the link saw which character runs which corp, on a PUBLIC recruiting
-   page. Now it asks the server who you are, so a logged-out visitor (or any
-   member below officer) never receives the markup state at all. */
-(function(){
-  var box=document.getElementById("gsHire"), cta=document.getElementById("gsBegin"),
-      note=document.getElementById("gsHireN");
-  if(!box||!cta) return;
-  fetch("/api/whoami",{credentials:"same-origin",cache:"no-store"})
-    .then(function(r){ return r.ok?r.json():null; })
-    .then(function(d){
-      if(!d||!d.loggedIn) return;
-      if(d.role!=="officer"&&d.role!=="admin") return;
-      box.hidden=false;
-      var WHO={ gobsec:"invite goes out from Notorious ORE", wd:"invite goes out from Fear Cleary" };
-      box.querySelectorAll(".gsHireB").forEach(function(b){
-        b.addEventListener("click", function(){
-          var t=b.getAttribute("data-dest");
-          box.querySelectorAll(".gsHireB").forEach(function(x){ x.classList.toggle("on", x===b); });
-          cta.href = "/apply/?track=gobsec" + (t==="wd" ? "&to=wd" : "");
-          note.textContent = WHO[t];
-        });
-      });
-    }).catch(function(){});
-})();
-</script>
+
 </body></html>
