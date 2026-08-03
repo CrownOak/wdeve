@@ -296,23 +296,39 @@
 
   /* THE SUGGESTION BOX. Small, quiet, bottom of the rail. The note under the
      button is load bearing: it states exactly what the backend does. */
-  .sugg{ border:1px solid var(--line); background:var(--steel); padding:11px 13px; margin:0 0 14px; }
-  .sugg .sgk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.22em; color:var(--muted); margin-bottom:8px; }
+  /* THE SUGGESTION BOX. Two things were wrong before: the load-bearing sentence
+     ("Genuinely anonymous...") rendered in --muted, the dimmest colour on the page
+     and the same one used for timestamps, so the promise the whole feature rests on
+     read as fine print. And Send was grey border on grey text, which is what a
+     DISABLED control looks like everywhere else in this portal.
+     Now it carries the ore accent and the same soft glow as the apply flow and the
+     milestone card, so it reads as a live thing rather than a dead panel. */
+  .sugg{ border:1px solid rgba(70,255,94,.22); border-left:3px solid var(--ore);
+    background:linear-gradient(180deg, rgba(70,255,94,.045), rgba(70,255,94,0) 60%), var(--steel);
+    padding:12px 14px; margin:0 0 14px;
+    box-shadow:0 0 0 1px rgba(70,255,94,.05), 0 14px 30px -24px rgba(70,255,94,.5); }
+  .sugg .sgk{ font-family:var(--mono); font-size:8.5px; letter-spacing:.22em; color:var(--ore); margin-bottom:9px; }
   .sugg textarea{ width:100%; font-size:12.5px; padding:7px 9px; resize:vertical; min-height:44px; }
+  .sugg textarea:focus{ outline:none; border-color:var(--ore);
+    box-shadow:0 0 8px rgba(70,255,94,.18); }
   .sgsign{ display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:10px;
-    color:var(--muted); margin:7px 0; cursor:pointer; }
+    color:var(--silver-dim); margin:7px 0; cursor:pointer; }
   .sgsign input{ accent-color:var(--ore); }
   .sgbtn{ font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
-    background:transparent; border:1px solid var(--line); color:var(--silver-dim); padding:5px 13px; cursor:pointer; }
-  .sgbtn:hover{ border-color:var(--ore); color:var(--ore); }
-  .sgbtn[disabled]{ opacity:.5; cursor:default; }
-  .sgnote{ font-family:var(--mono); font-size:9.5px; color:var(--muted); line-height:1.5; margin-top:8px; }
-  .sgi{ border-top:1px solid var(--line-soft); padding:8px 0 0; margin-top:9px; }
-  .sgb{ font-size:12px; color:var(--silver-dim); line-height:1.5; }
+    background:transparent; border:1px solid var(--ore); color:var(--ore); padding:6px 15px; cursor:pointer;
+    transition:background .15s, box-shadow .15s; }
+  .sgbtn:hover{ background:rgba(70,255,94,.1); box-shadow:0 0 14px rgba(70,255,94,.25); }
+  .sgbtn[disabled]{ opacity:.45; cursor:default; border-color:var(--line); color:var(--silver-dim);
+    background:transparent; box-shadow:none; }
+  /* the promise. Never dimmer than the body text it is vouching for. */
+  .sgnote{ font-family:var(--mono); font-size:9.5px; color:var(--silver-dim); line-height:1.55; margin-top:9px;
+    padding-top:8px; border-top:1px solid var(--line-soft); }
+  .sgi{ border-top:1px solid var(--line-soft); padding:9px 0 0; margin-top:10px; }
+  .sgb{ font-size:12px; color:var(--silver); line-height:1.55; }
   .sgm{ font-family:var(--mono); font-size:9.5px; color:var(--muted); margin-top:4px; }
   .sgm b{ color:var(--ore); font-weight:400; }
   .sgr{ font-size:11.5px; color:var(--silver); border-left:2px solid var(--ore);
-    padding-left:8px; margin-top:6px; line-height:1.5; }
+    padding-left:9px; margin-top:7px; line-height:1.55; }
   .sgempty{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:10px; }
   /* ---------- rail event cards ---------- */
   .revt{ display:block; background:var(--black); border:1px solid var(--line-soft);
