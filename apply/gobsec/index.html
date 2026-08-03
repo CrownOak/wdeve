@@ -72,7 +72,7 @@
                      color:var(--silver-dim); }
   @media(max-width:480px){ .gsBegin{ padding:12px 30px; letter-spacing:.22em; } }
 
-/* recruiter-only destination switch (?hire=1) */
+/* recruiter-only destination switch. Officer session required, never a URL flag. */
 .gsHire{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;
   margin:0 0 14px; padding:9px 12px; border:1px dashed rgba(255,71,87,.4); background:rgba(255,71,87,.04); }
 .gsHireK{ font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
@@ -160,24 +160,31 @@
 })();
 </script>
 <script>
-/* The switch is for the recruiter, not the recruit. Off unless ?hire=1, so the
-   public page still shows exactly one door. Choosing a destination only rewrites
-   the CTA link; the applicant never sees a choice and the server re-validates. */
+/* The switch is for the recruiter, not the recruit.
+   GATED ON A REAL OFFICER SESSION, not a URL flag. ?hire=1 was not gating: anyone
+   holding the link saw which character runs which corp, on a PUBLIC recruiting
+   page. Now it asks the server who you are, so a logged-out visitor (or any
+   member below officer) never receives the markup state at all. */
 (function(){
-  if (!/[?&]hire=1/.test(location.search)) return;
   var box=document.getElementById("gsHire"), cta=document.getElementById("gsBegin"),
       note=document.getElementById("gsHireN");
   if(!box||!cta) return;
-  box.hidden=false;
-  var WHO={ gobsec:"invite goes out from Notorious ORE", wd:"invite goes out from Fear Cleary" };
-  box.querySelectorAll(".gsHireB").forEach(function(b){
-    b.addEventListener("click", function(){
-      var d=b.getAttribute("data-dest");
-      box.querySelectorAll(".gsHireB").forEach(function(x){ x.classList.toggle("on", x===b); });
-      cta.href = "/apply/?track=gobsec" + (d==="wd" ? "&to=wd" : "");
-      note.textContent = WHO[d];
-    });
-  });
+  fetch("/api/whoami",{credentials:"same-origin",cache:"no-store"})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){
+      if(!d||!d.loggedIn) return;
+      if(d.role!=="officer"&&d.role!=="admin") return;
+      box.hidden=false;
+      var WHO={ gobsec:"invite goes out from Notorious ORE", wd:"invite goes out from Fear Cleary" };
+      box.querySelectorAll(".gsHireB").forEach(function(b){
+        b.addEventListener("click", function(){
+          var t=b.getAttribute("data-dest");
+          box.querySelectorAll(".gsHireB").forEach(function(x){ x.classList.toggle("on", x===b); });
+          cta.href = "/apply/?track=gobsec" + (t==="wd" ? "&to=wd" : "");
+          note.textContent = WHO[t];
+        });
+      });
+    }).catch(function(){});
 })();
 </script>
 </body></html>
