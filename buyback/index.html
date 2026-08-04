@@ -97,14 +97,45 @@
          display:none; line-height:1.7; text-align:center; }
   .qerr a{ color:var(--ore); }
 
-  /* the reading room (kept in full, by decree) */
-  .faq{ margin-top:52px; }
-  .faq h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.08em;
-    font-size:15px; color:var(--ore); text-align:center; margin:38px 0 4px; position:relative; }
-  .faq h2::before, .faq h2::after{ content:""; position:absolute; top:50%; width:60px; height:1px;
-    background:var(--line); }
-  .faq h2::before{ left:0; } .faq h2::after{ right:0; }
-  .faq p{ color:#a9b2a8; font-size:14.5px; line-height:1.7; margin:14px 0 0; }
+  /* the board: what every rock pays, no pasting required */
+  .board{ margin-top:52px; }
+  .bhead{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .bhead h2{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; font-size:15px; color:var(--ore); margin:0; }
+  .bhead .bnote{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--muted); }
+  .bctl{ display:flex; gap:10px; margin-left:auto; align-items:center; flex-wrap:wrap; }
+  .bctl input{ background:#0a0d0b; border:1px solid var(--line); color:var(--silver);
+    font-family:var(--mono); font-size:11.5px; padding:6px 10px; width:150px; }
+  .bctl input:focus{ outline:none; border-color:var(--ore); }
+  .bctl label{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--silver-dim);
+    display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
+  .bscroll{ max-height:430px; overflow-y:auto; border:1px solid var(--line-soft); }
+  .btable{ border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12px; }
+  .btable th{ position:sticky; top:0; background:var(--steel); text-align:right; color:var(--muted);
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; padding:9px 12px; cursor:pointer;
+    border-bottom:1px solid var(--line); }
+  .btable th:first-child{ text-align:left; }
+  .btable th.on{ color:var(--ore); }
+  .btable td{ padding:6px 12px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  .btable td.num{ text-align:right; color:var(--silver); font-variant-numeric:tabular-nums; }
+  .btable tr:hover td{ color:var(--ore); }
+  .bgate{ font-family:var(--mono); font-size:12px; color:var(--muted); border:1px solid var(--line-soft);
+    padding:18px; text-align:center; line-height:1.7; }
+  .bgate a{ color:var(--ore); }
+
+  /* the fine print, folded */
+  .faq{ margin-top:34px; }
+  details.fq{ border-top:1px solid var(--line-soft); }
+  details.fq:last-of-type{ border-bottom:1px solid var(--line-soft); }
+  details.fq summary{ list-style:none; cursor:pointer; font-family:var(--mono); font-size:11px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--muted); padding:12px 4px;
+    display:flex; align-items:center; gap:10px; transition:color .2s; }
+  details.fq summary::-webkit-details-marker{ display:none; }
+  details.fq summary::before{ content:"\25B8"; font-size:10px; transition:transform .15s; }
+  details.fq[open] summary{ color:var(--silver-dim); }
+  details.fq[open] summary::before{ transform:rotate(90deg); color:var(--ore); }
+  details.fq summary:hover{ color:var(--silver-dim); }
+  details.fq p{ color:#a9b2a8; font-size:13.5px; line-height:1.7; margin:0 4px 14px; max-width:700px; }
   footer{ margin-top:40px; text-align:center; }
 
   @media(max-width:520px){
@@ -151,8 +182,20 @@
     <div class="mwrap" id="mwrap"><div><table class="mtable" id="mtable"></table></div></div>
   </div>
 
+  <div class="board" id="board">
+    <div class="bhead">
+      <h2>The price board</h2>
+      <span class="bnote" id="bnote">what every rock pays, per unit and per hold space</span>
+      <div class="bctl" id="bctl" style="display:none">
+        <input id="bq" type="search" placeholder="filter ore" spellcheck="false">
+        <label><input id="bcomp" type="checkbox"> compressed</label>
+      </div>
+    </div>
+    <div id="bbody"></div>
+  </div>
+
   <div class="faq">
-    <h2>Why your cargo tooltip says one number and the desk says another</h2>
+    <details class="fq"><summary>Why your cargo tooltip says one number and the desk says another</summary>
     <p>The number in your cargo tooltip is real. It is also not a buyer. It is the game's polite
     guess at what the minerals inside your rocks might fetch at a trade hub, if the rocks were
     already minerals, and the minerals were already twenty jumps away, and somebody there wanted
@@ -163,8 +206,8 @@
     money, they are homework with a spread).</p>
     <p>The buyback skips all of it. You drop ore at the home station, ISK appears, you are back in
     the belt before your wallet stops blinking. We do the refining, the hauling, the market grind,
-    and the getting shot at. That service is the product.</p>
-    <h2>The three doors</h2>
+    and the getting shot at. That service is the product.</p></details>
+    <details class="fq"><summary>The three doors</summary>
     <p>You never have to use the desk. Three doors, always open. Contract it to the corp and get
     paid now. Haul it to a hub yourself and squeeze the top price out of it, we will wave at the
     gate. Or refine it and build things, the industry program will take every mineral you can make.
@@ -172,7 +215,7 @@
     <p>Want to compare doors first? <a href="/refine/">The calculator</a> prices your load at every
     hub. The desk quotes what we pay. Both numbers are honest, they are just answering different
     questions: what your ore might be worth somewhere, versus what it is worth right here, right
-    now, with zero effort attached.</p>
+    now, with zero effort attached.</p></details>
   </div>
 
   <footer>The desk quote and the fleet ledger read the same table, so the same rock never pays two
@@ -334,6 +377,54 @@
       $("vunit").classList.add("in");
     }
   }catch(e){}
+
+  /* ---- the price board: the whole list, no pasting required ---- */
+  var BROWS=null, bSort="m3", bDir=-1;
+  function unitFmt(v){ return v>=1000 ? Math.round(v).toLocaleString() : v.toFixed(2); }
+  function drawBoard(){
+    if(!BROWS) return;
+    var q=($("bq").value||"").toLowerCase().trim();
+    var comp=$("bcomp").checked;
+    var rows=BROWS.filter(function(r){
+      if(!comp && /^compressed /i.test(r.name)) return false;
+      return !q || r.name.toLowerCase().indexOf(q)>=0;
+    });
+    rows.sort(function(a,b){
+      var x = bSort==="name" ? a.name.toLowerCase() : (bSort==="unit" ? a.isk : a.m3);
+      var y = bSort==="name" ? b.name.toLowerCase() : (bSort==="unit" ? b.isk : b.m3);
+      return (x<y?-1:x>y?1:0)*bDir;
+    });
+    var h='<div class="bscroll"><table class="btable"><thead><tr>'
+      +'<th data-s="name" class="'+(bSort==="name"?"on":"")+'">ore</th>'
+      +'<th data-s="unit" class="'+(bSort==="unit"?"on":"")+'">isk / unit</th>'
+      +'<th data-s="m3" class="'+(bSort==="m3"?"on":"")+'">isk / m&sup3;</th>'
+      +'</tr></thead><tbody>';
+    rows.forEach(function(r){
+      h+="<tr><td>"+r.name.replace(/[<>&]/g,"")+"</td><td class='num'>"+unitFmt(r.isk)
+        +"</td><td class='num'>"+(r.m3?unitFmt(r.m3):"&ndash;")+"</td></tr>";
+    });
+    h+="</tbody></table></div>";
+    $("bbody").innerHTML=h;
+    Array.prototype.forEach.call($("bbody").querySelectorAll("th[data-s]"),function(th){
+      th.onclick=function(){
+        var k=th.getAttribute("data-s");
+        if(bSort===k) bDir=-bDir; else { bSort=k; bDir = k==="name" ? 1 : -1; }
+        drawBoard();
+      };
+    });
+  }
+  fetch("/api/quote/board",{credentials:"same-origin"}).then(function(r){
+    if(r.status===401){ $("bbody").innerHTML='<div class="bgate">The board prices members. <a href="/portal/">Log in once</a> and every rock shows its number.</div>'; return null; }
+    return r.json();
+  }).then(function(d){
+    if(!d||!d.ok) return;
+    BROWS=d.rows.map(function(r){ return {name:r.name, isk:r.isk, m3:(r.vol&&r.vol>0)?(r.isk/r.vol):0}; });
+    $("bctl").style.display="flex";
+    if(d.asof) $("bnote").textContent="per unit and per hold space · baked "+hhmm(d.asof);
+    drawBoard();
+    $("bq").addEventListener("input", drawBoard);
+    $("bcomp").addEventListener("change", drawBoard);
+  }).catch(function(){});
 })();
 </script>
 </body></html>
