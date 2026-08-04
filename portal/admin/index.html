@@ -1796,10 +1796,82 @@ async function secRecruiting(){
 <script>
 "use strict";
 /* ================= 5. DECORATIONS ================= */
+/* The pin list (Kyle 2026-08-04): the portal hands out a medal the moment it is
+   earned, but the one a goblin sees in the EVE client gets pinned by hand, and
+   nothing tracked which was which. This drains to zero: high honors and event
+   medals pending first, mark them as you pin them, undo lives with the pinned. */
+let QSTATE={all:false, pinned:false};
+function medalQueueHTML(rows){
+  const shown=rows.filter(function(r){ return QSTATE.all || r.honor; });
+  const pending=shown.filter(function(r){ return !r.ingame_at; });
+  const pinned=shown.filter(function(r){ return !!r.ingame_at; });
+  const hidden=rows.length-shown.length;
+  let h='<div class="panel" style="margin-bottom:18px"><div class="ptitle">The pin list</div>'
+    +'<div class="rowmeta" style="margin-bottom:10px">Medals the portal already gave that nobody has pinned in the client yet. '
+    +'High honors and event medals by default, the shelf stuff stays digital. '
+    +'<a href="#" id="mq_all">'+(QSTATE.all?"back to the honors":"show every medal ("+hidden+" hidden)")+"</a></div>";
+  if(!pending.length){
+    h+='<div class="nap">Nothing waiting. The wall and the client agree, enjoy it while it lasts.</div>';
+  } else {
+    h+='<div style="overflow-x:auto"><table><thead><tr><th></th><th>Medal</th><th>Goblin</th><th>Awarded</th><th></th></tr></thead><tbody>';
+    pending.forEach(function(r){
+      h+="<tr>"
+        +'<td style="font-size:19px">'+esc(r.emoji||"")+"</td>"
+        +'<td class="tl"><b>'+esc(r.name)+"</b>"+(r.honor?"":' <span class="rowmeta">rank</span>')
+        +(r.note?'<div class="rowmeta">'+esc(r.note)+"</div>":"")+"</td>"
+        +'<td class="tl"><b>'+esc(r.ign||("account "+r.account_id))+"</b></td>"
+        +'<td class="tl">'+esc(fmtDate(r.awarded_at))+'<div class="rowmeta">by '+esc(r.awarded_by||"system")+"</div></td>"
+        +'<td><button class="gobtn" data-mqpin="'+esc(String(r.account_id))+'|'+esc(r.key)+'">Pinned in game</button></td>'
+        +"</tr>";
+    });
+    h+="</tbody></table></div>";
+  }
+  h+='<div class="rowmeta" style="margin-top:10px"><a href="#" id="mq_pinned">'
+    +(QSTATE.pinned?"hide the pinned":"show the pinned ("+pinned.length+")")+"</a></div>";
+  if(QSTATE.pinned && pinned.length){
+    h+='<div style="overflow-x:auto"><table><tbody>';
+    pinned.forEach(function(r){
+      h+='<tr><td style="font-size:16px">'+esc(r.emoji||"")+"</td>"
+        +'<td class="tl">'+esc(r.name)+"</td><td class='tl'>"+esc(r.ign||("account "+r.account_id))+"</td>"
+        +'<td class="tl"><span class="rowmeta">pinned '+esc(fmtDate(r.ingame_at))+" by "+esc(r.ingame_by||"")+"</span></td>"
+        +'<td><a href="#" class="mqundo" data-mqundo="'+esc(String(r.account_id))+'|'+esc(r.key)+'">undo</a></td></tr>';
+    });
+    h+="</tbody></table></div>";
+  }
+  h+="</div>";
+  return h;
+}
+function bindMedalQueue(){
+  const m=document.getElementById("main");
+  const rerender=function(){ secDecorations(); };
+  const t1=document.getElementById("mq_all");
+  if(t1) t1.addEventListener("click", function(e){ e.preventDefault(); QSTATE.all=!QSTATE.all; rerender(); });
+  const t2=document.getElementById("mq_pinned");
+  if(t2) t2.addEventListener("click", function(e){ e.preventDefault(); QSTATE.pinned=!QSTATE.pinned; rerender(); });
+  m.querySelectorAll("[data-mqpin]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const p=this.getAttribute("data-mqpin").split("|");
+      busy(this, async function(){
+        await api("/api/admin/medal-ingame",{account_id:Number(p[0]), decoration_key:p[1]});
+        toast("Pinned. The client and the wall agree on one more thing.");
+        rerender();
+      });
+    });
+  });
+  m.querySelectorAll("[data-mqundo]").forEach(function(a){
+    a.addEventListener("click", function(e){
+      e.preventDefault();
+      const p=this.getAttribute("data-mqundo").split("|");
+      api("/api/admin/medal-ingame",{account_id:Number(p[0]), decoration_key:p[1], undo:true})
+        .then(function(){ toast("Back on the pin list."); secDecorations(); })
+        .catch(function(err){ if(err.message!==SILENT) toast(err.message, true); });
+    });
+  });
+}
 async function secDecorations(){
   const m=document.getElementById("main");
-  m.innerHTML=head("Decorations","the catalog behind the Wall of Goblins")+skel(3);
-  let j;
+  m.innerHTML=head("Decorations","the pin list + the catalog behind the Wall of Goblins")+skel(3);
+  let j, q=null;
   try{ j=await api("/api/admin/decorations"); }
   catch(e){
     if(e.message===SILENT) return;
@@ -1807,9 +1879,13 @@ async function secDecorations(){
       +'<button class="inv" onclick="secDecorations()">Try again</button>';
     return;
   }
+  try{ q=await api("/api/admin/medal-queue"); }
+  catch(e){ if(e.message===SILENT) return; }
   CATALOG=j.decorations||j.catalog||[];
   const remind=j.reminder||j.message||"When the catalog changes, update the static Wall of Goblins page so the wall and the shelf never drift.";
-  let h=head("Decorations","the catalog behind the Wall of Goblins");
+  let h=head("Decorations","the pin list + the catalog behind the Wall of Goblins");
+  h+=(q&&q.queue) ? medalQueueHTML(q.queue)
+    : '<div class="nap" style="margin-bottom:14px">The pin list would not load. The catalog below still works, try the tab again for the list.</div>';
   h+='<div class="nap" style="padding:8px 0 14px">'+esc(remind)+"</div>";
   h+='<div style="overflow-x:auto"><table><thead><tr><th></th><th>Name</th><th>Key</th><th>Tier</th><th>Grant</th><th>Source</th><th>Threshold</th>'
     +(ISADMIN?"<th></th>":"")+"</tr></thead><tbody>";
@@ -1831,6 +1907,7 @@ async function secDecorations(){
   if(ISADMIN) h+='<div style="margin-top:14px"><button class="inv" id="dadd">Add a medal</button></div><div id="dform"></div>';
   h+=footLine();
   m.innerHTML=h;
+  bindMedalQueue();
   if(ISADMIN){
     document.getElementById("dadd").addEventListener("click", function(){ decForm({}); });
     m.querySelectorAll("[data-dedit]").forEach(function(b){
