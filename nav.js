@@ -147,6 +147,9 @@
   html += '<div class="bn-group" data-i18n-skip><div class="bn-glabel">LANGUAGE · ЯЗЫК</div>'
         + '<button type="button" class="bn-item" data-lang="en">English</button>'
         + '<button type="button" class="bn-item" data-lang="ru">Русский</button></div>';
+  // The desk gets a door of its own at the bottom of the panel. It is the one
+  // tool every miner needs mid contract, so it glows, gently, like the rock does.
+  html += '<a class="bn-deskbtn" href="' + ORIGIN + BASE + 'buyback/">THE BUYBACK DESK</a>';
   html += '</div>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
@@ -290,7 +293,20 @@
     ".bn-burger.bn-hot .bn-lines span:nth-child(2){animation-delay:.2s;}" +
     ".bn-burger.bn-hot .bn-lines span:nth-child(3){animation-delay:.4s;}" +
     "@keyframes bnPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.55;}}" +
-    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span{animation:none;}}" +
+    // the desk glows: the menu row breathes a little green, and the panel ends on
+    // a full door. Slow and subtle on purpose, ~4s, it should catch the corner of
+    // the eye, not wave at it.
+    ".bn-item[data-rel=\"buyback/\"]{color:var(--ore,#46ff5e);animation:bnDeskRow 4.2s ease-in-out infinite;}" +
+    ".bn-item[data-rel=\"buyback/\"].cur{animation:none;}" +
+    "@keyframes bnDeskRow{0%,100%{text-shadow:0 0 0 rgba(70,255,94,0);}50%{text-shadow:0 0 11px rgba(70,255,94,.6);}}" +
+    ".bn-deskbtn{display:block;margin-top:14px;padding:11px 12px;text-align:center;text-decoration:none;" +
+    "font-family:var(--mono,ui-monospace,monospace);font-size:11.5px;letter-spacing:.22em;font-weight:700;" +
+    "color:var(--ore,#46ff5e);border:1px solid rgba(70,255,94,.45);" +
+    "animation:bnDeskGlow 4.2s ease-in-out infinite;transition:background .2s,color .2s;}" +
+    ".bn-deskbtn:hover{background:var(--ore,#46ff5e);color:#04140a;animation:none;}" +
+    "@keyframes bnDeskGlow{0%,100%{box-shadow:0 0 0 rgba(70,255,94,0);border-color:rgba(70,255,94,.35);}" +
+    "50%{box-shadow:0 0 14px rgba(70,255,94,.28),0 0 4px rgba(70,255,94,.2) inset;border-color:rgba(70,255,94,.75);}}" +
+    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span,.bn-deskbtn,.bn-item[data-rel=\"buyback/\"]{animation:none;}}" +
     "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
     ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
     "max-height:calc(100vh - 54px);}}" +
