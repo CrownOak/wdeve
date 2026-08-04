@@ -41,6 +41,7 @@
     ["Portal",      BASE + "portal/",         "MEMBER", true ],
     ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
     ["Decorations", BASE + "decorations/",    "MEMBER", false],
+    ["Buyback Desk", BASE + "buyback/",       "MEMBER", false],
     ["Ore Calc",    BASE + "refine/",         "MARKET", false],
     ["Survey Scan", BASE + "survey/",         "MARKET", false],
     ["Reprocess",   BASE + "reprocess/",      "MARKET", false],

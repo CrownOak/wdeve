@@ -253,7 +253,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       <textarea id="ore" placeholder="Paste ore from your inventory, one per line:&#10;Compressed Kernite	147327&#10;Compressed Omber II-Grade	524219&#10;..."></textarea>
       <div class="controls">
         <button id="go" class="gobtn">Calculate</button>
-        <div class="effnote">Buyback of the refined value. Reprocesses in 100-unit batches (rounds down).</div>
+        <div class="effnote">Reprocesses in 100-unit batches (rounds down).</div>
       </div>
     </div>
     <div id="out"></div>
@@ -286,8 +286,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     </div>
   </div>
   <footer>Yields from the EVE SDE; refined material prices are Jita and Rens sell, ore market prices
-  cover all five hubs (region aggregates), refreshed hourly. BUYBACK is the buyback percent of the
-  JITA refined value, the number to pay out for corp fleet ops. Ore Prices: instant is the top buy
+  cover all five hubs (region aggregates), refreshed hourly. What the corp pays lives on <a href="/buyback/">the buyback desk</a>. Ore Prices: instant is the top buy
   order, list is the robust cheapest 5 percent sell. The Project Tracker is corp only, gated by a
   password, with the Keep and build queue shared on the server (never in this page); buy costs are
   estimates and the order book moves on big buys. Auto-refreshes every 60m.</footer>
@@ -322,28 +321,26 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   var mode="fwd", lastRefined={}, keep={}, queue=[], custom={}, TGT={}, MPX={}, unlocked=false, ptoken="";
   // Refining efficiency is fixed and internal (the corp's basis). No toggle, no
   // presets: the buyback stays constant as the structure improves, and the
-  // efficiency is never exposed on the page.
-  // Basis by ore family (Kyle 2026-07-26). Empire rock is valued at a lower internal
-  // recovery than null rock; the headline buyback rate BB is unchanged either way.
-  // ONE place to edit. Move a family between the two sets to change what it pays.
-  // FALLBACKS ONLY, used when /api/basis is unreachable. Empire moved 0.56 -> 0.68 on
-  // 2026-07-31 and this constant was left behind, so an offline page quoted every empire
-  // rock 18% light. Keep it in step with the live setting or it lies quietly.
-  var EFF_NULL=0.70, EFF_EMPIRE=0.68, BASIS_ON=true;
+  /* PUBLIC DEFAULT IS THE NPC STATION BASE (50%), a number anyone can check on a
+     wiki. It carries NO corp information: the corp's real recovery and pay rate
+     arrive ONLY via the gated /api/basis fetch (members, same origin session).
+     Do not reintroduce a fallback constant: baking the internal figures into the
+     public source made the whole gating story theater. */
+  var EFF_NULL=0.50, EFF_EMPIRE=0.50, BASIS_ON=true;
   var NULL_ORE={"Arkonor":1,"Bistot":1,"Spodumain":1,"Mercoxit":1,"Crokite":1};
   function effFor(g){ if(!BASIS_ON) return EFF_NULL; return NULL_ORE[g] ? EFF_NULL : EFF_EMPIRE; }
-  // Live override from the portal so the rate can be retuned or switched off without
-  // rebuilding this page. Values above are the fallback when the API is unreachable.
-  (function(){ try{ fetch("/api/basis").then(function(r){ return r.json(); }).then(function(b){
+  // Corp pay rate. ONLY the gated fetch sets it; survey valuation stays dark without it.
+  var BB=null;
+  (function(){ try{ fetch("/api/basis",{credentials:"same-origin"}).then(function(r){ return r.json(); }).then(function(b){
     if(!b||!b.ok) return;
     if(typeof b.empire==="number") EFF_EMPIRE=b.empire;
     if(typeof b.null==="number") EFF_NULL=b.null;
+    if(typeof b.bb==="number") BB=b.bb;
     BASIS_ON = b.on !== false;
     if(Array.isArray(b.nullGroups)){ NULL_ORE={}; b.nullGroups.forEach(function(g){ NULL_ORE[g]=1; }); }
+    EFF=EFF_EMPIRE;
   }).catch(function(){}); }catch(e){} })();
   var EFF=EFF_EMPIRE;   // legacy scalar, only for paths with no ore context
-  // The buyback rate. Fixed, no dial (it does not change). ONE place to edit.
-  var BB=0.90;
   function m3fmt(v){ v=v||0; if(v>=1e6) return (v/1e6).toFixed(2)+"M"; if(v>=1e3) return (v/1e3).toFixed(1)+"k"; return String(Math.round(v)); }
   function calcFwd(){
     var eff=EFF;
@@ -360,27 +357,24 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       var oeff=effFor(y.grp);
       for(var mid in y.m){ got[mid]=(got[mid]||0)+batches*y.m[mid]*oeff; }
     });
-    var bb=BB, bbpct=Math.round(BB*100);
-    var rows=[], tj=0, tr=0, tbb=0;
+    var rows=[], tj=0, tr=0;
     Object.keys(got).forEach(function(mid){
       var amt=Math.floor(got[mid]); if(amt<=0) return;
       var p=DATA.prices[mid]||{j:0,r:0};
       var jv=amt*p.j, rv=amt*p.r; tj+=jv; tr+=rv;
-      var av=p.j||p.r;   // buyback basis is JITA (Kyle 2026-07-12); Rens only if a material never trades at Jita
-      var bv=amt*av*bb; tbb+=bv;
-      rows.push({name:DATA.names[mid]||("id:"+mid), amt:amt, jv:jv, rv:rv, bv:bv});
+      rows.push({name:DATA.names[mid]||("id:"+mid), amt:amt, jv:jv, rv:rv});
     });
     rows.sort(function(a,b){ return b.jv-a.jv; });
     var out=document.getElementById("out");
     if(!items.length){ out.innerHTML="<div class='empty'>Paste ore above and hit Calculate.</div>"; return; }
     var h="<div class='totline'><div><div class='k'>Total Jita</div><div class='v'>"+isk(tj)+"</div></div>"
         +"<div><div class='k'>Total Rens</div><div class='v'>"+isk(tr)+"</div></div>"
-        +"<div><div class='k'>Buyback ("+bbpct+"%)</div><div class='v good'>"+isk(tbb)+"</div></div>"
         +"<div><div class='k'>Ore lines</div><div class='v'>"+matched+"</div></div></div>";
-    h+="<table><thead><tr><th data-tip='Refined mineral you get from reprocessing the pasted ore.'>MATERIAL</th><th data-tip='Refined units you recover from reprocessing this ore.'>AMOUNT</th><th data-tip='That amount sold at Jita (The Forge) sell prices.'>JITA VALUE</th><th data-tip='That amount sold at Rens (Heimatar) sell prices.'>RENS VALUE</th><th data-tip='Corp buyback for fleet ops: the buyback percent of the Jita refined value. This is what you pay the miner.'>BUYBACK</th></tr></thead><tbody>";
+    h+="<table><thead><tr><th data-tip='Refined mineral you get from reprocessing the pasted ore.'>MATERIAL</th><th data-tip='Refined units you recover from reprocessing this ore.'>AMOUNT</th><th data-tip='That amount sold at Jita (The Forge) sell prices.'>JITA VALUE</th><th data-tip='That amount sold at Rens (Heimatar) sell prices.'>RENS VALUE</th></tr></thead><tbody>";
     rows.forEach(function(r){ h+="<tr><td class='who'>"+r.name+"</td><td class='num'>"+r.amt.toLocaleString()
-       +"</td><td class='num'>"+isk(r.jv)+"</td><td class='num'>"+isk(r.rv)+"</td><td class='num strong good'>"+isk(r.bv)+"</td></tr>"; });
+       +"</td><td class='num'>"+isk(r.jv)+"</td><td class='num'>"+isk(r.rv)+"</td></tr>"; });
     h+="</tbody></table>";
+    h+="<div class='effnote'><b>Looking for the buyback price?</b> It moved to its own desk: <a href='/buyback/'>bonkeve.com/buyback</a> quotes this exact cargo to the ISK, contract ready. Same number, its own page.</div>";
     lastRefined={}; rows.forEach(function(r){ lastRefined[r.name]=(lastRefined[r.name]||0)+r.amt; });
     h+="<button id='addkeep' class='gobtn' style='margin-top:14px'>Add these "+rows.length+" minerals to the Keep</button>";
     if(gasLines.length) h+="<div class='unmatched'>Gas does not refine ("+gasLines.length+" line"+(gasLines.length===1?"":"s")+": "+gasLines.slice(0,6).join(", ")+(gasLines.length>6?" ...":"")+"). Price it raw in <b>Ore Prices</b>.</div>";
@@ -392,9 +386,8 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   }
   function calcRev(){
     var eff=EFF;
-    var bb=BB, bbpct=Math.round(BB*100);
     var items=parse(document.getElementById("ore").value);
-    var rows=[], totM3=0, totContract=0, unmatched=[];
+    var rows=[], totM3=0, unmatched=[];
     items.forEach(function(it){
       var mo=DATA.mineral_ore[it.name.toLowerCase()];
       if(!mo){ unmatched.push(it.name); return; }
@@ -402,20 +395,18 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       if(perUnit<=0){ unmatched.push(it.name); return; }
       var units=Math.ceil(it.qty/perUnit);
       var m3=units*mo.vol; totM3+=m3;
-      var price=mo.price||0, contract=Math.round(units*price*bb); totContract+=contract;
-      rows.push({mineral:it.name, need:it.qty, ore:mo.ore, sec:mo.sec, units:units, m3:m3, price:price, contract:contract});
+      rows.push({mineral:it.name, need:it.qty, ore:mo.ore, sec:mo.sec, units:units, m3:m3});
     });
     rows.sort(function(a,b){ return b.m3-a.m3; });
     var out=document.getElementById("out");
     if(!items.length){ out.innerHTML="<div class='empty'>Paste the minerals you need (like Tritanium 5000000) and hit Calculate.</div>"; return; }
     var h="<div class='totline'><div><div class='k'>Total ore to mine</div><div class='v'>"+m3fmt(totM3)+" m&sup3;</div></div>"
-        +"<div><div class='k'>Contract total ("+bbpct+"%)</div><div class='v'>"+isk(totContract)+"</div></div>"
         +"<div><div class='k'>Minerals</div><div class='v'>"+rows.length+"</div></div></div>";
-    h+="<table><thead><tr><th>MATERIAL</th><th>NEED</th><th>MINE</th><th>SPACE</th><th>ORE UNITS</th><th>~m&sup3;</th><th>BUYBACK/U</th><th>CONTRACT</th></tr></thead><tbody>";
-    rows.forEach(function(r){ var bpu=r.price>0?isk(r.price*bb):"n/a", con=r.price>0?isk(r.contract):"n/a";
-      h+="<tr><td class='who'>"+r.mineral+"</td><td class='num'>"+r.need.toLocaleString()+"</td><td>"+r.ore+"</td><td class='sec'>"+r.sec+"</td><td class='num'>"+r.units.toLocaleString()+"</td><td class='num'>"+m3fmt(r.m3)+"</td><td class='num'>"+bpu+"</td><td class='num strong'>"+con+"</td></tr>"; });
+    h+="<table><thead><tr><th>MATERIAL</th><th>NEED</th><th>MINE</th><th>SPACE</th><th>ORE UNITS</th><th>~m&sup3;</th></tr></thead><tbody>";
+    rows.forEach(function(r){
+      h+="<tr><td class='who'>"+r.mineral+"</td><td class='num'>"+r.need.toLocaleString()+"</td><td>"+r.ore+"</td><td class='sec'>"+r.sec+"</td><td class='num'>"+r.units.toLocaleString()+"</td><td class='num'>"+m3fmt(r.m3)+"</td></tr>"; });
     h+="</tbody></table>";
-    h+="<div class='effnote'>Best accessible ore per mineral at your efficiency. Per-mineral totals are an upper bound: one ore drops byproducts that cover others, so the real haul is less. Lo and Null minerals you can also just buy. BUYBACK/U and CONTRACT are the ore Jita sell times the buyback rate.</div>";
+    h+="<div class='effnote'>Best accessible ore per mineral at your efficiency. Per-mineral totals are an upper bound: one ore drops byproducts that cover others, so the real haul is less. Lo and Null minerals you can also just buy.</div>";
     if(unmatched.length) h+="<div class='unmatched'>No ore mapping ("+unmatched.length+"): "+unmatched.slice(0,12).join(", ")+(unmatched.length>12?" ...":"")+". Only the 8 refined minerals map to ore (Tritanium, Pyerite, Mexallon, Isogen, Nocxium, Zydrine, Megacyte, Morphite).</div>";
     out.innerHTML=h;
   }
@@ -474,12 +465,8 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     h+="</tbody></table>";
     if(cAny){ var cbv=-1, ck=""; HUBS.forEach(function(hh){ if(cTot[hh[0]]>cbv){ cbv=cTot[hh[0]]; ck=hh[0]; } });
       if(cbv>0) h+="<div class='pxnote'>Compress it first and the same load prices about <b>"+isk(cbv)+"</b> at "+hubName[ck]+". Compressed is 100x smaller, one hauler trip instead of twenty.</div>"; }
-    var eff=EFF, bb=BB;
-    var got={}; items.forEach(function(it){ var y=DATA.yields[it.name.toLowerCase()]; if(!y) return;
-      var b=Math.floor(it.qty/y.p), oe=effFor(y.grp); for(var mid in y.m){ got[mid]=(got[mid]||0)+b*y.m[mid]*oe; } });
-    var tbb=0; Object.keys(got).forEach(function(mid){ var amt=Math.floor(got[mid]); if(amt>0) tbb+=amt*((DATA.prices[mid]||{}).j||0)*bb; });
-    if(tbb>0) h+="<div class='pxnote'>Corp buyback pays <b class='good'>"+isk(tbb)+"</b> ("+Math.round(bb*100)+"% of the Jita refined value). No haul, no fees, no waiting on a buyer.</div>";
-    if(gasAny) h+="<div class='pxnote'>Gas prices raw. Huffed clouds never touch a refinery, so the buyback line above covers the ore lines only. Sell gas at the hub or feed it to a reaction.</div>";
+    h+="<div class='pxnote'>In the corp? Skip the haul entirely: <a href='/buyback/'>the buyback desk</a> quotes what we pay for this exact cargo, at the home station, to the ISK.</div>";
+    if(gasAny) h+="<div class='pxnote'>Gas prices raw. Huffed clouds never touch a refinery. Sell gas at the hub or feed it to a reaction.</div>";
     if(unmatched.length) h+="<div class='unmatched'>Not recognized ("+unmatched.length+"): "+unmatched.slice(0,12).join(", ")+(unmatched.length>12?" ...":"")+"</div>";
     out.innerHTML=h;
   }
@@ -621,6 +608,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 
   function calcSurvey(){
     var out=document.getElementById("out");
+    if(BB==null){ out.innerHTML="<div class='effnote'>Survey valuation is corp math: what the buyback pays for a field is member information. <a href='/portal/'>Log in</a> and this lights up.</div>"; return; }
     var rows=parseSurvey(document.getElementById("ore").value);
     if(!rows.length){ out.innerHTML="<div class='effnote'>Paste your Survey Scanner window above, then Calculate.</div>"; return; }
     var ok=[], unknown=[], mism=0, mins={};
@@ -1260,10 +1248,10 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     var el=document.getElementById("keep"); var names=Object.keys(keep).filter(function(n){ return keep[n]>0; });
     if(!names.length){ el.innerHTML="<div class='empty' style='padding:22px'>Keep is empty. Run an Ore to Materials calc and hit Add to the Keep.</div>"; return; }
     names.sort(function(a,b){ return (keep[b]*((MPX[b]||{}).j||0))-(keep[a]*((MPX[a]||{}).j||0)); });
-    var tj=0,tbb=0,h="<table><thead><tr><th>MINERAL</th><th>QTY</th><th>JITA VALUE</th><th>BUYBACK 90%</th><th></th></tr></thead><tbody>";
-    names.forEach(function(n){ var q=keep[n], px=MPX[n]||{j:0,r:0}; var jv=q*px.j; var av=px.j||px.r; var bv=q*av*0.9; tj+=jv; tbb+=bv;
-      h+="<tr><td class='who'>"+n+"</td><td class='num'><input class='keepin' data-k=\""+n+"\" type='text' value='"+q.toLocaleString()+"'></td><td class='num'>"+isk(jv)+"</td><td class='num good'>"+isk(bv)+"</td><td class='num'><button class='qdel' data-rm=\""+n+"\">x</button></td></tr>"; });
-    h+="</tbody></table><div class='totline' style='margin-top:12px'><div><div class='k'>Keep Jita value</div><div class='v'>"+isk(tj)+"</div></div><div><div class='k'>Keep buyback (90%)</div><div class='v good'>"+isk(tbb)+"</div></div></div>";
+    var tj=0,h="<table><thead><tr><th>MINERAL</th><th>QTY</th><th>JITA VALUE</th><th></th></tr></thead><tbody>";
+    names.forEach(function(n){ var q=keep[n], px=MPX[n]||{j:0,r:0}; var jv=q*px.j; tj+=jv;
+      h+="<tr><td class='who'>"+n+"</td><td class='num'><input class='keepin' data-k=\""+n+"\" type='text' value='"+q.toLocaleString()+"'></td><td class='num'>"+isk(jv)+"</td><td class='num'><button class='qdel' data-rm=\""+n+"\">x</button></td></tr>"; });
+    h+="</tbody></table><div class='totline' style='margin-top:12px'><div><div class='k'>Keep Jita value</div><div class='v'>"+isk(tj)+"</div></div></div>";
     el.innerHTML=h;
     Array.prototype.forEach.call(el.querySelectorAll(".keepin"), function(inp){ inp.addEventListener("change", function(){ var k=inp.getAttribute("data-k"); var v=parseInt(inp.value.replace(/[ ,]/g,""),10)||0; if(v>0) keep[k]=v; else delete keep[k]; scheduleSave(); renderKeep(); if(mode==="proj") projAnalysis(); }); });
     Array.prototype.forEach.call(el.querySelectorAll(".qdel[data-rm]"), function(b){ b.onclick=function(){ delete keep[b.getAttribute("data-rm")]; scheduleSave(); renderKeep(); if(mode==="proj") projAnalysis(); }; });

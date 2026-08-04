@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK - The Buyback Desk</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.6; max-width:760px; margin:2px 0 14px; }
+  .desk{ background:var(--steel); border:1px solid var(--line-soft); padding:18px; max-width:760px; }
+  .desk textarea{ width:100%; min-height:130px; background:#0b0d0e; color:var(--silver);
+    border:1px solid var(--line); font-family:var(--mono); font-size:12.5px; padding:10px; box-sizing:border-box; }
+  .desk .gobtn{ margin-top:10px; font-family:var(--display); text-transform:uppercase; letter-spacing:.08em;
+    background:var(--ore); color:#04140a; border:0; padding:10px 22px; font-weight:700; cursor:pointer; font-size:14px; }
+  .quote{ margin-top:16px; display:none; }
+  .qtotal{ font-family:var(--display); font-size:34px; color:var(--ore); line-height:1.1; }
+  .qsub{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:6px; }
+  .qnote{ font-family:var(--mono); font-size:12px; color:#a9b2a8; margin-top:10px; line-height:1.6; }
+  .qmath{ margin-top:10px; display:none; }
+  .qmath table{ border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12px; }
+  .qmath td{ padding:4px 8px; border-bottom:1px solid var(--line-soft); color:var(--silver-dim); }
+  .qmath td.num{ text-align:right; color:var(--silver); }
+  .qtoggle{ font-family:var(--mono); font-size:11.5px; color:var(--muted); cursor:pointer;
+    text-decoration:underline; margin-top:10px; display:inline-block; }
+  .qerr{ font-family:var(--mono); font-size:12.5px; color:var(--amber); margin-top:12px; display:none; line-height:1.6; }
+  .faq{ max-width:760px; margin-top:34px; }
+  .faq h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    font-size:16px; color:var(--ore); border-top:1px solid var(--line); padding-top:22px; }
+  .faq p{ color:#a9b2a8; font-size:14.5px; line-height:1.65; }
+  footer{ margin-top:30px; }
+</style></head>
+<body>
+<div class="wrap">
+  <h1>THE BUYBACK <b>DESK</b></h1>
+  <div class="intro">Paste your cargo, get the number, put the number on the contract. That is the
+  whole desk. The figure is what the corp pays for that exact load at the home station, to the ISK,
+  no guessing and nothing to compute. Priced fresh every hour off the live market.</div>
+
+  <div class="desk">
+    <textarea id="cargo" placeholder="Copy your ore from the inventory window and paste it here, one line each:&#10;Compressed Kernite	147,327&#10;Veldspar	52,000"></textarea>
+    <button id="go" class="gobtn">Quote it</button>
+    <div class="qerr" id="qerr"></div>
+    <div class="quote" id="quote">
+      <div class="qtotal" id="qtotal"></div>
+      <div class="qsub" id="qsub"></div>
+      <div class="qnote"><b>Contract it:</b> in game, create an Item Exchange contract to
+      <b>Wealthy Dropouts</b> at the home station, ask exactly the number above, and it gets
+      accepted. Same number, no haggling, back to the belt.</div>
+      <span class="qtoggle" id="qtoggle">show the math</span>
+      <div class="qmath" id="qmath"></div>
+    </div>
+  </div>
+
+  <div class="faq">
+    <h2>Why your cargo tooltip says one number and the desk says another</h2>
+    <p>The number in your cargo tooltip is real. It is also not a buyer. It is the game's polite
+    guess at what the minerals inside your rocks might fetch at a trade hub, if the rocks were
+    already minerals, and the minerals were already twenty jumps away, and somebody there wanted
+    all of them today.</p>
+    <p>Between your cargo hold and that number stands the entire supply chain: reprocessing (the
+    refinery keeps a cut, physics does not negotiate), hauling (a freighter full of ore is just a
+    piñata with an itinerary), hub fees and taxes, market skills, and time (sell orders are not
+    money, they are homework with a spread).</p>
+    <p>The buyback skips all of it. You drop ore at the home station, ISK appears, you are back in
+    the belt before your wallet stops blinking. We do the refining, the hauling, the market grind,
+    and the getting shot at. That service is the product.</p>
+    <h2>The three doors</h2>
+    <p>You never have to use the desk. Three doors, always open. Contract it to the corp and get
+    paid now. Haul it to a hub yourself and squeeze the top price out of it, we will wave at the
+    gate. Or refine it and build things, the industry program will take every mineral you can make.
+    Pick a different door every day. Nobody keeps score, the rocks certainly do not.</p>
+    <p>Want to compare doors first? <a href="/refine/">The calculator</a> prices your load at every
+    hub. The desk quotes what we pay. Both numbers are honest, they are just answering different
+    questions: what your ore might be worth somewhere, versus what it is worth right here, right
+    now, with zero effort attached.</p>
+  </div>
+
+  <footer>The desk quote and the fleet ledger read the same table, so the same rock never pays two
+  different numbers. <a href="/portal/">Portal</a> &middot; <a href="/refine/">Calculator</a></footer>
+</div>
+<script src="/nav.js?v=24"></script>
+<script>
+(function(){
+  var busy=false;
+  function parse(text){
+    var out=[];
+    String(text||"").split(/\r?\n/).forEach(function(ln){
+      ln=ln.trim(); if(!ln) return;
+      var cells=ln.split(/\t| {2,}/).map(function(c){ return c.trim(); }).filter(Boolean);
+      if(!cells.length) return;
+      var name=cells[0], qty=0;
+      for(var i=1;i<cells.length;i++){
+        var v=parseInt(cells[i].replace(/[ ,.']/g,""),10);
+        if(isFinite(v)&&v>0){ qty=v; break; }
+      }
+      if(!qty){ var m=name.match(/^(.*?)[ x]+([\d ,.']+)$/); if(m){ name=m[1].trim(); qty=parseInt(m[2].replace(/[ ,.']/g,""),10)||0; } }
+      if(name&&qty>0) out.push({name:name, qty:qty});
+    });
+    return out;
+  }
+  function isk(v){ v=Math.round(v||0);
+    if(v>=1e9) return (v/1e9).toFixed(2)+"B ISK";
+    if(v>=1e6) return (v/1e6).toFixed(1)+"M ISK";
+    return v.toLocaleString()+" ISK"; }
+  function err(msg, html){ var e=document.getElementById("qerr");
+    if(html) e.innerHTML=msg; else e.textContent=msg;
+    e.style.display="block"; document.getElementById("quote").style.display="none"; }
+  document.getElementById("qtoggle").onclick=function(){
+    var m=document.getElementById("qmath");
+    var open=m.style.display==="block";
+    m.style.display=open?"none":"block";
+    this.textContent=open?"show the math":"hide the math"; };
+  document.getElementById("go").onclick=function(){
+    if(busy) return;
+    var lines=parse(document.getElementById("cargo").value);
+    if(!lines.length){ err("Paste some ore first. Straight from the inventory window works, one line per stack."); return; }
+    busy=true; var btn=this, old=btn.textContent; btn.textContent="Pricing...";
+    fetch("/api/quote",{method:"POST",credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},body:JSON.stringify({lines:lines})})
+    .then(function(r){
+      if(r.status===401){ err("The desk quotes members. <a href='/portal/' style='color:var(--ore)'>Log in once on this device</a> and it answers instantly forever after.", true); return null; }
+      return r.json(); })
+    .then(function(d){
+      if(!d) return;
+      if(!d.ok){ err(d.error||"The desk could not price that, try again."); return; }
+      document.getElementById("qerr").style.display="none";
+      var q=document.getElementById("quote"); q.style.display="block";
+      document.getElementById("qtotal").textContent=isk(d.total_isk);
+      document.getElementById("qsub").textContent=(d.lines.length+" stack"+(d.lines.length===1?"":"s"))
+        +(d.m3?(" · "+d.m3.toLocaleString()+" m³"):"")
+        +" · at "+(d.station||"the home station")
+        +(d.leftovers?(" · "+d.leftovers.toLocaleString()+" units under a full refine batch ride along unpriced"):"")
+        +(d.unmatched&&d.unmatched.length?(" · "+d.unmatched.length+" line"+(d.unmatched.length===1?"":"s")+" not priced: "+d.unmatched.slice(0,4).join(", ")):"");
+      var h="<table>";
+      d.lines.forEach(function(l){ h+="<tr><td>"+l.name.replace(/[<>&]/g,"")+"</td><td class='num'>"+l.qty.toLocaleString()+"</td><td class='num'>"+isk(l.isk)+"</td></tr>"; });
+      h+="</table>";
+      document.getElementById("qmath").innerHTML=h;
+    })
+    .catch(function(){ err("The wire is down. Check your link and try again."); })
+    .finally ? null : null;
+    setTimeout(function(){ busy=false; btn.textContent=old; }, 900);
+  };
+})();
+</script>
+</body></html>
