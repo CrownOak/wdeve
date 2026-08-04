@@ -4479,6 +4479,7 @@ function renderFoot(){
   var html =
     '<a href="/portal/roster/">the wall of goblin faces</a>' +
     '<a href="/portal/leaderboard/">Leaderboards</a>' +
+    '<a href="/portal/roles/">Roles &amp; Permissions</a>' +
     (role === "officer" || role === "admin" ? '<a href="/portal/admin/">Command Center</a>' : '') +
     (role === "officer" || role === "admin" || (S.me.account && S.me.account.gss) ? '<a href="/portal/intel/">GSS</a>' : '') +
     '<button class="mini" id="logoutBtn">Log out</button>' +
