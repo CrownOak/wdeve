@@ -242,6 +242,30 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .ssacc{ background:var(--ore); color:#04140a; border:none; cursor:pointer; font-family:var(--mono);
   font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; }
 .ssacc.taken{ background:none; color:var(--ore); border:1px solid var(--ore); cursor:default; }
+/* ---- THE REPORT IS A MODAL ----
+   It used to expand inline inside #sslist, which is height-capped and clipped
+   for the fade. The report is taller than the cap, so it was cut off by its own
+   container. A modal leaves the container entirely, and the report is a
+   read-it-then-decide surface anyway, not something you skim beside the list. */
+.srmask{ position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:9000;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  animation:srIn .16s ease both; }
+@keyframes srIn{ from{ opacity:0 } to{ opacity:1 } }
+.srbox{ position:relative; width:min(680px,100%); max-height:86vh; overflow-y:auto;
+  background:var(--steel); border:1px solid var(--line); border-left:2px solid var(--ore);
+  padding:14px 16px 16px; animation:srUp .2s cubic-bezier(.22,.61,.36,1) both;
+  scrollbar-width:thin; scrollbar-color:var(--line-soft) transparent; }
+@keyframes srUp{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:none } }
+.srbox::-webkit-scrollbar{ width:7px; }
+.srbox::-webkit-scrollbar-thumb{ background:var(--line-soft); }
+.srtop{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; }
+.srtop b{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ore); }
+.srtop span{ font-family:var(--mono); font-size:10px; color:var(--muted); }
+.srx{ margin-left:auto; background:none; border:1px solid var(--line-soft); color:var(--muted);
+  font-family:var(--mono); font-size:11px; padding:3px 9px; cursor:pointer; }
+.srx:hover{ border-color:var(--ore); color:var(--ore); }
+@media (prefers-reduced-motion: reduce){ .srmask,.srbox{ animation:none } }
 .sshud{ padding:10px 14px 13px; border-top:1px solid var(--line-soft); background:var(--black); }
 .sshud .shgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px; margin-bottom:10px; }
 .sshud .shgrid div{ border:1px solid var(--line-soft); padding:6px 9px; }
@@ -2558,7 +2582,7 @@ tr.haulrow{ cursor:pointer; }
                         + 'title="drop this off your callout list. the site stays live for everyone else.">pass</button>')
               : (mine ? '<span class="sper">&#10003;</span>' : ''))+'</div>'
         + '</div>';
-      if (isOn) h += '<div class="sshud" id="sshud'+s.id+'">reading the field&hellip;</div>';
+      // the report is a modal now, so the row never grows and never gets clipped
     }
     h += '</div><div class="ssfade' + (SS_LIST_OPEN ? ' hide' : '') + '" id="ssfade"></div></div>';
     // the button only exists when there is genuinely something below the cut
@@ -2582,10 +2606,7 @@ tr.haulrow{ cursor:pointer; }
       row.onclick = function(ev){
         if (ev.target && ev.target.getAttribute
             && (ev.target.getAttribute("data-acc") || ev.target.getAttribute("data-dec"))) return;
-        var id = parseInt(row.getAttribute("data-site"),10);
-        SS_OPEN = (SS_OPEN === id) ? null : id;
-        renderScoutSites();
-        if (SS_OPEN) ssLoadDetail(SS_OPEN);
+        ssOpenReport(parseInt(row.getAttribute("data-site"),10));
       };
     });
     /* PASS: local to this FC. Animate the row out first so the list does not
@@ -2620,6 +2641,49 @@ tr.haulrow{ cursor:pointer; }
       };
     });
     if (SS_OPEN && ssDetail[SS_OPEN]) ssPaintDetail(SS_OPEN);
+  }
+
+  /* THE REPORT MODAL. One node, reused, appended to body so no ancestor's
+     overflow or height cap can clip it. Escape and the backdrop both close, and
+     the page behind is scroll-locked so a long ore table does not scroll the
+     ledger underneath it. */
+  var SS_MASK = null, ssPrevOverflow = "";
+  function ssCloseReport(){
+    if (!SS_MASK) return;
+    if (SS_MASK.parentNode) SS_MASK.parentNode.removeChild(SS_MASK);
+    SS_MASK = null; SS_OPEN = null;
+    document.body.style.overflow = ssPrevOverflow;
+    document.removeEventListener("keydown", ssEscClose);
+  }
+  function ssEscClose(e){ if (e.key === "Escape") ssCloseReport(); }
+
+  function ssOpenReport(id){
+    if (!id) return;
+    if (SS_OPEN === id) { ssCloseReport(); return; }
+    ssCloseReport();
+    SS_OPEN = id;
+    var s = null;
+    for (var k=0;k<SS_CACHE.length;k++) if (SS_CACHE[k].id === id) s = SS_CACHE[k];
+
+    SS_MASK = document.createElement("div");
+    SS_MASK.className = "srmask";
+    SS_MASK.innerHTML =
+      '<div class="srbox" id="srbox">'
+      + '<div class="srtop"><b>&#9670; ' + esc((s && s.system) || "the field") + '</b>'
+      +   '<span>scout report</span>'
+      +   '<button type="button" class="srx" id="srx">close &times;</button></div>'
+      + '<div class="sshud" id="sshud' + id + '">reading the field&hellip;</div></div>';
+    document.body.appendChild(SS_MASK);
+
+    ssPrevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // backdrop closes, the panel itself does not
+    SS_MASK.onclick = function(ev){ if (ev.target === SS_MASK) ssCloseReport(); };
+    var x = el("srx"); if (x) x.onclick = ssCloseReport;
+    document.addEventListener("keydown", ssEscClose);
+
+    renderScoutSites();       // repaint the row highlight behind the mask
+    ssLoadDetail(id);
   }
 
   function ssLoadDetail(id){
@@ -2767,11 +2831,18 @@ tr.haulrow{ cursor:pointer; }
     m.innerHTML = h;
     ssWireVote(id);
   }
-  function renderAll(){ if(!P) return;
+  function renderAll(){
+    /* THE SCOUT BOARD RUNS WITHOUT AN OP, on purpose. Everything below this
+       needs a live poll payload, but the board is precisely what an FC reads
+       BEFORE there is a fleet: it is how you decide where to take one. Sitting
+       inside the `if(!P) return` meant belts were filed, live, and invisible to
+       anyone who had not already started an op. renderScoutSites already guards
+       its own use of P. */
+    scoutSitesLoad(); renderScoutSites();   // self-throttled 45s, no second timer
+    if(!P) return;
     if (typeof renderBoard==="function") renderBoard(); // board card stays live
     renderStatus(); renderTiles(); renderCmd(); renderAnnounce(); renderFrozen(); renderPilots(); renderFeed(); renderRoster(); renderChat();
     renderScoutOrigin();
-    scoutSitesLoad(); renderScoutSites();   // self-throttled 45s, no second timer
     // ambient bubble needs the map + kills even while the card is collapsed;
     // both loaders are guarded (once/session, hourly fresh-check, busy flags)
     if(scOpen || (P.system && P.system.name)){ scLoadMap(); scLoadKills(); }
