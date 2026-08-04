@@ -293,20 +293,23 @@
     ".bn-burger.bn-hot .bn-lines span:nth-child(2){animation-delay:.2s;}" +
     ".bn-burger.bn-hot .bn-lines span:nth-child(3){animation-delay:.4s;}" +
     "@keyframes bnPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.55;}}" +
-    // the desk glows: the menu row breathes a little green, and the panel ends on
-    // a full door. Slow and subtle on purpose, ~4s, it should catch the corner of
-    // the eye, not wave at it.
-    ".bn-item[data-rel=\"buyback/\"]{color:var(--ore,#46ff5e);animation:bnDeskRow 4.2s ease-in-out infinite;}" +
-    ".bn-item[data-rel=\"buyback/\"].cur{animation:none;}" +
-    "@keyframes bnDeskRow{0%,100%{text-shadow:0 0 0 rgba(70,255,94,0);}50%{text-shadow:0 0 11px rgba(70,255,94,.6);}}" +
-    ".bn-deskbtn{display:block;margin-top:14px;padding:11px 12px;text-align:center;text-decoration:none;" +
-    "font-family:var(--mono,ui-monospace,monospace);font-size:11.5px;letter-spacing:.22em;font-weight:700;" +
-    "color:var(--ore,#46ff5e);border:1px solid rgba(70,255,94,.45);" +
-    "animation:bnDeskGlow 4.2s ease-in-out infinite;transition:background .2s,color .2s;}" +
-    ".bn-deskbtn:hover{background:var(--ore,#46ff5e);color:#04140a;animation:none;}" +
-    "@keyframes bnDeskGlow{0%,100%{box-shadow:0 0 0 rgba(70,255,94,0);border-color:rgba(70,255,94,.35);}" +
-    "50%{box-shadow:0 0 14px rgba(70,255,94,.28),0 0 4px rgba(70,255,94,.2) inset;border-color:rgba(70,255,94,.75);}}" +
-    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span,.bn-deskbtn,.bn-item[data-rel=\"buyback/\"]{animation:none;}}" +
+    // the desk stands out quietly: the menu row breathes a faint green, and the
+    // panel ends on a small, confident door. Understated on purpose: it should
+    // catch the corner of the eye, not wave at it. The .cur state keeps the
+    // standard inverted row (ink on ore) or the label vanishes into itself.
+    ".bn-item[data-rel=\"buyback/\"]{color:var(--ore,#46ff5e);animation:bnDeskRow 4.6s ease-in-out infinite;}" +
+    ".bn-item[data-rel=\"buyback/\"].cur{color:#04140a;animation:none;text-shadow:none;}" +
+    "@keyframes bnDeskRow{0%,100%{text-shadow:0 0 0 rgba(70,255,94,0);}50%{text-shadow:0 0 8px rgba(70,255,94,.4);}}" +
+    ".bn-deskbtn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px;" +
+    "padding:10px 12px;text-decoration:none;font-family:var(--mono,ui-monospace,monospace);" +
+    "font-size:10.5px;letter-spacing:.24em;color:var(--silver-dim,#9aa39c);" +
+    "border:1px solid var(--line,rgba(150,168,158,.16));transition:color .3s,border-color .3s;}" +
+    ".bn-deskbtn::before{content:\"\";width:6px;height:6px;border-radius:50%;flex:0 0 auto;" +
+    "background:var(--ore,#46ff5e);animation:bnDeskDot 4.6s ease-in-out infinite;}" +
+    "@keyframes bnDeskDot{0%,100%{opacity:.3;box-shadow:0 0 0 rgba(70,255,94,0);}" +
+    "50%{opacity:1;box-shadow:0 0 7px rgba(70,255,94,.5);}}" +
+    ".bn-deskbtn:hover{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
+    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span,.bn-deskbtn::before,.bn-item[data-rel=\"buyback/\"]{animation:none;}}" +
     "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
     ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
     "max-height:calc(100vh - 54px);}}" +
