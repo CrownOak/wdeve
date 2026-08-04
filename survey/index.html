@@ -825,6 +825,15 @@ tr.survrow:hover .survmore{ color:var(--ore); }
         scoutBoard();
       }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
   }
+  /* Everything on this board was TYPED BY ANOTHER PLAYER: the system name comes off
+     a scout's paste, the scout name off their character. It all lands in innerHTML,
+     so it goes through here first or it is a script tag waiting for an officer to
+     open the board. The server sanitiser trims and slices, it does NOT encode.
+     Encoding is the renderer's job, and this is the renderer. */
+  function esc(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
   function scoutBoard(){
     var host=document.getElementById("scoutboard"); if(!host) return;
     fetch("/api/scout/sites").then(function(r){ return r.json(); }).then(function(d){
@@ -832,12 +841,16 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       var h="<h2>&#128225; The scout board <span style='font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em'>"+
             "LIVE SITES &middot; "+d.ttl_hours+"H CLOCK</span></h2>";
       d.sites.forEach(function(s){
-        var pct=Math.max(0,Math.min(100, 100*s.expires_min/(d.ttl_hours*60)));
+        /* PER-ROW life, not the global clock. A site filed just before downtime
+           honestly lives 40 minutes, and a bar drawn against 6h would read 90%
+           drained the instant it was filed. The server sends life_min for this. */
+        var life=s.life_min||(d.ttl_hours*60);
+        var pct=Math.max(0,Math.min(100, 100*s.expires_min/life));
         h+="<div class='sbrow"+(s.stale?" stale":"")+"' data-site='"+s.id+"'>"+
-           "<div><div class='sbsys'>"+s.system+"</div>"+
+           "<div><div class='sbsys'>"+esc(s.system)+"</div>"+
              "<span class='sbchip "+(s.corroborated?"sbver'>&#10003; confirmed":"sbunv'>unverified")+"</span></div>"+
            "<div class='sbrate'>"+s.pay_per_m3.toFixed(0)+"</div>"+
-           "<div class='sbmeta'>ISK/m&sup3;<br>"+(s.top_ore||"")+"</div>"+
+           "<div class='sbmeta'>ISK/m&sup3;<br>"+esc(s.top_ore||"")+"</div>"+
            "<div class='sbmeta'>"+m3fmt(s.m3)+" m&sup3;<br>"+s.rocks+" rocks</div>"+
            "<div class='sbage'>"+(s.age_min<60?s.age_min+"m old":(s.age_min/60).toFixed(1)+"h old")+
              "<br><b>"+(s.expires_min<60?s.expires_min+"m left":(s.expires_min/60).toFixed(1)+"h left")+"</b>"+
@@ -869,7 +882,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       .then(function(d){
         if(!d||!d.ok){ el.innerHTML=""; return; }
         var h="<div class='sbdrop'><div class='survgrid'>"+
-          "<div><span>filed by</span><b>"+(d.scout||"a goblin")+"</b></div>"+
+          "<div><span>filed by</span><b>"+esc(d.scout||"a goblin")+"</b></div>"+
           "<div><span>the whole site pays</span><b>"+isk(d.pay)+" ISK</b></div>"+
           "<div><span>volume</span><b>"+m3fmt(d.m3)+" m&sup3;</b></div>"+
           "<div><span>rocks scanned</span><b>"+d.rocks+"</b></div>"+
@@ -877,7 +890,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
           "</div><table><thead><tr><th>Ore</th><th class='num'>rocks</th><th class='num'>units</th>"+
           "<th class='num'>m&sup3;</th><th class='num'>ISK/m&sup3;</th></tr></thead><tbody>";
         (d.ores||[]).forEach(function(o,i){
-          h+="<tr"+(i===0?" class='best'":"")+"><td>"+o.ore+"</td><td class='num'>"+o.n+"</td>"+
+          h+="<tr"+(i===0?" class='best'":"")+"><td>"+esc(o.ore)+"</td><td class='num'>"+o.n+"</td>"+
              "<td class='num'>"+o.qty.toLocaleString()+"</td><td class='num'>"+m3fmt(o.m3)+"</td>"+
              "<td class='num'><b>"+o.per_m3.toFixed(1)+"</b></td></tr>";
         });
