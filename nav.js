@@ -55,7 +55,7 @@
     // while their MEMBER_LABELS entries stayed behind. Restored 2026-08-03 with
     // a real gate instead of a redacted label. 5th field is the gate.
     ["Recruiting",  BASE + "bonk-prospects/", "RECRUIT", false, "recruit"],
-    ["Finder",      BASE + "gobsec/finder/",  "RECRUIT", false, "recruit"]
+    ["The Shortlist", BASE + "gobsec/finder/",  "RECRUIT", false, "recruit"]
   ];
   var GROUPS = ["HOME", "MEMBER", "MARKET", "INTEL", "RECRUIT"];
 
