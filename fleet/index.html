@@ -2506,18 +2506,36 @@ tr.haulrow{ cursor:pointer; }
 
     // rows the FC passed on stay out of their own list; everyone else still sees them
     var passed = ssPrunePassed(SS_CACHE);
-    var live = SS_CACHE.filter(function(x){ return passed.indexOf(x.id) < 0; });
+    var kept = SS_CACHE.filter(function(x){ return passed.indexOf(x.id) < 0; });
+    /* LEADS ARE NOT CALLOUTS. A sighting carries no rocks and no price, so left
+       in this list it renders as an ordinary row advertising 0 ISK/m3 next to
+       real scans. The callout list is what an FC warps the fleet on, so it holds
+       scans only; leads are counted in the header and read on /survey/. */
+    var leads = kept.filter(function(x){ return x.sighting; });
+    var live  = kept.filter(function(x){ return !x.sighting; });
+    /* Three different empties, and saying the wrong one is worse than silence:
+       passed-on-everything, leads-but-nothing-surveyed, and genuinely nothing. */
     if (!live.length){
-      box.style.display=""; box.innerHTML =
-        '<div class="sshead"><b>&#128225; SCOUT</b><span>'+SS_CACHE.length+' filed, all passed on'
-        + ' &middot; <span id="ssreset" style="cursor:pointer;text-decoration:underline">bring them back</span></span></div>';
-      var rs = el("ssreset");
-      if (rs) rs.onclick = function(){ try{ localStorage.removeItem(LS_SSDEC); }catch(e){} renderScoutSites(); };
+      if (passed.length){
+        box.style.display=""; box.innerHTML =
+          '<div class="sshead"><b>&#128225; SCOUT</b><span>'+SS_CACHE.length+' filed, all passed on'
+          + ' &middot; <span id="ssreset" style="cursor:pointer;text-decoration:underline">bring them back</span></span></div>';
+        var rs = el("ssreset");
+        if (rs) rs.onclick = function(){ try{ localStorage.removeItem(LS_SSDEC); }catch(e){} renderScoutSites(); };
+      } else if (leads.length){
+        box.style.display=""; box.innerHTML =
+          '<div class="sshead"><b>&#128225; SCOUT</b><span>'+leads.length
+          + ' called in from range, none surveyed yet</span></div>';
+      } else {
+        box.style.display="none";
+      }
       return;
     }
 
     var h = '<div class="sshead"><b>&#128225; SCOUT</b><span>'+live.length
-          +' belt'+(live.length===1?'':'s')+' filed &middot; tap one to see the field</span></div>'
+          +' belt'+(live.length===1?'':'s')+' filed'
+          + (leads.length ? ' &middot; '+leads.length+' called in from range' : '')
+          +' &middot; tap one to see the field</span></div>'
           + '<div class="sswrap"><div class="sslist' + (SS_LIST_OPEN ? ' open' : '') + '" id="sslist">';
     for (var i=0;i<live.length;i++){
       var s = live[i];
