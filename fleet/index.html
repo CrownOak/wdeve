@@ -147,6 +147,98 @@ header.fchead::after{ content:""; display:block; width:34px; height:1px; margin:
 .scrow .sage{ color:var(--muted); text-align:right; font-size:10.5px; }
 .scrow.on{ background:var(--black); }
 .scrow .swarn{ color:var(--amber); }
+/* CONDITION CHIPS: what the belt was like. Used in the filer (as toggles) and on
+   the ledger row (as read-only marks). Colour carries the meaning, because an FC
+   scanning the callout list reads colour before words. */
+.ccb{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+  padding:4px 7px; border:1px solid var(--line-soft); background:none; color:var(--muted);
+  cursor:pointer; margin:0 4px 4px 0; }
+.ccb:hover{ border-color:var(--silver-dim); color:var(--silver-dim); }
+.ccb.on{ border-color:var(--ore); color:var(--ore); }
+.ccb.on[data-c="rats"], .ccb.on[data-c="gankers"], .ccb.on[data-c="hostiles"]{
+  border-color:var(--amber); color:var(--amber); }
+.sccond{ margin:6px 0 4px; }
+.scnote{ width:100%; font-family:var(--mono); font-size:11px; padding:6px 8px;
+  background:var(--black); border:1px solid var(--line-soft); color:var(--silver); }
+.scnote:focus{ outline:none; border-color:var(--ore); }
+/* read-only marks on a ledger row */
+.ccm{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted); }
+.ccm.hot{ color:var(--amber); }
+.ccm.ok{ color:var(--ore); }
+.ssdec{ background:none; color:var(--muted); border:1px solid var(--line-soft); cursor:pointer;
+  font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+  padding:5px 8px; margin-left:5px; }
+.ssdec:hover{ border-color:var(--amber); color:var(--amber); }
+/* ---- THE SITREP: the field report header on an opened site ----
+   The scout console already frames itself in corner brackets; this carries that
+   the rest of the way into a readout that looks transmitted rather than typed.
+   Everything here is presentation, every value under it is server derived. */
+.srep{ position:relative; border:1px solid var(--line-soft); border-left:2px solid var(--ore);
+  background:linear-gradient(180deg, rgba(0,255,127,.045), transparent 60%);
+  padding:9px 11px 10px; margin-bottom:10px; }
+.srep::before, .srep::after{ content:""; position:absolute; width:9px; height:9px;
+  border-color:var(--ore); border-style:solid; opacity:.6; }
+.srep::before{ top:4px; right:4px; border-width:1px 1px 0 0; }
+.srep::after{ bottom:4px; right:4px; border-width:0 1px 1px 0; }
+.srep .srh{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ore); display:flex; align-items:baseline; gap:8px; margin-bottom:7px; }
+.srep .srh i{ font-style:normal; color:var(--muted); letter-spacing:.1em; margin-left:auto; }
+.srep .srl{ font-family:var(--mono); font-size:10.5px; color:var(--silver-dim);
+  display:flex; gap:7px; align-items:baseline; padding:2px 0; }
+.srep .srl u{ text-decoration:none; color:var(--muted); font-size:9px; letter-spacing:.14em;
+  text-transform:uppercase; min-width:74px; display:inline-block; }
+.srep .srdiv{ height:1px; margin:7px 0; background:repeating-linear-gradient(90deg,
+  var(--line-soft) 0 4px, transparent 4px 8px); }
+.srep .srnote{ font-family:var(--mono); font-size:11px; color:var(--silver); }
+.srep .srnote b{ color:var(--ore); }
+/* THE BALLOT. Inside the report, never on the row: the vote is permanent and
+   you should have read the thing before ruling on it. Big targets, because
+   there is no undo. */
+.srvote{ display:flex; align-items:center; gap:8px; margin-top:8px; }
+.srvote button{ font-family:var(--mono); font-size:12px; line-height:1; padding:6px 11px;
+  background:none; border:1px solid var(--line-soft); color:var(--muted); cursor:pointer;
+  transition:border-color .18s, color .18s; }
+.srvote button:hover:not(:disabled){ border-color:var(--ore); color:var(--ore); }
+/* down never goes red: this is a contribution surface, not a punishment one */
+.srvote button.dn:hover:not(:disabled){ border-color:var(--silver-dim); color:var(--silver-dim); }
+.srvote button:disabled{ opacity:.4; cursor:default; }
+.srvote .srvq{ font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--muted); }
+.srvote .srvt{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+.srvote .srvt b{ color:var(--ore); }
+.srvote .srvt i{ font-style:normal; color:var(--muted); }
+/* ---- THE LIST: capped, faded, and scrolled instead of endless ----
+   A busy night puts 40 belts on this board. Growing the ledger column by five
+   screens is not a feature, so the list keeps a ceiling and scrolls INSIDE
+   itself once opened. Collapsed it fades at the cut so it reads as "more below"
+   rather than "that is all of it". */
+.sswrap{ position:relative; }
+.sslist{ max-height:266px; overflow:hidden;
+  transition:max-height .38s cubic-bezier(.22,.61,.36,1); }
+.sslist.open{ max-height:430px; overflow-y:auto; scrollbar-width:thin;
+  scrollbar-color:var(--line-soft) transparent; }
+.sslist.open::-webkit-scrollbar{ width:7px; }
+.sslist.open::-webkit-scrollbar-thumb{ background:var(--line-soft); }
+.sslist.open::-webkit-scrollbar-track{ background:transparent; }
+.ssfade{ position:absolute; left:0; right:0; bottom:0; height:58px; pointer-events:none;
+  background:linear-gradient(180deg, transparent, var(--steel) 85%);
+  opacity:1; transition:opacity .3s ease; }
+.ssfade.hide{ opacity:0; }
+.ssmore{ width:100%; background:none; border:none; border-top:1px solid var(--line-soft);
+  color:var(--muted); font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; padding:7px 0 8px; cursor:pointer; transition:color .2s; }
+.ssmore:hover{ color:var(--ore); }
+/* Rows arrive rather than appear. Only genuinely NEW ids animate: re-running
+   this on every 45s poll would make the whole board twitch for no reason. */
+@keyframes ssIn{ from{ opacity:0; transform:translateY(-5px); } to{ opacity:1; transform:none; } }
+@keyframes ssOut{ to{ opacity:0; transform:translateX(12px); } }
+.scrow.fresh{ animation:ssIn .34s cubic-bezier(.22,.61,.36,1) both; }
+.scrow.going{ animation:ssOut .24s ease forwards; pointer-events:none; }
+@media (prefers-reduced-motion: reduce){
+  .sslist{ transition:none; }
+  .scrow.fresh, .scrow.going{ animation:none; }
+}
 .ssacc{ background:var(--ore); color:#04140a; border:none; cursor:pointer; font-family:var(--mono);
   font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; }
 .ssacc.taken{ background:none; color:var(--ore); border:1px solid var(--ore); cursor:default; }
@@ -855,18 +947,22 @@ tr.haulrow{ cursor:pointer; }
         '<textarea id="scPaste" rows="4" placeholder="right click the scanner results &rarr; select all &rarr; copy &rarr; paste here"></textarea>' +
         '<div id="scParsed" class="rpok"></div>' +
         '<div id="scLast" class="rcpt" style="display:none"></div>' +
-        '<div class="scstep"><i>02</i> name it and file it</div>' +
+        '<div class="scstep"><i>02</i> what is on grid</div>' +
+        '<div class="sccond" id="scCond">' + scCondChips() + '</div>' +
+        '<input id="scNote" class="scnote" maxlength="20" placeholder="anything else (20 characters)">' +
+        '<div class="scstep"><i>03</i> name it and file it</div>' +
         '<div class="scfilerow">' +
           '<input id="scSysIn" placeholder="which system is this belt in?">' +
           '<button class="rpbtn" id="scFile" disabled>File this site</button>' +
         '</div>' +
         '<div class="rpok" id="scMsg"></div>' +
-        '<div class="scstep"><i>03</i> what is on the board</div>' +
+        '<div class="scstep"><i>04</i> what is on the board</div>' +
         '<div id="scBoard" class="rpok">reading the board&hellip;</div>' +
         '<div class="rpok" id="rpScout" style="display:none"></div>';
       wireRolePanel();
       rpOpen(p);
       wireScoutFiler();
+      wireScCond();
       paintReceipt();      // your last contribution, still standing
       scoutStanding();
       scoutBoardLoad();
@@ -1072,6 +1168,37 @@ tr.haulrow{ cursor:pointer; }
   }
 
   var scRows = [];
+  /* Toggle chips for the filer. Threat states first: if a scout only reads the
+     first row before pasting, the first row should be the one that saves a hull. */
+  function scCondChips(){
+    var h = "";
+    for (var i=0;i<SC_COND.length;i++)
+      h += '<button type="button" class="ccb" data-c="'+SC_COND[i][0]+'">'+SC_COND[i][1]+'</button>';
+    return h;
+  }
+  /* What the scout ticked. "clear" is exclusive in the UI as well as on the
+     server, so ticking it drops the rest and ticking anything else drops it. */
+  function scCondPicked(){
+    var box = rEl("scCond"); if (!box) return [];
+    var on = box.querySelectorAll(".ccb.on"), out = [];
+    for (var i=0;i<on.length;i++) out.push(on[i].getAttribute("data-c"));
+    return out;
+  }
+  function wireScCond(){
+    var box = rEl("scCond"); if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll(".ccb"), function(b){
+      b.onclick = function(){
+        var k = b.getAttribute("data-c"), turningOn = !/\bon\b/.test(b.className);
+        if (turningOn && k === "clear")
+          Array.prototype.forEach.call(box.querySelectorAll(".ccb"), function(o){ o.className = "ccb"; });
+        if (turningOn && k !== "clear"){
+          var c = box.querySelector('.ccb[data-c="clear"]'); if (c) c.className = "ccb";
+        }
+        b.className = turningOn ? "ccb on" : "ccb";
+      };
+    });
+  }
+
   var LS_RCPT = "bonk_scout_receipt", scLastReceipt = null;
   try { scLastReceipt = JSON.parse(localStorage.getItem(LS_RCPT) || "null"); } catch(e){}
 
@@ -1123,7 +1250,9 @@ tr.haulrow{ cursor:pointer; }
       btn.disabled = true; if (m) m.textContent = "filing…";
       fetch("/api/scout/site", { method:"POST", credentials:"same-origin",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ system: sname, rocks: scRows }) })
+        body: JSON.stringify({ system: sname, rocks: scRows,
+          conditions: scCondPicked(),
+          note: ((rEl("scNote") || {}).value || "").slice(0, 20) }) })
         .then(function(r){ return r.json(); })
         .then(function(d){
           btn.disabled = false;
@@ -1144,6 +1273,11 @@ tr.haulrow{ cursor:pointer; }
           try { localStorage.setItem(LS_RCPT, JSON.stringify(scLastReceipt)); } catch(e){}
           paintReceipt();
           ta.value = ""; scRows = []; btn.disabled = true;
+          // clear the report too: the next belt is a different belt, and a stale
+          // "gankers" carried over from the last one is worse than no report.
+          var nb = rEl("scNote"); if (nb) nb.value = "";
+          var cb = rEl("scCond");
+          if (cb) Array.prototype.forEach.call(cb.querySelectorAll(".ccb"), function(o){ o.className = "ccb"; });
           var pz = rEl("scParsed"); if (pz) pz.textContent = "";
           scoutBoardLoad(); scoutStanding();
         })
@@ -2289,8 +2423,49 @@ tr.haulrow{ cursor:pointer; }
      and would eat an open dropdown mid-read. Loader is self-throttled off
      renderAll like scLoadKills -- no second timer on a page that has none. */
   var SS_OPEN = null, ssBusy = false, ssAt = 0, SS_CACHE = [], ssDetail = {};
+  /* SS_SEEN keeps the arrival animation honest: a row animates the first time it
+     appears and never again, so the 45s poll does not make the board twitch.
+     SS_FIT is how many rows clear the collapsed height before the fade bites. */
+  var SS_SEEN = {}, SS_LIST_OPEN = false, SS_FIT = 5;
 
   function ssFmtAge(m){ return m >= 60 ? (m/60).toFixed(1)+"h" : Math.round(m)+"m"; }
+
+  /* Compact contact marks for the row. Threats first: an FC skimming eight rows
+     reads colour before words, so rats and gankers have to survive truncation. */
+  function ssCondMarks(s){
+    if (!s.conditions || !s.conditions.length) return "";
+    var hot = [], cold = [];
+    for (var i=0;i<s.conditions.length;i++){
+      var meta = scCondLabel(s.conditions[i]);
+      if (!meta) continue;
+      (meta[2] === "hot" ? hot : cold).push('<span class="ccm '+meta[2]+'">'+meta[1]+'</span>');
+    }
+    var all = hot.concat(cold);
+    return all.length ? ' &middot; ' + all.join(' ') : "";
+  }
+
+  /* PASS is the FC's own list, not a verdict on the site. It hides the row for
+     this browser and leaves the filing live for every other FC, because one
+     officer should not be able to bury a good belt for the whole corp. Ids are
+     pruned against the live board so the list cannot grow forever. */
+  var LS_SSDEC = "bonk_scout_passed";
+  function ssPassed(){
+    try { return JSON.parse(localStorage.getItem(LS_SSDEC) || "[]") || []; }
+    catch(e){ return []; }
+  }
+  function ssPass(id){
+    var p = ssPassed();
+    if (p.indexOf(id) < 0) p.push(id);
+    try { localStorage.setItem(LS_SSDEC, JSON.stringify(p)); } catch(e){}
+  }
+  function ssPrunePassed(live){
+    var keep = ssPassed().filter(function(id){
+      for (var i=0;i<live.length;i++) if (String(live[i].id) === String(id)) return true;
+      return false;   // expired off the board, stop remembering it
+    });
+    try { localStorage.setItem(LS_SSDEC, JSON.stringify(keep)); } catch(e){}
+    return keep;
+  }
 
   function scoutSitesLoad(force){
     if (ssBusy) return;
@@ -2329,34 +2504,102 @@ tr.haulrow{ cursor:pointer; }
       box.style.display="none"; return;
     }
 
-    var h = '<div class="sshead"><b>&#128225; SCOUT</b><span>'+SS_CACHE.length
-          +' belt'+(SS_CACHE.length===1?'':'s')+' filed &middot; tap one to see the field</span></div>';
-    for (var i=0;i<SS_CACHE.length && i<8;i++){
-      var s = SS_CACHE[i];
+    // rows the FC passed on stay out of their own list; everyone else still sees them
+    var passed = ssPrunePassed(SS_CACHE);
+    var kept = SS_CACHE.filter(function(x){ return passed.indexOf(x.id) < 0; });
+    /* LEADS ARE NOT CALLOUTS. A sighting carries no rocks and no price, so left
+       in this list it renders as an ordinary row advertising 0 ISK/m3 next to
+       real scans. The callout list is what an FC warps the fleet on, so it holds
+       scans only; leads are counted in the header and read on /survey/. */
+    var leads = kept.filter(function(x){ return x.sighting; });
+    var live  = kept.filter(function(x){ return !x.sighting; });
+    /* Three different empties, and saying the wrong one is worse than silence:
+       passed-on-everything, leads-but-nothing-surveyed, and genuinely nothing. */
+    if (!live.length){
+      if (passed.length){
+        box.style.display=""; box.innerHTML =
+          '<div class="sshead"><b>&#128225; SCOUT</b><span>'+SS_CACHE.length+' filed, all passed on'
+          + ' &middot; <span id="ssreset" style="cursor:pointer;text-decoration:underline">bring them back</span></span></div>';
+        var rs = el("ssreset");
+        if (rs) rs.onclick = function(){ try{ localStorage.removeItem(LS_SSDEC); }catch(e){} renderScoutSites(); };
+      } else if (leads.length){
+        box.style.display=""; box.innerHTML =
+          '<div class="sshead"><b>&#128225; SCOUT</b><span>'+leads.length
+          + ' called in from range, none surveyed yet</span></div>';
+      } else {
+        box.style.display="none";
+      }
+      return;
+    }
+
+    var h = '<div class="sshead"><b>&#128225; SCOUT</b><span>'+live.length
+          +' belt'+(live.length===1?'':'s')+' filed'
+          + (leads.length ? ' &middot; '+leads.length+' called in from range' : '')
+          +' &middot; tap one to see the field</span></div>'
+          + '<div class="sswrap"><div class="sslist' + (SS_LIST_OPEN ? ' open' : '') + '" id="sslist">';
+    for (var i=0;i<live.length;i++){
+      var s = live[i];
+      var fresh = SS_SEEN[s.id] ? "" : " fresh";
+      SS_SEEN[s.id] = 1;
       var isOn = SS_OPEN === s.id;
       var mine = accepted && String(accepted.id) === String(s.id);
-      h += '<div class="scrow'+(isOn?' on':'')+'" data-site="'+s.id+'">'
+      h += '<div class="scrow'+(isOn?' on':'')+fresh+'" data-site="'+s.id+'"'
+        +   (fresh ? ' style="animation-delay:'+Math.min(i,6)*45+'ms"' : '') + '>'
         +   '<div class="ssys">'+esc(s.system)+(s.corroborated?'':' <span class="swarn" title="ESI did not put the scout in this system">?</span>')+'</div>'
         +   '<div class="sper">'+Math.round(s.pay_per_m3)+'</div>'
         +   '<div class="smeta">ISK/m&sup3; &middot; '+s.rocks+' rocks'+(s.top_ore?' &middot; '+esc(s.top_ore):'')
+        +     ssCondMarks(s)
         +     (s.suspect?' <span class="swarn">&#9888; check</span>':'')+'</div>'
         +   '<div class="sage">'+ssFmtAge(s.expires_min)+' left</div>'
         +   '<div>'+(opKeys()
               ? (mine ? '<button class="ssacc taken" disabled>accepted</button>'
-                      : '<button class="ssacc" data-acc="'+s.id+'">accept</button>')
+                      : '<button class="ssacc" data-acc="'+s.id+'">accept</button>'
+                        + '<button class="ssdec" data-dec="'+s.id+'" '
+                        + 'title="drop this off your callout list. the site stays live for everyone else.">pass</button>')
               : (mine ? '<span class="sper">&#10003;</span>' : ''))+'</div>'
         + '</div>';
       if (isOn) h += '<div class="sshud" id="sshud'+s.id+'">reading the field&hellip;</div>';
     }
+    h += '</div><div class="ssfade' + (SS_LIST_OPEN ? ' hide' : '') + '" id="ssfade"></div></div>';
+    // the button only exists when there is genuinely something below the cut
+    if (live.length > SS_FIT || SS_LIST_OPEN)
+      h += '<button type="button" class="ssmore" id="ssmore">'
+        +  (SS_LIST_OPEN ? "collapse" : "show all " + live.length) + '</button>';
     box.innerHTML = h; box.style.display="";
+
+    var more = el("ssmore");
+    if (more) more.onclick = function(){
+      SS_LIST_OPEN = !SS_LIST_OPEN;
+      var l = el("sslist"), f = el("ssfade");
+      // toggle classes rather than re-render, so the max-height transition runs
+      if (l) l.className = "sslist" + (SS_LIST_OPEN ? " open" : "");
+      if (f) f.className = "ssfade" + (SS_LIST_OPEN ? " hide" : "");
+      more.textContent = SS_LIST_OPEN ? "collapse" : "show all " + live.length;
+      if (!SS_LIST_OPEN && l) l.scrollTop = 0;
+    };
 
     Array.prototype.forEach.call(box.querySelectorAll(".scrow"), function(row){
       row.onclick = function(ev){
-        if (ev.target && ev.target.getAttribute && ev.target.getAttribute("data-acc")) return;
+        if (ev.target && ev.target.getAttribute
+            && (ev.target.getAttribute("data-acc") || ev.target.getAttribute("data-dec"))) return;
         var id = parseInt(row.getAttribute("data-site"),10);
         SS_OPEN = (SS_OPEN === id) ? null : id;
         renderScoutSites();
         if (SS_OPEN) ssLoadDetail(SS_OPEN);
+      };
+    });
+    /* PASS: local to this FC. Animate the row out first so the list does not
+       snap, then re-render. Nothing is sent to the server; the filing stays live
+       for every other officer. */
+    Array.prototype.forEach.call(box.querySelectorAll("[data-dec]"), function(b){
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var id = parseInt(b.getAttribute("data-dec"),10);
+        var row = b.closest ? b.closest(".scrow") : null;
+        ssPass(id);
+        if (SS_OPEN === id) SS_OPEN = null;
+        if (row){ row.className += " going"; setTimeout(renderScoutSites, 240); }
+        else renderScoutSites();
       };
     });
     Array.prototype.forEach.call(box.querySelectorAll("[data-acc]"), function(b){
@@ -2391,15 +2634,121 @@ tr.haulrow{ cursor:pointer; }
   /* THE HUD: what the scout actually saw. Renders entirely off the
      /api/scout/site payload, so the ledger line and the board can never
      disagree -- they read the same row. */
+  /* Conditions, shared with the filer. Tokens MUST match scout.js CONDITIONS;
+     the server allowlists on write, this only decides how they read. */
+  var SC_COND = [
+    ["rats",     "rats",         "hot"],
+    ["gankers",  "gankers",      "hot"],
+    ["hostiles", "hostiles",     "hot"],
+    ["miners",   "other miners", ""   ],
+    ["wrecks",   "wrecks",       ""   ],
+    ["clear",    "clear",        "ok" ]
+  ];
+  function scCondLabel(t){
+    for (var i=0;i<SC_COND.length;i++) if (SC_COND[i][0]===t) return SC_COND[i];
+    return null;
+  }
+  /* UTC, because a fleet spans time zones and EVE runs on one clock. */
+  function srepStamp(iso){
+    var t = Date.parse(iso);
+    if (!t) return "--:--";
+    var d = new Date(t);
+    function p(n){ return (n<10?"0":"")+n; }
+    return p(d.getUTCHours())+":"+p(d.getUTCMinutes())+" EVE";
+  }
+  function srepAgo(iso){
+    var t = Date.parse(iso); if (!t) return "";
+    var m = Math.max(0, Math.round((Date.now()-t)/60000));
+    return m < 60 ? m+"m ago" : (m/60).toFixed(1)+"h ago";
+  }
+
+  /* THE BALLOT, rendered off whatever the SERVER chose to send.
+     If you have not voted, there is no tally in the payload to leak, so the
+     blind holds even with devtools open. If you have, the count is all you get:
+     which way YOU voted is not in the database, on purpose. */
+  function ssVoteHtml(id, d){
+    if (d.own) return '<div class="srdiv"></div>'
+      + '<div class="srvote"><span class="srvq">your filing</span></div>';
+    if (d.voted){
+      var v = d.votes || { up:0, down:0 };
+      return '<div class="srdiv"></div><div class="srvote"><span class="srvt">'
+        + '<b>&#9650; ' + (v.up||0) + '</b> &nbsp; <i>&#9660; ' + (v.down||0) + '</i>'
+        + '</span><span class="srvq">ballot closed</span></div>';
+    }
+    // a site the fleet already ate still renders here from the paid ledger line;
+    // the ballot is shut and should say so rather than offering a dead button
+    if (d.closed) return '<div class="srdiv"></div>'
+      + '<div class="srvote"><span class="srvq">ballot closed, site is off the board</span></div>';
+    return '<div class="srdiv"></div><div class="srvote">'
+      + '<button type="button" data-v="1"  data-vid="'+id+'" title="good intel. this is final.">&#9650;</button>'
+      + '<button type="button" class="dn" data-v="-1" data-vid="'+id+'" title="bad intel: the rocks were not as filed. this is final.">&#9660;</button>'
+      + '<span class="srvq">one vote, final, nobody sees who</span></div>';
+  }
+
+  function ssWireVote(id){
+    var box = el("sshud"+id); if (!box) return;
+    Array.prototype.forEach.call(box.querySelectorAll("[data-vid]"), function(b){
+      b.onclick = function(ev){
+        ev.stopPropagation();
+        var btns = box.querySelectorAll("[data-vid]");
+        for (var i=0;i<btns.length;i++) btns[i].disabled = true;
+        fetch("/api/scout/vote", { method:"POST", credentials:"same-origin",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ id: id, v: parseInt(b.getAttribute("data-v"),10) }) })
+          .then(function(r){ return r.json(); })
+          .then(function(res){
+            if (res && res.ok){
+              // fold the counts into the cached detail so the reveal survives a repaint
+              ssDetail[id].voted = true; ssDetail[id].votes = res.votes;
+              ssPaintDetail(id);
+            } else {
+              if (res && res.already){ ssDetail[id].voted = true; ssPaintDetail(id); return; }
+              toast((res && res.error) || "could not record that vote");
+              for (var k=0;k<btns.length;k++) btns[k].disabled = false;
+            }
+          })
+          .catch(function(){
+            toast("could not record that vote");
+            for (var k=0;k<btns.length;k++) btns[k].disabled = false;
+          });
+      };
+    });
+  }
+
   function ssPaintDetail(id){
     var m = el("sshud"+id), d = ssDetail[id]; if(!m||!d) return;
-    var h = '<div class="shgrid">'
+
+    /* THE FIELD REPORT. What the scout saw, stamped and attributed, above the
+       numbers. An FC reads this first and decides whether to keep reading. */
+    var h = '<div class="srep">'
+      + '<div class="srh"><span>&#9670; FIELD REPORT</span><i>'
+      + srepStamp(d.filed_at) + ' &middot; ' + srepAgo(d.filed_at) + '</i></div>'
+      + '<div class="srl"><u>eyes</u><span>' + esc(d.scout || "unknown goblin")
+      +   ' &middot; ' + (d.corroborated ? "position confirmed" : "position unverified") + '</span></div>'
+      + '<div class="srl"><u>contact</u><span>';
+    if (d.conditions && d.conditions.length) {
+      for (var c=0;c<d.conditions.length;c++){
+        var meta = scCondLabel(d.conditions[c]);
+        h += '<span class="ccm ' + (meta ? meta[2] : "") + '">'
+           + (meta ? meta[1] : esc(d.conditions[c])) + '</span>'
+           + (c < d.conditions.length-1 ? '<span class="ccm"> / </span>' : '');
+      }
+    } else {
+      // never render this as "clear". Nobody looked is a different fact.
+      h += '<span class="ccm">not reported</span>';
+    }
+    h += '</span></div>';
+    if (d.note) h += '<div class="srdiv"></div><div class="srnote"><b>&raquo;</b> ' + esc(d.note) + '</div>';
+    h += ssVoteHtml(id, d);
+    h += '</div>';
+
+    h += '<div class="shgrid">'
       + '<div><span>pays</span><b>'+Math.round(d.pay_per_m3)+' /m&sup3;</b></div>'
       + '<div><span>whole belt</span><b>'+isk(d.pay||0)+'</b></div>'
       + '<div><span>volume</span><b>'+m3fmt(d.m3||0)+' m&sup3;</b></div>'
       + '<div><span>rocks</span><b>'+(d.rocks||0)+'</b></div>'
-      + '<div><span>scout</span><b>'+esc(d.scout||"?")+'</b></div>'
-      + '<div><span>eyes on it</span><b>'+(d.corroborated?"confirmed":"unverified")+'</b></div>'
+      // scout and corroboration moved up into the field report; repeating them
+      // here just made the reader check whether the two agreed.
       + '</div>';
     if (d.unmatched) h += '<div class="swarn" style="font-family:var(--mono);font-size:10.5px;margin-bottom:8px">&#9888; '
       + d.unmatched + ' pasted rows are not ore we know. treat this one carefully.</div>';
@@ -2416,6 +2765,7 @@ tr.haulrow{ cursor:pointer; }
          + 'shoot the top row first. priced at our buyback, not the game\'s ISK column.</div>';
     }
     m.innerHTML = h;
+    ssWireVote(id);
   }
   function renderAll(){ if(!P) return;
     if (typeof renderBoard==="function") renderBoard(); // board card stays live

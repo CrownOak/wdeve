@@ -81,6 +81,35 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .scoutlbl{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
             color:var(--ore); font-weight:700; }
 .scoutnote{ font-family:var(--mono); font-size:11px; color:var(--muted); flex-basis:100%; }
+/* ---- PARITY WITH THE FLEET CONSOLE ----
+   Same chips, same note, same meaning. A scout who learns this bar should not
+   have to learn a second one inside the op. */
+.ccb{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+  padding:4px 7px; border:1px solid var(--line-soft); background:none; color:var(--muted);
+  cursor:pointer; margin:0 4px 4px 0; }
+.ccb:hover{ border-color:var(--silver-dim); color:var(--silver-dim); }
+.ccb.on{ border-color:var(--ore); color:var(--ore); }
+.ccb.on[data-c="rats"], .ccb.on[data-c="gankers"], .ccb.on[data-c="hostiles"]{
+  border-color:var(--amber); color:var(--amber); }
+.sccond{ flex-basis:100%; margin:2px 0 0; }
+.scnote{ flex:1 1 200px; }
+.ccm{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted); }
+.ccm.hot{ color:var(--amber); }
+.ccm.ok{ color:var(--ore); }
+/* MODE: a scan you ran, or an anomaly you read from several jumps out. */
+.scmode{ flex-basis:100%; display:flex; gap:0; margin:2px 0 4px; }
+.scmode button{ font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+  padding:5px 10px; background:none; border:1px solid var(--line-soft); color:var(--muted); cursor:pointer; }
+.scmode button+button{ border-left:none; }
+.scmode button.on{ color:var(--ore); border-color:var(--ore); }
+/* sightings sit apart from scans on the board and stay folded until asked for */
+.sbsight{ opacity:.72; }
+.sbsight .sbrate{ color:var(--muted); }
+.sbfold{ width:100%; background:none; border:none; border-top:1px solid var(--line-soft);
+  color:var(--muted); font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; padding:7px 0 8px; cursor:pointer; }
+.sbfold:hover{ color:var(--ore); }
 .sb{ margin-top:22px; }
 .sbrow{ display:grid; grid-template-columns:minmax(0,1.4fr) 62px 1fr 78px 86px 64px; gap:10px;
          align-items:center; padding:9px 10px; border:1px solid var(--line-soft);
@@ -148,9 +177,17 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       <span id="svNote" class="btnote">Your numbers, not ours. Read them off your own modules and this belt gets an honest ISK per hour.</span>
     </div>
     <div id="scoutbar">
-      <span class="scoutlbl">&#128225; File this site</span>
+      <span class="scoutlbl">&#128225; Send to command</span>
+      <div class="scmode">
+        <button type="button" id="scmScan" class="on">scanned it</button>
+        <button type="button" id="scmRange">saw it from range</button>
+      </div>
       <input id="scSys" placeholder="which system?" autocomplete="off" spellcheck="false">
-      <button id="scGo" class="gobtn">File it</button>
+      <input id="scOre" placeholder="what the scanner called it" autocomplete="off" spellcheck="false" style="display:none">
+      <input id="scSize" placeholder="size, if it said" autocomplete="off" spellcheck="false" maxlength="24" style="display:none">
+      <button id="scGo" class="gobtn">SEND TO COMMAND</button>
+      <div class="sccond" id="scCond"></div>
+      <input id="scNote" class="scnote" maxlength="20" placeholder="anything else (20 characters)">
       <span id="scMsg" class="scoutnote">Filed sites go on the scout board below for 6 hours, so the fleet knows where the good rock is right now.</span>
     </div>
     <div id="btbar" style="display:none">
@@ -808,20 +845,96 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       scoutBoard();
     }).catch(function(){ scoutBoard(); });
   }
+  /* Conditions: identical tokens to the fleet console and to scout.js CONDITIONS.
+     The server allowlists on write; this only decides how they read. */
+  var SC_COND=[["rats","rats","hot"],["gankers","gankers","hot"],["hostiles","hostiles","hot"],
+               ["miners","other miners",""],["wrecks","wrecks",""],["clear","clear","ok"]];
+  function scCondLabel(t){ for(var i=0;i<SC_COND.length;i++) if(SC_COND[i][0]===t) return SC_COND[i]; return null; }
+  function scCondPaint(){
+    var b=document.getElementById("scCond"); if(!b) return;
+    var h=""; for(var i=0;i<SC_COND.length;i++)
+      h+='<button type="button" class="ccb" data-c="'+SC_COND[i][0]+'">'+SC_COND[i][1]+'</button>';
+    b.innerHTML=h;
+    Array.prototype.forEach.call(b.querySelectorAll(".ccb"), function(x){
+      x.onclick=function(){
+        var k=x.getAttribute("data-c"), on=!/\bon\b/.test(x.className);
+        // clear is exclusive both ways, same rule the server enforces
+        if(on&&k==="clear") Array.prototype.forEach.call(b.querySelectorAll(".ccb"),function(o){o.className="ccb";});
+        if(on&&k!=="clear"){ var c=b.querySelector('.ccb[data-c="clear"]'); if(c) c.className="ccb"; }
+        x.className=on?"ccb on":"ccb";
+      };
+    });
+  }
+  function scCondPicked(){
+    var b=document.getElementById("scCond"); if(!b) return [];
+    var on=b.querySelectorAll(".ccb.on"), out=[];
+    for(var i=0;i<on.length;i++) out.push(on[i].getAttribute("data-c"));
+    return out;
+  }
+  function scCondReset(){
+    var b=document.getElementById("scCond");
+    if(b) Array.prototype.forEach.call(b.querySelectorAll(".ccb"),function(o){o.className="ccb";});
+    var n=document.getElementById("scNote"); if(n) n.value="";
+  }
+
+  /* TWO MODES, ONE BAR. A scan is rocks you counted. A sighting is an anomaly you
+     read off the system scanner from a few jumps out and decided was not worth
+     the round trip. The second is a lead, carries no rocks, and is never priced. */
+  var SC_MODE="scan";
+  function scSetMode(m){
+    SC_MODE=m;
+    var a=document.getElementById("scmScan"), b=document.getElementById("scmRange"),
+        ore=document.getElementById("scOre"), size=document.getElementById("scSize"),
+        go=document.getElementById("scGo");
+    if(a) a.className = m==="scan" ? "on" : "";
+    if(b) b.className = m==="range" ? "on" : "";
+    if(ore) ore.style.display = m==="range" ? "" : "none";
+    if(size) size.style.display = m==="range" ? "" : "none";
+    if(go) go.textContent = m==="range" ? "CALL IT IN" : "SEND TO COMMAND";
+    scoutMsg(m==="range"
+      ? "No scan needed. Name the system and what the scanner called it. It goes on the board as a lead, folded away, and still counts as yours."
+      : "Filed sites go on the scout board below for 6 hours, so the fleet knows where the good rock is right now.");
+  }
+
   function scoutFile(){
-    var sys=(document.getElementById("scSys")||{}).value||"";
-    if(!sys.trim()) return scoutMsg("Which system? The board is useless without it.", true);
-    if(!SC_LAST||!SC_LAST.length) return scoutMsg("Run a scan first, then file it.", true);
-    scoutMsg("Filing&hellip;");
+    var sys=((document.getElementById("scSys")||{}).value||"").trim();
+    if(!sys) return scoutMsg("Which system? The board is useless without it.", true);
+    var note=((document.getElementById("scNote")||{}).value||"").slice(0,20);
+    var conds=scCondPicked();
+
+    if(SC_MODE==="range"){
+      var ore=((document.getElementById("scOre")||{}).value||"").trim();
+      if(!ore) return scoutMsg("What did the scanner call it? That is the whole lead.", true);
+      var size=((document.getElementById("scSize")||{}).value||"").trim();
+      scoutMsg("Calling it in&hellip;");
+      return fetch("/api/scout/sighting", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ system: sys, ore: ore, size: size, note: note, conditions: conds }) })
+        .then(function(r){ return r.json(); }).then(function(d){
+          if(!d||!d.ok) return scoutMsg((d&&d.error)||"That did not go through.", true);
+          if(d.duplicate) return scoutMsg("Already called in within the hour. Nothing lost.");
+          scoutMsg("<b style='color:var(--ore)'>Called in.</b> It sits on the board as a lead for "
+            + (d.life_min!=null ? Math.round(d.life_min/60*10)/10+"h" : "6h")
+            + ". Nobody has to burn the round trip now.");
+          var o=document.getElementById("scOre"); if(o) o.value="";
+          var z=document.getElementById("scSize"); if(z) z.value="";
+          scCondReset(); scoutBoard();
+        }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
+    }
+
+    if(!SC_LAST||!SC_LAST.length) return scoutMsg("Run a scan first, then send it.", true);
+    scoutMsg("Sending&hellip;");
     fetch("/api/scout/site", { method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ system: sys.trim(), rocks: SC_LAST }) })
+      body: JSON.stringify({ system: sys, rocks: SC_LAST, conditions: conds, note: note }) })
       .then(function(r){ return r.json(); }).then(function(d){
         if(!d||!d.ok) return scoutMsg((d&&d.error)||"That did not file.", true);
         if(d.duplicate) scoutMsg("Already on the board, filed within the hour. Nothing lost.");
-        else scoutMsg("<b style='color:var(--ore)'>Filed.</b> "+(d.corroborated
+        else {
+          scoutMsg("<b style='color:var(--ore)'>Sent.</b> "+(d.corroborated
               ? "Your pilot was in system, so it is marked confirmed."
               : "Attach the location scope in the portal and these get marked confirmed.")+
               " Good for 6 hours.");
+          scCondReset();
+        }
         scoutBoard();
       }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
   }
@@ -834,13 +947,33 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;")
       .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
+  /* Compact contact marks, threats first. Same reading as the fleet ledger. */
+  function sbCondMarks(s){
+    if(!s.conditions||!s.conditions.length) return "";
+    var hot=[], cold=[];
+    for(var i=0;i<s.conditions.length;i++){
+      var m=scCondLabel(s.conditions[i]); if(!m) continue;
+      (m[2]==="hot"?hot:cold).push("<span class='ccm "+m[2]+"'>"+m[1]+"</span>");
+    }
+    var all=hot.concat(cold);
+    return all.length ? "<br>"+all.join(" ") : "";
+  }
+  var SB_LEADS_OPEN=false;
+
   function scoutBoard(){
     var host=document.getElementById("scoutboard"); if(!host) return;
     fetch("/api/scout/sites").then(function(r){ return r.json(); }).then(function(d){
       if(!d||!d.ok||!d.sites||!d.sites.length){ host.innerHTML=""; return; }
+      /* Scans first, leads folded. A sighting carries no rocks and no price, so
+         mixing it into the ranked list would put an unpriced row next to priced
+         ones and invite the reader to compare them. They count, they just do not
+         compete. */
+      var scans=[], leads=[];
+      d.sites.forEach(function(x){ (x.sighting ? leads : scans).push(x); });
+
       var h="<h2>&#128225; The scout board <span style='font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em'>"+
             "LIVE SITES &middot; "+d.ttl_hours+"H CLOCK</span></h2>";
-      d.sites.forEach(function(s){
+      scans.forEach(function(s){
         /* PER-ROW life, not the global clock. A site filed just before downtime
            honestly lives 40 minutes, and a bar drawn against 6h would read 90%
            drained the instant it was filed. The server sends life_min for this. */
@@ -850,7 +983,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
            "<div><div class='sbsys'>"+esc(s.system)+"</div>"+
              "<span class='sbchip "+(s.corroborated?"sbver'>&#10003; confirmed":"sbunv'>unverified")+"</span></div>"+
            "<div class='sbrate'>"+s.pay_per_m3.toFixed(0)+"</div>"+
-           "<div class='sbmeta'>ISK/m&sup3;<br>"+esc(s.top_ore||"")+"</div>"+
+           "<div class='sbmeta'>ISK/m&sup3;<br>"+esc(s.top_ore||"")+sbCondMarks(s)+"</div>"+
            "<div class='sbmeta'>"+m3fmt(s.m3)+" m&sup3;<br>"+s.rocks+" rocks</div>"+
            "<div class='sbage'>"+(s.age_min<60?s.age_min+"m old":(s.age_min/60).toFixed(1)+"h old")+
              "<br><b>"+(s.expires_min<60?s.expires_min+"m left":(s.expires_min/60).toFixed(1)+"h left")+"</b>"+
@@ -858,7 +991,37 @@ tr.survrow:hover .survmore{ color:var(--ore); }
            "<div><button class='sbempty' data-empty='"+s.id+"'>it's gone</button></div>"+
            "</div><div id='sbd"+s.id+"'></div>";
       });
+      /* LEADS, folded. Threat marks still show while collapsed, because "there
+         are gankers in that system" is worth seeing even on a row nobody has
+         surveyed yet. */
+      if (leads.length){
+        h += "<button type='button' class='sbfold' id='sbfold'>"
+           + (SB_LEADS_OPEN ? "hide" : "show") + " " + leads.length
+           + " called in from range</button><div id='sbleads'"
+           + (SB_LEADS_OPEN ? "" : " style='display:none'") + ">";
+        leads.forEach(function(s){
+          h += "<div class='sbrow sbsight'>"
+            +   "<div><div class='sbsys'>"+esc(s.system)+"</div>"
+            +     "<span class='sbchip sbunv'>called from range</span></div>"
+            +   "<div class='sbrate'>&mdash;</div>"
+            +   "<div class='sbmeta'>"+esc(s.sighting_ore||s.top_ore||"anomaly")
+            +     (s.sighting_size?" &middot; "+esc(s.sighting_size):"")+sbCondMarks(s)+"</div>"
+            +   "<div class='sbmeta'>not surveyed<br>no price</div>"
+            +   "<div class='sbage'>"+(s.expires_min<60?s.expires_min+"m left":(s.expires_min/60).toFixed(1)+"h left")+"</div>"
+            +   "<div></div>"
+            + "</div>";
+        });
+        h += "</div>";
+      }
+
       host.innerHTML=h;
+      var fold=document.getElementById("sbfold");
+      if (fold) fold.onclick=function(){
+        SB_LEADS_OPEN=!SB_LEADS_OPEN;
+        var box=document.getElementById("sbleads");
+        if(box) box.style.display=SB_LEADS_OPEN?"":"none";
+        fold.textContent=(SB_LEADS_OPEN?"hide":"show")+" "+leads.length+" called in from range";
+      };
       Array.prototype.forEach.call(host.querySelectorAll(".sbrow"), function(row){
         row.onclick=function(ev){ if(ev.target.getAttribute("data-empty")) return;
           scoutDrop(row.getAttribute("data-site")); };
@@ -904,6 +1067,10 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   }
   (function(){
     var g=document.getElementById("scGo"); if(g) g.onclick=scoutFile;
+    scCondPaint();
+    var ms=document.getElementById("scmScan"), mr=document.getElementById("scmRange");
+    if(ms) ms.onclick=function(){ scSetMode("scan"); };
+    if(mr) mr.onclick=function(){ scSetMode("range"); };
     var s=document.getElementById("scSys");
     if(s) s.addEventListener("keydown", function(e){ if(e.key==="Enter") scoutFile(); });
   })();
