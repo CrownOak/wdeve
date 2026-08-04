@@ -905,7 +905,13 @@ tr.haulrow{ cursor:pointer; }
           '<div class="rpl">Scout, boost and combat are all things the corp grants to your account, '
             + 'so the ledger needs to know who you are. The password gets you the ledger; '
             + 'the portal login gets you the rest of it.</div>' +
-          '<a class="rpbtn" href="/portal/" style="display:inline-block;text-decoration:none">Open the portal</a>';
+          '<a class="rpbtn" href="/portal/" style="display:inline-block;text-decoration:none">Open the portal</a> ' +
+          // The calculator half of Survey Scan needs no account at all, so send
+          // them somewhere useful instead of leaving a dead end. Filing still
+          // needs the login, and saying so here beats finding out after a paste.
+          '<a class="rpbtn ghost" href="/survey/" style="display:inline-block;text-decoration:none">Open Survey Scan &rarr;</a>' +
+          '<div class="rpok" style="margin-top:7px">Survey Scan prices a belt without any login. '
+            + 'Filing it to the board is the part that needs the portal.</div>';
         wireRolePanel();
         rpOpen(p);
         return;
@@ -921,7 +927,11 @@ tr.haulrow{ cursor:pointer; }
           '<li><b>Where it goes.</b> Paste it in, press calculate, press file.</li>' +
           '<li><b>What you get.</b> A line at payout when the fleet mines what you found. '
             + 'Sites that go unused pay nothing, on purpose.</li></ol>' +
-          '<button class="rpbtn" id="rpAsk">Ask for the scout role</button>' +
+          '<button class="rpbtn" id="rpAsk">Ask for the scout role</button> ' +
+          // ALWAYS REACHABLE. Whatever state this panel is in, the full tool
+          // exists at /survey/ and works on its own. A role gate should never be
+          // the only door to a thing that has its own page.
+          '<a class="rpbtn ghost" href="/survey/">Open Survey Scan &rarr;</a>' +
           '<div class="rpok" id="rpOk"></div>';
       } else if (ROLE === "boost") {
         p.innerHTML =
@@ -982,6 +992,9 @@ tr.haulrow{ cursor:pointer; }
         '<div class="rpok" id="scMsg"></div>' +
         '<div class="scstep"><i>04</i> what is on the board</div>' +
         '<div id="scBoard" class="rpok">reading the board&hellip;</div>' +
+        // the same tool with more room, for when you are not mid op
+        '<div class="rpok" style="margin-top:9px">Prefer the full page? '
+          + '<a href="/survey/" style="color:var(--ore)">Survey Scan &rarr;</a></div>' +
         '<div class="rpok" id="rpScout" style="display:none"></div>';
       wireRolePanel();
       rpOpen(p);
