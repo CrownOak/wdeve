@@ -76,6 +76,16 @@
   .chip.in{ opacity:1; transform:none; }
   .vcta{ font-family:var(--mono); font-size:12px; color:#a9b2a8; margin:16px auto 0; max-width:560px; line-height:1.7; }
   .vcta b{ color:var(--silver); }
+  .filebtn{ display:none; margin:18px auto 0; font-family:var(--display); text-transform:uppercase;
+    letter-spacing:.1em; background:var(--ore); color:#04140a; border:0; padding:13px 34px;
+    font-weight:700; cursor:pointer; font-size:14px; transition:filter .2s, transform .1s; }
+  .filebtn:hover{ filter:brightness(1.12); }
+  .filebtn:active{ transform:translateY(1px); }
+  .filebtn.busy{ filter:saturate(.4) brightness(.85); cursor:default; }
+  .filed{ display:none; font-family:var(--mono); font-size:12px; color:var(--ore); margin-top:14px;
+    line-height:1.8; letter-spacing:.04em; }
+  .filed.err{ color:var(--amber); }
+  .filed b{ letter-spacing:.18em; }
 
   /* the manifest */
   .mtoggle{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
@@ -175,9 +185,11 @@
     <div class="vunit" id="vunit">ISK &middot; click the number to copy it</div>
     <div class="vsub" id="vsub"></div>
     <div class="vchips" id="vchips"></div>
-    <div class="vcta"><b>Contract it:</b> in game, create an Item Exchange contract to
-      <b>Wealthy Dropouts</b> at the home station, ask exactly the number above, and it gets
-      accepted. Same number, no haggling, back to the belt.</div>
+    <button class="filebtn" id="filebtn" type="button">File it with the corp</button>
+    <div class="filed" id="filed"></div>
+    <div class="vcta"><b>One click files it.</b> Then create the matching Item Exchange contract
+      to <b>Wealthy Dropouts</b> at the home station, ask exactly the number above, and
+      leadership accepts it against your filing. Same number, no haggling, back to the belt.</div>
     <span class="mtoggle" id="mtoggle">the manifest</span>
     <div class="mwrap" id="mwrap"><div><table class="mtable" id="mtable"></table></div></div>
   </div>
@@ -303,6 +315,9 @@
       else tr.classList.add("in");
     });
     if(d.asof) $("feedtxt").textContent="price feed live · baked "+hhmm(d.asof)+" · rebakes hourly";
+    var fb=$("filebtn"), fd=$("filed");
+    if(fb){ fb.style.display="block"; fb.classList.remove("busy"); fb.textContent="File it with the corp"; }
+    if(fd){ fd.style.display="none"; fd.className="filed"; fd.textContent=""; }
   }
 
   function quote(force){
@@ -377,6 +392,36 @@
       $("vunit").classList.add("in");
     }
   }catch(e){}
+
+  /* one click, contract filed: same paste goes to the portal's contract desk,
+     valued server side at the same live basis and rate the quote used. Pending
+     until leadership accepts it against the real in game contract. */
+  $("filebtn").addEventListener("click", function(){
+    var fb=this, fd=$("filed");
+    if(fb.classList.contains("busy")) return;
+    fb.classList.add("busy"); fb.textContent="Filing…";
+    fetch("/api/contracts/add",{method:"POST",credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({raw:lastText, note:"desk quote "+fmt(lastTotal)+" ISK"})})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d&&d.ok&&d.contract){
+        fb.style.display="none";
+        fd.className="filed"; fd.style.display="block";
+        fd.innerHTML="<b>CONTRACT FILED</b> · #"+d.contract.id+" · pending review<br>"
+          +"Now create the matching Item Exchange contract in game and leadership accepts it against this filing.";
+      } else {
+        fb.classList.remove("busy"); fb.textContent="File it with the corp";
+        fd.className="filed err"; fd.style.display="block";
+        fd.textContent=(d&&d.error)||"The filing did not go through, try again.";
+      }
+    })
+    .catch(function(){
+      fb.classList.remove("busy"); fb.textContent="File it with the corp";
+      fd.className="filed err"; fd.style.display="block";
+      fd.textContent="The wire is down. The quote stands, try the filing again.";
+    });
+  });
 
   /* ---- the price board: the whole list, no pasting required ---- */
   var BROWS=null, bSort="m3", bDir=-1;
