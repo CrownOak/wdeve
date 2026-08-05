@@ -386,7 +386,7 @@
     var q=($("bq").value||"").toLowerCase().trim();
     var comp=$("bcomp").checked;
     var rows=BROWS.filter(function(r){
-      if(!comp && /^compressed /i.test(r.name)) return false;
+      if(!comp && /^(batch )?compressed /i.test(r.name)) return false;
       return !q || r.name.toLowerCase().indexOf(q)>=0;
     });
     rows.sort(function(a,b){
