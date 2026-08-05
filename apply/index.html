@@ -118,6 +118,75 @@
     .revRow .rl{ flex-basis:84px; }
   }
 
+  /* ---- THE INTAKE chrome (2026-08-04): arrival, terminal, clearance. Everything
+     keys off var(--ore) so the GOBSEC and ALLY tracks inherit it in their own color. ---- */
+  .bnhead{ position:relative; }
+  .bnhead::before{ content:""; position:absolute; inset:-30px -60px -10px; pointer-events:none;
+    background:radial-gradient(ellipse 55% 60% at 50% 35%, rgba(70,255,94,.06), transparent 70%); }
+  body.t-gobsec .bnhead::before{ background:radial-gradient(ellipse 55% 60% at 50% 35%, rgba(255,71,87,.06), transparent 70%); }
+  body.t-ally .bnhead::before{ background:radial-gradient(ellipse 55% 60% at 50% 35%, rgba(255,159,28,.06), transparent 70%); }
+  .arrive{ position:relative; display:flex; align-items:center; justify-content:center; gap:9px;
+    flex-wrap:wrap; margin:12px auto 0; font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--silver-dim); min-height:16px; }
+  .arrive b{ color:var(--ore); font-weight:700; }
+  .arrive .adot{ width:6px; height:6px; border-radius:50%; background:var(--ore); flex:0 0 auto;
+    animation:abreathe 2.4s ease-in-out infinite; }
+  @keyframes abreathe{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+  .vouch{ display:none; margin:10px auto 0; width:max-content; max-width:90%; font-family:var(--mono);
+    font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ore);
+    border:1px solid var(--line); padding:5px 13px; }
+
+  .stage{ overflow:hidden; }
+  .scorner{ position:absolute; width:15px; height:15px; border:2px solid var(--ore); opacity:.6;
+    pointer-events:none; z-index:2; }
+  .scorner.tl{ top:-1px; left:-1px; border-right:0; border-bottom:0; }
+  .scorner.tr{ top:-1px; right:-1px; border-left:0; border-bottom:0; }
+  .scorner.bl{ bottom:-1px; left:-1px; border-right:0; border-top:0; }
+  .scorner.br{ bottom:-1px; right:-1px; border-left:0; border-top:0; }
+  .scanfx{ position:absolute; inset:0; pointer-events:none; opacity:.035;
+    background:repeating-linear-gradient(0deg, transparent 0 3px, #9ff5a9 3px 4px);
+    animation:stagescan 16s linear infinite; }
+  body.t-gobsec .scanfx{ background:repeating-linear-gradient(0deg, transparent 0 3px, #ffb3ba 3px 4px); }
+  body.t-ally .scanfx{ background:repeating-linear-gradient(0deg, transparent 0 3px, #ffd9a0 3px 4px); }
+  @keyframes stagescan{ from{ transform:translateY(0);} to{ transform:translateY(4px);} }
+  .stSweep{ position:absolute; top:0; bottom:0; width:80px; left:-110px; pointer-events:none; opacity:0; z-index:3;
+    background:linear-gradient(90deg, transparent, rgba(70,255,94,.12), rgba(70,255,94,.3), rgba(70,255,94,.12), transparent); }
+  body.t-gobsec .stSweep{ background:linear-gradient(90deg, transparent, rgba(255,71,87,.12), rgba(255,71,87,.3), rgba(255,71,87,.12), transparent); }
+  body.t-ally .stSweep{ background:linear-gradient(90deg, transparent, rgba(255,159,28,.12), rgba(255,159,28,.3), rgba(255,159,28,.12), transparent); }
+  .stSweep.run{ animation:stsweep .4s cubic-bezier(.4,0,.2,1) 1; }
+  @keyframes stsweep{ 0%{ left:-110px; opacity:1; } 100%{ left:calc(100% + 30px); opacity:1; } }
+
+  .seg.cur{ animation:segbreathe 2.6s ease-in-out infinite; }
+  @keyframes segbreathe{ 0%,100%{ opacity:.45; } 50%{ opacity:1; } }
+  .gob{ animation:gobfloat 5.4s ease-in-out infinite; }
+  @keyframes gobfloat{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+  .answer input[type=text]:focus, .answer textarea:focus{
+    box-shadow:0 0 0 1px rgba(70,255,94,.22), 0 0 20px rgba(70,255,94,.06) inset; }
+  .chip:active, .card:active, .gobtn:active{ transform:translateY(1px); }
+
+  /* the clearance stamp */
+  .stamp{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em;
+    font-size:clamp(22px, 5vw, 34px); color:var(--ore); border:3px solid var(--ore); padding:10px 22px;
+    display:inline-block; transform:rotate(-3deg); margin:6px 0 4px; }
+  .stamp.slam{ animation:slam .5s cubic-bezier(.2,1.4,.4,1) 1; }
+  @keyframes slam{ 0%{ opacity:0; transform:rotate(-8deg) scale(1.6); }
+    60%{ opacity:1; transform:rotate(-3deg) scale(.97); } 100%{ opacity:1; transform:rotate(-3deg) scale(1); } }
+  .stampglow{ animation:stampglow 1.2s ease-out 1; }
+  @keyframes stampglow{ 0%{ box-shadow:0 0 0 rgba(70,255,94,0); } 30%{ box-shadow:0 0 34px rgba(70,255,94,.4); } 100%{ box-shadow:0 0 0 rgba(70,255,94,0); } }
+  .stampsub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
+    color:var(--muted); margin:2px 0 16px; }
+  .steps{ margin:14px 0 0; padding:0; list-style:none; counter-reset:st; text-align:left; }
+  .steps li{ counter-increment:st; display:flex; gap:12px; align-items:baseline; padding:9px 0;
+    border-top:1px solid var(--line-soft); color:#a9b2a8; font-size:13.5px; line-height:1.6; }
+  .steps li::before{ content:counter(st, decimal-leading-zero); font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.1em; color:var(--ore); flex:0 0 auto; }
+  .clearwrap{ text-align:center; }
+  .clearwrap .discordcta{ margin-top:16px; }
+  @media(prefers-reduced-motion:reduce){
+    .arrive .adot, .scanfx, .stSweep.run, .seg.cur, .gob, .stamp.slam, .stampglow{ animation:none !important; }
+    .stamp{ opacity:1; }
+  }
+
   /* ---- GOBSEC track: same components, another key. See GOBSEC-PORTAL-SPEC.md section 9. ---- */
   body.t-gobsec{ --ore:#ff4757; --ore-deep:#c4133a; --laser:#ffb3ba; background:#08090a; }
   body.t-gobsec .bubble{ border-left-color:#ff4757; }
@@ -160,9 +229,15 @@
     <img id="pgSeal" class="pgseal" src="bonk.png" alt="Big Rock Energy" width="180" height="180">
     <div class="bnover" id="pgOver">BIG ROCK ENERGY [BONK]</div>
     <h1 id="pgTitle">JOIN THE GOBLINS</h1>
+    <div class="arrive" id="arrive"></div>
+    <div class="vouch" id="vouch"></div>
   </header>
   <div class="wrap">
     <div class="stage" id="stage">
+      <span class="scorner tl"></span><span class="scorner tr"></span>
+      <span class="scorner bl"></span><span class="scorner br"></span>
+      <div class="scanfx"></div>
+      <div class="stSweep" id="stSweep"></div>
       <div class="topRow">
         <div class="prog" id="prog" role="progressbar" aria-label="Application progress"
              aria-valuemin="0" aria-valuemax="9" aria-valuenow="0">
@@ -189,7 +264,14 @@
   "use strict";
   var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var DUR = RM ? 0 : 240;
-  var DISCORD = "https://discord.gg/eavumbvRnp";
+  /* The invite carries the Discord ROLE, so the track decides the invite
+     (audience = attribution). The old single invite here was the RETIRED
+     miner/site code, which landed every recruit roleless. */
+  function discordFor(){
+    if (ans.track === "ally") return "https://discord.gg/CNJ8z6D6dC";
+    if (ans.track === "gobsec") return "https://discord.gg/XjeYXTEcq7";
+    return "https://discord.gg/mWZH7uYHNy";
+  }
   var DRAFT_KEY = "bonk_apply_draft_v1";
   var POSES = { ask:"goblin-ask.webp", ledger:"goblin-ledger.webp", work:"goblin-work.webp",
                 greed:"goblin-greed.webp", hype:"goblin-hype.webp" };
@@ -228,6 +310,26 @@
       + 'for GOBSEC access. <a href="/portal/">Open the portal</a>';
     b.style.display = "block";
   }
+  /* THE RECEIPTS. Absolute numbers only, straight off the public stats the whole
+     site already polls: the pitch is that the place is alive and it pays. */
+  try {
+    fetch("/api/public-stats").then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if (!d) return;
+      var paid = d.givenBack || d.given_back || 0, ops = d.ops || 0;
+      if (!paid && !ops) return;
+      var iskTxt = paid >= 1e9 ? (paid/1e9).toFixed(1) + "B" : paid >= 1e6 ? Math.round(paid/1e6) + "M" : "";
+      var a = document.getElementById("arrive");
+      if (!a) return;
+      a.setAttribute("data-i18n-skip", "");
+      var parts = [];
+      if (iskTxt) parts.push("<b>" + iskTxt + " ISK</b> paid out to goblins");
+      if (ops) parts.push("<b>" + ops.toLocaleString() + "</b> fleet ops logged");
+      if (d.live_op && d.online) parts.push("<b>" + d.online + "</b> in the belt right now");
+      parts.push("paid on the spot, receipts public");
+      a.innerHTML = '<span class="adot"></span>' + parts.join(" &middot; ");
+    }).catch(function(){});
+  } catch(e){}
+  var REFNAME = "";
   try {
     fetch("/api/whoami", { credentials:"same-origin" })
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -442,6 +544,11 @@
   /* ---------- rendering ---------- */
   function show(next, instant){
     slideErr.textContent = "";
+    // forward motion gets the scanner pass; going back is not progress
+    if (!instant && DUR && next > idx) {
+      var sw = document.getElementById("stSweep");
+      if (sw) { sw.classList.remove("run"); void sw.offsetWidth; sw.classList.add("run"); }
+    }
     var swap = function(){
       idx = next;
       var s = SL()[idx];
@@ -508,7 +615,7 @@
       answer.appendChild(inp);
       if (s.discord) {
         var dc = el("a", "discordcta", "Join the BONK Discord ▶");
-        dc.href = DISCORD; dc.target = "_blank"; dc.rel = "noopener";
+        dc.href = discordFor(); dc.target = "_blank"; dc.rel = "noopener";
         answer.appendChild(dc);
       }
       var nx = el("button", "gobtn", "Next ▶"); nx.type = "button";
@@ -654,7 +761,12 @@
       answer.appendChild(vb);
       fetch("/api/referral/who?r=" + encodeURIComponent(REF))
         .then(function(r){ return r.json(); })
-        .then(function(d){ if (d && d.ign) vb.textContent = "Referred by " + d.ign + ". Nice."; })
+        .then(function(d){ if (d && d.ign) {
+          REFNAME = d.ign;
+          vb.textContent = "Referred by " + d.ign + ". Nice.";
+          var vc = document.getElementById("vouch");
+          if (vc) { vc.textContent = "vouched by " + d.ign; vc.style.display = "block"; }
+        } })
         .catch(function(){});
     }
     // Language check (Kyle): the pick flips the interview live, rides the
@@ -881,15 +993,36 @@
     clearDraft();
     bubble.textContent = "Application in. A recruiter will reach out. The table is nearly set. \u{1FAA8}";
     answer.textContent = "";
-    var body = el("div", "confirmBody");
-    body.appendChild(document.createTextNode("Once you are in, your goblin career lives at "));
+    // the clearance: one sweep, the stamp slams, then three plain next steps
+    var sw = document.getElementById("stSweep");
+    if (sw && !RM) { sw.classList.remove("run"); void sw.offsetWidth; sw.classList.add("run"); }
+    var wrapC = el("div", "clearwrap");
+    var st = el("div", "stamp" + (RM ? "" : " slam stampglow"), "Application filed");
+    wrapC.appendChild(st);
+    wrapC.appendChild(el("div", "stampsub", "clearance pending · we answer fast"));
+    var steps = el("ol", "steps");
+    var li1 = el("li");
+    li1.appendChild(document.createTextNode("Jump into the Discord, that is where the handshake happens."));
+    steps.appendChild(li1);
+    var li2 = el("li");
+    li2.appendChild(document.createTextNode("Watch your evemail for the invite, usually within the day."));
+    steps.appendChild(li2);
+    var li3 = el("li");
+    li3.appendChild(document.createTextNode("Once you are in, your career lives at "));
     var a = el("a", null, "the member portal"); a.href = "/portal/";
-    body.appendChild(a);
-    body.appendChild(document.createTextNode(". Medals, hauls, the whole ledger of your rise. See you in the belt."));
-    answer.appendChild(body);
+    li3.appendChild(a);
+    li3.appendChild(document.createTextNode(": medals, hauls, the whole ledger of your rise."));
+    steps.appendChild(li3);
+    if (REFNAME) {
+      var li4 = el("li");
+      li4.appendChild(document.createTextNode(REFNAME + " will hear you made it."));
+      steps.appendChild(li4);
+    }
+    wrapC.appendChild(steps);
     var dc = el("a", "discordcta", "Jump into the Discord ▶");
-    dc.href = DISCORD; dc.target = "_blank"; dc.rel = "noopener";
-    answer.appendChild(dc);
+    dc.href = discordFor(); dc.target = "_blank"; dc.rel = "noopener";
+    wrapC.appendChild(dc);
+    answer.appendChild(wrapC);
     qcount.textContent = "done";
     hint("", false);
   }
