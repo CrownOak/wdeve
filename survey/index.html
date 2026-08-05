@@ -116,6 +116,41 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .scoutlbl{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
             color:var(--ore); font-weight:700; }
 .scoutnote{ font-family:var(--mono); font-size:11px; color:var(--muted); flex-basis:100%; }
+/* ---- THE RATE CHIPS: pick a hull, or fly on your own measured numbers ---- */
+.rateChips{ display:flex; flex-wrap:wrap; gap:6px; flex-basis:100%; margin:2px 0 4px; }
+.rchip{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  padding:6px 12px; cursor:pointer; transition:border-color .18s, color .18s, background .18s; }
+.rchip:hover{ border-color:var(--ore); color:var(--ore); }
+.rchip.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+.rchip.meas{ border-color:rgba(70,255,94,.45); color:var(--ore); }
+.rchip.meas.on{ color:#04140a; }
+/* ---- THE SCOUT DECK: a console, not a form ---- */
+#survdeck{ position:relative; overflow:hidden; }
+#survdeck .dcorner{ position:absolute; width:13px; height:13px; border:2px solid var(--ore);
+  opacity:.5; pointer-events:none; z-index:2; }
+#survdeck .dcorner.tl{ top:-1px; left:-1px; border-right:0; border-bottom:0; }
+#survdeck .dcorner.tr{ top:-1px; right:-1px; border-left:0; border-bottom:0; }
+#survdeck .dcorner.bl{ bottom:-1px; left:-1px; border-right:0; border-top:0; }
+#survdeck .dcorner.br{ bottom:-1px; right:-1px; border-left:0; border-top:0; }
+#survdeck .dscan{ position:absolute; inset:0; pointer-events:none; opacity:.03;
+  background:repeating-linear-gradient(0deg, transparent 0 3px, #9ff5a9 3px 4px);
+  animation:deckscan 15s linear infinite; }
+@keyframes deckscan{ from{ transform:translateY(0);} to{ transform:translateY(4px);} }
+#survdeck .dsweep{ position:absolute; top:0; bottom:0; width:80px; left:-110px; pointer-events:none;
+  opacity:0; z-index:3;
+  background:linear-gradient(90deg, transparent, rgba(70,255,94,.12), rgba(70,255,94,.32), rgba(70,255,94,.12), transparent); }
+#survdeck .dsweep.run{ animation:decksweep .5s cubic-bezier(.4,0,.2,1) 1; }
+@keyframes decksweep{ 0%{ left:-110px; opacity:1; } 100%{ left:calc(100% + 30px); opacity:1; } }
+.scoutlbl .pinger{ display:inline-block; width:6px; height:6px; border-radius:50%;
+  background:var(--ore); margin-right:7px; vertical-align:middle;
+  animation:scoutping 2.6s ease-in-out infinite; }
+@keyframes scoutping{ 0%,100%{ opacity:.25; box-shadow:0 0 0 rgba(70,255,94,0); }
+  50%{ opacity:1; box-shadow:0 0 8px rgba(70,255,94,.55); } }
+#scGo.sending{ filter:saturate(.4) brightness(.85); cursor:default; }
+@media(prefers-reduced-motion:reduce){
+  #survdeck .dscan, #survdeck .dsweep.run, .scoutlbl .pinger{ animation:none !important; }
+}
 /* ---- PARITY WITH THE FLEET CONSOLE ----
    Same chips, same note, same meaning. A scout who learns this bar should not
    have to learn a second one inside the op. */
@@ -213,19 +248,16 @@ tr.survrow:hover .survmore{ color:var(--ore); }
          belt in front of you, so they read as one control surface with two
          halves instead of two stacked bars competing for the same attention. -->
     <div id="survdeck">
+    <span class="dcorner tl"></span><span class="dcorner tr"></span>
+    <span class="dcorner bl"></span><span class="dcorner br"></span>
+    <div class="dscan"></div><div class="dsweep" id="dsweep"></div>
     <div id="survbar" style="display:none">
       <span class="btlbl">YOUR RATE</span>
-      <input id="svYield" type="number" min="1" step="1" placeholder="m3 per cycle" title="How much ONE laser pulls in one cycle. Read it off your own module, do not guess.">
-      <span class="btme">m&sup3; per cycle</span>
-      <input id="svCycle" type="number" min="1" step="1" placeholder="seconds" title="Your cycle time in seconds, as your module actually shows it.">
-      <span class="btme">sec</span>
-      <input id="svLasers" type="number" min="1" max="8" step="1" placeholder="lasers" title="How many mining lasers or strip miners you are actually running.">
-      <span class="btme">lasers</span>
-      <button id="svGo" class="gobtn">Rate me</button>
-      <span id="svNote" class="btnote">Your numbers, not ours. Read them off your own modules and this belt gets an honest ISK per hour.</span>
+      <div class="rateChips" id="rateChips"></div>
+      <span id="svNote" class="btnote">Pick the hull you are flying. Log in and the tool uses the rate your own ops actually measured.</span>
     </div>
     <div id="scoutbar">
-      <span class="scoutlbl">&#128225; Send to command</span>
+      <span class="scoutlbl"><span class="pinger"></span>Send to command</span>
       <div class="scmode">
         <button type="button" id="scmScan" class="on">scanned it</button>
         <button type="button" id="scmRange">saw it from range</button>
@@ -576,35 +608,55 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     if(h<1) return Math.round(h*60)+" min";
     if(h<24) return h.toFixed(1)+" hr";
     return (h/24).toFixed(1)+" days"; }
-  /* YOUR RATE. Deliberately not derived from a hull, a rig or a skill sheet: we would be
-     asserting four assumptions and calling the product an income report. The miner reads
-     three numbers off their own modules and then nothing here is a guess. Remembered so
-     they type it once. */
+  /* YOUR RATE, without an interrogation. The old strip asked for yield, cycle time and
+     laser count, three numbers nobody has memorised, and every session started with
+     homework. Now: pick your hull, or better, let the corp's own ledger answer. A member's
+     measured rate (lifetime m3 hauled over lifetime belt time) is not an assumption at all,
+     it is what they ACTUALLY pull with their skills, their rigs and their boosts, so it
+     beats any spec sheet this page could assert. */
+  var RATE_HULLS=[["Venture",1300],["Procurer",4100],["Retriever",5400],["Skiff",5200],
+                  ["Covetor",6400],["Hulk",8700],["Orca",4600]];
+  var rateSel=null, rateMeasured=null;
+  try{ rateSel=JSON.parse(localStorage.getItem("bonk_surv_rate2")||"null"); }catch(e){}
   function survRate(){
-    var y=parseFloat((document.getElementById("svYield")||{}).value)||0;
-    var c=parseFloat((document.getElementById("svCycle")||{}).value)||0;
-    var n=parseFloat((document.getElementById("svLasers")||{}).value)||0;
-    if(y<=0||c<=0||n<=0) return null;
-    return {y:y, c:c, n:n, m3h:y*n*(3600/c)};
+    if(!rateSel) return null;
+    return {m3h:rateSel.m3h, label:rateSel.label};
   }
-  (function(){
-    try{
-      var s=JSON.parse(localStorage.getItem("bonk_surv_rate")||"null");
-      if(s){ if(s.y) document.getElementById("svYield").value=s.y;
-              if(s.c) document.getElementById("svCycle").value=s.c;
-              if(s.n) document.getElementById("svLasers").value=s.n; }
-    }catch(e){}
-    var go=document.getElementById("svGo");
-    if(go) go.onclick=function(){
-      var r=survRate();
-      if(r){ try{ localStorage.setItem("bonk_surv_rate", JSON.stringify({y:r.y,c:r.c,n:r.n})); }catch(e){} }
-      calc();
-    };
-    ["svYield","svCycle","svLasers"].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.addEventListener("keydown", function(ev){ if(ev.key==="Enter") document.getElementById("svGo").click(); });
+  function drawRateChips(){
+    var box=document.getElementById("rateChips"); if(!box) return;
+    var h="";
+    if(rateMeasured) h+='<button type="button" class="rchip meas'+(rateSel&&rateSel.src==="meas"?" on":"")
+      +'" data-m3h="'+Math.round(rateMeasured)+'" data-label="your measured rate" data-src="meas">'
+      +'YOUR OPS &middot; '+Math.round(rateMeasured).toLocaleString()+' m&sup3;/hr</button>';
+    RATE_HULLS.forEach(function(hu){
+      h+='<button type="button" class="rchip'+(rateSel&&rateSel.label===hu[0]?" on":"")
+        +'" data-m3h="'+hu[1]+'" data-label="'+hu[0]+'" data-src="hull">'+hu[0]+"</button>";
     });
-  })();
+    box.innerHTML=h;
+    Array.prototype.forEach.call(box.querySelectorAll(".rchip"), function(b){
+      b.onclick=function(){
+        rateSel={m3h:+b.getAttribute("data-m3h"), label:b.getAttribute("data-label"), src:b.getAttribute("data-src")};
+        try{ localStorage.setItem("bonk_surv_rate2", JSON.stringify(rateSel)); }catch(e){}
+        drawRateChips(); calc();
+      };
+    });
+  }
+  drawRateChips();
+  /* the measured rate: lifetime m3 hauled over lifetime belt time, from their own ops */
+  fetch("/api/me",{credentials:"same-origin"}).then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){
+      var f=d&&d.stats&&d.stats.fleet;
+      if(!f||!f.m3||!f.beltMs) return;
+      var hrs=f.beltMs/3600000;
+      if(hrs<0.25) return;                     // too little belt time to mean anything
+      rateMeasured=f.m3/hrs;
+      if(!rateSel) rateSel={m3h:rateMeasured, label:"your measured rate", src:"meas"};
+      drawRateChips();
+      var n=document.getElementById("svNote");
+      if(n) n.textContent="Measured from your own ops: "+Math.round(rateMeasured).toLocaleString()
+        +" m³ an hour across "+hrs.toFixed(1)+" hours on the belt. Pick a hull to compare.";
+      calc();
+    }).catch(function(){});
 
   function calcSurvey(){
     var out=document.getElementById("out");
@@ -711,8 +763,7 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       var beltAvg=tPay/tM3, bestRock=byRock[0];
       h+="<h2>What this belt pays you</h2>";
       h+="<div class='effnote' style='margin-bottom:8px'>"+
-         RATE.n+" laser"+(RATE.n===1?"":"s")+" &times; "+RATE.y.toLocaleString()+" m&sup3; every "+RATE.c+"s = "+
-         "<b>"+Math.round(RATE.m3h).toLocaleString()+" m&sup3; an hour</b>. "+
+         esc(RATE.label)+" pulls <b>"+Math.round(RATE.m3h).toLocaleString()+" m&sup3; an hour</b>. "+
          "On the best rock here that is <b style='color:var(--ore)'>"+isk(bestRock.perM3*RATE.m3h)+" ISK/hr</b>; "+
          "across the whole field it averages <b>"+isk(beltAvg*RATE.m3h)+" ISK/hr</b>. "+
          "The whole belt is <b>"+hrsTxt(tM3/RATE.m3h)+"</b> of mining.</div>";
@@ -936,6 +987,11 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   function scoutFile(){
     var sys=((document.getElementById("scSys")||{}).value||"").trim();
     if(!sys) return scoutMsg("Which system? The board is useless without it.", true);
+    // the transmission: one scanner pass across the deck as the report goes up
+    var dsw=document.getElementById("dsweep");
+    if(dsw && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)){
+      dsw.classList.remove("run"); void dsw.offsetWidth; dsw.classList.add("run");
+    }
     var note=((document.getElementById("scNote")||{}).value||"").slice(0,20);
     var conds=scCondPicked();
 
