@@ -2764,7 +2764,8 @@ function bkWorks(sc){
       +"This is a scale problem, not a margin problem.</div>";
   }
   h+='<div class="bkline">Feeding it costs <em>'+fmtN(sc.m3_day)+" m³ a day</em>, about "
-    +sig(Number(sc.fleet_nights_week)||0)+" Orca fleet nights a week.</div>";
+    +(sc.ops_week!=null ? sig(Number(sc.ops_week))+" ops a week of ore value"
+        : sig(Number(sc.fleet_nights_week)||0)+" (legacy unit)")+".</div>";
   return h;
 }
 async function secBooks(){

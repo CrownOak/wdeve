@@ -1929,7 +1929,7 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
    item since the dictate); nothing is computed client-side but the percent. */
 /* YOUR NEXT TRIP. The member half of the Mohas card, and the numbers are no longer
    guessed: works_stock_plan.py computes which ore closes the 30 day gap, how many units
-   and m3 that is, and how many fleet nights it represents, and the portal now reads it.
+   and m3 that is, and how many OPS of ore value it represents, and the portal reads it.
    The whole point is that a member is handed ONE trip, not a spreadsheet: the ore, why it
    matters in plain language, and what a night's worth looks like. Everything else the plan
    knows (module bills, margins) is stripped at ingest and never reaches this page. */
@@ -1993,8 +1993,10 @@ function renderNextTrip(plan, co){
   var gap = plan.gap_30d || {}, dos = plan.days_of_stock || {};
   var min = Object.keys(gap)[0] || null;
   var days = min && dos[min] != null ? Math.round(dos[min]) : null;
-  var NIGHT = 23000;                     // one Orca-boosted fleet night, the plan's own figure
-  var nights = Number(plan.fleet_nights) || (m3 / NIGHT);
+  /* Ops, not hold loads. The old 23000 "Orca fleet night" matched no Orca hold and
+     compared raw ore m3 against hauled capacity on a crew that compresses, so it read
+     high by a wide margin. The plan now ships ops of ore VALUE, which is unit safe. */
+  var nights = Number(plan.ops);
   var loc = ORE_WHERE[String(ore).toLowerCase()] || ORE_WHERE_DEFAULT;
   var age = plan.generated ? Math.floor((Date.now() - Date.parse(plan.generated)) / 86400000) : null;
 
@@ -2009,7 +2011,8 @@ function renderNextTrip(plan, co){
     '<div class="trip-rows">' +
       '<div><span>Where</span><b>' + esc(loc.where) + '</b></div>' +
       '<div><span>A night</span><b>about ' + Math.round(NIGHT/1000) + 'k m&#179;. ' +
-        (nights >= 2 ? Math.round(nights) + ' of those covers the whole gap.' : 'One trip covers it.') +
+        (isFinite(nights) && nights >= 2 ? Math.round(nights) + ' ops covers the whole gap.'
+          : 'One op covers it, with room to spare.') +
         '</b></div>' +
       '<div><span>After</span><b>Drop it at the Den. Buyback pays as always.</b></div>' +
     '</div>' +
