@@ -1259,9 +1259,12 @@ function wireOffboard(aid, displayName){
       if(!why){ toast("Pick a reason first"); return; }
       const btn=D.querySelector("#dw_offgo");
       busy(btn, async function(){
-        await api("/api/admin/member-status",{method:"POST",body:JSON.stringify({
+        // api() builds the POST itself: second arg is the PAYLOAD, not fetch options.
+        // Passing {method,body} sent {"method":"POST","body":"..."} and the worker read
+        // body.account_id as undefined, so every offboard died on "member not found".
+        await api("/api/admin/member-status",{
           account_id:aid, status:"deactivated", reason:why.value,
-          note:(D.querySelector("#dw_offnote").value||"").slice(0,300) })});
+          note:(D.querySelector("#dw_offnote").value||"").slice(0,300) });
         toast(displayName+" is off the books");
         openMemberDrawer(aid);            // repaint: the zone flips to Reinstate
         if(typeof loadSection==="function") loadSection();
@@ -1271,8 +1274,7 @@ function wireOffboard(aid, displayName){
   const back=D.querySelector("#dw_reinstate");
   if(back) back.addEventListener("click",function(){
     busy(back, async function(){
-      await api("/api/admin/member-status",{method:"POST",body:JSON.stringify({
-        account_id:aid, status:"active", reason:"rejoined" })});
+      await api("/api/admin/member-status",{ account_id:aid, status:"active", reason:"rejoined" });
       toast(displayName+" is back on");
       openMemberDrawer(aid);
       if(typeof loadSection==="function") loadSection();
@@ -3010,7 +3012,7 @@ async function secSuggestions(){
   const m=document.getElementById("main");
   m.innerHTML=head("Suggestions","what the corp is telling you, with nobody's name on it")+skel(3);
   let d=null;
-  try{ d=await api("admin/suggestions"); }catch(e){ m.innerHTML=head("Suggestions","")+napPanel("Suggestions","Could not read the queue."); return; }
+  try{ d=await api("/api/admin/suggestions"); }catch(e){ m.innerHTML=head("Suggestions","")+napPanel("Suggestions","Could not read the queue."); return; }
   const rows=(d&&d.suggestions)||[];
   let h=head("Suggestions", (d&&d.open?d.open:0)+" open of "+rows.length);
   h+='<div class="panel"><div class="nap" style="margin:0">'
@@ -3043,11 +3045,14 @@ async function secSuggestions(){
       const id=b.getAttribute("data-id");
       b.disabled=true; b.textContent="saving";
       try{
-        await api("admin/suggestion",{method:"POST",body:JSON.stringify({
+        // Same two faults as the offboard call had: a relative path (this resolved to
+        // /portal/admin/admin/suggestion, a 404) and fetch options where api() wants the
+        // payload. Saving a suggestion reply has never once reached the worker.
+        await api("/api/admin/suggestion",{
           id:+id,
           status:document.getElementById("sgsel"+id).value,
           reply:document.getElementById("sgrep"+id).value
-        })});
+        });
         toast("Saved");
         secSuggestions();
       }catch(e){ b.disabled=false; b.textContent="Save"; toast("Did not save"); }
