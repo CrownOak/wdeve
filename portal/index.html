@@ -1421,7 +1421,13 @@ function parseIskInput(v){
   var n = parseFloat(v.trim());
   return isFinite(n) ? Math.floor(n * mult) : NaN;
 }
-function fmtM3(n){ return fmtSig(n) + " m³"; }
+/* Volume is not ISK. fmtSig abbreviates k/M/B, so a 37,843.9 m³ haul read as
+   "37.8k m³" right beside real ISK formatted the same way. Volumes print in full;
+   the decimal stays below 10k where a tenth of a cubic metre still means something. */
+function fmtM3(n){
+  n = Number(n); if (!isFinite(n)) return "0 m³";
+  return n.toLocaleString("en-US",{maximumFractionDigits:(Math.abs(n)>=10000?0:1)}) + " m³";
+}
 function toDate(x){
   if (x == null) return null;
   if (typeof x === "number") return new Date(x < 1e12 ? x*1000 : x);

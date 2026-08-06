@@ -371,7 +371,15 @@ function fmtIsk(n){
   if(a>=1e3) return s+sig(a/1e3)+"k";
   return s+String(Math.round(a));
 }
-function fmtM3(n){ if(n==null||!isFinite(Number(n))) return null; return fmtIsk(n)+" m³"; }
+/* Volume is not ISK. This borrowed fmtIsk, so a 37,843.9 m³ contract rendered as
+   "37.8k m³": lossy, and the k/M/B suffixes read as ISK when they sit one tile
+   away from actual ISK. Volumes print in full, with the decimal kept below 10k
+   where a tenth of a cubic metre still means something. */
+function fmtM3(n){
+  if(n==null||!isFinite(Number(n))) return null;
+  n=Number(n);
+  return n.toLocaleString("en-US",{maximumFractionDigits:(Math.abs(n)>=10000?0:1)})+" m³";
+}
 function fmtN(n){ n=Number(n); return isFinite(n)?n.toLocaleString("en-US"):"0"; }
 function ago(ts){
   if(!ts) return "never";
