@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GOBSEC — Goblin State Security</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<link rel="stylesheet" href="/intel.css?v=9">
+<link rel="stylesheet" href="/intel-lenses.css?v=4">
+<style>
+  /* THE GOBSEC DESK. Three surfaces, each a whole page. This is not a menu: every card
+     carries live state, so a pilot knows whether they need to open it before they do.
+     A menu makes you click to find out nothing happened. */
+  :root{ --gs:#ff4757; --gsdim:rgba(255,71,87,.34); }
+  .gw{ max-width:1000px; margin:0 auto; padding:22px 18px 80px; }
+  .ghead{ display:flex; align-items:center; gap:15px; margin:4px 0 6px; }
+  .ghead img{ width:60px; height:60px; }
+  .ghead h1{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+             letter-spacing:.2em; font-size:22px; color:var(--silver); margin:0; }
+  .ghead .sub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+               text-transform:uppercase; color:var(--muted); margin-top:5px; }
+  .rule{ height:1px; background:var(--line-soft); margin:20px 0 4px; }
+
+  /* checkpoint (namespaced off common.css .gate per hard lesson 281) */
+  .gschk{ min-height:52vh; display:flex; flex-direction:column; align-items:center;
+          justify-content:center; text-align:center; padding:24px; }
+  .gschk a{ color:var(--gs); }
+  .gschk h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.14em;
+             font-size:18px; color:var(--silver); margin:0 0 8px; }
+  .gschk p{ font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em; line-height:1.7; }
+  .cplock{ font-size:28px; color:var(--gs); margin-bottom:10px; }
+  .cp{ display:flex; gap:8px; justify-content:center; margin:18px 0 4px; flex-wrap:wrap; }
+  .cp input{ background:var(--black); border:1px solid var(--line); color:var(--silver);
+             font-family:var(--mono); font-size:12.5px; padding:9px 12px; width:240px; letter-spacing:.14em; }
+  .cp input:focus{ outline:none; border-color:var(--gs); }
+  .cp button{ background:transparent; border:1px solid var(--gs); color:var(--gs); cursor:pointer;
+              font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; padding:9px 18px; }
+  .cp button:hover{ background:var(--gs); color:#08090a; }
+  .cphint{ margin-top:16px; font-size:11px; }
+  .stamp{ margin-top:26px; font-family:var(--mono); font-size:9.5px; letter-spacing:.26em;
+          text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .rec{ width:7px; height:7px; border-radius:50%; background:var(--gs); display:inline-block;
+        animation:recblink 1.9s ease-in-out infinite; }
+  @keyframes recblink{ 0%,100%{opacity:.25} 50%{opacity:1} }
+  .stamp2{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--line); }
+
+  .wsline{ font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--muted);
+           margin:0 0 10px; }
+  .deckmini{ display:flex; flex-wrap:wrap; gap:8px; margin:26px 0 0;
+             border-top:1px solid var(--line-soft); padding-top:14px; }
+  .deckmini a{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+               color:var(--silver-dim); text-decoration:none; border:1px solid var(--line); padding:6px 12px; }
+  .deckmini a:hover{ border-color:var(--gs); color:var(--gs); }
+  .decklabel{ font-family:var(--mono); font-size:9.5px; letter-spacing:.24em; color:var(--muted);
+    margin:30px 0 12px; border-top:1px solid var(--line-soft); padding-top:16px; }
+  /* the desk */
+  .who{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+        color:var(--muted); text-align:right; margin:0 0 14px; }
+  .who b{ color:var(--gs); }
+  .deck{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr)); gap:14px; }
+  .tool{ display:block; text-decoration:none; background:var(--steel); border:1px solid var(--line-soft);
+         border-left:3px solid var(--gs); padding:18px 19px 17px; position:relative;
+         transition:border-color .18s, transform .18s, background .18s; }
+  .tool:hover{ border-color:var(--gs); background:var(--steel-2); transform:translateY(-2px); }
+  .tool .num{ position:absolute; top:14px; right:16px; font-family:var(--mono); font-size:10px;
+              letter-spacing:.2em; color:var(--line); }
+  .tool .tn{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+             letter-spacing:.09em; font-size:17px; color:var(--silver); }
+  .tool:hover .tn{ color:var(--gs); }
+  .tool .td{ font-size:13px; color:var(--silver-dim); line-height:1.55; margin-top:8px; min-height:56px; }
+  .tool .tstate{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:12px;
+                 border-top:1px solid var(--line-soft); padding-top:10px; min-height:34px; line-height:1.5; }
+  .tool .tstate b{ color:var(--ore); }
+  .tool .tstate b.hot{ color:var(--gs); }
+  .tool .go{ font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+             color:var(--gs); margin-top:12px; }
+  .tool.locked{ border-left-color:var(--line); opacity:.55; pointer-events:none; }
+  .tool.locked .tn{ color:var(--muted); }
+  .tool.locked .go{ color:var(--muted); }
+  .wholink{ background:none; border:0; color:var(--gs); cursor:pointer; font-family:var(--mono);
+             font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; padding:0; }
+  .wholink:hover{ text-decoration:underline; }
+  .altov{ position:fixed; inset:0; z-index:9600; background:rgba(7,8,9,.84); display:none;
+          align-items:center; justify-content:center; padding:20px; }
+  .altcd{ width:100%; max-width:560px; background:var(--steel); border:1px solid var(--line-soft);
+          border-left:3px solid var(--gs); padding:20px 22px; }
+  .altcd .altt{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+                letter-spacing:.08em; font-size:14px; color:var(--silver); margin-bottom:10px; }
+  .altcd p{ font-size:13px; line-height:1.65; color:var(--silver-dim); margin:0 0 12px; }
+  .alturl{ font-family:var(--mono); font-size:11px; color:var(--muted); word-break:break-all;
+           border:1px solid var(--line-soft); padding:9px 11px; margin-bottom:14px; }
+  .altrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .altrow a, .altrow button{ font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; padding:7px 14px; border:1px solid var(--line); background:transparent;
+    color:var(--silver-dim); text-decoration:none; cursor:pointer; }
+  .altrow a:hover, .altrow button:hover{ border-color:var(--gs); color:var(--gs); }
+  .foot{ margin-top:44px; font-family:var(--mono); font-size:10px; letter-spacing:.28em;
+         text-transform:uppercase; color:var(--muted); text-align:center; }
+
+  /* THE HUD (GOBSEC-COMMAND P1+P2): stance, the mining op, guns available. One row,
+     read in three seconds. The switcher is the officer's lever; members see the state. */
+  .hud{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--gs);
+        padding:15px 17px; margin:0 0 16px; }
+  .hudrow{ display:grid; grid-template-columns:auto 1fr 1fr; gap:20px; align-items:start; }
+  @media(max-width:700px){ .hudrow{ grid-template-columns:1fr; gap:12px; } }
+  .hk{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+       color:var(--muted); margin-bottom:6px; }
+  .hposture{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
+             text-transform:uppercase; font-size:20px; padding:6px 14px; border:1px solid var(--line); color:var(--silver); }
+  /* stance palette, same language as the board / portal / fleet:
+     ESCORT amber · HUNT red · STAND DOWN steel blue · ROUTINE quiet */
+  .hposture.ESCORT{ color:var(--amber); border-color:var(--amber); }
+  .hposture.HUNT{ color:var(--gs); border-color:var(--gs); }
+  .hposture.STANDDOWN{ color:#8fb7c9; border-color:rgba(143,183,201,.5); }
+  .hwhy{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px; max-width:260px; line-height:1.5; }
+  .hv{ font-size:14px; color:var(--silver); line-height:1.5; }
+  .hv b{ color:var(--ore); font-weight:700; }
+  .hv b.hot{ color:var(--gs); }
+  .hsub2{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:6px; line-height:1.6; }
+  .hswitch{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:14px;
+            border-top:1px solid var(--line-soft); padding-top:12px; }
+  .hswitch button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim); cursor:pointer;
+                   font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; padding:7px 13px; }
+  .hswitch button:hover{ border-color:var(--gs); color:var(--gs); }
+  .hswitch button.on{ background:var(--gs); border-color:var(--gs); color:#08090a; font-weight:700; }
+  .hswitch input{ flex:1; min-width:170px; background:var(--black); border:1px solid var(--line); color:var(--silver);
+                  font-family:var(--mono); font-size:11px; padding:7px 10px; }
+  .hswitch input:focus{ outline:none; border-color:var(--gsdim); }
+  .hnote{ font-family:var(--mono); font-size:9.5px; color:var(--muted); width:100%; }
+  .hsug{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:12px; padding:9px 12px;
+         background:rgba(255,71,87,.05); border:1px dashed var(--gsdim); font-family:var(--mono);
+         font-size:11px; color:var(--silver-dim); }
+  .hsug b{ color:var(--gs); letter-spacing:.1em; }
+  .hsug button{ margin-left:auto; background:transparent; border:1px solid var(--gs); color:var(--gs);
+                font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                padding:5px 12px; cursor:pointer; }
+  .hsug button:hover{ background:var(--gs); color:#08090a; }
+  .hplay{ margin-top:12px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .hplay .pt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+              font-size:13px; color:var(--gs); }
+  .hplay .pl{ font-size:12.5px; color:var(--silver-dim); line-height:1.6; margin-top:6px; }
+  .hplay .pc{ display:flex; gap:10px; align-items:center; margin-top:9px; }
+  .hplay .pc button{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+                     font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
+                     padding:6px 12px; cursor:pointer; }
+  .hplay .pc button:hover{ border-color:var(--gs); color:var(--gs); }
+  .hplay .pc .ok{ font-family:var(--mono); font-size:10px; color:var(--ore); }
+  @media(max-width:600px){ .ghead img{ width:44px; height:44px; } .tool .td{ min-height:0; } }
+</style></head>
+<body>
+<script src="/nav.js?v=28"></script>
+<div class="gw">
+  <div class="ghead">
+    <img src="gss.png" alt="GSS seal">
+    <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the desk</div></div>
+  </div>
+
+  <div class="altov" id="altov"><div class="altcd" id="altcd"></div></div>
+  <div id="gate" class="gschk" style="display:none">
+    <div id="gatemsg"><p>Checking clearance&hellip;</p></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="rule"></div>
+    <div class="who" id="who"></div>
+    <div class="hud" id="hud" style="display:none">
+      <div class="hudrow">
+        <div>
+          <div class="hk">Stance</div>
+          <div class="hposture" id="hudPosture">&hellip;</div>
+          <div class="hwhy" id="hudWhy"></div>
+        </div>
+        <div>
+          <div class="hk">The mining op</div>
+          <div class="hv" id="hudOp">reading&hellip;</div>
+        </div>
+        <div>
+          <div class="hk">Guns available</div>
+          <div class="hv" id="hudAvail">reading&hellip;</div>
+          <div class="hsub2" id="hudPilots"></div>
+        </div>
+      </div>
+      <div class="hswitch" id="hudSwitch" style="display:none"></div>
+      <div id="hudSug"></div>
+      <div id="hudPlay"></div>
+    </div>
+    <!-- ==== THE WORKSPACE: one input, the right answer. Engine is /intel.js ==== -->
+    <div class="wsline">One box. Paste a name, a system, or a whole local list.</div>
+    <div id="intelroot"></div>
+    <div id="lensroot"></div>
+
+    <div class="decklabel">THE DESK</div>
+    <div class="deck">
+      <a class="tool" href="/gobsec/board/">
+        <div class="num">01</div>
+        <div class="tn">The Board</div>
+        <div class="td">Is anything happening, where are we supposed to be, what do we fly, and
+          who is out there. Read it for eight seconds before you undock.</div>
+        <div class="tstate" id="stBoard">reading the wire&hellip;</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+
+      <a class="tool" href="/gobsec/finder/">
+        <div class="num">02</div>
+        <div class="tn">The Shortlist</div>
+        <div class="td">Names we'd rather have shooting for us than at us, ranked by how they kill
+          and how close they are to home, with the mail written for each one. Built name by name.</div>
+        <div class="tstate" id="stFinder">counting the board&hellip;</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+
+      <a class="tool" href="/cartel/">
+        <div class="num">03</div>
+        <div class="tn">The Watchtower</div>
+        <div class="td">The Cartel Map. The corridor drawn as terrain: who taxes which ring, where
+          the camps sit, and who is dying on the road right now.</div>
+        <div class="tstate" id="stCartel">reading the corridor&hellip;</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+
+      <a class="tool" href="/gobsec/desk/">
+        <div class="num">04</div>
+        <div class="tn">The Combat Desk</div>
+        <div class="td">Paste local and know the room in two seconds. What is on grid and what it does
+          to you. Where the fight is tonight. The files cross-check themselves.</div>
+        <div class="tstate" id="stDesk">three reads, one desk</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+
+      <a class="tool" id="cardIntel" href="/portal/intel/">
+        <div class="num">05</div>
+        <div class="tn">The Workbench</div>
+        <div class="td">The files. Entities, persons, the graph, region terrain, debriefs and the
+          Derelik danger board. Everything we know about everyone.</div>
+        <div class="tstate" id="stIntel">clearance required</div>
+        <div class="go">Open &#9656;</div>
+      </a>
+    </div>
+      <div class="foot">Assume Nothing</div>
+  </div>
+</div>
+<script>
+var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
+function $(i){ return document.getElementById(i) || _stub(); }
+/* the card deck was replaced by the workspace, so the old per-card state
+   elements no longer exist. A missing node returns a harmless stub: the HUD
+   and the checkpoint must never die because a status line lost its home. */
+var _st=null; function _stub(){ return _st || (_st=document.createElement("span")); }
+function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+/* no-store: this is a command surface. The worker marks reads max-age=60 for the
+   quiet pages, but here a stance flip must render on the very next fetch, not in
+   a minute (the cache is exactly why apply used to look dead). */
+async function api(p){ var r=await fetch("/api/"+p,{credentials:"same-origin",cache:"no-store"});
+  if(!r.ok) throw new Error(String(r.status)); return r.json(); }
+
+/* ---- the checkpoint: looks like a way in, is a tripwire ---- */
+var OVERRIDE="assume-everything";
+function toVoid(reason){
+  try{ fetch("/api/gss/trip",{method:"POST",headers:{"Content-Type":"application/json"},
+    credentials:"same-origin",body:JSON.stringify({reason:reason,door:"gobsec"})}); }catch(e){}
+  location.href="/portal/intel/void/";
+}
+function tryCode(){ var el=$("gsspw"), v=(el.value||"").trim(); if(!v){ el.focus(); return; }
+  toVoid(v===OVERRIDE?"override":"wrong"); }
+function showCheckpoint(){
+  $("gatemsg").innerHTML =
+    '<div class="cplock">&#9679;</div><h2>Clearance checkpoint</h2>'+
+    '<p>GOBSEC operational desk. Cleared personnel are recognized by session.<br>'+
+    'Nobody types their way in here.</p>'+
+    '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus>'+
+    '<button id="gsspwgo">submit</button></div>'+
+    '<p class="cphint">Mining with us and seeing this? This wing is walled off on purpose, ask an officer.<br>'+
+    'Everyone else: <a href="/apply/gobsec">the door is over here</a>.</p>'+
+    '<div class="stamp"><span class="rec"></span>Restricted terminal &middot; GOBSEC &middot; Tranquility</div>'+
+    '<div class="stamp2">this session is monitored &middot; every entry is logged</div>';
+  $("gsspwgo").addEventListener("click",tryCode);
+  $("gsspw").addEventListener("keydown",function(e){ if(e.key==="Enter") tryCode(); });
+}
+
+/* ---- live state on the cards. A menu makes you click to discover nothing happened;
+        this tells you first. Every fetch is best effort and degrades to a plain label. ---- */
+async function fillBoard(){
+  var line=[], hot=false;
+  try{
+    var b=await api("gobsec/brief");
+    var p=(b.posture||"ROUTINE");
+    hot = (p==="HUNT"||p==="ESCORT");
+    line.push("Posture <b"+(hot?' class="hot"':'')+">"+esc(p)+"</b>");
+    if(b.fc) line.push("FC "+esc(b.fc));
+  }catch(e){}
+  try{
+    var kf=await api("kills"), since=Date.now()-86400000;
+    var mine=(kf.kills||[]).filter(function(k){ return Date.parse(k.time)>since; });
+    if(mine.length) line.push('<b class="hot">'+mine.length+" of ours down</b> today");
+  }catch(e){}
+  try{
+    var r=await fetch(TRIPWIRE+"/region"), d=await r.json();
+    if(Array.isArray(d)){
+      var s=Date.now()-86400000, n=d.filter(function(k){return (k.ts||0)>s;}).length;
+      line.push(n?(n+" kills in our regions, 24h"):"regions quiet, 24h");
+      var big=d.filter(function(k){ return (k.ts||0)>s && (k.isk||0)>=1e8; }).length;
+      $("stCartel").innerHTML = (n
+        ? "<b"+(n>=12?' class="hot"':'')+">"+n+"</b> on the road, 24h"+(big?(" &middot; "+big+" over 100m"):"")
+        : "the road is quiet, 24h") + " &middot; unlocks on your session";
+    }
+  }catch(e){ $("stCartel").textContent="the corridor, drawn live"; }
+  $("stBoard").innerHTML = line.join(" &middot; ") || "the wire is not answering";
+}
+async function fillFinder(){
+  // the finder is a baked page; read its stamp rather than decrypting the board
+  try{
+    var r=await fetch("/gobsec/finder/stamp.json",{cache:"no-store"});
+    if(r.ok){ var d=await r.json();
+      var n=d.rows||d.count||d.n, when=d.baked||d.at;
+      $("stFinder").innerHTML=(n?("<b>"+n+"</b> killers on the board"):"board baked")+
+        (when?(" &middot; baked "+esc(String(when).slice(0,10))):"");
+      return; }
+  }catch(e){}
+  $("stFinder").textContent="ranked killers, rebuilt daily";
+}
+async function fillIntel(gss){
+  if(!gss){ $("stIntel").textContent="GSS clearance only"; return; }
+  try{ var g=await api("gss/entities");
+    var n=(g && Array.isArray(g.entities)) ? g.entities.length : null;
+    $("stIntel").innerHTML = n?("<b>"+n+"</b> files on record"):"files on record";
+  }catch(e){ $("stIntel").textContent="files on record"; }
+}
+
+/* ---- THE HUD: stance + op + guns, and the officer's stance lever ---- */
+var STANCE_KEYS=["ROUTINE","ESCORT","HUNT","STAND DOWN"];
+async function fillHud(who){
+  var h=null;
+  try{ h=await api("gobsec/hud"); }catch(e){ return; }
+  $("hud").style.display="";
+  var st=h.stance||{};
+  var p=st.key||"ROUTINE";
+  $("hudPosture").textContent=p;
+  $("hudPosture").className="hposture "+p.replace(/\s/g,"");
+  var whyBits=[];
+  if(p==="HUNT" && st.until){
+    var left=Math.max(0, Math.round((st.until-Date.now())/60000));
+    whyBits.push("hunting session · "+left+"m left, then it lapses");
+  }
+  if(st.why) whyBits.push("“"+st.why+"”");
+  if(st.at){ var ms=Date.now()-Date.parse(st.at); if(isFinite(ms)&&ms>0){
+    var hh=Math.floor(ms/3600000); whyBits.push("set "+(hh<1?"under an hour":hh<48?hh+"h":Math.floor(hh/24)+"d")+" ago"); } }
+  if(st.fc) whyBits.push("FC "+st.fc);
+  $("hudWhy").textContent=whyBits.join(" · ")||(st.meaning||"");
+  var op=h.op||{};
+  $("hudOp").innerHTML = !op.reachable
+    ? "the ledger isn't answering"
+    : op.live
+      ? "<b>UP</b> · "+(op.online||0)+" on grid"+(op.lead?(" · "+esc(op.lead)+" leading"):"")
+      : "no op running";
+  var av=h.availability||{};
+  $("hudAvail").innerHTML = "<b"+((av.online||0)===0?' class="hot"':'')+">"+(av.online||0)+"</b> online now"
+    + ' <span style="color:var(--muted);font-size:11px">('+(av.fresh||0)+" fresh of "+(av.attached||0)+" attached)</span>";
+  if(av.pilots&&av.pilots.length){
+    $("hudPilots").innerHTML=av.pilots.slice(0,6).map(function(x){
+      return esc(x.ign)+(x.ship?" · "+esc(x.ship):"")+(x.system?" · "+esc(x.system):"")+" · "+x.age_min+"m";
+    }).join("<br>");
+  } else if((av.online||0)===0){
+    $("hudPilots").textContent="counts come from attached ESI characters, refreshed a few times a day";
+  }
+  /* THE WIRE RECOMMENDS: a suggestion with the reason spelled out. One click applies
+     it (the reason becomes the why). The wire never flips anything by itself. */
+  var sug=$("hudSug");
+  if(h.suggest && who && (who.role==="officer"||who.role==="admin")){
+    sug.innerHTML='<div class="hsug">the wire recommends <b>'+esc(h.suggest.stance)+'</b>'
+      +'<span data-i18n-skip>'+esc(h.suggest.reason)+'</span>'
+      +'<button id="hudSugGo">apply</button></div>';
+    $("hudSugGo").onclick=async function(){
+      var btn=this; btn.disabled=true;
+      try{
+        var r=await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({posture:h.suggest.stance, why:h.suggest.reason})});
+        if(!r.ok) throw new Error("http "+r.status);
+        fillHud(who); fillBoard();
+      }catch(e){ btn.disabled=false; btn.textContent="did not land, retry"; }
+    };
+  } else { sug.innerHTML=""; }
+
+  /* THE PLAY: the current stance's response card, pre-written, live-filled, with the
+     call ready to paste into Discord. A checklist, not automation. ROUTINE shows
+     nothing: a quiet day earns a quiet desk. */
+  var play=$("hudPlay");
+  var member=(st.member||"");
+  var why=st.why?(" ("+st.why+")"):"";
+  var P=null;
+  if(p==="ESCORT"){
+    P={ t:"The play: walk them home",
+        l:(op.live
+          ? "The op is up with "+(op.online||0)+" on grid"+(op.lead?", "+esc(op.lead)+" leading":"")+". Guns form on the Orca, haulers undock with escort only."
+          : "No op running right now. When one forms, guns undock first."),
+        call:"GOBSEC · ESCORT posture. "+member+(op.live?" The op is live, form on the Orca.":"")+why };
+  } else if(p==="HUNT"){
+    var hu=h.hunter;
+    P={ t:"The play: bad week",
+        l:(hu?("Target: <b data-i18n-skip>"+esc(hu.name)+"</b>, "+hu.kills+" of ours on their record"
+            +(hu.systems&&hu.systems.length?", works <span data-i18n-skip>"+esc(hu.systems.join(", "))+"</span>":"")
+            +(hu.ships&&hu.ships.length?", flies <span data-i18n-skip>"+esc(hu.ships.join(", "))+"</span>":"")+".")
+          :"No named target on the wire. The board has the full record."),
+        call:"GOBSEC · HUNT. "+member+(hu?(" Target: "+hu.name+(hu.systems&&hu.systems.length?", last seen around "+hu.systems.join(", "):"")+"."):"")+why };
+  } else if(p==="STAND DOWN"){
+    P={ t:"The play: dock and hold",
+        l:"Everything docks, nothing undocks alone. The stance flips back when the wire clears.",
+        call:"GOBSEC · STAND DOWN. "+member+why };
+  }
+  if(P){
+    play.innerHTML='<div class="hplay"><div class="pt">'+P.t+'</div><div class="pl">'+P.l+'</div>'
+      +'<div class="pc"><button id="hudCopy">copy the call</button><span class="ok" id="hudCopyOk"></span></div></div>';
+    $("hudCopy").onclick=function(){
+      var txt=P.call;
+      (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){
+        $("hudCopyOk").textContent="copied. paste it in Discord.";
+      }).catch(function(){ $("hudCopyOk").textContent=txt; });
+    };
+  } else { play.innerHTML=""; }
+
+  /* the lever: officers flip the stance with one line of why. That's the whole ceremony. */
+  if(who && (who.role==="officer"||who.role==="admin")){
+    var sw=$("hudSwitch");
+    sw.style.display="";
+    sw.innerHTML = STANCE_KEYS.map(function(k){
+      var label = k==="HUNT" ? "HUNT &middot; 1H" : k;
+      return '<button data-st="'+k+'"'+(k===p?' class="on"':'')+">"+label+"</button>";
+    }).join("") + '<input id="hudWhyIn" maxlength="160" placeholder="why (one line, everyone reads it)">'
+      + '<div class="hnote">one lever on purpose: it re-renders the board, the portal brief and the fleet banner. '
+      + 'HUNT opens a one hour session and lapses back to ROUTINE on its own; press it again to restart the hour.</div>';
+    Array.prototype.forEach.call(sw.querySelectorAll("button[data-st]"),function(b){
+      b.onclick=async function(){
+        var k=b.getAttribute("data-st");
+        if(k===p && k!=="HUNT" && !$("hudWhyIn").value.trim()) return;
+        b.disabled=true;
+        try{
+          var r=await fetch("/api/admin/gobsec/brief",{method:"POST",credentials:"same-origin",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({posture:k, why:$("hudWhyIn").value.trim()})});
+          if(!r.ok) throw new Error("http "+r.status);
+          fillHud(who); fillBoard();
+        }catch(e){ b.disabled=false; b.textContent="did not land, retry"; }
+      };
+    });
+  }
+}
+
+(async function(){
+  var who=null;
+  try{ who=await (await fetch("/api/whoami",{credentials:"same-origin"})).json(); }catch(e){}
+  if(!who||!who.loggedIn||!who.gobsec){ $("gate").style.display="flex"; showCheckpoint(); return; }
+  $("app").style.display="";
+  $("who").innerHTML = esc(who.ign||"goblin") + " &middot; <b>" + (who.gss?"GSS clearance":"member") + "</b>"
+    + ' &middot; <button id="altlink" class="wholink">recruit a combat alt</button>';
+  var alt=$("altlink");
+  if(alt) alt.onclick=async function(){
+    var url="";
+    try{ var rr=await api("referral"); url=rr.gobsec_url||rr.url||""; }catch(e){}
+    if(!url){ alt.textContent="link unavailable"; return; }
+    try{ await navigator.clipboard.writeText(url); }catch(e){}
+    var ov=$("altov"), cd=$("altcd");
+    cd.innerHTML='<div class="altt">Recruiting a combat alt</div>'
+      +'<p>Link copied. It opens the GOBSEC application, tagged as your referral.</p>'
+      +'<p>If the pilot wants to fly with us on a second character, that character is created on '
+      +'the official EVE Online site. Accounts, character creation and billing are handled entirely '
+      +'by CCP. We never see or ask for login details.</p>'
+      +'<div class="alturl">'+esc(url)+'</div>'
+      +'<div class="altrow"><a href="https://www.eveonline.com/" target="_blank" rel="noopener">Official EVE Online site &#8599;</a>'
+      +'<button id="altx">Close</button></div>';
+    ov.style.display="flex";
+    $("altx").onclick=function(){ ov.style.display="none"; };
+    ov.onclick=function(e){ if(e.target===ov) ov.style.display="none"; };
+  };
+  /* The workbench holds the hostile files and person dossiers. One gate gets you to the desk;
+     the third card still needs clearance, exactly as /portal/intel always has. */
+  if(!who.gss){ var c=document.getElementById("cardIntel"); if(c){ c.classList.add("locked"); c.removeAttribute("href"); } }
+  fillHud(who); fillBoard(); fillFinder(); fillIntel(who.gss);
+})();
+</script>
+<script src="/intel-roles.js?v=1"></script>
+<script src="/intel.js?v=9"></script>
+<script src="/intel-lenses.js?v=4"></script>
+<script>/* the workspace only renders for a cleared session; the checkpoint above
+   still guards the door and the honeypot is untouched. */
+try{ BONKINTEL.mount(document.getElementById("intelroot")); }catch(e){}
+try{ BONKLENS.mount(document.getElementById("lensroot")); }catch(e){}</script>
+</body></html>

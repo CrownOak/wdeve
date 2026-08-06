@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK - The Roster</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  /* page chrome */
+  .strip{ display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin:0 0 16px;
+          font-family:var(--mono); font-size:12px; letter-spacing:.05em; color:var(--muted); }
+  .strip .cnt{ color:var(--ore); font-size:13px; }
+  .strip .sorter{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .strip .sorter .lbl{ text-transform:uppercase; letter-spacing:.1em; font-size:10.5px; }
+  .strip .sorter button{ background:transparent; color:var(--silver-dim); border:1px solid var(--line);
+    padding:6px 13px; cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; transition:border-color .15s,color .15s,background .15s; }
+  .strip .sorter button:hover{ border-color:var(--ore); color:var(--ore); }
+  .strip .sorter button.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
+
+  /* face cards (reuse the .med wall style) */
+  .medgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; margin:0 0 8px; }
+  .med{ background:var(--steel); border:1px solid var(--line-soft); padding:16px 18px; position:relative; }
+  .med::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ore); opacity:.55; }
+  .med.brass::before{ background:var(--amber); }
+  .fhead{ display:flex; align-items:center; gap:14px; }
+  .fava{ flex:0 0 72px; width:72px; height:72px; border:1px solid var(--line); background:#0b0d0e; overflow:hidden; }
+  .fava img, .fava svg{ display:block; width:72px; height:72px; object-fit:cover; }
+  .fid{ min-width:0; }
+  .fign{ font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.02em;
+         color:var(--silver); line-height:1.25; overflow-wrap:anywhere; }
+  .badge.adm{ background:var(--amber); }
+  .badge.whale{ color:#7ec8e3; border-color:rgba(126,200,227,.5); }
+  .badge.ally{ background:transparent; color:var(--amber); border:1px solid rgba(233,196,106,.5); }
+  .allysec{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--amber);
+            border-top:1px solid var(--line); padding-top:16px; margin-top:6px; }
+  .fmeta{ font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--silver-dim); margin-top:6px; }
+  .fisk{ margin-top:13px; border-top:1px solid var(--line-soft); padding-top:10px;
+         display:flex; align-items:baseline; gap:12px; }
+  .fisk .k{ font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .fisk .v{ font-family:var(--mono); font-size:22px; font-weight:700; color:var(--ore); font-variant-numeric:tabular-nums; }
+  .fisk .v.nap{ font-size:12px; font-weight:400; color:var(--muted); text-transform:none; letter-spacing:.03em; }
+  .fops{ font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--silver-dim); margin-top:7px; }
+  .fops b{ color:var(--muted); font-weight:400; text-transform:uppercase; font-size:10.5px; letter-spacing:.08em; }
+  .fmine{ display:flex; gap:14px; margin-top:7px; font-family:var(--mono); font-size:12px; color:var(--ore); }
+  .fmine .mm{ display:inline-flex; align-items:center; gap:5px; }
+  .fmine .ml{ color:var(--muted); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; }
+  .falts{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:11px;
+          border-top:1px solid var(--line-soft); padding-top:9px; }
+  .falts .albl{ font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-right:2px; }
+  .alt{ display:inline-flex; width:24px; height:24px; border:1px solid var(--line); background:#0b0d0e; overflow:hidden; }
+  .alt img, .alt svg{ display:block; width:24px; height:24px; object-fit:cover; }
+
+  /* skeletons */
+  @keyframes skpulse{ 0%{opacity:.45} 50%{opacity:.9} 100%{opacity:.45} }
+  .skb{ background:var(--steel-2); animation:skpulse 1.4s ease-in-out infinite; }
+  .skc .fava{ border-color:var(--line-soft); }
+  .skc .l1{ width:60%; height:15px; margin-bottom:8px; }
+  .skc .l2{ width:40%; height:10px; }
+  .skc .l3{ width:50%; height:20px; margin-top:14px; }
+
+  /* gate + states */
+  .gate.inpage{ min-height:46vh; }
+  a.gobtn{ display:inline-block; text-decoration:none; padding:11px 26px; margin-top:14px; }
+  .empty{ padding:44px; text-align:center; color:var(--muted); background:var(--steel); border:1px solid var(--line-soft); }
+  .closing{ color:var(--muted); font-family:var(--mono); font-size:12px; letter-spacing:.03em;
+            margin:26px 0 6px; border-top:1px solid var(--line); padding-top:18px; line-height:1.6; }
+  .closing b{ color:var(--silver); }
+
+  @media(max-width:480px){
+    .strip .sorter{ margin-left:0; width:100%; }
+    .fisk .v{ font-size:19px; }
+  }
+</style></head>
+<body>
+  <header class="bnhead">
+    <div class="bnover">BIG ROCK ENERGY [BONK]</div>
+    <h1>THE WALL OF GOBLIN FACES</h1>
+    <div class="sub">every goblin in the corp, face on the wall, receipts attached. this is who eats with us.</div>
+  </header>
+  <div class="wrap" id="main">
+    <div class="strip" id="strip">
+      <span class="cnt" id="count">counting goblins&hellip;</span>
+      <span class="sorter" id="sorter" hidden>
+        <span class="lbl">Sort</span>
+        <button type="button" data-sort="isk" class="on">ISK</button>
+        <button type="button" data-sort="tenure">Tenure</button>
+        <button type="button" data-sort="medals">Medals</button>
+      </span>
+    </div>
+    <div class="medgrid" id="board"></div>
+    <div class="closing" id="closing" hidden>Every face up there earned its spot. Get in a fleet and grow your number.<br>
+      <b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
+  </div>
+  <footer>The roster refreshes itself. Numbers come straight from the corp ledger, no fudging.</footer>
+<script>
+(function(){
+  "use strict";
+  var ROSTER = [];
+  var DEPARTED = [];
+  var LEDGER_OK = true;
+  var SORT = "isk";
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  /* shared deterministic goblin generator (identical on every portal page) */
+  function goblin(seed, size){
+    let h=2166136261; const s=String(seed||"goblin");
+    for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+    const rnd=()=>{ h^=h<<13; h>>>=0; h^=h>>>17; h^=h<<5; h>>>=0; return h/4294967296; };
+    const hue=Math.floor(rnd()*360), c1="hsl("+hue+",70%,55%)", c2="hsl("+((hue+40)%360)+",80%,70%)";
+    let cells="";
+    for(let y=0;y<5;y++)for(let x=0;x<3;x++){ if(rnd()>0.45){ const f=rnd()>0.8?c2:c1;
+      cells+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>';
+      if(x<2) cells+='<rect x="'+(4-x)+'" y="'+y+'" width="1" height="1" fill="'+f+'"/>'; } }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.5 -0.5 6 6" width="'+size+'" height="'+size+'" style="background:#0b0d0e">'+cells+'</svg>';
+  }
+
+  function seedOf(url, seed, ign){
+    return seed || String(ign || "goblin").trim().toLowerCase();
+  }
+
+  function avatarHTML(url, seed, ign, size){
+    var sd = seedOf(url, seed, ign);
+    if (url){
+      return '<img src="'+esc(url)+'" width="'+size+'" height="'+size+'" alt="" ' +
+             'data-seed="'+esc(sd)+'" data-size="'+size+'" onerror="window.__gobfall(this)">';
+    }
+    return goblin(sd, size);
+  }
+
+  /* if an uploaded avatar 404s, fall back to the generated goblin (C8) */
+  window.__gobfall = function(img){
+    try{
+      var sd = img.getAttribute("data-seed") || "goblin";
+      var sz = parseInt(img.getAttribute("data-size"), 10) || 72;
+      var box = document.createElement("span");
+      box.innerHTML = goblin(sd, sz);
+      img.replaceWith(box.firstChild);
+    }catch(e){}
+  };
+
+  function fmtIsk(n){
+    n = Number(n) || 0;
+    var a = Math.abs(n);
+    function t(x){ var v = Math.abs(x); return v >= 100 ? x.toFixed(0) : v >= 10 ? x.toFixed(1) : x.toFixed(2); }
+    if (a >= 1e9) return t(n/1e9) + "B";
+    if (a >= 1e6) return t(n/1e6) + "M";
+    if (a >= 1e3) return t(n/1e3) + "k";
+    return String(Math.round(n));
+  }
+  function fmtU(n){ n = Number(n) || 0; if (n >= 1e9) return (n/1e9).toFixed(1)+"B"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(0)+"k"; return String(Math.round(n)); }
+
+  function medalCount(r){
+    if (Array.isArray(r.decorations)) return r.decorations.length;
+    return Number(r.decorations) || 0;
+  }
+
+  function skeletons(){
+    var out = "";
+    for (var i = 0; i < 8; i++){
+      out += '<div class="med skc"><div class="fhead"><div class="fava skb"></div>' +
+             '<div class="fid" style="flex:1"><div class="skb l1"></div><div class="skb l2"></div></div></div>' +
+             '<div class="skb l3"></div></div>';
+    }
+    document.getElementById("board").innerHTML = out;
+  }
+
+  function roleBadge(role){
+    if (role === "admin")   return ' <span class="badge adm">&#9819; ADMIN</span>';
+    if (role === "officer") return ' <span class="badge">OFFICER</span>';
+    if (role === "ally")    return ' <span class="badge ally">&#129309; ALLY</span>';
+    return "";
+  }
+  /* FLEET RIGHTS: who can actually start an op. The point of the roster badge is
+     that a goblin who wants to mine tonight can find someone to ask. */
+  function fleetBadge(r){
+    if (r.orca)     return ' <span class="badge whale">&#128011; FLEET BOSS</span>';
+    if (r.porpoise) return ' <span class="badge whale">&#128044; FLEET BOSS</span>';
+    return "";
+  }
+
+  function card(r){
+    var ign    = r.main_ign || "unknown goblin";
+    var medals = medalCount(r);
+    var tenure = Number(r.tenure_days) || 0;
+
+    var iskCell = LEDGER_OK
+      ? '<span class="v">' + esc(fmtIsk(r.lifetimeIsk)) + '</span>'
+      : '<span class="v nap">ledger napping</span>';
+
+    var opsLabel, opsVal;
+    if (r.opsAttended != null){ opsLabel = "Ops run";  opsVal = Number(r.opsAttended) || 0; }
+    else                      { opsLabel = "Op drops"; opsVal = Number(r.opDrops) || 0; }
+
+    var altsRow = "";
+    var chars = Array.isArray(r.characters) ? r.characters : [];
+    if (chars.length > 1){
+      var alts = chars.filter(function(c){ return !c.is_main; });
+      if (alts.length){
+        altsRow = '<div class="falts"><span class="albl">Alts</span>';
+        for (var i = 0; i < alts.length; i++){
+          var a = alts[i];
+          altsRow += '<span class="alt" data-tip="' + esc(a.ign) + '">' +
+                     avatarHTML(a.avatar_url, a.avatar_seed, a.ign, 24) + '</span>';
+        }
+        altsRow += '</div>';
+      }
+    }
+
+    return '<div class="med face' + (r.role === "admin" ? " brass" : "") + '">' +
+      '<div class="fhead">' +
+        '<div class="fava">' + avatarHTML(r.avatar_url, r.avatar_seed, ign, 72) + '</div>' +
+        '<div class="fid">' +
+          '<div class="fign">' + esc(ign) + roleBadge(r.role) + fleetBadge(r) + '</div>' +
+          '<div class="fmeta">' + tenure + ' days in corp &middot; &#127894; ' + medals + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="fisk"><span class="k">ISK earned</span>' + iskCell + '</div>' +
+      '<div class="fops"><b>' + opsLabel + '</b> &middot; ' + opsVal + '</div>' +
+      '<div class="fmine">' +
+        '<span class="mm" title="Ore hauled to fleet ledger (compressed counted ×100)"><span class="ml">Fleet</span> ' + fmtU(r.fleetOreUnits) + ' u</span>' +
+        '<span class="mm" title="Ore mined per the in-game ESI ledger (raw units)"><span class="ml">ESI</span> ' + (Number(r.esiOreUnits) > 0 ? fmtU(r.esiOreUnits) + ' u' : '&middot;') + '</span>' +
+      '</div>' +
+      altsRow +
+    '</div>';
+  }
+
+  function sorted(){
+    var list = ROSTER.slice();
+    list.sort(function(a, b){
+      var d = 0;
+      if (SORT === "tenure")      d = (Number(b.tenure_days) || 0) - (Number(a.tenure_days) || 0);
+      else if (SORT === "medals") d = medalCount(b) - medalCount(a);
+      else                        d = (Number(b.lifetimeIsk) || 0) - (Number(a.lifetimeIsk) || 0);
+      if (d !== 0) return d;
+      return String(a.main_ign || "").localeCompare(String(b.main_ign || ""));
+    });
+    return list;
+  }
+
+  function render(){
+    var board = document.getElementById("board");
+    var n = ROSTER.length;
+    document.getElementById("count").textContent =
+      n === 1 ? "1 goblin on the wall" : n + " goblins on the wall";
+    document.getElementById("sorter").hidden = n === 0;
+    document.getElementById("closing").hidden = n === 0;
+    if (!n){
+      board.innerHTML = '<div class="empty" style="grid-column:1/-1">The wall is bare. No goblin faces yet. Recruit some and watch it fill. &#129704;</div>';
+      return;
+    }
+    var list = sorted(), out = "";
+    var goblins = list.filter(function(r){ return r.role !== "ally"; });
+    var allies  = list.filter(function(r){ return r.role === "ally"; });
+    for (var i = 0; i < goblins.length; i++) out += card(goblins[i]);
+    if (allies.length){
+      out += '<div class="allysec" style="grid-column:1/-1">FRIENDS OF THE ROCK</div>';
+      for (var j = 0; j < allies.length; j++) out += card(allies[j]);
+    }
+    // The ex-goblins wall: names only, no faces, no numbers. They know what
+    // they did. Kept below the living so nobody scrolls past a ghost first.
+    if (DEPARTED.length){
+      out += '<div class="allysec" style="grid-column:1/-1;color:var(--muted);border-color:var(--line)">&#9904; EX-GOBLINS &middot; THE ONES WHO LEFT</div>';
+      out += '<div style="grid-column:1/-1;font-family:var(--mono);font-size:12px;color:var(--muted);margin:-6px 0 4px">They chose a life without boosts. The rock does not forgive. The rock does not forget.</div>';
+      for (var d = 0; d < DEPARTED.length; d++){
+        var g = DEPARTED[d];
+        out += '<div class="empty" style="opacity:.65"><b style="color:var(--silver-dim);text-decoration:line-through">' + esc(g.ign) + '</b>' +
+               '<div style="font-family:var(--mono);font-size:11px;margin-top:4px">left the belt' +
+               (g.tenure_days != null ? ' &middot; was a goblin ' + g.tenure_days + ' days' : '') +
+               ' &middot; chair reassigned</div></div>';
+      }
+    }
+    board.innerHTML = out;
+  }
+
+  function gate(){
+    document.getElementById("strip").hidden = true;
+    document.getElementById("closing").hidden = true;
+    document.getElementById("board").outerHTML =
+      '<div class="gate inpage"><div class="card">' +
+        '<h1>MEMBERS ONLY</h1>' +
+        '<p>Members only. Log in at the portal.</p>' +
+        '<a class="gobtn" href="/portal/">To the portal</a>' +
+      '</div></div>';
+  }
+
+  function fail(msg){
+    document.getElementById("count").textContent = "the wall is having a moment";
+    document.getElementById("sorter").hidden = true;
+    document.getElementById("closing").hidden = true;
+    var text = msg ? String(msg)
+      : "The wall fell over. Give it a refresh. If it keeps happening, poke an officer on Discord.";
+    var box = document.createElement("div");
+    box.className = "empty";
+    box.style.gridColumn = "1/-1";
+    box.textContent = text;
+    var board = document.getElementById("board");
+    board.innerHTML = "";
+    board.appendChild(box);
+  }
+
+  document.getElementById("sorter").addEventListener("click", function(ev){
+    var btn = ev.target.closest ? ev.target.closest("button[data-sort]") : null;
+    if (!btn) return;
+    SORT = btn.getAttribute("data-sort");
+    var btns = this.querySelectorAll("button[data-sort]");
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("on", btns[i] === btn);
+    render();
+  });
+
+  async function load(){
+    skeletons();
+    var res, data = null;
+    try{
+      res = await fetch("/api/roster");
+    }catch(e){ fail(); return; }
+    if (res.status === 401){ gate(); return; }
+    try{ data = await res.json(); }catch(e){}
+    if (!res.ok || !data || data.ok === false){ fail(data && data.error); return; }
+    ROSTER = Array.isArray(data.roster) ? data.roster : [];
+    DEPARTED = Array.isArray(data.departed) ? data.departed : [];
+    LEDGER_OK = !(data.ledger && data.ledger.ok === false);
+    render();
+  }
+
+  load();
+})();
+</script>
+<script src="/nav.js?v=28"></script>
+</body></html>

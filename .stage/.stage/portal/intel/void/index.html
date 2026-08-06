@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<meta name="referrer" content="no-referrer">
+<title>GSS</title>
+<link rel="icon" href="/portal/intel/gss2-96.png">
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+:root{ --ice:#8fb7c9; --hostile:#f0817a; }
+body{ background:#050507; color:var(--silver); }
+.void{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:44px 22px; position:relative; }
+.void .seal{ width:220px; max-width:64vw; opacity:.5; filter:drop-shadow(0 0 42px rgba(240,129,122,.14)); margin-bottom:6px; }
+.denied{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.22em; font-size:clamp(28px,7vw,54px); color:var(--hostile); margin:6px 0 2px; }
+.void .sub{ font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:28px; }
+.void p{ max-width:560px; font-size:15px; line-height:1.75; color:var(--silver-dim); margin:11px 0; }
+.void p.cold{ color:var(--silver); }
+.void .sig{ margin-top:30px; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.16em; font-size:14px; color:var(--ice); }
+.void .out{ margin-top:26px; font-family:var(--mono); font-size:11px; letter-spacing:.06em; }
+.void .out a{ color:var(--muted); text-decoration:none; border-bottom:1px solid var(--line); }
+.void .out a:hover{ color:var(--silver-dim); }
+.scan{ position:fixed; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); opacity:.045; }
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="void">
+  <img class="seal" src="/portal/intel/gss2-512.png" alt="Goblin State Security">
+  <div class="denied">Access Denied</div>
+  <div class="sub">Goblin State Security</div>
+  <p class="cold">There is no code. There was never a code. The only way through that door is to be one of us, and you are not.</p>
+  <p>You knocked anyway. So now there is a file. Your session, the address you came from, the hour, and every word you tried are written down, the way everything is written down in here.</p>
+  <p>Assume we saw it. We assume everything.</p>
+  <div class="sig">GSS &middot; there is always a file</div>
+  <div class="out"><a href="/portal/">back to the surface</a></div>
+</div>
+<script>
+try{ fetch("/api/gss/trip",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({reason:"void"})}); }catch(e){}
+</script>
+</body>
+</html>

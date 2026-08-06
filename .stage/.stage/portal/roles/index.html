@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BONK - Roles and Permissions</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  .doc{ max-width:860px; }
+  .docsub{ font-family:var(--mono); font-size:12px; letter-spacing:.05em; color:var(--muted);
+           margin:2px 0 18px; line-height:1.6; }
+  .docsub b{ color:var(--ore); }
+  .intro{ color:#a9b2a8; font-size:14.5px; line-height:1.65; margin:0 0 22px; }
+  h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+      font-size:15px; color:var(--ore); border-top:1px solid var(--line); padding-top:22px; margin:26px 0 4px; }
+  .secnote{ font-family:var(--mono); font-size:11.5px; color:var(--muted); margin:0 0 12px; line-height:1.6; }
+
+  details.role{ background:var(--steel); border:1px solid var(--line-soft); margin:0 0 8px; }
+  details.role summary{ list-style:none; cursor:pointer; display:flex; align-items:baseline; gap:12px;
+    padding:12px 16px; }
+  details.role summary::-webkit-details-marker{ display:none; }
+  details.role summary .car{ color:var(--muted); font-size:11px; flex:0 0 auto; transition:transform .15s; }
+  details.role[open] summary .car{ transform:rotate(90deg); color:var(--ore); }
+  .rname{ font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.04em;
+          text-transform:uppercase; color:var(--silver); flex:0 0 auto; }
+  .rperm{ font-family:var(--mono); font-size:11.5px; color:var(--silver-dim); line-height:1.5; min-width:0; }
+  .chip{ flex:0 0 auto; margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.12em;
+         text-transform:uppercase; padding:3px 8px; border:1px solid; white-space:nowrap; }
+  .chip.cust{ color:#ff6b76; border-color:rgba(255,107,118,.45); }
+  .chip.spend{ color:var(--amber); border-color:rgba(233,196,106,.45); }
+  .chip.intel{ color:#8fb7c9; border-color:rgba(143,183,201,.45); }
+  .chip.safe{ color:var(--ore); border-color:rgba(70,255,94,.35); }
+  .rbody{ border-top:1px solid var(--line-soft); padding:13px 16px 15px; }
+  .rbody .k{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--muted); margin:10px 0 3px; }
+  .rbody .k:first-child{ margin-top:0; }
+  .rbody p{ color:#a9b2a8; font-size:13.5px; line-height:1.6; margin:0; }
+  .fine{ font-family:var(--mono); font-size:11.5px; color:var(--muted); line-height:1.7; margin:16px 0 0; }
+  .cta{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+        padding:16px 18px; margin:26px 0 0; color:#a9b2a8; font-size:14px; line-height:1.65; }
+  #gate{ display:none; font-family:var(--mono); color:var(--silver-dim); padding:40px 0; font-size:13px; }
+  #gate a{ color:var(--ore); }
+  footer{ margin-top:34px; }
+</style></head>
+<body>
+<div class="wrap doc">
+  <h1>ROLES <b>&amp; PERMISSIONS</b></h1>
+  <div class="docsub">CORPORATION DOCTRINE &middot; <b>v1, PROPOSED</b> &middot; comments open to every member</div>
+
+  <div id="gate">This is corp doctrine. <a href="/portal/">Log in</a> and it opens.</div>
+  <div id="doc" style="display:none">
+
+  <div class="intro">The corp is big enough that leadership needs more hands, and handing out
+  power in EVE deserves paperwork. This page is the paperwork. It lists every corporation role
+  the game offers, what each one truly permits, what we expect from anyone holding it, and the
+  title structure we propose to run. Read the parts that concern you, argue with the parts you
+  disagree with, and know that the structure is deliberate: narrow grants, clear mandates, and
+  an audit trail.</div>
+
+  <h2>How the system works</h2>
+  <div class="secnote">Five mechanics explain almost everything below.</div>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Roles vs titles</span>
+    <span class="rperm">roles are permissions, titles are named bundles of them</span></summary>
+    <div class="rbody"><p>A role is a single game permission. A title bundles roles under a name
+    and is assigned by the CEO or a Director. We assign titles, never loose roles: one place to
+    audit, one thing to revoke, and your title on the member list says what you do.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Grantable roles</span>
+    <span class="rperm">the ability to give a role without holding it</span></summary>
+    <div class="rbody"><p>A grantable role lets its holder assign that role to others without
+    gaining the permission themselves. Director is never grantable and only the CEO assigns
+    Directors. Our policy keeps grantables rare and deliberate.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Scoping</span>
+    <span class="rperm">hangar and container access comes per location: HQ, your base, or elsewhere</span></summary>
+    <div class="rbody"><p>Hangar and container roles exist in three location flavors: at
+    headquarters, at your assigned base (set by a Director), and at other offices. That is the
+    precision tool: access exactly where a job needs it and nowhere else.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Divisions</span>
+    <span class="rperm">seven wallets and seven hangars, each with its own access</span></summary>
+    <div class="rbody"><p>The corp has seven wallet divisions (division one is the Master Wallet)
+    and seven hangar divisions, each nameable and each with separate query, take and container
+    permissions. Money and materials are compartmented on purpose: a role opens one drawer, not
+    the cabinet.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">The 24 hour rule</span>
+    <span class="rperm">roles stick for a day after they are dropped</span></summary>
+    <div class="rbody"><p>A member holding roles cannot leave into another player corporation or
+    be removed until the roles are dropped and 24 hours pass. Every grant is therefore a grant
+    for today and for a full day after anyone changes their mind. Access is sized with that in
+    mind, and it is nothing personal: it is arithmetic.</p>
+    <p style="margin-top:8px">Related: removing a member at all is Director tier by game design
+    (Personnel Manager cannot kick). That is why the structure below keeps more than one person
+    who can start that clock.</p></div></details>
+
+  <h2>General roles</h2>
+  <div class="secnote">CUSTODY holds corp assets &middot; SPEND can commit corp resources &middot; INTEL sees sensitive information &middot; SAFE is safe.</div>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Director</span>
+    <span class="rperm">every other role implicitly, plus kicks, bases, corp details</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Carries every other role and its grantable
+    form, edits corporation details, views shareholders, assigns member bases, removes members.
+    Assigned only by the CEO.</p>
+    <div class="k">Responsibilities</div><p>Full fiduciary trust. A Director can do anything the
+    corp can do, so the list stays as short as the corp can survive.</p>
+    <div class="k">Assignment</div><p>CEO retained. Appointments are announced, never quiet.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Accountant</span>
+    <span class="rperm">all wallet journals and bills; can also take from corp deliveries</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Views bills plus every wallet division's
+    journal and transaction log. Separately, and less obviously, it is one of the roles that can
+    remove items from the Corporation Deliveries hangar. It is not a read only role.</p>
+    <div class="k">Responsibilities</div><p>Treasury oversight, when delegated at all.</p>
+    <div class="k">Assignment</div><p>CEO retained.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Junior Accountant</span>
+    <span class="rperm">wallet balances and bills, not the journals</span><span class="chip intel">intel</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Sees division balances and corp bills.
+    Journals and transaction logs stay closed (the transaction log opens only in combination
+    with Trader).</p>
+    <div class="k">Assignment</div><p>CEO retained. Balances still tell a story.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Auditor</span>
+    <span class="rperm">the role change log: who granted what, when</span><span class="chip safe">safe</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Reads the record of role changes: date,
+    action, initiator. Touches nothing.</p>
+    <div class="k">Responsibilities</div><p>The watchdog. Reviews the log on a cadence and flags
+    anything unexplained. This role exists so trust is verified, not assumed.</p>
+    <div class="k">Assignment</div><p>Carried by the WATCHDOG title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Personnel Manager</span>
+    <span class="rperm">accepts applications, awards medals; cannot kick</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Accepts and rejects membership
+    applications and awards existing decorations. Creating decorations stays with leadership,
+    and each award costs the corp 5 million ISK, permanently: awards cannot be revoked.</p>
+    <div class="k">Responsibilities</div><p>The door. Every acceptance follows the vetting flow,
+    no exceptions for friends, and medal awards follow the honors list.</p>
+    <div class="k">Assignment</div><p>Carried by the RECRUITER title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Communications Officer</span>
+    <span class="rperm">bulletins, corp calendar, channel MOTD, corp bookmarks</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Adds and edits corp bulletins and calendar
+    events, edits the corp channel message of the day and corp bookmark folders.</p>
+    <div class="k">Responsibilities</div><p>The voice. Ops on the calendar, the MOTD current,
+    announcements clean.</p>
+    <div class="k">Assignment</div><p>Carried by the HERALD title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Diplomat</span>
+    <span class="rperm">edits corp standings toward other entities</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Sets and edits the corporation's standings
+    list. Standings drive who reads as friendly on every member's overview, so an error here is
+    everyone's error.</p>
+    <div class="k">Responsibilities</div><p>Alliance and neighbor relations. Standings changes are
+    announced when they happen.</p>
+    <div class="k">Assignment</div><p>Carried by the ENVOY title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Fitting Manager</span>
+    <span class="rperm">maintains the corp's saved fittings</span><span class="chip safe">safe</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Adds, edits and removes corporation ship
+    fittings.</p><div class="k">Responsibilities</div><p>Doctrine fits stay current and named
+    clearly.</p><div class="k">Assignment</div><p>Carried by the HERALD title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Skill Plan Manager</span>
+    <span class="rperm">manages corporation skill plans</span><span class="chip safe">safe</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Creates and maintains the corp's shared
+    skill plans.</p><div class="k">Responsibilities</div><p>Keeps the Academy's in game skill
+    plans matched to what we actually fly.</p>
+    <div class="k">Assignment</div><p>Carried by the HERALD title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Project Manager</span>
+    <span class="rperm">creates and closes Corporation Projects</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Creates, closes and deletes Corporation
+    Projects. A project that pays ISK additionally requires access to a corp wallet division,
+    which is why this role rides with one capped payout wallet and nothing else.</p>
+    <div class="k">Responsibilities</div><p>Turns the corp's needs into posted, paid objectives:
+    mine this ore, haul this route, kill these rats. The works plan decides what; projects make
+    it happen.</p>
+    <div class="k">Assignment</div><p>Carried by the PROJECT LEAD title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Brand Manager</span>
+    <span class="rperm">creates and applies structure SKINs</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Creates SKINR designs and applies them to
+    the corp's Upwell structures, consuming SKINR materials.</p>
+    <div class="k">Assignment</div><p>CEO retained. The Athanor's look is a leadership vice.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Contract Manager</span>
+    <span class="rperm">creates contracts in the corp's name</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Creates corporation contracts. To actually
+    move anything it needs a wallet division and hangar take access, so it is granted as a
+    package into one capped wallet and one intake hangar, never broadly.</p>
+    <div class="k">Responsibilities</div><p>Runs buyback intake: accepts ore contracts at desk
+    quotes, settles from the desk float, moves ore into the Keep.</p>
+    <div class="k">Assignment</div><p>Carried by the DESK OFFICER title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Config Equipment</span>
+    <span class="rperm">configures audit log containers</span><span class="chip intel">intel</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Configures audit log secure containers.
+    Requires hangar take access to be useful.</p>
+    <div class="k">Assignment</div><p>Granted alongside a hangar mandate when needed.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Starbase roles</span>
+    <span class="rperm">legacy POS control: config, defense, fuel</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Config Starbase Equipment anchors,
+    unanchors and configures legacy starbases. Starbase Defense Operator fires their weapons.
+    Starbase Fuel Technician views and refuels them. We operate Upwell structures, not
+    starbases.</p>
+    <div class="k">Assignment</div><p>Not granted. Legacy.</p></div></details>
+
+  <h2>Station services</h2>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Station Manager</span>
+    <span class="rperm">Upwell structure settings: docking, services, profiles</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Edits a corporation's Upwell structure
+    configuration: docking rights, service and slot availability, structure profiles.</p>
+    <div class="k">Assignment</div><p>Inert here, deliberately. Our structures are held by a
+    separate entity, so no role inside this corp can touch the station. That is not an
+    oversight, it is the blast wall: whatever happens to any role in this corp, the Athanor
+    keeps standing and the doors keep working.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Security Officer</span>
+    <span class="rperm">views member personal hangars at corp offices</span><span class="chip intel">intel</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Views members' personal hangars at
+    stations where the corp holds an office and can place items into them, but never remove.</p>
+    <div class="k">Assignment</div><p>CEO retained. Surveillance of members is not delegated.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Factory Manager</span>
+    <span class="rperm">runs corp industry jobs from corp assets</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Installs, cancels and delivers corp
+    manufacturing and research jobs using corporation assets. Pairs with the rent slot roles and
+    hangar access on the industry division to function.</p>
+    <div class="k">Responsibilities</div><p>The print queue: runs posted builds from the industry
+    hangar, delivers product back, touches nothing outside the mandate.</p>
+    <div class="k">Assignment</div><p>Carried by the FOREMAN title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Rent Office / Rent Factory Slot / Rent Research Slot</span>
+    <span class="rperm">rents offices and industry slots on the corp's account</span><span class="chip spend">spend</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>The rent roles commit corp money. Rent
+    Office in particular requires no wallet role at all to spend, which is why it is never in a
+    title. The slot roles ride with FOREMAN because industry does not run without them.</p>
+    <div class="k">Assignment</div><p>Slots with FOREMAN. Offices CEO retained.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Trader</span>
+    <span class="rperm">corp market orders and the deliveries hangar</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Creates market orders in the corp's name,
+    buys with corp funds when paired with wallet access, and holds full access to the
+    Corporation Deliveries hangar where every corp market purchase and sale lands.</p>
+    <div class="k">Assignment</div><p>CEO retained.</p></div></details>
+
+  <h2>Division roles</h2>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Account Take 1 to 7</span>
+    <span class="rperm">withdraw and transfer from that wallet division</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Each grant opens exactly one wallet
+    division for withdrawals and transfers. Division one is the Master Wallet and is CEO
+    retained without exception. Working divisions are kept topped to their purpose, not pooled.</p>
+    <div class="k">Assignment</div><p>Division two with DESK OFFICER, division five with PROJECT
+    LEAD. Others CEO retained.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Hangar Query 1 to 7</span>
+    <span class="rperm">view one hangar division at one location scope</span><span class="chip intel">intel</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Sight without touch, per division, per
+    location scope. The default first grant for any hangar mandate.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Hangar Take 1 to 7</span>
+    <span class="rperm">take from one hangar division at one location scope</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Removal rights, per division, per
+    location. Granted only where a mandate needs its hands: intake for the desk, work in
+    progress for industry.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Container Take 1 to 7</span>
+    <span class="rperm">remove whole containers from a division</span><span class="chip cust">custody</span></summary>
+    <div class="rbody"><div class="k">Mechanics</div><p>Lifts entire containers out of a hangar
+    division, contents and all. Opening a container's contents needs the matching hangar take.</p>
+    <div class="k">Assignment</div><p>CEO retained.</p></div></details>
+
+  <h2>Proposed titles</h2>
+  <div class="secnote">The bundles we intend to run. Each is one checkbox set, one mandate, one line on the member list.</div>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Deputy Director</span>
+    <span class="rperm">Director &middot; exactly one, appointment announced corp wide</span></summary>
+    <div class="rbody"><p>Continuity. A corp this size cannot depend on one person's login for
+    titles, removals, base assignments or division changes. The Deputy carries the full
+    Director role, which is why there is exactly one, why the appointment is public, and why
+    the seat is the most carefully chosen line on this page. No mechanic reduces Director
+    trust; the structure compensates instead: the station sits behind the blast wall and the
+    corp's books are kept and reconciled outside the game.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Recruiter</span>
+    <span class="rperm">Personnel Manager</span></summary>
+    <div class="rbody"><p>Works the door: vets and accepts applicants through the standing
+    process, awards medals from the honors list. The corp grows through this title.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Herald</span>
+    <span class="rperm">Communications Officer + Fitting Manager + Skill Plan Manager</span></summary>
+    <div class="rbody"><p>The corp's voice and library: calendar, MOTD, bulletins, doctrine fits,
+    Academy skill plans. Wide responsibility, zero asset surface, which is exactly the point.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Envoy</span>
+    <span class="rperm">Diplomat</span></summary>
+    <div class="rbody"><p>Standings and neighbor relations, announced as they change.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Desk Officer</span>
+    <span class="rperm">Contract Manager + one capped wallet + intake hangar at HQ</span></summary>
+    <div class="rbody"><p>Runs buyback intake: accepts ore contracts at desk quotes, settles from
+    the desk float, moves ore onward. Exposure is one float and one hangar, deliberately.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Foreman</span>
+    <span class="rperm">Factory Manager + rent slots + industry hangar at HQ</span></summary>
+    <div class="rbody"><p>Runs the print queue: posted builds from the industry hangar, blueprints
+    arriving by contract, product delivered back. Sees the mineral stock, takes only work in
+    progress.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Project Lead</span>
+    <span class="rperm">Project Manager + one capped payout wallet</span></summary>
+    <div class="rbody"><p>Posts paid Corporation Projects off the corp's actual needs: what to
+    mine, what to haul, what to clear. The machine says what it wants; this title puts ISK
+    behind it.</p></div></details>
+
+  <details class="role"><summary><span class="car">&#9656;</span><span class="rname">Watchdog</span>
+    <span class="rperm">Auditor</span></summary>
+    <div class="rbody"><p>Reads the role change log on a cadence and asks the questions out loud.
+    Trust, verified.</p></div></details>
+
+  <div class="cta"><b>This is v1 and it is not scripture.</b> If a mandate is missing, a grant is
+  too tight, or you want a seat: say so. The suggestion box on the <a href="/portal/">portal</a>
+  takes it signed or anonymous, or raise it with any officer in Discord. Doctrine gets amended
+  by argument, not by silence.</div>
+
+  <div class="fine">Mechanics per the corporation management interface and current CCP role
+  listings. If the game and this page ever disagree, the game wins and this page gets fixed.</div>
+
+  </div>
+  <footer><a href="/portal/">Portal</a> &middot; <a href="/decorations/">The Wall of Goblins</a></footer>
+</div>
+<script src="/nav.js?v=28"></script>
+<script>
+(function(){
+  fetch("/api/whoami",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(w){
+    var ok = w && w.loggedIn;
+    document.getElementById(ok ? "doc" : "gate").style.display = "block";
+  }).catch(function(){ document.getElementById("gate").style.display = "block"; });
+})();
+</script>
+</body></html>
