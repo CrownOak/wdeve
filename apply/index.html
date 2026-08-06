@@ -180,6 +180,23 @@
   .stampsub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
     color:var(--muted); margin:2px 0 16px; }
   .footcta{ max-width:680px; margin:22px auto 0; text-align:center; }
+
+  /* The footer inherited --maxw (1180px) while the entire application flow is a
+     centred 680px column, so its line started well left of the form and read as
+     though it belonged to a different page. Same width, same centre line.
+     The skillpoint offer becomes a control rather than a link buried in a
+     sentence: it is the one thing on this page for somebody who has no character
+     yet, so it should be findable. Small and quiet though. It sits under the
+     portal button, which is the loud one, and must not compete with it: no ore
+     fill, hairline border, and it only warms up on hover. */
+  footer{ max-width:680px; text-align:center; }
+  .fnew{ display:block; margin:15px 0 9px; color:var(--muted); }
+  .sptbtn{ display:inline-block; font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.13em; text-transform:uppercase; color:var(--silver-dim);
+    text-decoration:none; border:1px solid var(--line); padding:7px 15px;
+    transition:color .18s ease, border-color .18s ease, background .18s ease; }
+  .sptbtn:hover,.sptbtn:focus-visible{ color:var(--ore); border-color:var(--ore);
+    background:rgba(70,255,94,.06); outline:none; }
   .portalbtn{ display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:.14em;
     text-transform:uppercase; color:var(--ore); border:1px solid var(--ore); padding:11px 26px;
     text-decoration:none; transition:background .2s, color .2s; }
@@ -272,7 +289,8 @@
     <a class="portalbtn" href="/portal/">Already a goblin? Open the portal &#9656;</a>
   </div>
   <footer><span id="pgFoot">Applications go straight to the recruiting goblins.</span>
-    New to EVE? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">Start with a million free skillpoints</a>.</footer>
+    <span class="fnew">New to EVE?</span>
+    <a class="sptbtn" href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">A million free skillpoints</a></footer>
 
 <script>
 (function(){
