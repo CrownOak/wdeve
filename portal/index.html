@@ -467,7 +467,10 @@
                 font-variant-numeric:tabular-nums; }
   .mevfoot{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.03em;
             line-height:1.5; color:var(--muted); }
-  .mevempty{ margin-top:11px; font-size:12.5px; color:var(--muted); }
+  /* the empty board is a pitch now, so it gets reading measure and a lit first line */
+  .mevempty{ margin-top:11px; font-size:12.5px; color:var(--muted); line-height:1.55; max-width:54ch; }
+  .mevempty b{ color:var(--silver); }
+  .mevempty i{ font-style:normal; color:var(--ore); }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
                 font-size:12.5px; color:var(--ore); }
   .refcard .rs{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
@@ -2962,9 +2965,33 @@ function renderEventBoard(){
           '<span class="mvj">' + row.joined + '</span>' +
           '<span class="mvh">' + row.held + '</span></div>';
       }).join("") +
-      '<div class="mevfoot">joined wins &middot; held = still here at 14 days, breaks ties</div></div>';
+      /* CONTEXT, not just columns. The board used to state the tiebreak rule and nothing
+         else, so a member could read the whole card and still not know what an entry IS
+         or why held exists. Both are one sentence each, and the second one carries the
+         actual point: held is there so this rewards bringing friends home rather than
+         farming signups. */
+      '<div class="mevfoot">Your link, their application, an officer says yes. That is a JOINED. ' +
+        'Still flying with us two weeks later and it becomes a HELD.<br>' +
+        'Joined wins the 500M. Held settles ties, because we are counting goblins who stayed, ' +
+        'not names on a form.</div></div>';
   } else {
-    h += '<div class="mevempty">Nobody on the board yet. First one up sets the pace.</div>';
+    /* AN EMPTY BOARD IS THE BEST PITCH WE WILL EVER HAVE and it was being wasted on eight
+       words. Everything here is doing a job: first place is currently unoccupied (the ask
+       costs nothing and the reward is the whole pot), the work is shrunk to one concrete
+       action so nobody talks themselves out of it on effort, and it closes on the line from
+       the hundred goblins banner, because "somebody thought to ask" is true of almost every
+       person reading it. Identity beats instruction. */
+    h += '<div class="mevempty">' +
+      '<b>Nobody is on the board.</b> Which means first place is currently held by no one, ' +
+      'the 500M is sitting in the pot getting comfortable, and the entire field is whoever ' +
+      'reads this and then does one small thing about it.' +
+      '<br><br>' +
+      'You do not have to pitch anybody. You are not selling timeshares. You send your link ' +
+      'to one person who is out there mining alone in the cold like a Victorian orphan, and ' +
+      'you ask. That is the job. That is the whole job.' +
+      '<br><br>' +
+      '<i>Almost every one of us is here because somebody thought to ask. Go be the somebody.</i>' +
+      '</div>';
   }
   return h + '</div>';
 }
