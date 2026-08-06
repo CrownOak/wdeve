@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
+<title>Wealthy Dropouts - Tools</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+/* ---- tools hub elevation (page-scoped, spec: BONK-TOOLS-HUB-ELEVATION-SPEC.md) ---- */
+.hub{ max-width:860px; }
+/* grid whisper under the column only */
+.hub{ background:
+  linear-gradient(rgba(150,168,158,.045) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(150,168,158,.045) 1px, transparent 1px);
+  background-size:48px 48px; background-position:center top; }
+/* scanline film: felt, not seen */
+body::after{ content:""; position:fixed; inset:0; pointer-events:none; z-index:3;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+  opacity:.025; }
+/* command deck */
+.deck{ margin:0 0 26px; }
+.deck h1{ font-size:22px; }
+.deckline{ font-family:var(--mono); font-size:11.5px; letter-spacing:.05em; color:var(--muted); margin-top:7px; }
+.bootline{ font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--ore); margin-top:4px; min-height:16px; }
+.proof{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.proof .p{ font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--silver-dim);
+  border:1px solid var(--line); background:rgba(20,23,26,.72); padding:6px 11px; }
+.proof .p b{ color:var(--ore); font-weight:400; font-variant-numeric:tabular-nums; }
+.proof .p.hot{ color:var(--ore); border-color:rgba(70,255,94,.45); animation:pulse 1.6s ease-in-out infinite; }
+@keyframes pulse{ 50%{ box-shadow:0 0 12px rgba(70,255,94,.25); } }
+/* drawer labels */
+.workbench{ display:flex; align-items:center; gap:10px; margin:34px 0 12px; }
+.workbench .ix{ color:var(--ore); }
+.workbench::after{ content:""; flex:1; height:1px; background:var(--line-soft); }
+.drawhint{ font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--muted); margin:-6px 0 12px; }
+/* card grid */
+.cards{ display:grid; grid-template-columns:1fr; gap:12px; }
+@media(min-width:900px){ .cards{ grid-template-columns:1fr 1fr; } a.card.flag{ grid-column:1 / -1; } }
+/* card anatomy v2 */
+a.card{ margin:0; position:relative; }
+a.card .micro{ display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10.5px;
+  letter-spacing:.06em; color:var(--muted); margin-top:6px; }
+a.card .micro .fdot{ width:6px; height:6px; border-radius:50%; background:var(--silver-dim); flex:none; }
+a.card .micro .fdot.live{ background:var(--ore); box-shadow:0 0 6px rgba(70,255,94,.5); }
+a.card .micro .fdot.slow{ background:var(--muted); }
+a.card .micro .fdot.hot{ background:var(--ore); animation:pulse 1.6s ease-in-out infinite; }
+/* corner brackets */
+a.card::after{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(var(--line) 0 0) top    left  / 10px 1px no-repeat,
+    linear-gradient(var(--line) 0 0) top    left  / 1px 10px no-repeat,
+    linear-gradient(var(--line) 0 0) bottom right / 10px 1px no-repeat,
+    linear-gradient(var(--line) 0 0) bottom right / 1px 10px no-repeat;
+  transition:filter .15s; }
+a.card:hover::after{ background:
+    linear-gradient(var(--ore) 0 0) top    left  / 10px 1px no-repeat,
+    linear-gradient(var(--ore) 0 0) top    left  / 1px 10px no-repeat,
+    linear-gradient(var(--ore) 0 0) bottom right / 10px 1px no-repeat,
+    linear-gradient(var(--ore) 0 0) bottom right / 1px 10px no-repeat; }
+/* laser sweep on the accent bar: the bar dissolves as it flies (never visibly
+   returns), then flickers back into place like a bad hologram. Last frame =
+   rest state, so there is no snap, only a spectral rematerialization. */
+a.card:hover::before{ animation:sweep .62s linear 1; }
+@keyframes sweep{
+  0%  { transform:translateX(0);     opacity:1;   box-shadow:0 0 0 rgba(70,255,94,0); }
+  30% { transform:translateX(70px);  opacity:.85; box-shadow:0 0 10px rgba(70,255,94,.55); }
+  55% { transform:translateX(150px); opacity:0;   box-shadow:0 0 14px rgba(182,255,192,.35); }
+  56% { transform:translateX(0);     opacity:0;   box-shadow:none; }
+  63% { opacity:.55; }
+  69% { opacity:.06; }
+  77% { opacity:.7;  }
+  84% { opacity:.12; }
+  100%{ transform:translateX(0);     opacity:1;   box-shadow:none; }
+}
+/* flagships */
+a.card.flag{ padding:20px 22px; }
+a.card.flag .name{ font-size:19px; }
+a.card.flag:hover{ box-shadow:0 0 26px rgba(70,255,94,.07) inset, 0 0 18px rgba(70,255,94,.06); }
+.flagtag{ font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; color:var(--ore);
+  border:1px solid rgba(70,255,94,.4); padding:2px 7px; margin-left:10px; vertical-align:2px; }
+/* member-aware chip state */
+.lock.you{ color:var(--ore); border-color:rgba(70,255,94,.45); }
+/* redacted glitch (hover only) */
+@keyframes glitch{ 25%{ text-shadow:1px 0 rgba(240,129,122,.8), -1px 0 rgba(70,255,94,.6); }
+  50%{ text-shadow:-1px 0 rgba(240,129,122,.8), 1px 0 rgba(70,255,94,.6); } 100%{ text-shadow:none; } }
+a.card.secret:hover .name{ animation:glitch .12s steps(2) 1; }
+@media(prefers-reduced-motion:reduce){
+  .proof .p.hot, a.card .micro .fdot.hot{ animation:none; }
+  a.card:hover::before{ animation:none; filter:brightness(1.35); }
+  a.card.secret:hover .name{ animation:none; }
+}
+</style>
+</head>
+<body>
+  <div class="hub">
+    <div class="deck">
+      <h1>WEALTHY DROPOUTS &middot; THE TOOL SHED</h1>
+      <div class="deckline">15 drawers &middot; most open to anyone &middot; the rest ask who you are</div>
+      <div class="bootline" id="bootline"></div>
+      <div class="proof" id="proof" style="display:none"></div>
+    </div>
+
+    <div class="workbench"><span class="ix">01 //</span> Public Tools</div>
+    <div class="cards">
+
+    <a class="card flag" href="../lowsec/">
+      <div class="row"><span class="name">Radar<span class="flagtag">FLAGSHIP</span></span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot"></span>70 regions &middot; 5,485 systems &middot; 40,928 belts &middot; hourly</div>
+      <div class="desc">System search, the Belt Radar (every belt, moon, and station by region), and the
+      GW Watch scout scores. The one tool with no login and no equal: pick a region, see everything
+      worth pointing a laser at, and check who else had the same idea.</div>
+    </a>
+
+    <a class="card" href="../briefing/">
+      <div class="row"><span class="name">PVP Briefing</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot live"></span>any pilot, corp or alliance &middot; read at query time</div>
+      <div class="desc">Name a target and get the file: what they hunt, how big their gang runs, the tank
+      they favor and how to break it, who flies with them, and the hours they actually undock. Public
+      killmails, read properly. Assume nothing, there is always a file.</div>
+    </a>
+
+    <a class="card" href="../refine/">
+      <div class="row"><span class="name">Ore Calculator</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot live"></span>440 ores + 55 gases &middot; 5 hubs &middot; buyback math &middot; hourly</div>
+      <div class="desc">Paste ore: refined minerals and value at your efficiency, or raw prices at all
+      five hubs (the Rock Index knows every rock and every gas). Materials to ore works backwards too.</div>
+    </a>
+
+    <a class="card" href="../arbitrage/">
+      <div class="row"><span class="name">Hub Arbitrage</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot"></span>358 items &middot; 5 hubs &middot; danger scored &middot; hourly</div>
+      <div class="desc">Buy low in one trade hub, sell high in another. Cross hub spreads ranked net
+      of fees per jump, with a Load Optimizer that packs your exact cargo hold and a DANGER chip
+      naming the system that wants your freighter.</div>
+    </a>
+
+    <a class="card" href="../market/">
+      <div class="row"><span class="name">Market Finder</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot live"></span>any multibuy &middot; 5 hubs &middot; live at query time</div>
+      <div class="desc">Paste one item or a whole multibuy and see what it costs in every hub, per item
+      and total, cheapest one stop shop highlighted. Prices pulled live the moment you ask.</div>
+    </a>
+
+    <a class="card" href="../blueprints/">
+      <div class="row"><span class="name">Blueprint Scanner</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot slow"></span>top 5 per category &middot; ME10 math &middot; monthly bake</div>
+      <div class="desc">Most profitable Tech I builds by ISK/hour from the SDE + live Jita prices, with
+      the mining plan for every mineral and a one click push into the corp build queue.</div>
+    </a>
+
+    <a class="card" href="../reprocess/">
+      <div class="row"><span class="name">Reprocessing Reference</span><span class="lock">open</span></div>
+      <div class="micro"><span class="fdot"></span>47 ores + ices &middot; ISK per m3 &middot; hourly</div>
+      <div class="desc">Every ore and ice: what it refines into, where you find it, refined value and
+      ISK per m3 at your mining rate. The "what is this rock worth" lookup.</div>
+    </a>
+
+    </div>
+
+    <div class="workbench"><span class="ix">02 //</span> Goblin Tools</div>
+    <div class="drawhint" id="goblinhint">carrying a portal login opens these by itself &middot; members log in once and stop typing words</div>
+    <div class="cards">
+
+    <a class="card" href="../fleet/" data-key="fleet">
+      <div class="row"><span class="name">Fleet Drop Ledger</span><span class="lock" data-lockfor="fleet">&#128274; password</span></div>
+      <div class="micro"><span class="fdot live" id="fleetdot"></span><span id="fleetmicro">live tabs &middot; exact shares &middot; receipts forever</span></div>
+      <div class="desc">The shared mining op tab. Paste what you jettison, the ledger values it live and
+      tracks your cut next to everyone else's. When the op wraps, fleet command pays out at buyback.
+      The ledger saw you drop it, so no arguing at the end.</div>
+    </a>
+
+    <a class="card" href="../kills/" data-key="kills">
+      <div class="row"><span class="name">Corp Kill Log</span><span class="lock" data-lockfor="kills">&#128274; password</span></div>
+      <div class="micro"><span class="fdot"></span>mirrored from zKillboard &middot; hourly</div>
+      <div class="desc">Recent kills and losses for the corp, straight from zKillboard. Every row opens
+      the killmail. See who got got.</div>
+    </a>
+
+    <a class="card" href="../decorations/">
+      <div class="row"><span class="name">Decorations</span><span class="lock">&#127894; the wall of goblins</span></div>
+      <div class="micro"><span class="fdot slow"></span>seventeen honors &middot; they never expire</div>
+      <div class="desc">Every corp medal a goblin can earn and exactly how to earn it, from First Haul
+      to The Cornerstone. They sit on your character sheet forever.</div>
+    </a>
+
+    </div>
+
+    <div class="workbench"><span class="ix">03 //</span> The Watchtower</div>
+    <div class="cards">
+
+    <a class="card flag" href="../cartel/" data-key="cartel">
+      <div class="row"><span class="name">WATCHTOWER<span class="flagtag">FLAGSHIP</span></span><span class="lock" data-lockfor="cartel">&#128274; goblins only</span></div>
+      <div class="micro"><span class="fdot live"></span>live danger &middot; any route &middot; refreshed every 5 min</div>
+      <div class="desc">Eyes on the whole neighborhood. Where it is calm, where it is hot, and the one
+      sentence that decides whether the fleet undocks. Now with the Route Check: plug in any two
+      systems in New Eden and it reads the road before you fly it.</div>
+    </a>
+
+    </div>
+
+    <div class="workbench"><span class="ix">04 //</span> Secret Tools</div>
+    <div class="cards">
+
+    <a class="card secret" href="../bonk-prospects/" data-secret="prospects">
+      <div class="row"><span class="name" data-sname="prospects">&#9608;&#9608;&#9608; CLASSIFIED &#9608;&#9608;&#9608;</span><span class="lock" data-lockfor="prospects">&#128274; recruiters only</span></div>
+      <div class="desc" data-sdesc="prospects">If you can read this, you already saw too much. There is nothing here. No list.
+      No names. No scores. The recruiters know what this does. You do not. We logged your visit. &#128065;</div>
+    </a>
+
+    <a class="card secret" href="../alliance/" data-secret="alliance">
+      <div class="row"><span class="name" data-sname="alliance">&#9608;&#9608;&#9608; REDACTED &#9608;&#9608;&#9608;</span><span class="lock" data-lockfor="alliance">&#128274; recruiters only</span></div>
+      <div class="desc" data-sdesc="alliance">Even more classified than the last one. We will not explain what it does. The recruiters
+      know. Rivals do not, and we intend to keep it that way. If you are not flying our colors this drawer is
+      empty and you never opened it. The rocks have eyes. &#128065;</div>
+    </a>
+
+    <a class="card secret" href="/portal/intel/" data-gss="1">
+      <div class="row"><span class="name" data-gname>&#9608;&#9608;&#9608; CLASSIFIED &#9608;&#9608;&#9608;</span><span class="lock" data-glock>&#128274; clearance required</span></div>
+      <div class="desc" data-gdesc>A room that is not on this list, except it is, right here, and you still cannot open it. The door
+      knows its own. If it does not know you, do not test it. It remembers everyone who knocks, and it never forgets a face.</div>
+    </a>
+
+    </div>
+
+    <div class="workbench"><span class="ix">05 //</span> On the workbench</div>
+    <div class="cards">
+
+    <a class="card soon">
+      <div class="row"><span class="name">Mining Ship Reference</span><span class="soonbadge">coming soon</span></div>
+      <div class="desc">Every mining hull, what it pulls, what it tanks, and a fit that lives past the
+      first neut. Because "I undocked the Hulk with zero tank" is a confession, not a strategy. Yields,
+      holds, and the fit that keeps the killboard clean.</div>
+    </a>
+
+    </div>
+
+    <footer>Welcome to the goblin tool shed. Most drawers are wide open, two are so secret we will not
+    even admit they exist, and one is just a wall of shiny medals. Touch what you can open. The ore must flow,
+    the goblins must eat, and this page is not crawlable so the spies stay hungry. &#129704;</footer>
+  </div>
+
+<script>
+(function(){
+  var reduced = false;
+  try{ reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+
+  // ---- boot line: types once per session, then it is just text -------------
+  var boot = document.getElementById("bootline");
+  var MSG = "> shed.init … drawers unlocked";
+  try{
+    if (sessionStorage.getItem("bonk_shed_boot")){ boot.textContent = MSG; }
+    else {
+      sessionStorage.setItem("bonk_shed_boot","1");
+      if (reduced){ boot.textContent = MSG; }
+      else { var i=0; (function tick(){ boot.textContent = MSG.slice(0, ++i); if (i<MSG.length) setTimeout(tick, 800/MSG.length); })(); }
+    }
+  }catch(e){ boot.textContent = MSG; }
+
+  // ---- live proof strip: public stats, hidden entirely if the fetch dies ---
+  function isk(n){ n=+n||0;
+    if(n>=1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,"")+"B";
+    if(n>=1e6) return Math.round(n/1e6)+"M";
+    return n.toLocaleString(); }
+  function countUp(el, target, fmt){
+    if (reduced || target<=0){ el.textContent = fmt(target); return; }
+    var t0 = performance.now();
+    (function step(now){
+      var p = Math.min(1,(now-t0)/600); p = 1-Math.pow(1-p,3);
+      el.textContent = fmt(target*p);
+      if (p<1) requestAnimationFrame(step);
+    })(t0);
+  }
+  fetch("/api/public-stats").then(function(r){ return r.ok? r.json():null; }).then(function(d){
+    if(!(d && d.ok)) return;
+    var box = document.getElementById("proof");
+    var chips = [
+      ["ISK PAID BACK", d.given_back, function(v){ return isk(v); }],
+      ["OPS SETTLED", d.ops, function(v){ return String(Math.round(v)); }],
+      ["STATION FUND", (d.station&&d.station.pct)||0, function(v){ return Math.round(v)+"%"; }]
+    ];
+    var h = "";
+    chips.forEach(function(c,i){ h += "<span class='p'>"+c[0]+" &#9656; <b id='pf"+i+"'></b></span>"; });
+    if (d.op_hot) h += "<span class='p hot'>OP LIVE NOW &#9656; goblins in the belt</span>";
+    box.innerHTML = h; box.style.display = "";
+    chips.forEach(function(c,i){ countUp(document.getElementById("pf"+i), +c[1]||0, c[2]); });
+    if (d.op_hot){
+      var fd = document.getElementById("fleetdot"), fm = document.getElementById("fleetmicro");
+      if (fd) fd.className = "fdot hot";
+      if (fm) fm.innerHTML = "OP FORMING &middot; get in &middot; receipts forever";
+    }
+  }).catch(function(){});
+
+  // ---- member-aware truth: the lock chips stop lying ----------------------
+  // whoami dead or logged out = exactly the static page. Ally sessions see
+  // only the doors their tier opens (fleet + cartel); corp members see all.
+  var REAL = {
+    prospects: { name:"Prospect Finder", desc:"Finds corp&#8209;less, freshly ganked miners and hands you a personalized opener. Shared done markers so no prospect gets double mailed. Vet any pilot before you pitch." },
+    alliance:  { name:"Alliance Builder", desc:"Ranked independent mining corps for the alliance pitch, one personalized CEO mail per row, same shared done markers. Founder to founder." }
+  };
+  fetch("/api/whoami",{credentials:"same-origin"}).then(function(r){ return r.ok? r.json():null; }).then(function(w){
+    if(!(w && w.loggedIn)) return;
+    var role = w.role || "member";
+    var isCorp = (role !== "ally");
+    var opens = isCorp ? ["fleet","kills","cartel","prospects","alliance"] : ["fleet","cartel"];
+    opens.forEach(function(k){
+      var chip = document.querySelector("[data-lockfor='"+k+"']");
+      if (chip){ chip.className = "lock you"; chip.innerHTML = "&#9672; opens for you"; }
+    });
+    if (isCorp){
+      Object.keys(REAL).forEach(function(k){
+        var nm = document.querySelector("[data-sname='"+k+"']");
+        var ds = document.querySelector("[data-sdesc='"+k+"']");
+        if (nm) nm.innerHTML = REAL[k].name;
+        if (ds) ds.innerHTML = REAL[k].desc;
+      });
+      var gh = document.getElementById("goblinhint");
+      if (gh) gh.innerHTML = "you are logged in &middot; these open themselves &middot; mine on";
+    }
+    // GSS reveals itself only to the cleared (officer, admin, designated).
+    if (w.gss){
+      var gn=document.querySelector('[data-gname]'); if(gn) gn.innerHTML="Goblin State Security";
+      var gd=document.querySelector('[data-gdesc]'); if(gd) gd.innerHTML="The intelligence sector. Dossiers, target packages, the neighborhood map, the standings watch, and the Field Rules. The cold room. Officers, admins, and the designated. Assume nothing.";
+      var gl=document.querySelector('[data-glock]'); if(gl){ gl.className="lock you"; gl.innerHTML="&#9672; opens for you"; }
+    }
+  }).catch(function(){});
+})();
+</script>
+<script src="/nav.js?v=28"></script>
+<script src="/walkthrough.js?v=5"></script>
+</body>
+</html>

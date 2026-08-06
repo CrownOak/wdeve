@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GOBSEC &middot; Goblin State Security</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  /* GOBSEC cover. Seal-dominant, one red accent, deliberately NOT the goblin-interview look.
+     The SEAL stays austere (that is the logo canon) while the copy is relaxed and dry: a
+     serious badge worn by somebody entirely unbothered is the whole GOBSEC voice. Toned back
+     2026-07-29 (Kyle: "so aggressive, make it hilarious, it's meant to be fun") because the
+     old copy read as a recruitment poster, which GOBSEC-VOICE.md says to kill on sight. */
+  :root{ --gsred: rgba(255,71,87,.72); --gsred-dim: rgba(255,71,87,.38); }
+  .gsWrap{ max-width:660px; margin:0 auto; padding:34px 22px 64px; }
+  .gsSeal{ width:min(320px,70vw); height:auto; display:block; margin:10px auto 24px;
+           filter:drop-shadow(0 14px 44px rgba(0,0,0,.65)); }
+  .gsHead{ text-align:center; }
+  .gsMark{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
+           color:#ff6b78; }
+  .gsName{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+           letter-spacing:.14em; font-size:clamp(17px,3.4vw,25px); color:var(--silver); margin-top:9px; }
+  .gsTick{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+           color:var(--muted); margin-top:8px; }
+  .gsRule{ width:46px; height:1px; background:var(--gsred); margin:24px auto; }
+  .gsLede{ font-size:15.5px; color:var(--silver); line-height:1.65; text-align:center; }
+  .gsBody{ font-size:14.5px; color:var(--silver-dim); line-height:1.7; margin-top:16px; }
+  .gsBody b{ color:var(--silver); font-weight:600; }
+
+  /* Four facts, one line each. They used to be four bordered blocks of three or four bullets,
+     which is a lot of page for a door. A label grid says the same thing in a quarter of the
+     height and reads in about five seconds, which is all this page ever gets. */
+  .gsFacts{ margin-top:30px; border-top:1px solid var(--line-soft); }
+  .gsFacts div{ display:grid; grid-template-columns:78px minmax(0,1fr); gap:16px;
+                align-items:baseline; padding:13px 0; border-bottom:1px solid var(--line-soft); }
+  .gsFacts span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase;
+                 color:#ff6b78; }
+  .gsFacts p{ margin:0; font-size:14.5px; color:var(--silver-dim); line-height:1.6; }
+  @media(max-width:440px){
+    .gsFacts div{ grid-template-columns:1fr; gap:5px; }
+  }
+
+  /* THE POOL. The one place on the page allowed to raise its voice, because it is the only
+     claim backed by a number somebody else generated. Numbers in ore green, the grim line in
+     red, everything else stays quiet so the figures carry it. */
+  .gsPool{ margin-top:30px; padding:18px 20px; background:var(--black);
+           border:1px solid var(--gsred-dim); border-left:3px solid var(--gsred); }
+  .gsPool .gpk{ font-family:var(--mono); font-size:9.5px; letter-spacing:.28em; text-transform:uppercase;
+                color:#ff6b78; margin-bottom:10px; }
+  .gsPool p{ margin:0 0 8px; font-size:14.5px; line-height:1.6; color:var(--silver-dim); }
+  .gsPool .gpj{ color:var(--muted); }
+  .gsPool .gph{ font-size:16px; color:var(--silver); }
+  .gsPool .gph b, .gsPool .gpn b{ font-family:var(--mono); color:var(--ore); font-weight:700; }
+  .gsPool .gph b{ font-size:18px; }
+  .gsPool .gpn b{ font-size:15px; }
+  .gsPool .gpg{ color:var(--silver); }
+  .gsPool .gpc{ margin-bottom:0; color:var(--muted); font-size:13.5px; }
+  .gsClose{ margin-top:32px; text-align:center; font-size:15px; color:var(--silver); line-height:1.7; }
+  .gsClose .quiet{ color:var(--muted); font-size:13.5px; }
+  .gsActs{ text-align:center; margin-top:28px; }
+  .gsBegin{ display:inline-block; padding:13px 46px;
+            font-family:var(--mono); font-size:12px; letter-spacing:.3em; text-transform:uppercase;
+            color:var(--silver); border:1px solid var(--line); text-decoration:none;
+            transition:border-color .2s, color .2s, letter-spacing .2s; }
+  .gsBegin:hover{ border-color:var(--gsred); color:#ff4757; letter-spacing:.34em; }
+  .gsAlt{ margin-top:16px; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
+          color:var(--muted); }
+  .gsAlt a{ color:var(--silver-dim); text-decoration:none; border-bottom:1px solid var(--line); }
+  .gsAlt a:hover{ color:#ff4757; border-color:var(--gsred-dim); }
+  .gsFoot{ margin-top:52px; font-family:var(--mono); font-size:10.5px; letter-spacing:.3em;
+           text-transform:uppercase; color:var(--muted); text-align:center; }
+  .gsFoot .dockline{ display:block; margin-top:10px; letter-spacing:.06em; text-transform:none;
+                     color:var(--silver-dim); }
+  @media(max-width:480px){ .gsBegin{ padding:12px 30px; letter-spacing:.22em; } }
+
+</style></head>
+<body>
+<script src="/nav.js?v=28"></script>
+<div class="gsWrap" data-i18n-skip>
+  <img class="gsSeal" src="gss.png" alt="Goblin State Security seal" width="520" height="520">
+  <div class="gsHead">
+    <div class="gsMark">&#128308; GOBSEC is open</div>
+    <div class="gsName">Goblin State Security</div>
+    <div class="gsTick">GOBSEC &middot; [GOBSC] &middot; Big Rock Energy</div>
+  </div>
+  <div class="gsRule"></div>
+
+  <div class="gsLede">Most pilots out here fly alone.<br>
+    Ours don't.</div>
+
+  <div class="gsBody">We're the combat unit. Our miners work null, low and j-space,
+    and we're what stands between them and everyone who'd rather they didn't.
+    Somebody jumps a barge, <b>somebody comes looking for them.</b>
+    We're new, so there's room.</div>
+
+  <div class="gsFacts">
+    <div><span>The task</span><p>Escort mining fleets into null, low and j-space. Hold the grid while they work. Bring them home.</p></div>
+    <div><span>Where</span><p>Home's highsec. The work isn't. The minerals that pay don't exist in safe space, so we go get them.</p></div>
+    <div><span>The trade</span><p>You get shot at so nine other people can mine. Unescorted, that trip earns less than staying home. Escorted, it's the only place the good minerals come from. That's the whole reason we exist.</p></div>
+    <div><span>The bar</span><p>Logi, EWAR, tackle, recon, FCs. Be excellent at one thing. We'll cover the rest.</p></div>
+  </div>
+
+  <!-- THE POOL: live off the finder's public stamp. Hidden until the numbers actually load,
+       because a flex with a zero in it is worse than no flex. -->
+  <div class="gsPool" id="gsPool" hidden>
+    <div class="gpk">The list</div>
+    <p class="gph">150 names. <b id="gpSolo">0</b> solo kills.</p>
+    <p class="gpn">We ran the numbers on <b id="gpRows">0</b> pilots and kept 150.</p>
+    <p class="gpc">If you're on it, you already know.</p>
+  </div>
+
+  <div class="gsActs">
+    <a class="gsBegin" id="gsBegin" href="/apply/?track=gobsec">I'm in</a>
+    <div class="gsAlt">or come meet the crew first:
+      <a href="https://discord.gg/XjeYXTEcq7" target="_blank" rel="noopener">Discord</a></div>
+    <div class="gsAlt">no combat character yet? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">start one</a>, it comes with a million skillpoints.</div>
+  </div>
+
+  <div class="gsFoot">Somebody's gotta undock
+    <span class="dockline">GOBSEC. The miners work. We make sure they get to.</span></div>
+</div>
+<script>
+/* The pool numbers come from the finder's own public stamp, never from this file. The board
+   rebakes daily, so a figure pasted in here would start lying the first time it moved. Only
+   aggregates are published: no names, no ids, nothing that could be read back as a target list.
+   Fails silent by design. If the fetch dies the block stays hidden, because a recruiting flex
+   showing 0 solo kills is considerably worse than no flex at all. */
+(function () {
+  var el = document.getElementById("gsPool");
+  if (!el || !window.fetch) return;
+  fetch("/gobsec/finder/stamp.json", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) return;
+      var rows = Number(d.rows) || 0, solo = Number(d.top150_solo) || 0;
+      if (rows < 50 || solo < 1000) return;   // board mid-rebuild or broken: say nothing
+      document.getElementById("gpRows").textContent = rows.toLocaleString();
+      document.getElementById("gpSolo").textContent = solo.toLocaleString();
+      el.hidden = false;
+    })
+    .catch(function () {});
+})();
+</script>
+
+</body></html>

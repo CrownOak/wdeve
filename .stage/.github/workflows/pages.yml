@@ -1,0 +1,69 @@
+name: pages
+# Deploy the site to GitHub Pages. Replaces the legacy branch-deploy pipeline,
+# which 400'd when hourly generator pushes landed close together. The
+# cancel-in-progress concurrency group ensures only the newest push deploys.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Bounds a hung deploy-pages status-poll (it can wait ~10 min per attempt).
+    # A healthy deploy takes <1 min and a fully-flaking retry cycle ~4 min, so
+    # this only trips on a genuinely stuck backend — failing fast so it surfaces
+    # instead of being masked by cancel-in-progress on the next push.
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url || steps.deploy4.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+      # The Pages backend intermittently returns "Deployment failed, try again
+      # later" mid-sync. The bad window can last a couple of minutes and swallow
+      # closely-spaced attempts, so we retry up to four times with widening
+      # backoff (~4 min total) to outlast it. Only the final attempt is allowed
+      # to fail the run — a real outage still surfaces, transient flakes do not.
+      # A superseded run is cancelled by cancel-in-progress (no failure email),
+      # and any dropped deploy self-heals on the next hourly generator push.
+      # NOTE: continue-on-error is load-bearing on deploy1-3 — it keeps the job
+      # status green so each later attempt's implicit success() gate still fires.
+      # Removing it from any early attempt silently collapses the ladder to one try.
+      - id: deploy1
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - if: steps.deploy1.outcome == 'failure'
+        run: sleep 30
+      - id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 60
+      - id: deploy3
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure' && steps.deploy3.outcome == 'failure'
+        run: sleep 120
+      - id: deploy4
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure' && steps.deploy3.outcome == 'failure'
+        uses: actions/deploy-pages@v5

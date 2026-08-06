@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><script src="/i18n.js?v=6"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>GOBSEC — the board</title>
+<link rel="stylesheet" href="/common.css?v=7">
+<style>
+  /* THE COMBAT PILOT'S PAGE (GOBSEC-PORTAL-SPEC part one). Five bands, in the order a
+     pilot cares. The test: read for eight seconds, know whether to undock and where.
+     GOBSEC register: cold, understated, contractions, no poster-speak. */
+  :root{ --gs: #ff4757; --gsdim: rgba(255,71,87,.34); }
+  .gw{ max-width:960px; margin:0 auto; padding:20px 18px 70px; }
+  .ghead{ display:flex; align-items:center; gap:14px; margin:4px 0 6px; }
+  .ghead img{ width:52px; height:52px; }
+  .ghead h1{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.14em;
+             font-size:19px; color:var(--silver); margin:0; }
+  .ghead .sub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+               color:var(--muted); margin-top:4px; }
+  .gschk{ min-height:calc(100vh - 220px); display:flex; flex-direction:column; align-items:center;
+         justify-content:center; text-align:center; padding:24px; }
+  .gschk a{ color:var(--gs); }
+  .gschk h2{ font-family:var(--display); text-transform:uppercase; letter-spacing:.14em; font-size:18px;
+            color:var(--silver); margin:0 0 8px; }
+  .gschk p{ font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.03em; line-height:1.7; }
+  .cplock{ font-size:28px; color:var(--gs); margin-bottom:10px; }
+  .cp{ display:flex; gap:8px; justify-content:center; margin:18px 0 4px; flex-wrap:wrap; }
+  .cp input{ background:var(--black); border:1px solid var(--line); color:var(--silver);
+             font-family:var(--mono); font-size:12.5px; padding:9px 12px; width:240px; letter-spacing:.14em; }
+  .cp input:focus{ outline:none; border-color:var(--gs); }
+  .cp button{ background:transparent; border:1px solid var(--gs); color:var(--gs); cursor:pointer;
+              font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; padding:9px 18px; }
+  .cp button:hover{ background:var(--gs); color:#08090a; }
+  .cphint{ margin-top:16px; font-size:11px; }
+  .stamp{ margin-top:26px; font-family:var(--mono); font-size:9.5px; letter-spacing:.26em;
+          text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; }
+  .rec{ width:7px; height:7px; border-radius:50%; background:var(--gs); display:inline-block;
+        animation:recblink 1.9s ease-in-out infinite; }
+  @keyframes recblink{ 0%,100%{opacity:.25} 50%{opacity:1} }
+  .stamp2{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; color:var(--line); }
+
+  .band{ background:var(--steel); border:1px solid var(--line-soft); padding:16px 18px 18px; margin:14px 0; }
+  .band > h2{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.09em;
+              font-size:12.5px; color:var(--muted); margin:0 0 12px; display:flex; align-items:baseline; gap:9px; }
+  .band > h2 .n{ color:var(--gs); font-family:var(--mono); font-size:10.5px; }
+
+  /* band 1 */
+  .verdict{ font-size:17px; line-height:1.5; color:var(--silver); }
+  .verdict.hot{ color:var(--gs); }
+  .vsub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:7px; }
+  .krow{ display:flex; gap:10px; align-items:baseline; padding:7px 2px; border-top:1px solid var(--line-soft);
+         font-family:var(--mono); font-size:12px; color:var(--silver-dim); text-decoration:none; }
+  .krow .kt{ flex:0 0 58px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .krow.ours{ background:rgba(255,71,87,.06); }
+  .krow.ours .kt{ color:var(--gs); }
+  .krow .kw{ flex:1; min-width:0; overflow-wrap:anywhere; color:var(--silver); }
+  .krow .ka{ white-space:nowrap; color:var(--muted); font-size:11px; }
+  .krow:hover .kw{ color:var(--gs); }
+
+  /* band 2 */
+  .posture{ display:inline-block; font-family:var(--display); font-weight:700; letter-spacing:.12em;
+            text-transform:uppercase; font-size:22px; padding:8px 18px; border:1px solid var(--line); color:var(--silver); }
+  /* the stance palette, ONE language on every surface (board, desk, portal, fleet):
+     ROUTINE quiet silver · ESCORT amber caution · HUNT red active · STAND DOWN
+     steel blue restriction. Change it here, change it everywhere, or not at all. */
+  .posture.ROUTINE{ color:var(--silver); }
+  .posture.ESCORT{ color:var(--amber); border-color:var(--amber); }
+  .posture.HUNT{ color:var(--gs); border-color:var(--gs); }
+  .posture.STANDDOWN{ color:#8fb7c9; border-color:rgba(143,183,201,.5); }
+  .stword{ font-size:12.5px; color:var(--silver-dim); line-height:1.6; margin-top:10px;
+           border-left:2px solid var(--line-soft); padding-left:11px; font-style:italic; }
+  .stword b{ font-style:normal; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--muted); display:block; margin-bottom:2px; }
+  .fcline{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:11px; }
+  .fcline b{ color:var(--ore); }
+  .orders{ margin-top:14px; border-top:1px solid var(--line-soft); }
+  .order{ display:flex; gap:12px; padding:9px 2px; border-bottom:1px solid var(--line-soft); }
+  .order .os{ flex:0 0 82px; font-family:var(--mono); font-size:11px; color:var(--gs); letter-spacing:.05em; }
+  .order .ot{ flex:1; font-size:13px; color:var(--silver-dim); line-height:1.5; }
+
+  /* bands 3 + 4 */
+  .cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr)); gap:11px; }
+  .card{ background:var(--black); border:1px solid var(--line-soft); border-left:3px solid var(--line); padding:12px 13px; }
+  .card.t{ border-left-color:var(--gs); }
+  .card .ct{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+             font-size:13.5px; color:var(--silver); }
+  .card .cr{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+             color:var(--ore); margin-top:3px; }
+  .card.t .cr{ color:var(--gs); }
+  .card .cl{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:7px; }
+  .card .cw{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:7px;
+             border-top:1px solid var(--line-soft); padding-top:6px; }
+  .card .cw.wire{ color:var(--gs); }
+  .card.auto{ border-left-style:dashed; }
+  .empty{ font-family:var(--mono); font-size:11.5px; color:var(--muted); line-height:1.6; }
+  .hsub{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; color:var(--line); font-weight:400; }
+
+  /* live route status chips */
+  .ost{ flex:0 0 auto; text-align:right; white-space:nowrap; }
+  .st{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.12em; padding:2px 7px;
+       border:1px solid var(--line); color:var(--muted); }
+  .st.HOT{ color:var(--gs); border-color:var(--gs); }
+  .st.WARM{ color:var(--amber); border-color:var(--amber); }
+  .st.QUIET{ color:var(--ore); border-color:rgba(70,255,94,.35); }
+  .stx{ display:block; font-family:var(--mono); font-size:9px; color:var(--muted); margin-top:4px; }
+  .order.home{ background:rgba(70,255,94,.04); }
+  .order.home .os{ color:var(--ore); }
+
+  /* the area table */
+  .arow{ display:flex; gap:10px; align-items:baseline; padding:8px 2px; border-top:1px solid var(--line-soft);
+         font-family:var(--mono); font-size:12px; color:var(--silver-dim); text-decoration:none; }
+  .arow .an{ flex:0 0 92px; color:var(--silver); overflow-wrap:anywhere; }
+  .arow:hover .an{ color:var(--gs); }
+  .arow .ar{ flex:0 0 92px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .arow .ak{ flex:1; min-width:0; }
+  .arow .ak b{ color:var(--silver); font-weight:400; }
+  .arow .aa{ white-space:nowrap; color:var(--muted); font-size:11px; }
+  .abadge{ font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.14em; padding:1px 6px;
+           border:1px solid var(--gsdim); color:var(--gs); margin-left:7px; vertical-align:1px; }
+  .abadge.home{ border-color:rgba(70,255,94,.4); color:var(--ore); }
+  .regline{ font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-bottom:4px; letter-spacing:.05em; }
+  @media(max-width:600px){ .arow .ar{ display:none; } .ost{ flex-basis:100%; text-align:left; } }
+
+  /* ---- the switcher ---- */
+  .tabs{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:2px 0 16px;
+         border-bottom:1px solid var(--line-soft); padding-bottom:10px; }
+  .tab{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
+        font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+        padding:8px 18px; cursor:pointer; transition:color .15s, border-color .15s; }
+  .tab:hover{ color:var(--gs); border-color:var(--gsdim); }
+  .tab.on{ color:#08090a; background:var(--gs); border-color:var(--gs); font-weight:700; }
+  .tab[hidden]{ display:none; }
+  .tabwho{ margin-left:auto; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--muted); }
+  .pane[hidden]{ display:none; }
+  /* the frames carry full pages; give them the room and kill the inner chrome on load */
+  .frame{ width:100%; height:calc(100vh - 190px); min-height:520px; border:1px solid var(--line-soft);
+          background:var(--black); display:block; }
+  .foot{ font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
+         color:var(--muted); text-align:center; margin-top:34px; }
+  @media(max-width:600px){ .order .os{ flex-basis:64px; } .ghead img{ width:40px; height:40px; } }
+</style></head>
+<body>
+<script src="/nav.js?v=28"></script>
+<div class="gw">
+  <div class="ghead">
+    <img src="/gobsec/gss.png" alt="GSS seal">
+    <div><h1>GOBSEC</h1><div class="sub">Goblin State Security &middot; the board</div></div>
+  </div>
+
+  <!-- THE CHECKPOINT. Same trick as the GSS workbench: it looks like a way in and it is not.
+       Cleared personnel are recognized by SESSION and never see this. Anyone who types a code
+       is telling us something about themselves, which is the only thing this box collects. -->
+  <div id="gate" class="gschk" style="display:none">
+    <div id="gatemsg"><p class="cpwait">Checking clearance&hellip;</p></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="band">
+      <h2><span class="n">01</span> RIGHT NOW</h2>
+      <div id="verdict" class="verdict">Reading the wire&hellip;</div>
+      <div id="vsub" class="vsub"></div>
+      <div id="kills" style="margin-top:12px"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">02</span> STANDING ORDERS <span class="hsub">home + the corridor &middot; live status off the wire</span></h2>
+      <div id="posture"></div>
+      <div id="fc" class="fcline"></div>
+      <div class="orders" id="orders"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">03</span> WHO IS HUNTING US <span class="hsub">from our own losses &middot; public record, counted</span></h2>
+      <div id="hunters"></div>
+      <div id="lossrows" style="margin-top:12px"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">04</span> THE AREA <span class="hsub">everything dying in the three regions we work</span></h2>
+      <div id="area"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">05</span> WHAT GSS IS SAYING <span class="hsub">curated files &middot; live counters joined from the wire</span></h2>
+      <div id="threats"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">06</span> THE DOCTRINE</h2>
+      <div id="doctrine"></div>
+    </div>
+
+    <div class="band">
+      <h2><span class="n">07</span> THE BOARD</h2>
+      <div id="board"></div>
+    </div>
+
+
+    <div class="foot"><a href="/gobsec/" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--line)">&larr; GOBSEC</a>&nbsp;&middot;&nbsp; Assume Nothing</div>
+  </div>
+</div>
+<script>
+var TRIPWIRE = "https://bonk-tripwire.kyle-dd7.workers.dev";
+function $(i){ return document.getElementById(i); }
+function esc(v){ return String(v==null?"":v).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function ago(t){
+  var ms = Date.now() - (typeof t === "number" ? t : Date.parse(t));
+  if (!isFinite(ms) || ms < 0) ms = 0;
+  var m = Math.floor(ms/60000); if (m < 60) return m + "m ago";
+  var h = Math.floor(m/60); if (h < 48) return h + "h ago";
+  return Math.floor(h/24) + "d ago";
+}
+function isk(v){ v = Number(v)||0;
+  if (v >= 1e9) return (v/1e9).toFixed(1) + "b";
+  if (v >= 1e6) return Math.round(v/1e6) + "m";
+  return String(Math.round(v)); }
+async function api(p){ var r = await fetch("/api/" + p, { credentials:"same-origin", cache:"no-store" });
+  if (!r.ok) throw new Error(String(r.status)); return r.json(); }
+
+/* ---- BAND 1: the only band that matters on most logins, and it is ALLOWED to say
+   nothing is happening. A board that only looks alive during a crisis trains people
+   to ignore it, so quiet gets said confidently. ---- */
+function renderNow(ours, ground, sysNames){
+  var since = Date.now() - 86400000;
+  var recent = (ground || []).filter(function(k){ return (k.ts||0) > since; });
+  var mine = (ours || []).filter(function(k){ return Date.parse(k.time) > since; });
+  var v = $("verdict"), s = $("vsub");
+  if (mine.length){
+    v.className = "verdict hot";
+    v.textContent = mine.length === 1
+      ? "One of ours died in the last day. Read it before you undock."
+      : mine.length + " of ours died in the last day. Something is working our space.";
+  } else if (recent.length >= 12){
+    v.className = "verdict hot";
+    v.textContent = recent.length + " kills in our regions today. Busy out there, fly like it.";
+  } else if (recent.length){
+    v.className = "verdict";
+    v.textContent = "Quiet enough. " + recent.length + " kill" + (recent.length===1?"":"s") + " in our regions today, none of them ours.";
+  } else {
+    v.className = "verdict";
+    v.textContent = "Quiet. Nothing died in our regions today.";
+  }
+  s.textContent = "Last 24 hours · our corridor and the three regions we work.";
+  var rows = [];
+  mine.slice(0, 6).forEach(function(k){
+    rows.push('<a class="krow ours" target="_blank" rel="noopener" href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+      '<span class="kt">OURS</span><span class="kw" data-i18n-skip>' + esc(k.ship||"?") +
+      (k.victim ? " · " + esc(k.victim) : "") + (k.system ? " · " + esc(k.system) : "") +
+      '</span><span class="ka">' + isk(k.value) + " · " + ago(k.time) + '</span></a>');
+  });
+  recent.slice(-8).reverse().forEach(function(k){
+    var nm = (sysNames && sysNames[k.sysId]) || ("system " + k.sysId);
+    rows.push('<a class="krow" target="_blank" rel="noopener" href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+      '<span class="kt" data-i18n-skip>' + esc(String(k.region||"?").slice(0,8)) + '</span>' +
+      '<span class="kw" data-i18n-skip>' + esc(nm) + '</span>' +
+      '<span class="ka">' + isk(k.isk) + " · " + ago(k.ts) + '</span></a>');
+  });
+  $("kills").innerHTML = rows.join("") || '<div class="empty">Nothing on the wire.</div>';
+}
+
+/* ---- LIVE ROUTE STATUS off the tripwire wire. The corridor systems are baked
+   by id (same names the standing orders carry); status is computed honestly
+   from timestamps, and quiet gets said confidently, same rule as band 1. ---- */
+var ROUTES = { "Khabi": 30000117, "7Q-8Z2": 30000943, "SUR-F7": 30000944, "JPL-RA": 30000901 };
+var HOME = { name: "Mohas", id: 30000031 };
+function sysStats(wire, sid){
+  var now = Date.now(), last = 0, k24 = 0, k72 = 0, isk72 = 0;
+  (wire||[]).forEach(function(k){
+    if (k.sysId !== sid) return;
+    if (k.ts > last) last = k.ts;
+    if (k.ts > now - 86400000) k24++;
+    if (k.ts > now - 259200000){ k72++; isk72 += (k.isk||0); }
+  });
+  var st = "QUIET";
+  if ((last && last > now - 21600000) || k24 >= 3) st = "HOT";
+  else if (k24 >= 1) st = "WARM";
+  return { st: st, last: last, k24: k24, k72: k72, isk72: isk72 };
+}
+function stChip(s){
+  return '<span class="st ' + s.st + '">' + s.st + '</span>' +
+    '<span class="stx">' + (s.k24 ? s.k24 + " in 24h" : (s.k72 ? s.k72 + " in 72h" : "clear 72h")) +
+    (s.last ? " &middot; last " + ago(s.last) : "") + '</span>';
+}
+
+/* ---- BANDS 2 + 6 ---- */
+function renderBrief(b, wire){
+  var p = b.posture || "ROUTINE";
+  var st = b.stance || {};
+  $("posture").innerHTML = '<span class="posture ' + esc(p.replace(/\s/g,"")) + '">' + esc(p) + '</span>' +
+    (st.meaning || st.why || st.at
+      ? '<div class="vsub" style="margin-top:9px">' +
+        esc(st.meaning || "") +
+        (st.until ? ' &middot; hunting session, ' + Math.max(0, Math.round((st.until - Date.now()) / 60000)) + 'm left' : '') +
+        (st.why ? ' &middot; &ldquo;' + esc(st.why) + '&rdquo;' : '') +
+        (st.at ? ' &middot; set ' + ago(st.at) : '') + '</div>'
+      : '') +
+    // what the miners were told, verbatim — pilots should know the word that went out
+    (p !== "ROUTINE" && st.member
+      ? '<div class="stword"><b>the word to the miners</b>' + esc(st.member) + '</div>'
+      : '');
+  $("fc").innerHTML = b.fc
+    ? 'FC today: <b data-i18n-skip>' + esc(b.fc) + '</b>'
+    : 'No FC on. Do not start anything you cannot finish alone.';
+  var rows = ['<div class="order home"><span class="os" data-i18n-skip>' + esc(HOME.name) + '</span>' +
+    '<span class="ot">HOME. The rock, the Athanor, the whole point. If home is hot, everything else waits.</span>' +
+    '<span class="ost">' + stChip(sysStats(wire, HOME.id)) + '</span></div>'];
+  (b.standing||[]).forEach(function(o){
+    var sid = ROUTES[o.sys];
+    rows.push('<div class="order"><span class="os" data-i18n-skip>' + esc(o.sys) + '</span>' +
+      '<span class="ot">' + esc(o.rule) + '</span>' +
+      (sid ? '<span class="ost">' + stChip(sysStats(wire, sid)) + '</span>' : '') + '</div>');
+  });
+  $("orders").innerHTML = rows.join("");
+
+  var d = b.doctrine || [];
+  $("doctrine").innerHTML = d.length
+    ? '<div class="cards">' + d.map(function(x){
+        return '<div class="card"><div class="ct" data-i18n-skip>' + esc(x.hull) + '</div>' +
+          (x.role ? '<div class="cr">' + esc(x.role) + '</div>' : '') +
+          (x.note ? '<div class="cl">' + esc(x.note) + '</div>' : '') +
+          '<div class="cw">' + (x.where ? esc(x.where) : "Ask in Discord, we will sort you out.") + '</div></div>';
+      }).join("") + '</div>'
+    : '<div class="empty">Doctrine is not posted yet. Fly cheap, fly what you can replace twice, ' +
+      'and ask before you buy anything expensive. Officers can post the list from the admin desk.</div>';
+}
+
+/* ---- BAND 3: WHO IS HUNTING US. Built from our own losses with attacker
+   attribution (public killboard record, aggregated server side). ---- */
+function renderHunters(gr){
+  var hs = (gr && gr.hunters) || [];
+  var ls = (gr && gr.losses) || [];
+  if (!gr){
+    $("hunters").innerHTML = '<div class="empty">The loss record did not answer. Reload to knock again.</div>';
+    return;
+  }
+  $("hunters").innerHTML = hs.length
+    ? '<div class="cards">' + hs.slice(0, 9).map(function(h){
+        return '<div class="card t"><div class="ct" data-i18n-skip>' + esc(h.name) + '</div>' +
+          '<div class="cr">' + h.kills + ' of ours &middot; ' + isk(h.isk) + ' taken' +
+            (h.pilots ? ' &middot; ' + h.pilots + ' pilot' + (h.pilots === 1 ? '' : 's') + ' seen' : '') + '</div>' +
+          (h.systems && h.systems.length ? '<div class="cl"><b>Where:</b> <span data-i18n-skip>' + esc(h.systems.slice(0,4).join(", ")) + '</span></div>' : '') +
+          (h.ships && h.ships.length ? '<div class="cl"><b>Flies:</b> <span data-i18n-skip>' + esc(h.ships.slice(0,4).join(", ")) + '</span></div>' : '') +
+          '<div class="cw">last hit on us ' + (h.last ? ago(h.last) : "?") + '</div></div>';
+      }).join("") + '</div>'
+    : '<div class="empty">No repeat customers in the recent loss record. Nobody has a pattern on us. Stay boring, stay alive.</div>';
+  $("lossrows").innerHTML = ls.slice(0, 8).map(function(k){
+    return '<a class="krow ours" target="_blank" rel="noopener" href="https://zkillboard.com/kill/' + Number(k.id) + '/">' +
+      '<span class="kt">LOST</span><span class="kw" data-i18n-skip>' + esc(k.ship||"?") +
+      (k.victim ? " &middot; " + esc(k.victim) : "") + (k.system ? " &middot; " + esc(k.system) : "") +
+      (k.by ? " &middot; by " + esc(k.by) + (k.gang > 1 ? " (" + k.gang + " guns)" : "") : "") +
+      '</span><span class="ka">' + isk(k.value) + " &middot; " + ago(k.time) + '</span></a>';
+  }).join("");
+}
+
+/* ---- BAND 4: THE AREA. Everything dying in the three regions, grouped by
+   system, ranked by heat, our home and corridor flagged. ---- */
+function renderArea(wire, sysNames){
+  var now = Date.now();
+  var by = {}, regions = {}, order = [];
+  (wire||[]).forEach(function(k){
+    if (k.ts < now - 259200000) return;
+    if (!by[k.sysId]){ by[k.sysId] = { id: k.sysId, region: k.region, k24: 0, k72: 0, isk: 0, last: 0 }; order.push(k.sysId); }
+    var b = by[k.sysId];
+    b.k72++; b.isk += (k.isk||0); if (k.ts > b.last) b.last = k.ts;
+    if (k.ts > now - 86400000){ b.k24++; }
+    regions[k.region] = (regions[k.region]||0) + 1;
+  });
+  order.sort(function(x, y){ return by[y].k72 - by[x].k72 || by[y].isk - by[x].isk; });
+  if (!order.length){
+    $("area").innerHTML = '<div class="empty">The wire is quiet across all three regions. 72 hours, nothing recorded. Suspicious, frankly.</div>';
+    return;
+  }
+  var routeIds = {}; Object.keys(ROUTES).forEach(function(k){ routeIds[ROUTES[k]] = 1; });
+  var regLine = Object.keys(regions).map(function(r){ return esc(r) + " " + regions[r]; }).join(" &middot; ");
+  var html = '<div class="regline" data-i18n-skip>72h across the wire: ' + regLine + ' kills</div>';
+  order.slice(0, 10).forEach(function(sid){
+    var b = by[sid];
+    var nm = (sysNames && sysNames[sid]) || ("system " + sid);
+    var badge = sid === HOME.id ? '<span class="abadge home">HOME</span>' : (routeIds[sid] ? '<span class="abadge">ROUTE</span>' : '');
+    html += '<a class="arow" target="_blank" rel="noopener" href="https://zkillboard.com/system/' + Number(sid) + '/">' +
+      '<span class="an" data-i18n-skip>' + esc(nm) + badge + '</span>' +
+      '<span class="ar" data-i18n-skip>' + esc(b.region||"?") + '</span>' +
+      '<span class="ak"><b>' + b.k72 + '</b> in 72h' + (b.k24 ? ' (<b>' + b.k24 + '</b> today)' : '') + ' &middot; ' + isk(b.isk) + '</span>' +
+      '<span class="aa">last ' + ago(b.last) + '</span></a>';
+  });
+  $("area").innerHTML = html;
+}
+
+/* ---- BAND 5: WHAT GSS IS SAYING. The curated member-safe cards from the
+   files, each joined to its live killboard counter when the name matches a
+   hunter on the wire. Hunters with a pattern and no card yet get an AUTO card
+   built purely from the public record (nothing from the files leaks). ---- */
+function renderGss(t, gr){
+  var hs = (gr && gr.hunters) || [];
+  function liveFor(name){
+    var f = String(name||"").toLowerCase().trim();
+    if (!f) return null;
+    for (var i = 0; i < hs.length; i++){
+      var hn = String(hs[i].name||"").toLowerCase();
+      if (hn && (hn.indexOf(f) >= 0 || f.indexOf(hn) >= 0)) return hs[i];
+    }
+    return null;
+  }
+  var used = {}, cards = [];
+  (t||[]).forEach(function(x){
+    var lv = liveFor(x.name);
+    if (lv) used[lv.name] = 1;
+    cards.push('<div class="card t"><div class="ct" data-i18n-skip>' + esc(x.name) + '</div>' +
+      '<div class="cr">' + esc([x.size, x.awake].filter(Boolean).join(" · ")) + '</div>' +
+      (x.flies ? '<div class="cl"><b>Flies:</b> ' + esc(x.flies) + '</div>' : '') +
+      (x.kills ? '<div class="cl"><b>Kills:</b> ' + esc(x.kills) + '</div>' : '') +
+      (x.doabout ? '<div class="cw">' + esc(x.doabout) + '</div>' : '') +
+      (lv ? '<div class="cw wire">ON THE WIRE: ' + lv.kills + ' of ours &middot; last ' + ago(lv.last) +
+        (lv.systems && lv.systems.length ? ' &middot; <span data-i18n-skip>' + esc(lv.systems.slice(0,3).join(", ")) + '</span>' : '') + '</div>' : '') +
+      '</div>');
+  });
+  hs.forEach(function(h){
+    if (used[h.name] || h.kills < 2 || cards.length >= 12) return;
+    cards.push('<div class="card t auto"><div class="ct" data-i18n-skip>' + esc(h.name) + '</div>' +
+      '<div class="cr">AUTO &middot; from the wire, no file yet</div>' +
+      '<div class="cl"><b>Kills:</b> ' + h.kills + ' of ours, ' + isk(h.isk) + '</div>' +
+      (h.ships && h.ships.length ? '<div class="cl"><b>Flies:</b> <span data-i18n-skip>' + esc(h.ships.slice(0,4).join(", ")) + '</span></div>' : '') +
+      '<div class="cw">last ' + ago(h.last) +
+      (h.systems && h.systems.length ? ' &middot; <span data-i18n-skip>' + esc(h.systems.slice(0,3).join(", ")) + '</span>' : '') + '</div></div>');
+  });
+  $("threats").innerHTML = cards.length
+    ? '<div class="cards">' + cards.join("") + '</div>'
+    : '<div class="empty">No cards posted and nothing on the wire with a pattern. ' +
+      'Officers: the workbench is at /portal/intel.</div>';
+}
+
+/* Band 5: built from the same kill feed, grouped by the pilots who showed up on it. */
+function renderBoard(ours){
+  var tally = {};
+  (ours||[]).forEach(function(k){
+    if (k.ours === "loss" || !k.victim) return;
+    tally[k.victim] = (tally[k.victim]||0) + 1;
+  });
+  var names = Object.keys(tally).sort(function(a,b){ return tally[b]-tally[a]; });
+  $("board").innerHTML = names.length
+    ? '<div class="cards">' + names.slice(0,12).map(function(n){
+        return '<div class="card"><div class="ct" data-i18n-skip>' + esc(n) + '</div>' +
+               '<div class="cr">' + tally[n] + ' on the board</div></div>'; }).join("") + '</div>'
+    : '<div class="empty">The board is empty. It stays empty until somebody puts a name on it, ' +
+      'which is the entire point of the corp.</div>';
+}
+
+/* ---- THE CHECKPOINT ----
+   Cleared personnel are recognized by session and never see this. The box is not a lock,
+   it is a tripwire: one attempt, any code, straight to the wall, and the attempt is filed. */
+var OVERRIDE = "assume-everything";
+function toVoid(reason){
+  try { fetch("/api/gss/trip", { method:"POST", headers:{"Content-Type":"application/json"},
+    credentials:"same-origin", body: JSON.stringify({ reason: reason, door: "gobsec" }) }); } catch(e){}
+  location.href = "/portal/intel/void/";
+}
+function tryCode(){
+  var el = $("gsspw"); var v = (el.value || "").trim();
+  if (!v){ el.focus(); return; }
+  toVoid(v === OVERRIDE ? "override" : "wrong");
+}
+function showCheckpoint(){
+  $("gatemsg").innerHTML =
+    '<div class="cplock">&#9679;</div>' +
+    '<h2>Clearance checkpoint</h2>' +
+    '<p>GOBSEC operational board. Cleared personnel are recognized by session.<br>' +
+    'Nobody types their way in here.</p>' +
+    '<div class="cp"><input id="gsspw" type="password" placeholder="clearance code" autocomplete="off" autofocus>' +
+    '<button id="gsspwgo">submit</button></div>' +
+    '<p class="cphint">Mining with us and seeing this? This wing is walled off on purpose, ask an officer.<br>' +
+    'Everyone else: <a href="/apply/gobsec">the door is over here</a>.</p>' +
+    '<div class="stamp"><span class="rec"></span>Restricted terminal &middot; GOBSEC &middot; Tranquility</div>' +
+    '<div class="stamp2">this session is monitored &middot; every entry is logged</div>';
+  $("gsspwgo").addEventListener("click", tryCode);
+  $("gsspw").addEventListener("keydown", function(e){ if (e.key === "Enter") tryCode(); });
+}
+
+(async function(){
+  var who = null;
+  try { who = await (await fetch("/api/whoami", {credentials:"same-origin"})).json(); } catch(e){}
+  if (!who || !who.loggedIn || !who.gobsec){ $("gate").style.display = ""; showCheckpoint(); return; }
+  $("app").style.display = "";
+
+  // the four sources land in parallel; any one of them failing leaves the
+  // others standing, and every band has an honest empty state
+  var results = await Promise.all([
+    api("kills").catch(function(){ return null; }),
+    (async function(){
+      var r = await fetch(TRIPWIRE + "/region");
+      var w = await r.json(); return Array.isArray(w) ? w : [];
+    })().catch(function(){ return []; }),
+    api("gobsec/ground").catch(function(){ return null; }),
+    api("gobsec/brief").catch(function(){ return { posture:"ROUTINE", standing:[], doctrine:[], threats:[] }; })
+  ]);
+  var ours = (results[0] && results[0].kills) || [];
+  var wire = results[1], gr = results[2], brief = results[3];
+
+  var sysNames = {};
+  try {
+    var ids = []; wire.forEach(function(k){ if (k.sysId && ids.indexOf(k.sysId) < 0) ids.push(k.sysId); });
+    if (ids.length){
+      var nr = await fetch("https://esi.evetech.net/latest/universe/names/", {
+        method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(ids.slice(0,500)) });
+      if (nr.ok) (await nr.json()).forEach(function(n){ sysNames[n.id] = n.name; });
+    }
+  } catch(e){}
+
+  renderNow(ours, wire, sysNames);
+  renderBrief(brief, wire);
+  renderHunters(gr);
+  renderArea(wire, sysNames);
+  renderGss((brief && brief.threats) || [], gr);
+  renderBoard(ours);
+})();
+</script>
+</body></html>
