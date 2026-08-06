@@ -1784,6 +1784,10 @@ async function secRecruitingGobsec(){
     if(a.gss_checked_at) h+='<div class="rowmeta">vetted '+esc(ago(a.gss_checked_at))+"</div>";
     h+='<div id="g_out_'+esc(id)+'"></div>';
     h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">'
+      +(a.gss_verdict==="clear"&&a.status!=="joined"
+        ? '<button class="inv" data-ginv="'+esc(id)+'">'
+          +(a.status==="invited"?"Show their code again":"Invite, mint the code")+"</button>"
+        : "")
       +'<button class="inv" data-gvet="'+esc(id)+'" data-v="clear">Clear</button>'
       +'<button class="cmail" data-gvet="'+esc(id)+'" data-v="check">Flag for a closer look</button>'
       +'<button class="dngr" data-gvet="'+esc(id)+'" data-v="hard_stop">Hard stop, burns their codes</button>'
@@ -1807,6 +1811,21 @@ async function secRecruitingGobsec(){
         if(host&&r.effect) host.innerHTML='<div class="hand">'+esc(r.effect)+"</div>";
         toast(r.effect||"Verdict recorded.");
         setTimeout(secRecruitingGobsec, 900);
+      });
+    });
+  });
+  m.querySelectorAll("[data-ginv]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-ginv");
+      busy(btn, async function(){
+        const r=await api("/api/admin/gobsec/review",{id:Number(id), action:"invite"});
+        const code=r.code||"", hand=r.handoff||("Your BONK portal code: "+code);
+        const host=document.getElementById("g_out_"+id);
+        if(host) host.innerHTML='<div style="margin:12px 0 6px"><span class="bigcode">'+esc(code)+"</span></div>"
+          +'<div class="hand">'+esc(hand)+"</div>"
+          +cpBtn("https://bonkeve.com/portal/claim?code="+code,"Copy link")+" "
+          +cpBtn(code,"Copy code")+" "+cpBtn(hand,"Copy handoff DM");
+        toast(r.reused?"That code was already out there. Same one.":"Invited. The wing gets a goblin.");
       });
     });
   });
