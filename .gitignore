@@ -1,2 +1,5 @@
 .wrangler/
 .claude/
+
+# build staging for the mirror deploy, never source
+.stage/
