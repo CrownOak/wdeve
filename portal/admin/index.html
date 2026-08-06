@@ -122,16 +122,66 @@
 /* One toggle component. This replaced five copies of the same inline style, which
    existed only to defeat `.frm label` (block/mono/10.5px) — a flag row is not a
    field label. Full width, uniform height, one line of what the flag grants. */
-.tglhead{ font-family:var(--mono); font-size:10.5px; letter-spacing:.07em; color:var(--muted);
-          text-transform:uppercase; margin:16px 0 0; }
-.tgls{ display:grid; gap:0; margin:6px 0 0; border-top:1px solid var(--line-soft); }
-.tgl{ display:flex; align-items:flex-start; gap:10px; padding:10px 2px;
+.tglhead{ font-family:var(--mono); font-size:11px; letter-spacing:.09em; color:var(--silver-dim);
+          text-transform:uppercase; margin:20px 0 0; }
+.tgls{ display:grid; gap:0; margin:8px 0 0; border-top:1px solid var(--line-soft); }
+.tgl{ display:flex; align-items:flex-start; gap:11px; padding:11px 4px;
       border-bottom:1px solid var(--line-soft); cursor:pointer; }
 .tgl:hover{ background:var(--steel-2); }
-.tgl input{ margin-top:3px; flex:0 0 auto; }
 .tgl .tt{ font-size:13px; color:var(--silver); line-height:1.35; font-weight:400; }
-.tgl .td{ display:block; font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px; }
-.dwacts{ margin-top:14px; }
+.tgl .td{ display:block; font-family:var(--mono); font-size:11.5px; color:var(--silver-dim);
+          margin-top:4px; line-height:1.45; }
+.dwacts{ margin-top:18px; display:flex; gap:8px; flex-wrap:wrap; }
+
+/* ── SLIDE OUT LEGIBILITY (2026-08-06) ────────────────────────────────────────
+   --muted is #6f776f. On the panel (#14171a) that is ~3.6:1 and on the drawer
+   ground (#070809) ~3.9:1, both under AA, and the drawer spends it on ~20 rules
+   of 10 to 11px mono, which is the hardest case there is. That is the same
+   failure that made the nav menu unreadable. Fixing one rule at a time never
+   held because the token is the problem, so it is overridden HERE, scoped to the
+   drawer, rather than globally where --muted is also load bearing for dots,
+   locked medal markers and inactive bars. #8b938b is ~5.7:1 on the panel and
+   still a clear step below --silver, so the hierarchy survives and every label
+   in the slide out becomes readable at once. */
+#drawer{ --muted:#8b938b; }
+
+/* The checkboxes were raw browser default: a light OS square on a near black
+   panel, different on every platform, with no relation to the palette. These are
+   the ACCESS flags and the academy list, so they get the same treatment as every
+   other control on the page. */
+#drawer input[type=checkbox]{
+  appearance:none; -webkit-appearance:none; box-sizing:border-box;
+  width:16px; height:16px; flex:0 0 16px; margin:1px 0 0; position:relative;
+  background:var(--black); border:1px solid var(--line); border-radius:2px; cursor:pointer;
+  transition:background .12s ease, border-color .12s ease; }
+#drawer input[type=checkbox]:hover{ border-color:var(--ore); }
+#drawer input[type=checkbox]:checked{ background:var(--ore); border-color:var(--ore); }
+#drawer input[type=checkbox]:checked::after{
+  content:""; position:absolute; left:4.5px; top:1px; width:4px; height:9px;
+  border:solid #04140a; border-width:0 2px 2px 0; transform:rotate(45deg); }
+#drawer input[type=checkbox]:focus-visible{ outline:2px solid var(--ore); outline-offset:2px; }
+
+/* .chk was only ever defined as `.filterbar .chk`, so both places the drawer uses
+   it (the academy list and the purge line) rendered as unstyled inline text with a
+   default checkbox jammed against it. */
+#drawer .chk{ display:flex; align-items:flex-start; gap:10px; padding:7px 2px;
+  font-family:var(--mono); font-size:12px; line-height:1.5; color:var(--silver);
+  cursor:pointer; }
+#drawer .chk:hover{ color:var(--laser); }
+#drawer .academy{ display:grid; gap:0; margin-top:4px; border-top:1px solid var(--line-soft); }
+#drawer .academy .chk{ border-bottom:1px solid var(--line-soft); padding:9px 2px; }
+#drawer .academy .chk:hover{ background:var(--steel-2); color:var(--silver); }
+#drawer .chk.warn{ color:#ffb3b3; align-items:flex-start; margin-top:4px; }
+#drawer .chk.warn input[type=checkbox]:checked{ background:#ff5c5c; border-color:#ff5c5c; }
+#drawer .chk.warn input[type=checkbox]:hover{ border-color:#ff5c5c; }
+
+/* Identity block: the field grid ran its labels at 10.5px --muted, which is the
+   same unreadable pairing, and the inputs sat tight against them. */
+#drawer .frm{ gap:13px 12px; margin:14px 0 0; }
+#drawer .frm label,#drawer .flabel{ font-size:11px; letter-spacing:.09em;
+  color:var(--silver-dim); margin:0 0 6px; }
+#drawer .frm input,#drawer .frm textarea,#drawer .frm select{ font-size:13px; }
+#drawer .ptitle{ margin-bottom:2px; }
 /* Offboarding zone. Sits last and reads cold on purpose: red is the only place
    on this page it appears, so the control cannot be confused with a routine one. */
 .danger{ border:1px solid rgba(255,92,92,.32); background:rgba(255,92,92,.03);
@@ -1185,13 +1235,16 @@ async function openMemberDrawer(id){
   /* onboarding */
   const mods=onb.modules||["welcome","fleet_ops","doctrine","tools","payday","medals"];
   const done=onb.done||[];
-  h+='<div class="panel"><div class="ptitle">Academy</div>';
+  const doneN=mods.filter(function(k){ return done.indexOf(k.key||k)>=0 || k.done===true; }).length;
+  h+='<div class="panel"><div class="ptitle">Academy <span class="pn">'
+    +fmtN(doneN)+" of "+fmtN(mods.length)+" done</span></div>";
+  h+='<div class="academy">';
   mods.forEach(function(k){
     const key=k.key||k, name=k.name||String(k).replace(/_/g," ");
     const isDone=done.indexOf(key)>=0 || (k.done===true);
-    h+='<label class="chk" style="display:flex;padding:4px 0"><input type="checkbox" class="dw_onb" value="'+esc(key)+'"'+(isDone?" checked":"")+"> "+esc(name)+"</label>";
+    h+='<label class="chk"><input type="checkbox" class="dw_onb" value="'+esc(key)+'"'+(isDone?" checked":"")+"><span>"+esc(name)+"</span></label>";
   });
-  h+="</div>";
+  h+="</div></div>";
   /* officer notes */
   h+='<div class="panel"><div class="ptitle">Officer notes <span class="pn">leadership eyes only</span></div><div id="dw_notes">';
   if(!notes.length) h+='<div class="nap">No notes. Write down why this goblin matters.</div>';
@@ -1207,7 +1260,7 @@ async function openMemberDrawer(id){
       +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
       +'<button class="dngr" id="dw_reset">Mint password reset</button>'
       +'<button class="dngr" id="dw_deact">Deactivate</button>'
-      +'<label class="chk"><input type="checkbox" id="dw_purge"> also purge everything. Characters, avatars, history. This is the airlock. There is no undo.</label>'
+      +'<label class="chk warn"><input type="checkbox" id="dw_purge"><span>Wipe their record too. Characters, avatars and history. This cannot be undone.</span></label>'
       +'</div><div id="dw_danger_out"></div></div>';
   }
   /* OFF THE BOOKS. Deliberately last, in its own zone, nowhere near Save
@@ -1457,10 +1510,10 @@ function wireDrawer(aid, chars, main){
       busy(btn, async function(){
         const purge=q("#dw_purge").checked;
         const warn=purge
-          ? "PURGE this account? Characters, avatars, history, all of it, gone for good. Type the airlock open?"
-          : "Deactivate this account? Sessions die, roster hides them, history stays.";
+          ? "Deactivate AND wipe this account? Characters, avatars and history all go. This cannot be undone."
+          : "Deactivate this account? Sessions end and the roster hides them. History is kept.";
         if(!confirm(warn)) return;
-        if(purge && !confirm("Last chance. Purge is forever.")) return;
+        if(purge && !confirm("Last check. The wipe is permanent.")) return;
         await api("/api/admin/deactivate",{account_id:aid, purge:purge});
         toast(purge?"Purged. The void has them now.":"Deactivated. The books remember.");
         closeDrawer(); secMembers();
