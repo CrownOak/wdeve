@@ -2627,6 +2627,18 @@ function renderCorpStrip(){
             '<span class="stl-go">see the wall &rarr;</span></button>';
         }).join('') + '</div>';
     }
+    /* EVERY ISK THE CORP HAS EVER RAISED. Each campaign showed its own figure and nothing
+       showed the sum, so the biggest number this corp owns was invisible. Derived from the
+       campaign records plus the live contributions ledger, never a typed setting. */
+    var allTime = 0;
+    S.launched.forEach(function(c){ allTime += Number(c.raised_final) || 0; });
+    var stNow = S.me && S.me.station;
+    if (stNow && !stNow.active_launched) allTime += Number(stNow.raised) || 0;
+    if (allTime > 0){
+      html += '<div class="tline">Goblins have put <b>' + fmtIsk(allTime) +
+        ' ISK</b> into building this place, across ' + S.launched.length +
+        (S.launched.length === 1 ? ' campaign.' : ' campaigns.') + '</div>';
+    }
   }
   html += renderWorks();
   if (goal){
@@ -2645,11 +2657,15 @@ function renderCorpStrip(){
       '<div class="pbar"><i style="width:' + gw + '%"></i></div></div></div>';
   }
   if (corp){
-    html += '<div class="corpstrip">Corp lifetime: <b>' + fmtIsk(corp.totalPayout) + ' ISK</b> &middot; <b>' +
+    /* ONE NUMBER, THE BIGGER ONE (Kyle 2026-08-06). This used to print fleet-ops-only ISK
+       here and fleet-plus-contracts on the next line, both labelled "lifetime", which read
+       as the site disagreeing with itself. The treasury figure is the true total paid to
+       goblins, so it is the only one worth showing; the fleet-only figure is a subset and
+       nobody was ever asking for it. */
+    var lifetimeIskPaid = (treasury != null && treasury > (Number(corp.totalPayout) || 0))
+      ? treasury : (Number(corp.totalPayout) || 0);
+    html += '<div class="corpstrip">Corp lifetime: <b>' + fmtIsk(lifetimeIskPaid) + ' ISK</b> paid to goblins &middot; <b>' +
       fmtM3(corp.totalM3) + '</b> &middot; <b>' + esc(String(Number(corp.fleetCount)||0)) + ' ops</b></div>';
-  }
-  if (treasury != null){
-    html += '<div class="tline">The corp has paid <b>' + fmtIsk(treasury) + ' ISK</b> to goblins, all time.</div>';
   }
   el.innerHTML = html;
   var swb = $("stWallBtn");

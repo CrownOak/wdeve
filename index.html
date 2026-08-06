@@ -711,7 +711,12 @@
     fetch("/api/public-stats").then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
       if(!d || !d.ok) return;
       var pg=document.getElementById("paidGoblins"); if(pg && d.given_back) pg.textContent=isk(d.given_back);
-      var rf=document.getElementById("rockFund"); if(rf && d.station) rf.textContent=isk(d.station.raised);
+      /* The rock fund is EVERY ISK ever raised across every campaign, not the live one.
+         It used to read a single campaign's figure and print nothing whenever the campaign
+         switch was off, which hid eighteen billion of goblin generosity. */
+      var rf=document.getElementById("rockFund");
+      var raised=Number(d.raised_all_time)||((d.station&&Number(d.station.raised))||0);
+      if(rf && raised) rf.textContent=isk(raised);
       var ol=document.getElementById("opLive");
       if(ol){ if(d.live_op){ var oc=document.getElementById("opCount"); if(oc) oc.textContent=(d.online||0); ol.style.display=""; } else { ol.style.display="none"; } }
     }).catch(function(){});

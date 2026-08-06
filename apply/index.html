@@ -179,6 +179,11 @@
   @keyframes stampglow{ 0%{ box-shadow:0 0 0 rgba(70,255,94,0); } 30%{ box-shadow:0 0 34px rgba(70,255,94,.4); } 100%{ box-shadow:0 0 0 rgba(70,255,94,0); } }
   .stampsub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.26em; text-transform:uppercase;
     color:var(--muted); margin:2px 0 16px; }
+  .footcta{ max-width:680px; margin:22px auto 0; text-align:center; }
+  .portalbtn{ display:inline-block; font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--ore); border:1px solid var(--ore); padding:11px 26px;
+    text-decoration:none; transition:background .2s, color .2s; }
+  .portalbtn:hover{ background:var(--ore); color:#04140a; }
   .steps{ margin:14px 0 0; padding:0; list-style:none; counter-reset:st; text-align:left; }
   .steps li{ counter-increment:st; display:flex; gap:12px; align-items:baseline; padding:9px 0;
     border-top:1px solid var(--line-soft); color:#a9b2a8; font-size:13.5px; line-height:1.6; }
@@ -260,8 +265,14 @@
     </div>
     <div class="signoff" id="pgSignoff"><b>The ore must flow. The goblins must eat. &#129704;&#129482;</b></div>
   </div>
+  <!-- The portal is the single most useful destination for anyone who is ALREADY in, and it
+       was a grey inline link in a footer sentence. It is a button now. GOBSEC is deliberately
+       absent: every funnel points at this page, and a second door here only splits the ask. -->
+  <div class="footcta">
+    <a class="portalbtn" href="/portal/">Already a goblin? Open the portal &#9656;</a>
+  </div>
   <footer><span id="pgFoot">Applications go straight to the recruiting goblins.</span>
-    New to EVE? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">Start with a million free skillpoints</a>. Already a member? The portal is at <b><a href="/portal/">/portal/</a></b>.</footer>
+    New to EVE? <a href="https://www.eveonline.com/signup?invc=f0cc022a-ff1a-4c44-abae-60226785342c" target="_blank" rel="noopener">Start with a million free skillpoints</a>.</footer>
 
 <script>
 (function(){
