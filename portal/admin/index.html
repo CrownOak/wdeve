@@ -1610,7 +1610,7 @@ async function getMemberList(){
 }
 function recTabs(active){
   let h='<div class="tabs">';
-  ["analytics","pending","approved","rejected","joined"].forEach(function(t){
+  ["analytics","pending","approved","rejected","joined","gobsec"].forEach(function(t){
     h+='<button class="tab'+(active===t?" on":"")+'" data-rtab="'+t+'">'+t+"</button>";
   });
   return h+"</div>";
@@ -1672,9 +1672,108 @@ async function secRecruitingStats(){
   m.innerHTML=h;
   wireRecTabs(m);
 }
+/* The combat intake. Its own table (gobsec_applications) because a combat pilot answers
+   different questions, and its own verdict field because GOBSEC recruits get MORE scrutiny,
+   not less: they end up closest to the sharp end. Both endpoints shipped 2026-07-28 and had
+   no surface until now, so four applicants sat unread. hard_stop also burns any invite code
+   already in the wild, which is why the button says so out loud. */
+function gsVerdictChip(v){
+  if(!v) return '<span class="qmeta">not vetted</span>';
+  const tone=v==="clear"?"#7fd18a":v==="hard_stop"?"#e06c6c":"#e0b64f";
+  const label=v==="hard_stop"?"HARD STOP":v.toUpperCase();
+  return '<span class="qmeta" style="color:'+tone+';font-weight:600">'+esc(label)+"</span>";
+}
+async function secRecruitingGobsec(){
+  const m=document.getElementById("main");
+  m.innerHTML=head("Recruiting","GOBSEC combat intake &middot; vet before the invite")+skel(3);
+  let j;
+  try{ j=await api("/api/admin/gobsec-applications"); }
+  catch(e){
+    if(e.message===SILENT) return;
+    m.innerHTML=head("Recruiting","GOBSEC combat intake")+napPanel("GOBSEC applications", e.message)
+      +'<button class="inv" onclick="secRecruiting()">Try again</button>';
+    return;
+  }
+  const list=j.applications||[];
+  let h=head("Recruiting","GOBSEC combat intake &middot; vet before the invite");
+  h+=recTabs("gobsec");
+  const unvetted=list.filter(function(a){ return !a.gss_verdict; }).length;
+  if(unvetted) h+='<div class="rowmeta" style="margin-bottom:10px">'+fmtN(unvetted)
+    +" waiting on a GSS verdict. Nobody can be invited to the wing until one is recorded.</div>";
+  if(!list.length) h+='<div class="empty">No combat applications yet.</div>';
+  list.forEach(function(a){
+    const id=String(a.id);
+    h+='<div class="ccard"><div class="chead">'
+      +'<span class="qwho" style="cursor:default">'+avat(a,22)+"<b>"+esc(a.ign||"no IGN given")+"</b></span>"
+      +'<span class="qmeta">applied '+esc(ago(a.created_at))+" &middot; status "+esc(a.status||"?")
+      +" &middot; </span>"+gsVerdictChip(a.gss_verdict)+"</div>";
+    const fields=[["killboard","Killboard"],["timezone","Timezone"],["flies_now","Flies now"],
+      ["wants_to_fly","Training toward"],["scale","Scale"],["fc","Ever FC'd"],
+      ["disclosure","Disclosed"],["found_us","Found us via"],["contact","Reach them at"],["notes","Notes"]];
+    h+='<div class="frm" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))">';
+    fields.forEach(function(f){
+      const v=a[f[0]];
+      if(v==null||v==="") return;
+      h+='<div><span class="flabel">'+esc(f[1])+"</span><span>"+esc(Array.isArray(v)?v.join(", "):v)+"</span></div>";
+    });
+    h+="</div>";
+    if(a.gss_note) h+='<div class="rowmeta">GSS note: '+esc(a.gss_note)+"</div>";
+    if(a.gss_checked_at) h+='<div class="rowmeta">vetted '+esc(ago(a.gss_checked_at))+"</div>";
+    h+='<div id="g_out_'+esc(id)+'"></div>';
+    h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">'
+      +'<button class="inv" data-gvet="'+esc(id)+'" data-v="clear">Clear</button>'
+      +'<button class="cmail" data-gvet="'+esc(id)+'" data-v="check">Flag for a closer look</button>'
+      +'<button class="dngr" data-gvet="'+esc(id)+'" data-v="hard_stop">Hard stop, burns their codes</button>'
+      +'<button class="cmail" data-gnote="'+esc(id)+'">Add note</button>'
+      +'<button class="dngr" data-gdec="'+esc(id)+'">Decline</button></div>';
+    h+="</div>";
+  });
+  h+=footLine();
+  m.innerHTML=h;
+  wireRecTabs(m);
+  m.querySelectorAll("[data-gvet]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-gvet"), v=btn.getAttribute("data-v");
+      busy(btn, async function(){
+        const note=prompt(v==="hard_stop"
+          ?"Reason for the hard stop (this also burns any invite code already issued):"
+          :"Note for the file (optional):");
+        if(note==null) return;
+        const r=await api("/api/admin/gobsec/review",{id:Number(id), action:"vet", verdict:v, note:note});
+        const host=document.getElementById("g_out_"+id);
+        if(host&&r.effect) host.innerHTML='<div class="hand">'+esc(r.effect)+"</div>";
+        toast(r.effect||"Verdict recorded.");
+        setTimeout(secRecruitingGobsec, 900);
+      });
+    });
+  });
+  m.querySelectorAll("[data-gnote]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-gnote");
+      busy(btn, async function(){
+        const n=prompt("GSS note:"); if(!n) return;
+        await api("/api/admin/gobsec/review",{id:Number(id), action:"note", note:n});
+        toast("Noted.");
+        secRecruitingGobsec();
+      });
+    });
+  });
+  m.querySelectorAll("[data-gdec]").forEach(function(b){
+    b.addEventListener("click", function(){
+      const btn=this, id=btn.getAttribute("data-gdec");
+      busy(btn, async function(){
+        const why=prompt("Reason for the decline:"); if(why==null) return;
+        await api("/api/admin/gobsec/review",{id:Number(id), action:"decline", note:why});
+        toast("Declined.");
+        secRecruitingGobsec();
+      });
+    });
+  });
+}
 async function secRecruiting(){
   const m=document.getElementById("main");
   if(RSTATE.tab==="analytics") return secRecruitingStats();
+  if(RSTATE.tab==="gobsec") return secRecruitingGobsec();
   m.innerHTML=head("Recruiting","the pipeline &middot; from knock on the door to goblin at the table")+skel(4);
   let j;
   try{ j=await api("/api/admin/applications?status="+encodeURIComponent(RSTATE.tab)); }
