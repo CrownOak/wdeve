@@ -295,7 +295,7 @@
       <span class="it">Blue Ice <span class="up">&#9650;</span> <b data-tk="blueice">194,400</b></span>
       <span class="it">Loparite <span class="up">&#9650;</span> <b data-tk="loparite">10,260</b></span>
       <span class="it">Fullerite-C50 <span class="up">&#9650;</span> <b data-tk="fulleritec50">4,638</b></span>
-      <span class="it"><span class="lbl">LAST HAUL</span> <b>748,000,000 ISK</b></span>
+      <span class="it"><span class="lbl">LAST HAUL</span> <b class="lastHaul">150,834,725 ISK</b></span>
       <span class="it">the ore must flow &nbsp;&middot;&nbsp; the goblins must eat</span>
     </div>
     <div class="grp">
@@ -306,7 +306,7 @@
       <span class="it">Blue Ice <span class="up">&#9650;</span> <b data-tk="blueice">194,400</b></span>
       <span class="it">Loparite <span class="up">&#9650;</span> <b data-tk="loparite">10,260</b></span>
       <span class="it">Fullerite-C50 <span class="up">&#9650;</span> <b data-tk="fulleritec50">4,638</b></span>
-      <span class="it"><span class="lbl">LAST HAUL</span> <b>748,000,000 ISK</b></span>
+      <span class="it"><span class="lbl">LAST HAUL</span> <b class="lastHaul">150,834,725 ISK</b></span>
       <span class="it">the ore must flow &nbsp;&middot;&nbsp; the goblins must eat</span>
     </div>
   </div>
@@ -328,9 +328,9 @@
       </div>
       <div class="readouts">
         <div class="r"><div class="n">12</div><div class="k">Years strong</div></div>
-        <div class="r"><div class="n" id="goblinCount">53</div><div class="k">Active goblins</div></div>
-        <div class="r"><div class="n green" id="paidGoblins">3.9B</div><div class="k">Paid to goblins</div></div>
-        <div class="r"><div class="n green" id="rockFund">4.2B</div><div class="k">Raised for the rock</div></div>
+        <div class="r"><div class="n" id="goblinCount">108</div><div class="k">Active goblins</div></div>
+        <div class="r"><div class="n green" id="paidGoblins">17.7B</div><div class="k">Paid to goblins</div></div>
+        <div class="r"><div class="n green" id="rockFund">18.0B</div><div class="k">Raised for the rock</div></div>
         <div class="r"><div class="n green">90%</div><div class="k">Ore buyback</div></div>
         <div class="r"><div class="n green">≈83%</div><div class="k">More ore / hr boosted</div></div>
       </div>
@@ -717,6 +717,11 @@
       var rf=document.getElementById("rockFund");
       var raised=Number(d.raised_all_time)||((d.station&&Number(d.station.raised))||0);
       if(rf && raised) rf.textContent=isk(raised);
+      /* LAST HAUL was frozen in the markup. Both ticker copies now carry the real one. */
+      if(d.last_haul){
+        var lh=Number(d.last_haul).toLocaleString("en-US")+" ISK";
+        Array.prototype.forEach.call(document.querySelectorAll(".lastHaul"),function(e){ e.textContent=lh; });
+      }
       var ol=document.getElementById("opLive");
       if(ol){ if(d.live_op){ var oc=document.getElementById("opCount"); if(oc) oc.textContent=(d.online||0); ol.style.display=""; } else { ol.style.display="none"; } }
     }).catch(function(){});
