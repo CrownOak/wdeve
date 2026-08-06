@@ -89,10 +89,14 @@
 
   .hintRow{ margin-top:14px; font-family:var(--mono); font-size:11px; letter-spacing:.05em;
             color:var(--muted); min-height:16px; display:flex; gap:18px; }
-  .hintRow .skiplink{ background:none; border:0; padding:0; color:var(--silver-dim); cursor:pointer;
+  /* NOT scoped to .hintRow. It was, and the error screen puts a .skiplink inside #answer
+     ("back to my answers"), where it inherited nothing and rendered as a raw browser
+     button in a dark UI. A control that appears only when something has already gone
+     wrong is the last one that should look broken. */
+  .skiplink{ background:none; border:0; padding:0; color:var(--silver-dim); cursor:pointer;
       font-family:var(--mono); font-size:11px; letter-spacing:.05em; text-transform:uppercase;
       text-decoration:underline; }
-  .hintRow .skiplink:hover{ color:var(--ore); }
+  .skiplink:hover{ color:var(--ore); }
   .err{ margin-top:12px; color:var(--red); font-family:var(--mono); font-size:12.5px; min-height:0; }
 
   .confirmBody{ color:#a9b2a8; font-size:14px; line-height:1.65; }
@@ -964,6 +968,35 @@
     return p;
   }
 
+  /* RETRY BEFORE YOU APOLOGISE (2026-08-06). A recruit hit "The wire to the recruiters is
+     quiet" and his application never landed, and the funnel simply gave up on the first
+     failure. A worker redeploy, a cold edge or a dropped packet is a one second problem,
+     but the recruit reads it as "this corp's website is broken" and most of them never
+     press the button twice. Two silent retries with a backoff turn the entire class of
+     transient failure into a non event. Only a REAL answer from the server (a validation
+     error) short circuits it, because retrying that would just fail identically. */
+  function fire(attempt){
+    fetch(gobMode() ? "/api/apply/gobsec" : "/api/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(gobMode() ? gobPayload() : payload())
+    }).then(function(res){
+      return res.json().then(function(d){ return { d: d, status: res.status }; })
+                       .catch(function(){ return { d: null, status: res.status }; });
+    }).then(function(r){
+      if (r.d && r.d.ok) { sending = false; confirmOk(); return; }
+      // a server that answered with a reason is not a transient failure
+      if (r.d && r.d.error) { sending = false; confirmErr(r.d.error); return; }
+      if (attempt < 2) { setTimeout(function(){ fire(attempt + 1); }, 900 * (attempt + 1)); return; }
+      sending = false;
+      confirmErr("The wire to the recruiters is quiet. Your answers are saved, so hit try again in a moment and nothing is lost.");
+    }).catch(function(){
+      if (attempt < 2) { setTimeout(function(){ fire(attempt + 1); }, 900 * (attempt + 1)); return; }
+      sending = false;
+      confirmErr("The wire to the recruiters is quiet. Your answers are saved, so hit try again in a moment and nothing is lost.");
+    });
+  }
+
   function submit(){
     if (sending) return;
     if (!ans.ign.trim()) { editReturn = true; show(1); return; }
@@ -971,22 +1004,7 @@
     show(11);
     hint("", false);
     /* start the wire AFTER the slide swap so a fast response cannot be wiped by it */
-    setTimeout(function(){
-      fetch(gobMode() ? "/api/apply/gobsec" : "/api/apply", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(gobMode() ? gobPayload() : payload())
-      }).then(function(res){
-        return res.json().then(function(data){ return data; }).catch(function(){ return null; });
-      }).then(function(data){
-        sending = false;
-        if (data && data.ok) { confirmOk(); return; }
-        confirmErr((data && data.error) || "The wire to the recruiters is quiet. Give it a moment and try again.");
-      }).catch(function(){
-        sending = false;
-        confirmErr("The wire to the recruiters is quiet. Give it a moment and try again.");
-      });
-    }, DUR ? DUR + 40 : 0);
+    setTimeout(function(){ fire(0); }, DUR ? DUR + 40 : 0);
   }
 
   function confirmOk(){
