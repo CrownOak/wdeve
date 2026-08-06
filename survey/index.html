@@ -173,6 +173,27 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   padding:5px 10px; background:none; border:1px solid var(--line-soft); color:var(--muted); cursor:pointer; }
 .scmode button+button{ border-left:none; }
 .scmode button.on{ color:var(--ore); border-color:var(--ore); }
+/* DOES IT COME BACK. Same control language as the mode strip, one step quieter,
+   because it qualifies the filing rather than choosing what is being filed. */
+.scpers{ display:flex; gap:0; }
+.scpers button{ font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase;
+  padding:5px 10px; background:none; border:1px solid var(--line-soft); color:var(--muted); cursor:pointer; }
+.scpers button+button{ border-left:none; }
+.scpers button i{ font-style:normal; opacity:.6; letter-spacing:.04em; }
+.scpers button.on{ color:var(--ore); border-color:var(--ore); }
+.scpers button.on i{ opacity:.85; }
+#scoutbar select{ font-family:var(--mono); font-size:10px; padding:5px 8px; max-width:100%;
+  background:var(--panel,#0d100d); border:1px solid var(--line-soft); color:var(--silver-dim); }
+.scoreIn{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; color:var(--silver-dim);
+  display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+/* a hole is a door that shuts on its own: the board marks it, never prices it */
+.sbhole .sbrate{ color:var(--amber); font-size:13px; letter-spacing:.06em; }
+.sbwarn{ color:var(--amber); }
+.sbgrp{ font-family:var(--mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); padding:10px 0 4px; border-bottom:1px solid var(--line-soft); margin-bottom:2px; }
+.sblabel{ font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--silver-dim); }
+.sbperm{ font-family:var(--mono); font-size:8px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--muted); margin-left:6px; }
 /* sightings sit apart from scans on the board and stay folded until asked for */
 .sbsight{ opacity:.72; }
 .sbsight .sbrate{ color:var(--muted); }
@@ -261,10 +282,43 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       <div class="scmode">
         <button type="button" id="scmScan" class="on">scanned it</button>
         <button type="button" id="scmRange">saw it from range</button>
+        <button type="button" id="scmHole">found a hole</button>
       </div>
       <input id="scSys" placeholder="which system?" autocomplete="off" spellcheck="false">
+      <!-- WHERE IN THE SYSTEM. Without this a second filing in the same system is
+           an unreadable duplicate of the first, which is exactly why the board
+           could only ever carry one site per system worth reading. -->
+      <input id="scWhere" placeholder="where in it? (Belt 4, Kernite Deposit&hellip;)" autocomplete="off" spellcheck="false" maxlength="40">
       <input id="scOre" placeholder="what the scanner called it" autocomplete="off" spellcheck="false" style="display:none">
       <input id="scSize" placeholder="size, if it said" autocomplete="off" spellcheck="false" maxlength="24" style="display:none">
+      <!-- DOES IT COME BACK. Decides how long we believe the filing and whether a
+           pilot can warp there by name or has to go and scan for it. -->
+      <div class="scpers" id="scPers">
+        <button type="button" data-p="static">belt <i>stays put</i></button>
+        <button type="button" data-p="anomaly">anomaly <i>burns out</i></button>
+      </div>
+      <input id="scSig" placeholder="signature (PWH-483)" autocomplete="off" spellcheck="false" maxlength="12" style="display:none">
+      <select id="scDest" style="display:none">
+        <option value="unknown">leads where? unknown</option>
+        <option value="c1">C1</option><option value="c2">C2</option><option value="c3">C3</option>
+        <option value="c4">C4</option><option value="c5">C5</option><option value="c6">C6</option>
+        <option value="hs">highsec</option><option value="ls">lowsec</option>
+        <option value="ns">nullsec</option><option value="thera">Thera</option>
+      </select>
+      <!-- READ, DO NOT ASSESS. These are the game's own show-info strings so a
+           scout matches text rather than forming a judgement about a wormhole. -->
+      <select id="scLife" style="display:none">
+        <option value="fresh">life: no end-of-life warning</option>
+        <option value="eol">life: "reaching the end of its natural lifetime"</option>
+      </select>
+      <select id="scMass" style="display:none">
+        <option value="stable">mass: "not yet had its stability significantly disrupted"</option>
+        <option value="disrupted">mass: "reduced&hellip; but not to a critical degree"</option>
+        <option value="critical">mass: "critically disrupted&hellip; verge of collapse"</option>
+      </select>
+      <label id="scOreIn" class="scoreIn" style="display:none">
+        <input type="checkbox" id="scHasOre"> ore or gas anomaly inside
+      </label>
       <button id="scGo" class="gobtn">SEND TO COMMAND</button>
       <div class="sccond" id="scCond"></div>
       <input id="scNote" class="scnote" maxlength="20" placeholder="anything else (20 characters)">
@@ -969,19 +1023,41 @@ tr.survrow:hover .survmore{ color:var(--ore); }
      read off the system scanner from a few jumps out and decided was not worth
      the round trip. The second is a lead, carries no rocks, and is never priced. */
   var SC_MODE="scan";
+  /* DOES IT COME BACK. Null until picked: "I did not say" is a real answer and
+     the board prints it as unknown rather than guessing on a scout's behalf. */
+  var SC_PERS=null;
+  function scSetPers(p){
+    SC_PERS = (SC_PERS===p) ? null : p;   // click the picked one again to unsay it
+    var b=document.getElementById("scPers"); if(!b) return;
+    Array.prototype.forEach.call(b.querySelectorAll("button"), function(o){
+      o.className = (o.getAttribute("data-p")===SC_PERS) ? "on" : "";
+    });
+    if(SC_PERS==="static") scoutMsg("A belt. It is on the overview, it is warpable by name, and its rocks come back at downtime, so this stays on the board until then.");
+    else if(SC_PERS==="anomaly") scoutMsg("An anomaly. Mine it out and the site itself is gone, so this gets the short clock and the fleet has to hurry.");
+  }
+  function scShow(id, on){ var e=document.getElementById(id); if(e) e.style.display = on ? "" : "none"; }
+
   function scSetMode(m){
     SC_MODE=m;
-    var a=document.getElementById("scmScan"), b=document.getElementById("scmRange"),
-        ore=document.getElementById("scOre"), size=document.getElementById("scSize"),
-        go=document.getElementById("scGo");
-    if(a) a.className = m==="scan" ? "on" : "";
-    if(b) b.className = m==="range" ? "on" : "";
-    if(ore) ore.style.display = m==="range" ? "" : "none";
-    if(size) size.style.display = m==="range" ? "" : "none";
-    if(go) go.textContent = m==="range" ? "CALL IT IN" : "SEND TO COMMAND";
-    scoutMsg(m==="range"
+    var ids={scan:"scmScan", range:"scmRange", hole:"scmHole"};
+    for(var k in ids){ var e=document.getElementById(ids[k]); if(e) e.className = (k===m)?"on":""; }
+    var hole = m==="hole";
+    scShow("scOre",   m==="range");
+    scShow("scSize",  m==="range");
+    scShow("scWhere", !hole);          // a hole's signature IS its location
+    scShow("scPers",  !hole);          // every k-space hole is transient; nothing to pick
+    scShow("scSig",   hole);
+    scShow("scDest",  hole);
+    scShow("scLife",  hole);
+    scShow("scMass",  hole);
+    scShow("scOreIn", hole);
+    var go=document.getElementById("scGo");
+    if(go) go.textContent = hole ? "FILE THE HOLE" : (m==="range" ? "CALL IT IN" : "SEND TO COMMAND");
+    scoutMsg(hole
+      ? "Read the wormhole's show-info and copy what it says. You are not being asked to judge it, just to repeat it. Holes go up in the scout channel the moment you file."
+      : m==="range"
       ? "No scan needed. Name the system and what the scanner called it. It goes on the board as a lead, folded away, and still counts as yours."
-      : "Filed sites go on the scout board below for 6 hours, so the fleet knows where the good rock is right now.");
+      : "Filed sites go on the scout board below, so the fleet knows where the good rock is right now. Say where in the system and a second belt there can go up too.");
   }
 
   function scoutFile(){
@@ -994,6 +1070,28 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     }
     var note=((document.getElementById("scNote")||{}).value||"").slice(0,20);
     var conds=scCondPicked();
+    var where=((document.getElementById("scWhere")||{}).value||"").trim().slice(0,40);
+
+    if(SC_MODE==="hole"){
+      var sig =((document.getElementById("scSig")||{}).value||"").trim();
+      var dest=((document.getElementById("scDest")||{}).value||"unknown");
+      var life=((document.getElementById("scLife")||{}).value||"fresh");
+      var mass=((document.getElementById("scMass")||{}).value||"stable");
+      var hasOre=!!((document.getElementById("scHasOre")||{}).checked);
+      scoutMsg("Filing&hellip;");
+      return fetch("/api/scout/hole", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ system: sys, sig: sig, dest: dest, life: life, mass: mass,
+                               ore: hasOre, note: note, conditions: conds }) })
+        .then(function(r){ return r.json(); }).then(function(d){
+          if(!d||!d.ok) return scoutMsg((d&&d.error)||"That did not file.", true);
+          if(d.duplicate) return scoutMsg("Somebody already filed that signature. Nothing lost.");
+          scoutMsg("<b style='color:var(--ore)'>Filed.</b> It is on the board and in the scout channel for about "
+            + (d.life_min!=null ? Math.round(d.life_min/60) : 12) + "h. Bookmark both sides while you are there.");
+          var g=document.getElementById("scSig"); if(g) g.value="";
+          var oi=document.getElementById("scHasOre"); if(oi) oi.checked=false;
+          scCondReset(); scoutBoard();
+        }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
+    }
 
     if(SC_MODE==="range"){
       var ore=((document.getElementById("scOre")||{}).value||"").trim();
@@ -1001,7 +1099,8 @@ tr.survrow:hover .survmore{ color:var(--ore); }
       var size=((document.getElementById("scSize")||{}).value||"").trim();
       scoutMsg("Calling it in&hellip;");
       return fetch("/api/scout/sighting", { method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ system: sys, ore: ore, size: size, note: note, conditions: conds }) })
+        body: JSON.stringify({ system: sys, ore: ore, size: size, note: note, conditions: conds,
+                               label: where, persistence: SC_PERS }) })
         .then(function(r){ return r.json(); }).then(function(d){
           if(!d||!d.ok) return scoutMsg((d&&d.error)||"That did not go through.", true);
           if(d.duplicate) return scoutMsg("Already called in within the hour. Nothing lost.");
@@ -1017,7 +1116,8 @@ tr.survrow:hover .survmore{ color:var(--ore); }
     if(!SC_LAST||!SC_LAST.length) return scoutMsg("Run a scan first, then send it.", true);
     scoutMsg("Sending&hellip;");
     fetch("/api/scout/site", { method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ system: sys, rocks: SC_LAST, conditions: conds, note: note }) })
+      body: JSON.stringify({ system: sys, rocks: SC_LAST, conditions: conds, note: note,
+                             label: where, persistence: SC_PERS }) })
       .then(function(r){ return r.json(); }).then(function(d){
         if(!d||!d.ok) return scoutMsg((d&&d.error)||"That did not file.", true);
         if(d.duplicate) scoutMsg("Already on the board, filed within the hour. Nothing lost.");
@@ -1061,11 +1161,40 @@ tr.survrow:hover .survmore{ color:var(--ore); }
          mixing it into the ranked list would put an unpriced row next to priced
          ones and invite the reader to compare them. They count, they just do not
          compete. */
-      var scans=[], leads=[];
-      d.sites.forEach(function(x){ (x.sighting ? leads : scans).push(x); });
+      var scans=[], leads=[], holes=[];
+      d.sites.forEach(function(x){
+        if(x.kind==="hole") holes.push(x);
+        else if(x.sighting) leads.push(x);
+        else scans.push(x);
+      });
 
       var h="<h2>&#128225; The scout board <span style='font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em'>"+
             "LIVE SITES &middot; "+d.ttl_hours+"H CLOCK</span></h2>";
+      /* HOLES FIRST AND SEPARATE. A wormhole has no ISK/m3 to rank on, so putting
+         one in the priced list would either invent a number for it or park a 0
+         above real sites. It is also the shortest-lived thing on the board. */
+      if(holes.length){
+        h+="<div class='sbgrp'>&#128371; WORMHOLES &middot; "+holes.length+"</div>";
+        holes.forEach(function(s){
+          var w=s.wh||{}, life=s.life_min||720;
+          var pct=Math.max(0,Math.min(100, 100*s.expires_min/life));
+          var bad = w.life==="eol" || w.mass==="critical";
+          h+="<div class='sbrow sbhole"+(s.stale?" stale":"")+"' data-site='"+s.id+"'>"+
+             "<div><div class='sbsys'>"+esc(s.system)+"</div>"+
+               (w.sig?"<div class='sblabel'>"+esc(w.sig)+"</div>":"")+
+               "<span class='sbchip "+(s.corroborated?"sbver'>&#10003; confirmed":"sbunv'>unverified")+"</span></div>"+
+             "<div class='sbrate'>"+esc(String(w.dest||"?").toUpperCase())+"</div>"+
+             "<div class='sbmeta'>leads to<br>"+(w.ore?"<span style='color:var(--ore)'>ore or gas inside</span>":"nothing reported inside")+sbCondMarks(s)+"</div>"+
+             "<div class='sbmeta'>"+(w.life==="eol"?"<span class='sbwarn'>END OF LIFE</span>":"not EOL")+
+               "<br>mass "+(w.mass==="stable"?"stable":"<span class='sbwarn'>"+esc(w.mass)+"</span>")+"</div>"+
+             "<div class='sbage'>"+(s.age_min<60?s.age_min+"m old":(s.age_min/60).toFixed(1)+"h old")+
+               "<br><b"+(bad?" class='sbwarn'":"")+">"+(s.expires_min<60?s.expires_min+"m left":(s.expires_min/60).toFixed(1)+"h left")+"</b>"+
+               "<span class='sbtick'><i style='width:"+pct.toFixed(0)+"%'></i></span></div>"+
+             "<div><button class='sbempty' data-empty='"+s.id+"'>it's shut</button></div>"+
+             "</div>";
+        });
+        if(scans.length) h+="<div class='sbgrp'>&#129704; ROCK &middot; "+scans.length+"</div>";
+      }
       scans.forEach(function(s){
         /* PER-ROW life, not the global clock. A site filed just before downtime
            honestly lives 40 minutes, and a bar drawn against 6h would read 90%
@@ -1074,7 +1203,15 @@ tr.survrow:hover .survmore{ color:var(--ore); }
         var pct=Math.max(0,Math.min(100, 100*s.expires_min/life));
         h+="<div class='sbrow"+(s.stale?" stale":"")+"' data-site='"+s.id+"'>"+
            "<div><div class='sbsys'>"+esc(s.system)+"</div>"+
-             "<span class='sbchip "+(s.corroborated?"sbver'>&#10003; confirmed":"sbunv'>unverified")+"</span></div>"+
+             /* WHERE IN THE SYSTEM. The whole reason two rows can now share a
+                system name and still tell a pilot two different things. */
+             (s.label?"<div class='sblabel'>"+esc(s.label)+"</div>":"")+
+             "<span class='sbchip "+(s.corroborated?"sbver'>&#10003; confirmed":"sbunv'>unverified")+"</span>"+
+             /* Silent when unknown. Every row filed before 2026-08-06 has no
+                answer here and inventing one would be worse than saying nothing. */
+             (s.persistence==="static"?"<span class='sbperm'>belt &middot; stays put</span>"
+              :s.persistence==="anomaly"?"<span class='sbperm'>anomaly &middot; burns out</span>":"")+
+             "</div>"+
            "<div class='sbrate'>"+s.pay_per_m3.toFixed(0)+"</div>"+
            "<div class='sbmeta'>ISK/m&sup3;<br>"+esc(s.top_ore||"")+sbCondMarks(s)+"</div>"+
            "<div class='sbmeta'>"+m3fmt(s.m3)+" m&sup3;<br>"+s.rocks+" rocks</div>"+
@@ -1161,9 +1298,16 @@ tr.survrow:hover .survmore{ color:var(--ore); }
   (function(){
     var g=document.getElementById("scGo"); if(g) g.onclick=scoutFile;
     scCondPaint();
-    var ms=document.getElementById("scmScan"), mr=document.getElementById("scmRange");
+    var ms=document.getElementById("scmScan"), mr=document.getElementById("scmRange"),
+        mh=document.getElementById("scmHole");
     if(ms) ms.onclick=function(){ scSetMode("scan"); };
     if(mr) mr.onclick=function(){ scSetMode("range"); };
+    if(mh) mh.onclick=function(){ scSetMode("hole"); };
+    var pb=document.getElementById("scPers");
+    if(pb) Array.prototype.forEach.call(pb.querySelectorAll("button"), function(o){
+      o.onclick=function(){ scSetPers(o.getAttribute("data-p")); };
+    });
+    scSetMode("scan");   // paints the initial show/hide instead of trusting the markup
     var s=document.getElementById("scSys");
     if(s) s.addEventListener("keydown", function(e){ if(e.key==="Enter") scoutFile(); });
   })();
