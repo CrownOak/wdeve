@@ -276,12 +276,12 @@
     "@media(prefers-reduced-motion:reduce){.bn-panel{animation:none;}}" +
     ".bn-group{margin-top:12px;}.bn-group:first-child{margin-top:0;}" +
     ".bn-glabel{font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.22em;" +
-    "color:var(--muted,#6f776f);border-bottom:1px solid var(--line,rgba(150,168,158,.16));" +
-    "padding-bottom:5px;margin-bottom:6px;}" +
-    ".bn-item{display:block;font-family:var(--mono,ui-monospace,monospace);font-size:11.5px;letter-spacing:.1em;" +
-    "text-transform:uppercase;color:var(--silver-dim,#9aa39c);text-decoration:none;padding:7px 9px;" +
-    "transition:color .15s,background .15s;}" +
-    ".bn-item:hover{color:var(--ore,#46ff5e);background:rgba(70,255,94,.06);}" +
+    "color:var(--ore,#46ff5e);font-weight:700;border-bottom:1px solid rgba(150,168,158,.28);" +
+    "padding-bottom:5px;margin-bottom:6px;opacity:.85;}" +
+    ".bn-item{display:block;font-family:var(--mono,ui-monospace,monospace);font-size:12px;letter-spacing:.1em;" +
+    "text-transform:uppercase;color:#c8d0c8;text-decoration:none;padding:8px 10px;" +
+    "border-left:2px solid transparent;transition:color .15s,background .15s,border-color .15s;}" +
+    ".bn-item:hover{color:var(--ore,#46ff5e);background:rgba(70,255,94,.09);border-left-color:var(--ore,#46ff5e);}" +
     ".bn-item.cur{background:var(--ore,#46ff5e);color:#04140a;font-weight:700;}" +
     ".bn-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ore,#46ff5e);" +
     "margin-left:7px;vertical-align:middle;box-shadow:0 0 6px rgba(70,255,94,.8);" +
@@ -303,7 +303,7 @@
     ".bn-deskbtn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px;" +
     "padding:10px 12px;text-decoration:none;font-family:var(--mono,ui-monospace,monospace);" +
     "font-size:10.5px;letter-spacing:.24em;color:var(--silver-dim,#9aa39c);" +
-    "border:1px solid var(--line,rgba(150,168,158,.16));transition:color .3s,border-color .3s;}" +
+    "border:1px solid rgba(70,255,94,.5);color:var(--ore,#46ff5e);transition:color .2s,border-color .2s,background .2s;}" +
     ".bn-deskbtn::before{content:\"\";width:6px;height:6px;border-radius:50%;flex:0 0 auto;" +
     "background:var(--ore,#46ff5e);animation:bnDeskDot 4.6s ease-in-out infinite;}" +
     "@keyframes bnDeskDot{0%,100%{opacity:.3;box-shadow:0 0 0 rgba(70,255,94,0);}" +
