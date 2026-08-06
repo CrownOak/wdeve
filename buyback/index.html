@@ -69,6 +69,18 @@
   .vunit.in{ opacity:1; }
   .vunit .tick{ color:var(--ore); }
   .vsub{ font-family:var(--mono); font-size:12px; color:var(--silver-dim); margin-top:12px; line-height:1.7; }
+/* The hourly rate line. Dead quiet by default: it only exists when somebody has
+   actually hauled livestock, and it should read like a clerk asking a routine
+   question, not like a punchline with a spotlight on it. */
+.hrs{ display:none; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+      margin:16px auto 0; padding:10px 14px; max-width:max-content;
+      border:1px solid var(--line); background:rgba(0,0,0,.25); }
+.hrs.on{ display:flex; }
+.hrsimg{ display:block; width:32px; height:32px; image-rendering:auto; opacity:.9; }
+.hrsl{ font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--silver-dim); }
+.hrs select{ font-family:var(--mono); font-size:11.5px; background:var(--black);
+      color:var(--silver); border:1px solid var(--line); padding:6px 9px; cursor:pointer; }
+.hrs select:focus{ outline:none; border-color:var(--ore); }
   .vchips{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
   .chip{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--amber);
     border:1px solid rgba(233,196,106,.4); padding:4px 10px; opacity:0; transform:translateY(6px);
@@ -185,6 +197,19 @@
     <div class="vunit" id="vunit">ISK &middot; click the number to copy it</div>
     <div class="vsub" id="vsub"></div>
     <div class="vchips" id="vchips"></div>
+    <!-- Livestock is priced by the hour, so the desk has to ask. Hidden until a
+         manifest actually contains some. -->
+    <div class="hrs" id="hrs">
+      <img class="hrsimg" id="hrsimg" alt="" width="32" height="32">
+      <label class="hrsl" for="hrssel">Wait. How many hours?</label>
+      <select id="hrssel">
+        <option value="1">one hour</option>
+        <option value="2">two hours</option>
+        <option value="4">four hours</option>
+        <option value="8">the whole night</option>
+        <option value="24">they live here now</option>
+      </select>
+    </div>
     <button class="filebtn" id="filebtn" type="button">File it with the corp</button>
     <div class="filed" id="filed"></div>
     <div class="vcta"><b>One click files it.</b> Then create the matching Item Exchange contract
@@ -314,11 +339,48 @@
       if(animate&&!REDUCED) setTimeout(function(){ tr.classList.add("in"); }, 120+i*25);
       else tr.classList.add("in");
     });
+    hours(d);
     if(d.asof) $("feedtxt").textContent="price feed live · baked "+hhmm(d.asof)+" · rebakes hourly";
     var fb=$("filebtn"), fd=$("filed");
     if(fb){ fb.style.display="block"; fb.classList.remove("busy"); fb.textContent="File it with the corp"; }
     if(fd){ fd.style.display="none"; fd.className="filed"; fd.textContent=""; }
   }
+
+  /* THE HOURLY RATE. The board pays 100 ISK a unit for livestock, and a unit is an
+     hour, so the quoted total is the one hour price until somebody says otherwise.
+     The server only ever sums a price list, which is the whole point of the desk
+     (no multiplier lives anywhere a page can read it), so the extra hours are
+     applied here on top of the figure it returned: base + (hours - 1) x rate x qty.
+     lastTotal moves with it, because the number you copy into the contract has to
+     be the number on the screen. */
+  var RATE=100, hrQty=0, hrBase=0;
+  function hours(d){
+    var box=$("hrs"), sel=$("hrssel");
+    hrQty=0;
+    (d.lines||[]).forEach(function(l){
+      if(String(l.name||"").trim().toLowerCase()==="prostitute") hrQty+=(l.qty||0);
+    });
+    if(!hrQty){ box.classList.remove("on"); return; }
+    hrBase=d.total_isk;
+    var img=$("hrsimg");
+    if(!img.getAttribute("src")) img.setAttribute("src","https://images.evetech.net/types/22208/icon?size=64");
+    sel.value="1";
+    box.classList.add("on");
+  }
+  function applyHours(){
+    if(!hrQty) return;
+    var h=Number($("hrssel").value)||1;
+    var total=hrBase+(h-1)*RATE*hrQty;
+    lastTotal=total;
+    $("vtotal").textContent=fmt(total);
+    var tb=$("mtable");
+    Array.prototype.forEach.call(tb.rows, function(tr){
+      var c=tr.cells;
+      if(c && c.length===3 && c[0].textContent.trim().toLowerCase()==="prostitute")
+        c[2].textContent=iskShort(RATE*hrQty*h);
+    });
+  }
+  $("hrssel").addEventListener("change", applyHours);
 
   function quote(force){
     var text=$("cargo").value;
