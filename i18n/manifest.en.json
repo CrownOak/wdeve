@@ -1498,7 +1498,7 @@
    ]
   },
   {
-   "s": "s dark iframe. Falls back to a plain join link. (function(){ var GUILD=\"1512938976686641333\"; var listEl=document.getElementById(\"disc-list\"), countEl=document.getElementById(\"disc-count\"), joinEl=document.getElementById(\"disc-join\"); if(!listEl) return; function esc(s){return String(s==null?\"\":s).replace(/[&<>\"]/g,function(c){return {\"&\":\"&\",\"<\":\"<\",\">\":\">\",\"\"\":\"\"\"}[c];});} fetch(\"https://discord.com/api/guilds/\"+GUILD+\"/widget.json\").then(function(r){return r.ok?r.json():null;}).then(function(d){ if(!d) throw \"no\"; if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length); // keep the prospect-role invite (mWZH7uYHNy) — do NOT override with the widget",
+   "s": "s dark iframe. Falls back to a plain join link. (function(){ var GUILD=\"1512938976686641333\"; var listEl=document.getElementById(\"disc-list\"), countEl=document.getElementById(\"disc-count\"), joinEl=document.getElementById(\"disc-join\"); if(!listEl) return; function esc(s){return String(s==null?\"\":s).replace(/[&<>\"]/g,function(c){return {\"&\":\"&\",\"<\":\"<\",\">\":\">\",\"\"\":\"\"\"}[c];});} fetch(\"https://discord.com/api/guilds/\"+GUILD+\"/widget.json\").then(function(r){return r.ok?r.json():null;}).then(function(d){ if(!d) throw \"no\"; if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length); // keep the prospect-role invite (MWBeFXmhgU) — do NOT override with the widget",
    "kind": "js",
    "files": [
     "index.html"
@@ -28204,7 +28204,7 @@
    ]
   },
   {
-   "s": "ore to materials, hub prices for every rock, or materials to the ore you need · 440 ore types + 55 gases · five hub markets, updated 2026-08-07T01:18:41.363646+00:00 UTC",
+   "s": "ore to materials, hub prices for every rock, or materials to the ore you need · 440 ore types + 55 gases · five hub markets, updated 2026-08-07T03:18:49.398538+00:00 UTC",
    "kind": "html",
    "files": [
     "refine/index.html"
@@ -53240,7 +53240,7 @@
    ]
   },
   {
-   "s": "buy low in one hub, sell high in another · ranked by ISK per jump, because travel is the job · 358 items across 5 hubs (Jita, Amarr, Dodixie, Rens, Hek) · prices updated 2026-08-07T01:17:41.606893+00:00 UTC",
+   "s": "buy low in one hub, sell high in another · ranked by ISK per jump, because travel is the job · 358 items across 5 hubs (Jita, Amarr, Dodixie, Rens, Hek) · prices updated 2026-08-07T03:17:46.768208+00:00 UTC",
    "kind": "html",
    "files": [
     "arbitrage/index.html"
@@ -55443,35 +55443,42 @@
    ]
   },
   {
-   "s": "Uedama (~14 pvp kills/hr lately)",
+   "s": "Hek (~13 pvp kills/hr lately)",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
    ]
   },
   {
-   "s": "Hek (~3 pvp kills/hr lately)",
+   "s": "Uedama (~5 pvp kills/hr lately)",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
    ]
   },
   {
-   "s": "Esescama (~3 pvp kills/hr lately)",
+   "s": "Deltole (~8 pvp kills/hr lately)",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
    ]
   },
   {
-   "s": "Balle (~3 pvp kills/hr lately)",
+   "s": "Esescama (~1 pvp kills/hr lately)",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
    ]
   },
   {
-   "s": "Gyng (~1 pvp kills/hr lately)",
+   "s": "Rens (~3 pvp kills/hr lately)",
+   "kind": "js",
+   "files": [
+    "arbitrage/index.html"
+   ]
+  },
+  {
+   "s": "Gyng (~0 pvp kills/hr lately)",
    "kind": "js",
    "files": [
     "arbitrage/index.html"
@@ -56206,14 +56213,14 @@
    "ru": true
   },
   {
-   "s": "RSS0EotneazXM0N6zmc8Mg==",
+   "s": "5YmsrihzQ+pQtMbSDvpzLQ==",
    "kind": "js",
    "files": [
     "lowsec/index.html"
    ]
   },
   {
-   "s": "lTW8g1tfiFwSCpq5",
+   "s": "kRPe0gDLS6RsfDLu",
    "kind": "js",
    "files": [
     "lowsec/index.html"
@@ -56588,7 +56595,7 @@
    "ru": true
   },
   {
-   "s": "noggp7bnPW28VeW3cUh9oA==",
+   "s": "ZvymEbh3UuMdU7Q2",
    "kind": "js",
    "files": [
     "kills/index.html"
@@ -56610,14 +56617,7 @@
    "ru": true
   },
   {
-   "s": "syeigLuOXy2UjDHYwHFXEQ==",
-   "kind": "js",
-   "files": [
-    "cartel/index.html"
-   ]
-  },
-  {
-   "s": "fCbM73Ii+glpmIS8",
+   "s": "Em0h4kEKGQrUrRg0",
    "kind": "js",
    "files": [
     "cartel/index.html"
