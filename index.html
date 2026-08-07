@@ -305,7 +305,7 @@
       <a href="/tools/">Tools</a>
       <a class="btn-mini-ghost" id="navPortal" href="/portal/">Portal<span class="ign" id="navIgn" data-i18n-skip></span></a>
       <a class="btn-mini-ghost" id="navFleet" href="/fleet/">Fleet<span class="livedot" id="fleetDot" hidden></span></a>
-      <a class="navlink" href="https://discord.gg/MWBeFXmhgU" target="_blank" rel="noopener">Discord</a>
+      <a class="navlink" href="https://discord.gg/CGzRQCC4B" target="_blank" rel="noopener">Discord</a>
       <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
       <a class="btn-mini" id="navApply" href="/apply/">Apply</a>
     </nav>
@@ -351,7 +351,7 @@
       <div class="cta-row">
         <a class="btn btn-ore" id="heroApply" href="/apply/">Apply to join ▸</a>
         <a class="btn btn-hollow" id="heroPortal" href="/portal/">Member portal →</a>
-        <a class="btn btn-ghost" href="https://discord.gg/MWBeFXmhgU" target="_blank" rel="noopener">Join the Discord</a>
+        <a class="btn btn-ghost" href="https://discord.gg/CGzRQCC4B" target="_blank" rel="noopener">Join the Discord</a>
       </div>
       <div class="readouts">
         <div class="r"><div class="n">12</div><div class="k">Years cracking rocks</div></div>
@@ -527,7 +527,7 @@
     <div class="disc" id="disc">
       <div class="disc-head">
         <div class="disc-live"><span class="disc-dot"></span><b id="disc-count">&hellip;</b> goblins in the belt right now</div>
-        <a class="disc-join" id="disc-join" href="https://discord.gg/MWBeFXmhgU" target="_blank" rel="noopener">Jump in &#9656;</a>
+        <a class="disc-join" id="disc-join" href="https://discord.gg/CGzRQCC4B" target="_blank" rel="noopener">Jump in &#9656;</a>
       </div>
       <div class="disc-list" id="disc-list"><div class="disc-loading">knocking on the airlock&hellip;</div></div>
       <div class="disc-foot">// live headcount straight from Discord. lurkers welcome, but the ore does not mine itself.</div>
@@ -539,7 +539,7 @@
   <div class="wrap reveal">
     <p class="creed">The ore must flow.<br>The <span class="o">goblins</span> must eat.</p>
     <p class="sub">Reject the prescribed path. Mine the rock instead.</p>
-    <a class="btn btn-ore" href="https://discord.gg/MWBeFXmhgU" target="_blank" rel="noopener">Come be a goblin ▸</a>
+    <a class="btn btn-ore" href="https://discord.gg/CGzRQCC4B" target="_blank" rel="noopener">Come be a goblin ▸</a>
   </div>
 </section>
 
@@ -672,7 +672,7 @@
     fetch("https://discord.com/api/guilds/"+GUILD+"/widget.json").then(function(r){return r.ok?r.json():null;}).then(function(d){
       if(!d) throw "no";
       if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length);
-      // keep the prospect-role invite (MWBeFXmhgU) — do NOT override with the widget's instant_invite
+      // keep the prospect-role invite (CGzRQCC4B) — do NOT override with the widget's instant_invite
       var rank={online:0,idle:1,dnd:2};
       var members=(d.members||[]).slice().sort(function(a,b){
         return ((rank[a.status]==null?3:rank[a.status])-(rank[b.status]==null?3:rank[b.status]))
@@ -690,7 +690,7 @@
       });
       listEl.innerHTML=h;
     }).catch(function(){
-      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/MWBeFXmhgU" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
+      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/CGzRQCC4B" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
     });
   })();
 </script>

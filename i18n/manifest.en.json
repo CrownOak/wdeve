@@ -1498,7 +1498,7 @@
    ]
   },
   {
-   "s": "s dark iframe. Falls back to a plain join link. (function(){ var GUILD=\"1512938976686641333\"; var listEl=document.getElementById(\"disc-list\"), countEl=document.getElementById(\"disc-count\"), joinEl=document.getElementById(\"disc-join\"); if(!listEl) return; function esc(s){return String(s==null?\"\":s).replace(/[&<>\"]/g,function(c){return {\"&\":\"&\",\"<\":\"<\",\">\":\">\",\"\"\":\"\"\"}[c];});} fetch(\"https://discord.com/api/guilds/\"+GUILD+\"/widget.json\").then(function(r){return r.ok?r.json():null;}).then(function(d){ if(!d) throw \"no\"; if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length); // keep the prospect-role invite (MWBeFXmhgU) — do NOT override with the widget",
+   "s": "s dark iframe. Falls back to a plain join link. (function(){ var GUILD=\"1512938976686641333\"; var listEl=document.getElementById(\"disc-list\"), countEl=document.getElementById(\"disc-count\"), joinEl=document.getElementById(\"disc-join\"); if(!listEl) return; function esc(s){return String(s==null?\"\":s).replace(/[&<>\"]/g,function(c){return {\"&\":\"&\",\"<\":\"<\",\">\":\">\",\"\"\":\"\"\"}[c];});} fetch(\"https://discord.com/api/guilds/\"+GUILD+\"/widget.json\").then(function(r){return r.ok?r.json():null;}).then(function(d){ if(!d) throw \"no\"; if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length); // keep the prospect-role invite (CGzRQCC4B) — do NOT override with the widget",
    "kind": "js",
    "files": [
     "index.html"
