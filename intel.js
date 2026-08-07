@@ -3,8 +3,34 @@
    lazy: nothing heavy loads until a lens asks for it (spec v1.1, red team F1). */
 (function(){
 var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="thecall"></div>\n  <div id="youare"></div>\n  <div id="statetiles"></div>\n  <div class="askline">Or ask about anyone.</div>\n  <div class="btop">\n   <input id="q" type="text" placeholder="Pilot, corp, alliance or system. A zkill link works too." autocomplete="off" spellcheck="false">\n   <button id="go" class="gobtn">Pull the file</button>\n  </div>\n  <div class="bhelp">Exact in game spelling. Public killboard and public ESI, read at the moment you ask.</div>\n  <div id="chips"></div>\n  <div id="trailbar"></div>\n  <div id="status"></div>\n  <div id="out"></div>\n </div>\n <aside class="prail">\n  <div class="rhud">\n   <div class="rhudk">NEW EDEN, THIS HOUR</div>\n   <div class="rhudbig" id="hudShips">&mdash; <small>ships</small></div>\n   <div class="rhudrow"><span>pods</span><b id="hudPods">&mdash;</b></div>\n   <div class="rhudrow"><span>hottest</span><span id="hudHot">reading&hellip;</span></div>\n   <div class="rhudrow"><span>our roads</span><span id="hudOurs">reading&hellip;</span></div>\n  </div>\n  <div class="rblk">\n   <div class="rhead">\n    <span class="rt" id="rTitle">WHERE IT IS BURNING</span>\n    <span class="rsw" id="rsw">\n     <button data-r="hot" class="on">Hot</button>\n     <button data-r="ours">Ours</button>\n     <button data-r="watch">Watch</button>\n    </span>\n   </div>\n   <div id="rlist"><div class="rnote">reading the map&hellip;</div></div>\n   <div class="rnote" id="rNote">Every row opens its own file.</div>\n  </div>\n </aside>\n</div>';
-window.BONKINTEL={mount:function(root){
+/* TWO POSTURES, ONE ENGINE (2026-08-06).
+
+   This tool is mounted in two places and they are not the same room. /briefing/ is
+   PUBLIC and is the best recruiting asset we own, precisely because it reads only
+   ESI and zKillboard and works for a stranger with no account. The GOBSEC desk is
+   member gated.
+
+   The problem: the ours layer shipped in both. A logged out visitor got an "Ours"
+   tab, a live "our roads" counter, and a rail that named the corridor and both
+   homes with kills against them this hour. That is our operational footprint,
+   published to anybody curious enough to click a tab, on a page we were about to
+   advertise in the recruitment forums. A hostile could watch our roads using our
+   own tool.
+
+   So: `ours` is OFF unless the caller asks for it. The per dossier road chips were
+   already behind whoami.loggedIn, which is why this reads as a partial fix rather
+   than a new one; the rail, the HUD counter and the distance from home were not,
+   and those are the ones that draw the map. */
+window.BONKINTEL={mount:function(root,opts){
   if(!root) return; root.innerHTML=MARKUP;
+  var OURS=!!(opts&&opts.ours);
+  if(!OURS){
+    /* Remove rather than hide. A display:none tab is still in the DOM for anyone
+       who opens devtools, and the whole point is to not publish the map. */
+    var ob=root.querySelector("#rsw button[data-r='ours']"); if(ob) ob.parentNode.removeChild(ob);
+    var oh=root.querySelector("#hudOurs");
+    if(oh&&oh.parentNode&&oh.parentNode.parentNode) oh.parentNode.parentNode.removeChild(oh.parentNode);
+  }
   /* module state declared BEFORE anything can use it. A deep link runs loadTarget
      partway down this body, and var hoists the name but not the value, so state
      assigned further down is undefined at that moment. */
@@ -641,9 +667,12 @@ function renderSystem(D,ageMs,partial){
     +(ageMs>60000?"<span class='cachech'>cached "+Math.round(ageMs/60000)+"m ago</span>":"")
     +"</div><div class='idsub'>";
   var bits=[];
-  if(D.jMohas!=null) bits.push(D.jMohas+" jumps from Mohas");
-  else if(D.jRens==null) bits.push("more than 12 jumps from home");
-  if(D.jRens!=null) bits.push(D.jRens+" from Rens");
+  /* Distance from home names our homes. Members only. */
+  if(OURS){
+    if(D.jMohas!=null) bits.push(D.jMohas+" jumps from Mohas");
+    else if(D.jRens==null) bits.push("more than 12 jumps from home");
+    if(D.jRens!=null) bits.push(D.jRens+" from Rens");
+  }
   if(D.belts) bits.push(D.belts.b+" belts &middot; "+D.belts.m+" moons"+(D.belts.st?" &middot; "+D.belts.st+" stations":""));
   h+=bits.join(" &middot; ")+"</div>";
   h+="<div class='idacts'>"
@@ -1240,7 +1269,7 @@ function paintRail(){
       h+=hudRow(s.n,"<span style='color:var(--gob,#ff4757)'>"+s.k+"</span>",s.sec,"sys",s.id);
     });
     note.textContent="Ship and pod kills in the last hour, live from ESI.";
-  } else if(rPane==="ours"){
+  } else if(rPane==="ours"&&OURS){
     title.textContent="OUR ROADS";
     if(!rOurs.length) h="<div class='rnote'>Quiet on our roads. Long may it last.</div>";
     else rOurs.forEach(function(s){
@@ -1295,7 +1324,9 @@ function refreshHud(){
     if(hotEl&&list[0]) hotEl.innerHTML="<a href='?t=sys&id="+list[0].id+"' class='hot'>"+esc(list[0].n)+"</a> <span style='color:var(--muted)'>"+list[0].k+"</span>";
     var kBy={}; kills.forEach(function(k){ kBy[k.system_id]=k; });
     rOurs=[];
-    if(S&&S.d) Object.keys(OUR_SYS).forEach(function(sid){
+    /* Not merely hidden: not computed. On the public mount our footprint never
+       enters the page's memory, so there is nothing to read out of a console. */
+    if(S&&S.d&&OURS) Object.keys(OUR_SYS).forEach(function(sid){
       var ix=S.byId[sid]; if(ix==null) return;
       var k=kBy[+sid];
       rOurs.push({id:+sid,n:S.d.sys[ix][0],sec:S.d.sys[ix][2].toFixed(1),k:k?((k.ship_kills||0)+(k.pod_kills||0)):0});
@@ -1321,6 +1352,14 @@ renderChips();
   var t=sp.get("t"), id=+sp.get("id"), qq=sp.get("q");
   if(t&&TPATH[t]&&id>0) loadTarget(t,id);
   else if(qq){ q.value=qq; run(); }
+  /* OPEN ON OURSELVES (public mount only). A tool that opens on an empty search box
+     asks a stranger to think of a name before it has proved it does anything, and
+     most of them will not bother. Loading our own file first turns the landing state
+     into a worked example: this is the shape of the answer, now go and run it on
+     whoever ganked you. Everything shown is public zKillboard and ESI, which anyone
+     could pull on us anyway, so the demo costs nothing and it is honest about the
+     killboard. Members get their own desk state instead, which is more useful to them. */
+  else if(!OURS) loadTarget("alli",OUR_ALLI);
 })();
 
 /* ==== YOU ARE HERE ====
@@ -1441,12 +1480,16 @@ function callSentence(){
     var w=ours[0];
     return {tone:"hot", text:"<b class='chot'>"+esc(w.n)+"</b> is hot, "+w.k+" dead there this hour. That is our road."};
   }
+  /* "our roads" means nothing to a stranger and quietly implies a footprint we are
+     no longer publishing, so the public mount speaks about New Eden instead. */
+  var clear=OURS?"Roads are clear. ":"";
   if(CALLST.near&&CALLST.near.j!=null){
-    return {tone:"calm", text:"Roads are clear. Nearest fight is <b>"+esc(CALLST.near.n)+"</b>, "
+    return {tone:"calm", text:clear+"Nearest fight is <b>"+esc(CALLST.near.n)+"</b>, "
       +CALLST.near.j+" jump"+(CALLST.near.j===1?"":"s")+" out, "+CALLST.near.k+" dead this hour."};
   }
-  if(top) return {tone:"calm", text:"Roads are clear. Loudest system in New Eden is <b>"+esc(top.n)+"</b> with "+top.k+"."};
-  return {tone:"calm", text:"Nothing on our roads. Quiet everywhere we can see."};
+  if(top) return {tone:"calm", text:clear+"Loudest system in New Eden is <b>"+esc(top.n)+"</b> with "+top.k+"."};
+  return {tone:"calm", text:OURS?"Nothing on our roads. Quiet everywhere we can see."
+                                :"Quiet everywhere we can see."};
 }
 function paintCall(){
   var host=document.getElementById("thecall"); if(!host) return;

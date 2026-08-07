@@ -478,10 +478,27 @@ async function fillHud(who){
 })();
 </script>
 <script src="/intel-roles.js?v=1"></script>
-<script src="/intel.js?v=9"></script>
+<script src="/intel.js?v=10"></script>
 <script src="/intel-lenses.js?v=4"></script>
-<script>/* the workspace only renders for a cleared session; the checkpoint above
-   still guards the door and the honeypot is untouched. */
-try{ BONKINTEL.mount(document.getElementById("intelroot")); }catch(e){}
-try{ BONKLENS.mount(document.getElementById("lensroot")); }catch(e){}</script>
+<script>/* THE WORKSPACE NOW ACTUALLY ONLY RENDERS FOR A CLEARED SESSION (2026-08-06).
+
+   It used to say that and it was not true. The checkpoint above sets display:flex on
+   an overlay and returns from ITS OWN IIFE, which never stopped this block, so the
+   desk mounted for every visitor and was merely covered by a div. Anyone could delete
+   the overlay in devtools, or just read the DOM, and get the corridor rail and the
+   distance from home underneath it.
+
+   So this block does its own check and mounts nothing at all when it fails. The ours
+   layer is passed explicitly, because /briefing/ runs the same engine in public and
+   must never receive it. See the posture comment at the top of intel.js. */
+(async function(){
+  var cleared=false;
+  try{
+    var w=await (await fetch("/api/whoami",{credentials:"same-origin"})).json();
+    cleared=!!(w&&w.loggedIn&&w.gobsec);
+  }catch(e){}
+  if(!cleared) return;
+  try{ BONKINTEL.mount(document.getElementById("intelroot"),{ours:true}); }catch(e){}
+  try{ BONKLENS.mount(document.getElementById("lensroot")); }catch(e){}
+})();</script>
 </body></html>
