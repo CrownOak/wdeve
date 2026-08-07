@@ -188,42 +188,45 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .recstrip button:disabled{ opacity:.4; cursor:default; }
 .srrec{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ore); border:1px dashed rgba(70,255,94,.5); padding:6px 9px; margin-bottom:10px; }
-/* ---- THE GOAT BOARD: top ten clean scans ever, podium first. Subtle but
-   legendary: hairline stands, one crown, quiet gold. The restraint is what
-   makes it read as a monument instead of a promotion (see #hundred). */
-#goatpodium{ margin:16px 0 8px; max-width:640px; }
+/* ---- THE GOAT BOARD: top ten clean scans ever, podium first, living on the
+   calc rail (300px) beside the scanner. Subtle but legendary: hairline stands,
+   one crown, quiet gold. The restraint is what makes it read as a monument
+   instead of a promotion (see #hundred). Below 680px the grid stacks and the
+   board follows the rail under the paste box at full width. */
+#goatpodium{ margin-top:14px; }
 #goatpodium.off{ display:none; }
-.goathead{ display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; margin-bottom:14px;
+.goathead{ display:flex; flex-direction:column; gap:2px; margin-bottom:12px;
   border-bottom:1px solid rgba(212,175,95,.35); padding-bottom:7px; }
-.goathead .gt{ font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.26em;
+.goathead .gt{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.26em;
   text-transform:uppercase; color:#d4af5f; }
-.goathead .gs{ font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+.goathead .gs{ font-family:var(--mono); font-size:9px; letter-spacing:.1em;
   text-transform:uppercase; color:var(--muted); }
-.goatempty{ font-family:var(--mono); font-size:11px; color:var(--muted);
-  border:1px dashed var(--line); padding:10px 12px; }
-.podium{ display:flex; align-items:flex-end; gap:8px; }
+.goatempty{ font-family:var(--mono); font-size:10.5px; line-height:1.6; color:var(--muted);
+  border:1px dashed var(--line); padding:9px 11px; }
+.podium{ display:flex; align-items:flex-end; gap:6px; }
 .podium .stand{ flex:1; min-width:0; text-align:center; display:flex;
   flex-direction:column; justify-content:flex-end; gap:2px; }
-.podium .crownrow{ font-size:14px; min-height:19px; line-height:1.2; opacity:.9; }
-.podium .who{ font-family:var(--display); font-weight:700; font-size:13.5px;
+.podium .crownrow{ font-size:12px; min-height:16px; line-height:1.2; opacity:.9; }
+.podium .who{ font-family:var(--display); font-weight:700; font-size:11.5px;
   color:var(--silver); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.podium .pay{ font-family:var(--mono); font-size:11.5px; color:var(--ore); }
-.podium .sys{ font-family:var(--mono); font-size:9px; color:var(--muted);
-  letter-spacing:.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.podium .box{ margin-top:6px; border:1px solid var(--line-soft); border-bottom-width:2px;
+.podium .pay{ font-family:var(--mono); font-size:10px; color:var(--ore); }
+.podium .sys{ font-family:var(--mono); font-size:8.5px; color:var(--muted);
+  letter-spacing:.04em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.podium .box{ margin-top:5px; border:1px solid var(--line-soft); border-bottom-width:2px;
   display:flex; align-items:center; justify-content:center;
   font-family:var(--mono); font-weight:700; color:var(--muted); }
-.podium .s1 .box{ height:74px; border-color:rgba(212,175,95,.55); color:#d4af5f; font-size:18px;
+.podium .s1 .box{ height:58px; border-color:rgba(212,175,95,.55); color:#d4af5f; font-size:15px;
   background:linear-gradient(180deg, rgba(212,175,95,.10), transparent 70%); }
 .podium .s1 .who{ color:#d4af5f; }
-.podium .s2 .box{ height:52px; border-color:rgba(207,212,206,.35); color:var(--silver-dim); font-size:15px; }
-.podium .s3 .box{ height:38px; border-color:rgba(201,138,75,.4); color:#b0855a; font-size:14px; }
-.podium .stand.open .who{ color:var(--muted); font-family:var(--mono); font-size:9.5px;
+.podium .s2 .box{ height:42px; border-color:rgba(207,212,206,.35); color:var(--silver-dim); font-size:13px; }
+.podium .s3 .box{ height:30px; border-color:rgba(201,138,75,.4); color:#b0855a; font-size:12px; }
+.podium .stand.open .who{ color:var(--muted); font-family:var(--mono); font-size:9px;
   letter-spacing:.14em; text-transform:uppercase; }
-.goatlist{ margin-top:12px; width:100%; background:none; border:none; }
-.goatlist td{ font-size:11.5px; padding:5px 10px; border-top:1px solid var(--line-soft);
+.goatlist{ margin-top:10px; width:100%; background:none; border:none; }
+.goatlist td{ font-size:10.5px; padding:4px 6px; border-top:1px solid var(--line-soft);
   font-family:var(--mono); color:var(--silver-dim); }
-.goatlist td.num{ width:34px; color:var(--muted); }
+.goatlist td.num{ width:24px; color:var(--muted); }
+.goatlist td.pay{ text-align:right; white-space:nowrap; }
 .goatlist b{ color:var(--silver); font-weight:600; }
 /* "shoot the top row first" needs the top row to actually look like the one.
    (tr.best was classed here and in the board dropdown but never styled.) */
@@ -432,9 +435,6 @@ tr.best td{ color:var(--ore); font-weight:600; }
       <span id="scMsg" class="scoutnote">Filed sites go on the scout board below for 6 hours, so the fleet knows where the good rock is right now.</span>
     </div>
     </div>
-    <!-- THE GOAT BOARD lives directly under the deck: the podium is half the
-         reason anyone scans a monster field twice. Fills for members only. -->
-    <div id="goatpodium" class="off"></div>
     <div id="btbar" style="display:none">
       <span class="btlbl">BUILD TARGET</span>
       <input id="btItem" list="btList" autocomplete="off" spellcheck="false" placeholder="what are you building? (Retriever, Hobgoblin I, antimatter&hellip;)">
@@ -450,6 +450,9 @@ tr.best td{ color:var(--ore); font-weight:600; }
       <div class="controls">
         <button id="go" class="gobtn">Calculate</button>
         <div class="effnote">Reprocesses in 100-unit batches (rounds down).</div>
+        <!-- THE GOAT BOARD rides the rail: the scanner keeps the floor, the
+             legends keep the sidebar. Fills for members, in survey mode only. -->
+        <div id="goatpodium" class="off"></div>
       </div>
     </div>
     <div id="out"></div>
@@ -1450,11 +1453,13 @@ tr.best td{ color:var(--ore); font-weight:600; }
         }
         h+='<div class="podium">'+stand(t[1],"s2",2)+stand(t[0],"s1",1)+stand(t[2],"s3",3)+'</div>';
         if(t.length>3){
+          /* rail width feeds three cells; the system rides the hover title so
+             the row stays one quiet line */
           h+='<table class="goatlist"><tbody>';
           for(var i=3;i<t.length;i++){ var r=t[i];
-            h+='<tr><td class="num">'+(i+1)+'</td><td>'+esc(r.scout)+'</td><td>'
-              +esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+'</td>'
-              +'<td class="num"><b>'+isk(r.pay)+'</b></td></tr>'; }
+            h+='<tr><td class="num">'+(i+1)+'</td>'
+              +'<td title="'+esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+'">'+esc(r.scout)+'</td>'
+              +'<td class="pay"><b>'+isk(r.pay)+'</b></td></tr>'; }
           h+='</tbody></table>';
         }
       }
