@@ -41,6 +41,15 @@
   .hnd-body{font-size:14.5px;line-height:1.75;color:var(--silver-dim);margin:0 auto;max-width:640px}
   .hnd-close{font-size:14.5px;line-height:1.75;color:var(--silver-dim);margin:14px auto 0;max-width:640px}
   .hnd-close b{color:var(--ore)}
+  /* THE FOUNDING CORP header: crest and name over the milestone, so the
+     alliance-first hero never erases who built all of this. */
+  .fc-head{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:22px}
+  .fc-crest{width:92px;height:auto;filter:drop-shadow(0 12px 26px rgba(0,0,0,.65))}
+  .fc-block{text-align:left}
+  .fc-kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
+  .fc-name{font-family:var(--display);font-weight:700;font-size:clamp(20px,3.4vw,30px);letter-spacing:.06em;color:var(--silver);line-height:1.1}
+  .hnd-founder{font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;line-height:1.8;color:var(--muted);margin:22px auto 0;max-width:640px}
+  .hnd-founder b{color:var(--ore)}
   @media(max-width:620px){#hundred{padding:46px 0 42px}}
   a{color:inherit}
   ::selection{background:var(--ore);color:#04140a}
@@ -336,7 +345,7 @@
   <div class="vignette"></div>
   <div class="wrap">
     <div>
-      <p class="eyebrow">Est. 2014 · Rens, Metropolis · A 12-year dynasty founded on spite</p>
+      <p class="eyebrow">Rens, Metropolis · An alliance forged by a 12-year dynasty founded on spite</p>
       <h1 class="hero-title">Emotionally stable goblins who love <span class="o">rocks</span></h1>
       <p class="lede"><b>Big Rock Energy [BONK]</b> is a highsec mining &amp; industry alliance. We mine the rock, refine the rock, build with the rock, and sell the thing. <b>The middleman gets nothing.</b> He weeps. We do not care.</p>
       <div class="cta-row">
@@ -345,8 +354,8 @@
         <a class="btn btn-ghost" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Join the Discord</a>
       </div>
       <div class="readouts">
-        <div class="r"><div class="n">12</div><div class="k">Years strong</div></div>
-        <div class="r"><div class="n" id="goblinCount">108</div><div class="k">Active goblins</div></div>
+        <div class="r"><div class="n">12</div><div class="k">Years cracking rocks</div></div>
+        <div class="r"><div class="n" id="goblinCount">235</div><div class="k">Goblins across the alliance</div></div>
         <div class="r"><div class="n green" id="paidGoblins">17.7B</div><div class="k">Paid to goblins</div></div>
         <div class="r"><div class="n green" id="rockFund">18.0B</div><div class="k">Raised for the rock</div></div>
         <div class="r"><div class="n green">90%</div><div class="k">Ore buyback</div></div>
@@ -360,14 +369,23 @@
   </div>
 </section>
 
-<!-- ONE HUNDRED GOBLINS. The count is LIVE off the same ESI corp pull that feeds the hero
-     readout, never a hardcoded 100, so this keeps counting instead of freezing on the day
-     we celebrated. It reads as a milestone to us and as social proof to a stranger, which
-     is why it sits directly under the hero rather than down with the perks. -->
+<!-- THE FOUNDING CORP. The hero speaks for the alliance now, so this band is where
+     Wealthy Dropouts keeps its name, its crest and its milestone. The big number is
+     the CORP's live ESI count (not the alliance roll-up in the hero readout): the
+     roster story below is the corp's story and the number must be the corp's number.
+     It reads as a milestone to us and as social proof to a stranger, which is why it
+     sits directly under the hero rather than down with the perks. -->
 <section id="hundred">
   <div class="wrap">
+    <div class="fc-head">
+      <img class="fc-crest" src="/wd-crest.webp?v=1" alt="Wealthy Dropouts corp crest" width="92" height="94" loading="lazy">
+      <div class="fc-block">
+        <div class="fc-kicker">The founding corp &middot; Est. 2014</div>
+        <div class="fc-name">WEALTHY DROPOUTS</div>
+      </div>
+    </div>
     <div class="hnd-eyebrow" id="hundredLabel">&#129703; A hundred goblins</div>
-    <div class="hnd-num"><span id="hundredCount">100</span></div>
+    <div class="hnd-num"><span id="hundredCount">110</span></div>
     <p class="hnd-lede">Not a number. A roster.</p>
     <p class="hnd-body">Some of us have been flying since before half these ships existed. Some
       joined this week and are still working out which laser goes where. The rock does not care how
@@ -375,6 +393,8 @@
       from your first hour.</p>
     <p class="hnd-close">A corp is just the people who keep showing up, and this many of us keep
       showing up. Almost every one of us got here the same way: <b>somebody thought to ask.</b></p>
+    <p class="hnd-founder">The Dropouts founded the alliance and still haul the most rock in it.
+      Corps join <b>BONK</b>. Goblins join <b>the Dropouts</b>. Everyone eats.</p>
   </div>
 </section>
 
@@ -697,30 +717,67 @@
     })();
     var el = document.getElementById("goblinCount");
     if (!el) return;
-    fetch("https://esi.evetech.net/latest/corporations/98342394/?datasource=tranquility")
+    /* TWO NUMBERS, TWO OWNERS. The hero readout is the ALLIANCE (every corp in
+       BONK, summed), because the hero speaks for the alliance now. The milestone
+       band below is the FOUNDING CORP's own count, because its roster story is
+       the corp's story. Both ride one alliance pull (1 + N public ESI calls, N
+       is small), cached an hour in sessionStorage; any failure falls back to the
+       single corp pull, then to the baked numbers. The readout never blanks. */
+    var ESI = "https://esi.evetech.net/latest";
+    var WD = 98342394, BONK = 99015148;
+    function paintHero(n){ if (typeof n === "number" && n > 0) el.textContent = n; }
+    function paintCorp(n){
+      if (typeof n !== "number" || !(n > 0)) return;
+      var h = document.getElementById("hundredCount");
+      if (h) h.textContent = n;
+      /* The LABEL rolls to the highest milestone the corp actually passed. Steps
+         of 50 mean a milestone sits for a good while instead of churning every
+         week. Falls back to the served text if the pull fails, never to a wrong
+         number. */
+      var lb = document.getElementById("hundredLabel");
+      if (lb) {
+        var MILES = [[100,"A hundred"],[150,"A hundred and fifty"],[200,"Two hundred"],
+                     [250,"Two hundred and fifty"],[300,"Three hundred"],[400,"Four hundred"],
+                     [500,"Five hundred"],[750,"Seven hundred and fifty"],[1000,"A thousand"]];
+        var word = null;
+        for (var i = 0; i < MILES.length; i++) if (n >= MILES[i][0]) word = MILES[i][1];
+        if (word) lb.innerHTML = "🪧 " + word + " goblins";
+      }
+    }
+    function corpOnly(){
+      fetch(ESI + "/corporations/" + WD + "/?datasource=tranquility")
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (!d || typeof d.member_count !== "number") return;
+          paintHero(d.member_count); paintCorp(d.member_count);
+        })
+        .catch(function(){});
+    }
+    try {
+      var c = JSON.parse(sessionStorage.getItem("bonk.goblins") || "null");
+      if (c && Date.now() - c.t < 36e5) { paintHero(c.total); paintCorp(c.wd); return; }
+    } catch (e) {}
+    fetch(ESI + "/alliances/" + BONK + "/corporations/?datasource=tranquility")
       .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){
-        if (!d || typeof d.member_count !== "number") return;
-        el.textContent = d.member_count;
-        // the milestone band rides the SAME pull: one request, and the big number keeps
-        // counting past 100 instead of being frozen on the night we celebrated
-        var h = document.getElementById("hundredCount");
-        if (h) h.textContent = d.member_count;
-        /* ...and so does the LABEL. A hardcoded "A hundred goblins" reads fine at 104 and
-           looks abandoned at 200, so it rolls to the highest milestone actually passed.
-           Steps of 50 mean a milestone sits for a good while instead of churning every
-           week. Falls back to the served text if the pull fails, never to a wrong number. */
-        var lb = document.getElementById("hundredLabel");
-        if (lb) {
-          var MILES = [[100,"A hundred"],[150,"A hundred and fifty"],[200,"Two hundred"],
-                       [250,"Two hundred and fifty"],[300,"Three hundred"],[400,"Four hundred"],
-                       [500,"Five hundred"],[750,"Seven hundred and fifty"],[1000,"A thousand"]];
-          var word = null;
-          for (var i = 0; i < MILES.length; i++) if (d.member_count >= MILES[i][0]) word = MILES[i][1];
-          if (word) lb.innerHTML = "🪧 " + word + " goblins";
-        }
+      .then(function(ids){
+        if (!Array.isArray(ids) || !ids.length) throw 0;
+        return Promise.all(ids.map(function(id){
+          return fetch(ESI + "/corporations/" + id + "/?datasource=tranquility")
+            .then(function(r){ return r.ok ? r.json() : null; })
+            .then(function(d){
+              var n = d && typeof d.member_count === "number" ? d.member_count : 0;
+              return { id: id, n: n };
+            });
+        }));
       })
-      .catch(function(){});
+      .then(function(rows){
+        var total = 0, wd = 0;
+        for (var i = 0; i < rows.length; i++) { total += rows[i].n; if (rows[i].id === WD) wd = rows[i].n; }
+        if (!(total > 0)) throw 0;
+        try { sessionStorage.setItem("bonk.goblins", JSON.stringify({ t: Date.now(), total: total, wd: wd })); } catch (e) {}
+        paintHero(total); paintCorp(wd);
+      })
+      .catch(corpOnly);
   })();
   /* Live corp stats (same-origin, cached 60s): ISK paid to goblins, Athanor
      fund raised, and a live-op ping when a fleet is running. */
