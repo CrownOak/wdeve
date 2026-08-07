@@ -172,6 +172,22 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .srep .srown{ font-family:var(--mono); font-size:9px; letter-spacing:.14em;
   text-transform:uppercase; color:var(--muted); }
 .srfoot{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:7px; }
+/* ---- THE SITE RECORD: the strip over the board, the ribbon on a record
+   filing, and the confetti a new record earns ---- */
+.recstrip{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 10px;
+  border:1px solid var(--line-soft); border-left:2px solid var(--ore); background:var(--steel);
+  padding:8px 12px; font-family:var(--mono); font-size:11px; color:var(--silver-dim); }
+.recstrip .rk{ font-size:9px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--ore); font-weight:700; }
+.recstrip b{ color:var(--silver); }
+.recstrip .pend{ color:var(--amber,#e0b34c); }
+.recstrip button{ margin-left:auto; background:none; border:1px solid var(--ore); color:var(--ore);
+  font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  padding:5px 10px; cursor:pointer; }
+.recstrip button:hover{ background:rgba(70,255,94,.08); }
+.recstrip button:disabled{ opacity:.4; cursor:default; }
+.srrec{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ore); border:1px dashed rgba(70,255,94,.5); padding:6px 9px; margin-bottom:10px; }
 /* "shoot the top row first" needs the top row to actually look like the one.
    (tr.best was classed here and in the board dropdown but never styled.) */
 tr.best td{ color:var(--ore); font-weight:600; }
@@ -1184,7 +1200,8 @@ tr.best td{ color:var(--ore); font-weight:600; }
         }
         /* the report pops for the duplicate too: "already on the board" plus
            WHAT is on the board answers the next question before it is asked */
-        if(d.id) scoutReport(d.id, where);
+        if(d.record) confettiBurst();
+        if(d.id) scoutReport(d.id, where, d.record);
         scoutBoard();
       }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
   }
@@ -1213,7 +1230,12 @@ tr.best td{ color:var(--ore); font-weight:600; }
   function scoutBoard(){
     var host=document.getElementById("scoutboard"); if(!host) return;
     fetch("/api/scout/sites").then(function(r){ return r.json(); }).then(function(d){
-      if(!d||!d.ok||!d.sites||!d.sites.length){ host.innerHTML=""; return; }
+      /* the record strip renders even over an empty board: a standing record
+         outlives every site on it */
+      if(!d||!d.ok||!d.sites||!d.sites.length){
+        host.innerHTML="<div class='recstrip' id='recstrip' style='display:none'></div>";
+        recStrip(); return;
+      }
       /* Scans first, leads folded. A sighting carries no rocks and no price, so
          mixing it into the ranked list would put an unpriced row next to priced
          ones and invite the reader to compare them. They count, they just do not
@@ -1226,7 +1248,8 @@ tr.best td{ color:var(--ore); font-weight:600; }
       });
 
       var h="<h2>&#128225; The scout board <span style='font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em'>"+
-            "LIVE SITES &middot; "+d.ttl_hours+"H CLOCK</span></h2>";
+            "LIVE SITES &middot; "+d.ttl_hours+"H CLOCK</span></h2>"+
+            "<div class='recstrip' id='recstrip' style='display:none'></div>";
       /* HOLES FIRST AND SEPARATE. A wormhole has no ISK/m3 to rank on, so putting
          one in the priced list would either invent a number for it or park a 0
          above real sites. It is also the shortest-lived thing on the board. */
@@ -1302,6 +1325,7 @@ tr.best td{ color:var(--ore); font-weight:600; }
       }
 
       host.innerHTML=h;
+      recStrip();
       var fold=document.getElementById("sbfold");
       if (fold) fold.onclick=function(){
         SB_LEADS_OPEN=!SB_LEADS_OPEN;
@@ -1352,6 +1376,60 @@ tr.best td{ color:var(--ore); font-weight:600; }
         el.innerHTML=h;
       }).catch(function(){ el.innerHTML=""; });
   }
+  /* THE SITE RECORD. The strip reads /api/scout/record (member-gated, fails
+     quiet when logged out); the vouch button is the second pair of eyes that
+     makes a claim real; the confetti is why anyone scans a monster field twice. */
+  function confettiBurst(){
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var c=document.createElement("canvas");
+    c.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:1400";
+    document.body.appendChild(c);
+    var g=c.getContext("2d"), W=c.width=window.innerWidth, H=c.height=window.innerHeight;
+    var COLS=["#46ff5e","#b8ffc4","#cfd4ce","#6f776f","#eaffee"];
+    var ps=[]; for(var i=0;i<150;i++) ps.push({
+      x:W/2+(Math.random()-0.5)*W*0.6, y:-20-Math.random()*H*0.25,
+      vx:(Math.random()-0.5)*3.2, vy:2+Math.random()*3.5,
+      w:4+Math.random()*5, h:2+Math.random()*4,
+      r:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.3,
+      col:COLS[(Math.random()*COLS.length)|0] });
+    var t0=Date.now();
+    (function tick(){
+      var dt=Date.now()-t0; g.clearRect(0,0,W,H);
+      for(var i=0;i<ps.length;i++){ var p=ps[i];
+        p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.vy+=0.02;
+        g.save(); g.translate(p.x,p.y); g.rotate(p.r); g.fillStyle=p.col;
+        g.fillRect(-p.w/2,-p.h/2,p.w,p.h); g.restore(); }
+      if(dt<2600) requestAnimationFrame(tick); else c.remove();
+    })();
+  }
+  function recStrip(){
+    var host=document.getElementById("recstrip"); if(!host) return;
+    fetch("/api/scout/record").then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      if(!d||!d.ok||(!d.record&&!d.pending)){ host.innerHTML=""; host.style.display="none"; return; }
+      var h='<span class="rk">&#127942; site record</span>';
+      if(d.record) h+='<span><b>'+isk(d.record.pay)+' ISK</b> &middot; '+esc(d.record.system)
+        +(d.record.label?' &middot; '+esc(d.record.label):'')+' &middot; '+esc(d.record.scout)+'</span>';
+      else h+='<span>none standing yet. the first clean filing sets the bar.</span>';
+      if(d.pending){
+        h+='<span class="pend">claim pending: <b>'+isk(d.pending.pay)+' ISK</b> &middot; '
+          +esc(d.pending.system)+' &middot; '+esc(d.pending.scout)+'</span>';
+        h+= d.can_vouch
+          ? '<button type="button" id="recVouch" title="you looked at the filing and believe it. this makes the record stand.">vouch for it</button>'
+          : '<span class="pend">awaiting another goblin\'s vouch</span>';
+      }
+      host.innerHTML=h; host.style.display="flex";
+      var b=document.getElementById("recVouch");
+      if(b) b.onclick=function(){
+        b.disabled=true;
+        fetch("/api/scout/record/confirm",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({id:d.pending.id})})
+          .then(function(r){ return r.json(); }).then(function(res){
+            if(res&&res.ok){ confettiBurst(); recStrip(); }
+            else { b.disabled=false; scoutMsg((res&&res.error)||"could not vouch for that", true); }
+          }).catch(function(){ b.disabled=false; });
+      };
+    }).catch(function(){});
+  }
   /* THE FIELD REPORT, popped when a filing lands. The same card the fleet
      console opens on a site (fleet/index.html ssPaintDetail), so the scout
      sees exactly what command will see, priced by the same server row. The
@@ -1365,13 +1443,15 @@ tr.best td{ color:var(--ore); font-weight:600; }
   function srClose(){ var m=document.getElementById("srmask"); if(m) m.remove();
     document.removeEventListener("keydown", srEsc); }
   function srEsc(e){ if(e.key==="Escape") srClose(); }
-  function scoutReport(id, label){
+  function scoutReport(id, label, rec){
     fetch("/api/scout/site?id="+encodeURIComponent(id)).then(function(r){ return r.json(); })
       .then(function(d){
         if(!d||!d.ok||d.sighting) return;
         var h='<div class="srcard"><div class="srtop"><b>'+esc(d.system||"")
           +(label?' &middot; '+esc(label):"")+'</b><span>scout report</span>'
           +'<button type="button" class="srx">close &times;</button></div>';
+        if(rec) h+='<div class="srrec">&#127942; new site record &middot; '+isk(rec.pay)
+          +' ISK on one field &middot; stands when another goblin vouches</div>';
         h+='<div class="srep"><div class="srh"><span>&#9670; FIELD REPORT</span><i>'
           +srStamp(d.filed_at)+' &middot; '+srAgo(d.filed_at)+'</i></div>';
         h+='<div class="srl"><u>eyes</u><span>'+esc(d.scout||"a goblin")+' &middot; '
