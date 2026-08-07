@@ -188,6 +188,43 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .recstrip button:disabled{ opacity:.4; cursor:default; }
 .srrec{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--ore); border:1px dashed rgba(70,255,94,.5); padding:6px 9px; margin-bottom:10px; }
+/* ---- THE GOAT BOARD: top ten clean scans ever, podium first. Subtle but
+   legendary: hairline stands, one crown, quiet gold. The restraint is what
+   makes it read as a monument instead of a promotion (see #hundred). */
+#goatpodium{ margin:16px 0 8px; max-width:640px; }
+#goatpodium.off{ display:none; }
+.goathead{ display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; margin-bottom:14px;
+  border-bottom:1px solid rgba(212,175,95,.35); padding-bottom:7px; }
+.goathead .gt{ font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.26em;
+  text-transform:uppercase; color:#d4af5f; }
+.goathead .gs{ font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--muted); }
+.goatempty{ font-family:var(--mono); font-size:11px; color:var(--muted);
+  border:1px dashed var(--line); padding:10px 12px; }
+.podium{ display:flex; align-items:flex-end; gap:8px; }
+.podium .stand{ flex:1; min-width:0; text-align:center; display:flex;
+  flex-direction:column; justify-content:flex-end; gap:2px; }
+.podium .crownrow{ font-size:14px; min-height:19px; line-height:1.2; opacity:.9; }
+.podium .who{ font-family:var(--display); font-weight:700; font-size:13.5px;
+  color:var(--silver); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.podium .pay{ font-family:var(--mono); font-size:11.5px; color:var(--ore); }
+.podium .sys{ font-family:var(--mono); font-size:9px; color:var(--muted);
+  letter-spacing:.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.podium .box{ margin-top:6px; border:1px solid var(--line-soft); border-bottom-width:2px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-weight:700; color:var(--muted); }
+.podium .s1 .box{ height:74px; border-color:rgba(212,175,95,.55); color:#d4af5f; font-size:18px;
+  background:linear-gradient(180deg, rgba(212,175,95,.10), transparent 70%); }
+.podium .s1 .who{ color:#d4af5f; }
+.podium .s2 .box{ height:52px; border-color:rgba(207,212,206,.35); color:var(--silver-dim); font-size:15px; }
+.podium .s3 .box{ height:38px; border-color:rgba(201,138,75,.4); color:#b0855a; font-size:14px; }
+.podium .stand.open .who{ color:var(--muted); font-family:var(--mono); font-size:9.5px;
+  letter-spacing:.14em; text-transform:uppercase; }
+.goatlist{ margin-top:12px; width:100%; background:none; border:none; }
+.goatlist td{ font-size:11.5px; padding:5px 10px; border-top:1px solid var(--line-soft);
+  font-family:var(--mono); color:var(--silver-dim); }
+.goatlist td.num{ width:34px; color:var(--muted); }
+.goatlist b{ color:var(--silver); font-weight:600; }
 /* "shoot the top row first" needs the top row to actually look like the one.
    (tr.best was classed here and in the board dropdown but never styled.) */
 tr.best td{ color:var(--ore); font-weight:600; }
@@ -395,6 +432,9 @@ tr.best td{ color:var(--ore); font-weight:600; }
       <span id="scMsg" class="scoutnote">Filed sites go on the scout board below for 6 hours, so the fleet knows where the good rock is right now.</span>
     </div>
     </div>
+    <!-- THE GOAT BOARD lives directly under the deck: the podium is half the
+         reason anyone scans a monster field twice. Fills for members only. -->
+    <div id="goatpodium" class="off"></div>
     <div id="btbar" style="display:none">
       <span class="btlbl">BUILD TARGET</span>
       <input id="btItem" list="btList" autocomplete="off" spellcheck="false" placeholder="what are you building? (Retriever, Hobgoblin I, antimatter&hellip;)">
@@ -1098,6 +1138,12 @@ tr.best td{ color:var(--ore); font-weight:600; }
   var SC_PERS=null;
   function scSetPers(p){
     SC_PERS = (SC_PERS===p) ? null : p;   // click the picked one again to unsay it
+    /* AN ANOMALY IS ITS OWN ADDRESS. The probe list names it and it dies with
+       its rocks, so "where in it" is only a question a BELT can answer. The
+       field clears on hide so a stale label never rides an anomaly filing. */
+    var askWhere = SC_PERS!=="anomaly";
+    scShow("scWhere", askWhere);
+    if(!askWhere){ var w=document.getElementById("scWhere"); if(w) w.value=""; }
     var b=document.getElementById("scPers"); if(!b) return;
     Array.prototype.forEach.call(b.querySelectorAll("button"), function(o){
       o.className = (o.getAttribute("data-p")===SC_PERS) ? "on" : "";
@@ -1114,7 +1160,7 @@ tr.best td{ color:var(--ore); font-weight:600; }
     var hole = m==="hole";
     scShow("scOre",   m==="range");
     scShow("scSize",  m==="range");
-    scShow("scWhere", !hole);          // a hole's signature IS its location
+    scShow("scWhere", !hole && SC_PERS!=="anomaly");  // a hole's signature IS its location; an anomaly is its own address
     scShow("scPers",  !hole);          // every k-space hole is transient; nothing to pick
     scShow("scSig",   hole);
     scShow("scDest",  hole);
@@ -1376,6 +1422,45 @@ tr.best td{ color:var(--ore); font-weight:600; }
         el.innerHTML=h;
       }).catch(function(){ el.innerHTML=""; });
   }
+  /* THE GOAT BOARD. Top clean scans ever, olympic style: 2 stands lower than 1,
+     3 lower than 2, and the crown only ever sits on one head. Member-gated data
+     (the worth is buyback priced); logged out, the throne room stays closed. */
+  var GOAT_LOADED=false;
+  function goatBoard(){
+    var host=document.getElementById("goatpodium"); if(!host||GOAT_LOADED) return;
+    fetch("/api/scout/podium").then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      if(!d||!d.ok) return;
+      GOAT_LOADED=true;
+      var t=d.top||[];
+      var h='<div class="goathead"><span class="gt">&#128081; THE GOAT BOARD</span>'
+        +'<span class="gs">the biggest clean fields ever filed to the scout net</span></div>';
+      if(!t.length){
+        h+='<div class="goatempty">The throne is empty. Nobody has filed a clean scan yet. '
+          +'It could be you and your Venture.</div>';
+      } else {
+        function stand(r, cls, n){
+          if(!r) return '<div class="stand '+cls+' open"><div class="crownrow"></div>'
+            +'<div class="who">open</div><div class="box">'+n+'</div></div>';
+          return '<div class="stand '+cls+'">'
+            +'<div class="crownrow">'+(cls==="s1"?"&#128081;":"")+'</div>'
+            +'<div class="who" title="'+esc(r.scout)+'">'+esc(r.scout)+'</div>'
+            +'<div class="pay">'+isk(r.pay)+' ISK</div>'
+            +'<div class="sys">'+esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+'</div>'
+            +'<div class="box">'+n+'</div></div>';
+        }
+        h+='<div class="podium">'+stand(t[1],"s2",2)+stand(t[0],"s1",1)+stand(t[2],"s3",3)+'</div>';
+        if(t.length>3){
+          h+='<table class="goatlist"><tbody>';
+          for(var i=3;i<t.length;i++){ var r=t[i];
+            h+='<tr><td class="num">'+(i+1)+'</td><td>'+esc(r.scout)+'</td><td>'
+              +esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+'</td>'
+              +'<td class="num"><b>'+isk(r.pay)+'</b></td></tr>'; }
+          h+='</tbody></table>';
+        }
+      }
+      host.innerHTML=h;
+    }).catch(function(){});
+  }
   /* THE SITE RECORD. The strip reads /api/scout/record (member-gated, fails
      quiet when logged out); the vouch button is the second pair of eyes that
      makes a claim real; the confetti is why anyone scans a monster field twice. */
@@ -1541,6 +1626,8 @@ tr.best td{ color:var(--ore); font-weight:600; }
     document.getElementById("survbar").style.display = (m==="surv")?"":"none";
     // the deck only exists in survey mode; without this it draws an empty frame
     var deck=document.getElementById("survdeck"); if(deck) deck.className = (m==="surv")?"":"off";
+    var gp=document.getElementById("goatpodium");
+    if(gp){ gp.className=(m==="surv")?"":"off"; if(m==="surv") goatBoard(); }
     if(m==="surv") scoutBoot(); else { var sb=document.getElementById("scoutbar"); if(sb) sb.style.display="none"; }
     document.getElementById("pxboard").style.display = (m==="px")?"":"none";
     if(m!=="proj"){ document.getElementById("ore").setAttribute("placeholder", PH[m]); document.getElementById("out").innerHTML=""; calc(); }
