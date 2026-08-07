@@ -279,7 +279,7 @@
       <a href="/tools/">Tools</a><a href="/portal/">Portal</a>
       <a class="btn-mini" href="/apply/">Apply</a>
       <a class="btn-gob btn-out" href="/apply/gobsec/">GOBSEC</a>
-      <a class="navlink" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Discord</a>
+      <a class="navlink" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Discord</a>
       <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
     </nav>
   </div>
@@ -323,7 +323,7 @@
       <p class="lede"><b>Big Rock Energy [BONK]</b> is a highsec mining &amp; industry alliance. We mine the rock, refine the rock, build with the rock, and sell the thing. <b>The middleman gets nothing.</b> He weeps. We do not care.</p>
       <div class="cta-row">
         <a class="btn btn-ore" href="/apply/">Apply to join ▸</a>
-        <a class="btn btn-ghost" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Join the Discord</a>
+        <a class="btn btn-ghost" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Join the Discord</a>
         <a class="btn btn-ghost" href="/portal/">Member portal →</a>
       </div>
       <div class="readouts">
@@ -489,7 +489,7 @@
     <div class="disc" id="disc">
       <div class="disc-head">
         <div class="disc-live"><span class="disc-dot"></span><b id="disc-count">&hellip;</b> goblins in the belt right now</div>
-        <a class="disc-join" id="disc-join" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Jump in &#9656;</a>
+        <a class="disc-join" id="disc-join" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Jump in &#9656;</a>
       </div>
       <div class="disc-list" id="disc-list"><div class="disc-loading">knocking on the airlock&hellip;</div></div>
       <div class="disc-foot">// live headcount straight from Discord. lurkers welcome, but the ore does not mine itself.</div>
@@ -501,7 +501,7 @@
   <div class="wrap reveal">
     <p class="creed">The ore must flow.<br>The <span class="o">goblins</span> must eat.</p>
     <p class="sub">Reject the prescribed path. Mine the rock instead.</p>
-    <a class="btn btn-ore" href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener">Come be a goblin ▸</a>
+    <a class="btn btn-ore" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Come be a goblin ▸</a>
   </div>
 </section>
 
@@ -634,7 +634,7 @@
     fetch("https://discord.com/api/guilds/"+GUILD+"/widget.json").then(function(r){return r.ok?r.json():null;}).then(function(d){
       if(!d) throw "no";
       if(countEl) countEl.textContent=(d.presence_count!=null?d.presence_count:(d.members||[]).length);
-      // keep the prospect-role invite (eavumbvRnp) — do NOT override with the widget's instant_invite
+      // keep the prospect-role invite (mWZH7uYHNy) — do NOT override with the widget's instant_invite
       var rank={online:0,idle:1,dnd:2};
       var members=(d.members||[]).slice().sort(function(a,b){
         return ((rank[a.status]==null?3:rank[a.status])-(rank[b.status]==null?3:rank[b.status]))
@@ -652,7 +652,7 @@
       });
       listEl.innerHTML=h;
     }).catch(function(){
-      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/eavumbvRnp" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
+      listEl.innerHTML='<div class="disc-loading">Discord is being shy. <a href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener" style="color:var(--ore)">Jump in anyway &#9656;</a></div>';
     });
   })();
 </script>
