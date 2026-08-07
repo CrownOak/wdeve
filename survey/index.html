@@ -228,6 +228,12 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .goatlist td.num{ width:24px; color:var(--muted); }
 .goatlist td.pay{ text-align:right; white-space:nowrap; }
 .goatlist b{ color:var(--silver); font-weight:600; }
+/* clickable legends: quiet until hovered, like everything else worth clicking */
+.podium .stand[data-site]{ cursor:pointer; }
+.podium .stand[data-site]:hover .box{ border-color:var(--ore); color:var(--ore); }
+.goatlist tr[data-site]{ cursor:pointer; }
+.goatlist tr[data-site]:hover td{ color:var(--ore); }
+.goatlist tr[data-site]:hover b{ color:var(--ore); }
 /* "shoot the top row first" needs the top row to actually look like the one.
    (tr.best was classed here and in the board dropdown but never styled.) */
 tr.best td{ color:var(--ore); font-weight:600; }
@@ -1444,7 +1450,7 @@ tr.best td{ color:var(--ore); font-weight:600; }
         function stand(r, cls, n){
           if(!r) return '<div class="stand '+cls+' open"><div class="crownrow"></div>'
             +'<div class="who">open</div><div class="box">'+n+'</div></div>';
-          return '<div class="stand '+cls+'">'
+          return '<div class="stand '+cls+'"'+(r.id?' data-site="'+r.id+'" data-lbl="'+esc(r.label||"")+'" title="open the filing"':'')+'>'
             +'<div class="crownrow">'+(cls==="s1"?"&#128081;":"")+'</div>'
             +'<div class="who" title="'+esc(r.scout)+'">'+esc(r.scout)+'</div>'
             +'<div class="pay">'+isk(r.pay)+' ISK</div>'
@@ -1457,13 +1463,19 @@ tr.best td{ color:var(--ore); font-weight:600; }
              the row stays one quiet line */
           h+='<table class="goatlist"><tbody>';
           for(var i=3;i<t.length;i++){ var r=t[i];
-            h+='<tr><td class="num">'+(i+1)+'</td>'
-              +'<td title="'+esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+'">'+esc(r.scout)+'</td>'
+            h+='<tr'+(r.id?' data-site="'+r.id+'" data-lbl="'+esc(r.label||"")+'"':'')+'><td class="num">'+(i+1)+'</td>'
+              +'<td title="'+esc(r.system)+(r.label?' &middot; '+esc(r.label):'')+' &middot; open the filing">'+esc(r.scout)+'</td>'
               +'<td class="pay"><b>'+isk(r.pay)+'</b></td></tr>'; }
           h+='</tbody></table>';
         }
       }
       host.innerHTML=h;
+      /* every legend opens its original filing: same field report card, same
+         server row. The detail endpoint keeps expired sites readable on
+         purpose, so history clicks never dead-end. */
+      Array.prototype.forEach.call(host.querySelectorAll("[data-site]"), function(el){
+        el.onclick=function(){ scoutReport(el.getAttribute("data-site"), el.getAttribute("data-lbl")||null); };
+      });
     }).catch(function(){});
   }
   /* THE SITE RECORD. The strip reads /api/scout/record (member-gated, fails
@@ -1529,7 +1541,9 @@ tr.best td{ color:var(--ore); font-weight:600; }
     return p(d.getUTCHours())+":"+p(d.getUTCMinutes())+" EVE"; }
   function srAgo(iso){ var t=Date.parse(iso); if(!t) return "";
     var m=Math.max(0,Math.round((Date.now()-t)/60000));
-    return m<60 ? m+"m ago" : (m/60).toFixed(1)+"h ago"; }
+    if(m<60) return m+"m ago";
+    if(m<2880) return (m/60).toFixed(1)+"h ago";   // under 2 days, hours still read
+    return Math.round(m/1440)+"d ago"; }           // a legend's age is in days
   function srClose(){ var m=document.getElementById("srmask"); if(m) m.remove();
     document.removeEventListener("keydown", srEsc); }
   function srEsc(e){ if(e.key==="Escape") srClose(); }
