@@ -91,21 +91,35 @@
   .langsw button:hover{color:var(--ore)}
   .langsw button.on{color:var(--ore);font-weight:700}
   .langsw span{color:var(--muted,#6f776f);font-size:10px}
-  /* ONE primary. Three filled buttons in a row is a toolbar, not a call to action: the eye
-     has nowhere to land and the actual conversion loses. Apply stays solid, GOBSEC becomes
-     the outlined second door, Discord drops to a plain link. */
+  /* ONE fill. Three important buttons cannot all shout, so the fill follows the
+     visitor's most likely next click: stranger = Apply, member = Portal, member
+     while an op is hot = Fleet. Portal and Fleet hold the outline otherwise.
+     Apply sits LAST, past the language switch: the end of the run is where the
+     eye lands. */
   .nav .btn-mini{color:#04140a;background:var(--ore);padding:8px 15px;font-weight:700;
     font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
     text-decoration:none;transition:transform .15s, box-shadow .2s}
   .nav .btn-mini:hover{color:#04140a;transform:translateY(-1px);box-shadow:0 6px 22px rgba(70,255,94,.3)}
+  .nav .btn-mini-ghost{color:var(--ore);border:1px solid rgba(70,255,94,.4);padding:7px 14px;
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
+    font-weight:700;text-decoration:none;transition:transform .15s, background .2s, box-shadow .2s}
+  .nav .btn-mini-ghost:hover{color:var(--ore);background:rgba(70,255,94,.08);transform:translateY(-1px)}
   .nav .btn-out{padding:7px 14px;border:1px solid var(--line);color:var(--muted);
     font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;
     text-decoration:none}
   .nav .navlink{color:var(--muted)}
   .nav .navlink:hover{color:var(--silver)}
-  /* below 900 the section links go; the doors and the clock stay */
-  @media(max-width:900px){.drop,.nav a[href="/tools/"],.nav a[href="/portal/"]{display:none}}
+  /* the live-op ember on Fleet: same signal nav.js runs on every subpage */
+  .livedot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ore);
+    margin-left:7px;vertical-align:middle;animation:oppulse 1.8s infinite}
+  .livedot[hidden]{display:none}
+  .btn-mini .livedot{background:#04140a;animation:none}
+  /* below 900 the section links go; the doors stay — Portal, Fleet and Apply ARE
+     the phone nav (the pinned three plus the conversion), so they never hide */
+  @media(max-width:900px){.drop,.nav a[href="/tools/"]{display:none}}
   @media(max-width:720px){.nav .navlink,.langsw{display:none}}
+  @media(max-width:480px){.nav{gap:12px}
+    .nav .btn-mini,.nav .btn-mini-ghost{padding:6px 10px;font-size:11.5px}}
 
   .ticker{border-bottom:1px solid var(--line);background:linear-gradient(var(--steel),var(--black));overflow:hidden;white-space:nowrap;position:relative;z-index:1}
   .ticker .rail{display:inline-flex;animation:scroll 42s linear infinite;will-change:transform}
@@ -135,6 +149,9 @@
   .btn-ore:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(70,255,94,.32)}
   .btn-ghost{background:linear-gradient(var(--steel-2),var(--steel));color:var(--silver);border-color:var(--line);clip-path:none}
   .btn-ghost:hover{border-color:var(--ore);color:var(--ore)}
+  /* the member door: outlined in ore, one step under the fill */
+  .btn-hollow{background:transparent;color:var(--ore);border-color:rgba(70,255,94,.4);clip-path:none}
+  .btn-hollow:hover{background:rgba(70,255,94,.08);border-color:var(--ore);transform:translateY(-1px)}
   .readouts{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--line)}
   .readouts .r{padding:16px 22px 4px 0;margin-right:22px}
   .readouts .n{font-family:var(--display);font-weight:700;font-size:26px;color:var(--silver);line-height:1}
@@ -276,11 +293,12 @@
           <a href="#chain">The Chain</a><a href="#perks">Perks</a><a href="#career">Career</a><a href="#buyback">Buyback</a>
         </div>
       </div>
-      <a href="/tools/">Tools</a><a href="/portal/">Portal</a>
-      <a class="btn-mini" href="/apply/">Apply</a>
-      <a class="btn-gob btn-out" href="/apply/gobsec/">GOBSEC</a>
+      <a href="/tools/">Tools</a>
+      <a class="btn-mini-ghost" id="navPortal" href="/portal/">Portal<span class="ign" id="navIgn" data-i18n-skip></span></a>
+      <a class="btn-mini-ghost" id="navFleet" href="/fleet/">Fleet<span class="livedot" id="fleetDot" hidden></span></a>
       <a class="navlink" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Discord</a>
       <span class="langsw" id="langsw" data-i18n-skip role="group" aria-label="Language / Язык"><button type="button" data-lang="en">EN</button><span aria-hidden="true">·</span><button type="button" data-lang="ru">RU</button></span>
+      <a class="btn-mini" id="navApply" href="/apply/">Apply</a>
     </nav>
   </div>
 </header>
@@ -322,9 +340,9 @@
       <h1 class="hero-title">Emotionally stable goblins who love <span class="o">rocks</span></h1>
       <p class="lede"><b>Big Rock Energy [BONK]</b> is a highsec mining &amp; industry alliance. We mine the rock, refine the rock, build with the rock, and sell the thing. <b>The middleman gets nothing.</b> He weeps. We do not care.</p>
       <div class="cta-row">
-        <a class="btn btn-ore" href="/apply/">Apply to join ▸</a>
+        <a class="btn btn-ore" id="heroApply" href="/apply/">Apply to join ▸</a>
+        <a class="btn btn-hollow" id="heroPortal" href="/portal/">Member portal →</a>
         <a class="btn btn-ghost" href="https://discord.gg/mWZH7uYHNy" target="_blank" rel="noopener">Join the Discord</a>
-        <a class="btn btn-ghost" href="/portal/">Member portal →</a>
       </div>
       <div class="readouts">
         <div class="r"><div class="n">12</div><div class="k">Years strong</div></div>
@@ -334,7 +352,7 @@
         <div class="r"><div class="n green">90%</div><div class="k">Ore buyback</div></div>
         <div class="r"><div class="n green">≈83%</div><div class="k">More ore / hr boosted</div></div>
       </div>
-      <div class="oplive" id="opLive" style="display:none"><span class="opdot"></span>OP LIVE &middot; <b id="opCount">0</b> goblins on the belt right now</div>
+      <a class="oplive" id="opLive" href="/fleet/" style="display:none"><span class="opdot"></span>OP LIVE &middot; <b id="opCount">0</b> goblins on the belt right now &nbsp;▸</a>
     </div>
     <div class="logo-wrap">
       <img src="/bonk-seal.webp?v=1" alt="Big Rock Energy [BONK] alliance seal" width="640" height="640">
@@ -724,6 +742,40 @@
       }
       var ol=document.getElementById("opLive");
       if(ol){ if(d.live_op){ var oc=document.getElementById("opCount"); if(oc) oc.textContent=(d.online||0); ol.style.display=""; } else { ol.style.display="none"; } }
+      if(window.__setOpHot) window.__setOpHot(!!(d.op_hot || d.live_op));
+    }).catch(function(){});
+  })();
+  /* THE FILL FOLLOWS THE LIKELY NEXT CLICK. Stranger: Apply carries the fill.
+     Member: Portal does, and wears the pilot's name. Member while an op is hot:
+     Fleet does, with the ember lit. Both signals arrive async (whoami, the
+     public-stats pull above), so the bar re-resolves when either lands; the
+     authored markup IS the stranger state, so with JS off nothing changes. */
+  (function(){
+    var st = { member:false, ign:"", hot:false };
+    function byId(i){ return document.getElementById(i); }
+    function cls(el, want){
+      if(!el) return;
+      el.classList.remove("btn-mini","btn-mini-ghost");
+      if(want==="fill") el.classList.add("btn-mini");
+      else if(want==="ghost") el.classList.add("btn-mini-ghost");
+    }
+    function resolve(){
+      var m=st.member, hot=st.hot;
+      cls(byId("navApply"),  m ? "plain" : "fill");
+      cls(byId("navPortal"), m && !hot ? "fill" : "ghost");
+      cls(byId("navFleet"),  m && hot  ? "fill" : "ghost");
+      var dot=byId("fleetDot"); if(dot) dot.hidden=!hot;
+      var ign=byId("navIgn"); if(ign) ign.textContent = m && st.ign ? " · "+st.ign : "";
+      var hA=byId("heroApply"), hP=byId("heroPortal");
+      if(hA && hP){
+        hA.classList.remove("btn-ore","btn-hollow"); hP.classList.remove("btn-ore","btn-hollow");
+        hA.classList.add(m ? "btn-hollow" : "btn-ore");
+        hP.classList.add(m ? "btn-ore" : "btn-hollow");
+      }
+    }
+    window.__setOpHot = function(on){ if(!!on!==st.hot){ st.hot=!!on; resolve(); } };
+    fetch("/api/whoami").then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if(d && d.loggedIn){ st.member=true; st.ign=d.ign||""; resolve(); }
     }).catch(function(){});
   })();
 </script>
