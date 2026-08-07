@@ -471,6 +471,10 @@
   .mevempty{ margin-top:11px; font-size:12.5px; color:var(--muted); line-height:1.55; max-width:54ch; }
   .mevempty b{ color:var(--silver); }
   .mevempty i{ font-style:normal; color:var(--ore); }
+  /* your own standing when you are past the visible ten */
+  .mevmine{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted);
+    padding:7px 0 0; text-align:right; }
+  .mevmine b{ color:var(--ore); }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
                 font-size:12.5px; color:var(--ore); }
   .refcard .rs{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
@@ -2963,7 +2967,12 @@ function renderEventBoard(){
      a sentence underneath it. JOINED leads the columns because joined is what wins. */
   var ends = "";
   try {
-    var dt = new Date(b.ends_at);
+    /* ends_at is an EXCLUSIVE bound (the server filters created_at < end), so the
+       raw date is the first day the race is OVER. Printing it read "to 1 Sep" for a
+       race the announcement calls "to Aug 31", which is a discrepancy a member can
+       check and will not ask about, they will just trust the board less. Step back
+       one day and say the last day that counts. */
+    var dt = new Date(Date.parse(b.ends_at) - 86400000);
     if (isFinite(dt.getTime()))
       ends = " &middot; to " + dt.getUTCDate() + " "
         + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][dt.getUTCMonth()];
@@ -2995,6 +3004,13 @@ function renderEventBoard(){
          or why held exists. Both are one sentence each, and the second one carries the
          actual point: held is there so this rewards bringing friends home rather than
          farming signups. */
+      /* WHERE YOU STAND, when you are not in the visible ten. The server has always
+         computed my_rank over every entrant and nothing ever read it, so a member
+         ranked 11th saw a board with no trace of themselves and no sense of how far
+         off the pace they were. Silent for anyone already shown above. */
+      ((b.my_rank && b.my_rank > b.board.length)
+        ? '<div class="mevmine">You are <b>' + b.my_rank + '</b> of ' + (b.entrants || b.my_rank) + '.</div>'
+        : '') +
       '<div class="mevfoot">Your link, their application, an officer says yes. That is a JOINED. ' +
         'Still flying with us two weeks later and it becomes a HELD.<br>' +
         'Joined wins the 500M. Held settles ties, because we are counting goblins who stayed, ' +
@@ -3014,6 +3030,13 @@ function renderEventBoard(){
       'You do not have to pitch anybody. You are not selling timeshares. You send your link ' +
       'to one person who is out there mining alone in the cold like a Victorian orphan, and ' +
       'you ask. That is the job. That is the whole job.' +
+      '<br><br>' +
+      /* The JOINED/HELD explainer only rendered inside the non-empty branch, so the
+         one moment it actually matters, an empty board that somebody has to break,
+         was the one moment nobody was told what counts. */
+      '<span style="color:var(--silver-dim)">Your link, their application, an officer says yes. ' +
+      'That is a JOINED, and most joined wins it. Still flying with us two weeks later and it ' +
+      'becomes a HELD, which settles ties.</span>' +
       '<br><br>' +
       '<i>Almost every one of us is here because somebody thought to ask. Go be the somebody.</i>' +
       '</div>';

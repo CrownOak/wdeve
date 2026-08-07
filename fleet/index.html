@@ -2586,8 +2586,16 @@ tr.haulrow{ cursor:pointer; }
        in this list it renders as an ordinary row advertising 0 ISK/m3 next to
        real scans. The callout list is what an FC warps the fleet on, so it holds
        scans only; leads are counted in the header and read on /survey/. */
-    var leads = kept.filter(function(x){ return x.sighting; });
-    var live  = kept.filter(function(x){ return !x.sighting; });
+    /* WORMHOLES ARE NOT MINING SITES. Holes started arriving on this feed on
+       2026-08-06 and this picker had no idea: a hole carries rocks:0 and
+       pay_per_m3:0, so it rendered as a belt worth 0 ISK/m3 with 0 rocks AND a
+       live accept button, which would have paid a scout a callout line for a site
+       the fleet cannot mine. Filter them out here rather than teach the payout
+       path about them: this picker exists to choose a BELT for an op. The holes
+       still live on the scout board at /survey/, which is where they belong. */
+    var kept2 = kept.filter(function(x){ return x.kind !== "hole"; });
+    var leads = kept2.filter(function(x){ return x.sighting; });
+    var live  = kept2.filter(function(x){ return !x.sighting; });
     /* Three different empties, and saying the wrong one is worse than silence:
        passed-on-everything, leads-but-nothing-surveyed, and genuinely nothing. */
     if (!live.length){

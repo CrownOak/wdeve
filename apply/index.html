@@ -1044,8 +1044,11 @@
                        .catch(function(){ return { d: null, status: res.status }; });
     }).then(function(r){
       if (r.d && r.d.ok) { sending = false; confirmOk(); return; }
-      // a server that answered with a reason is not a transient failure
-      if (r.d && r.d.error) { sending = false; confirmErr(r.d.error); return; }
+      /* A server that answered with a REASON is not a transient failure. But a 5xx
+         is a transient failure that happens to carry a message, and short circuiting
+         on those defeated the retry loop for exactly the class of fault it was built
+         for. Only a 4xx is a real answer. */
+      if (r.d && r.d.error && r.status < 500) { sending = false; confirmErr(r.d.error); return; }
       if (attempt < 2) { setTimeout(function(){ fire(attempt + 1); }, 900 * (attempt + 1)); return; }
       sending = false;
       confirmErr("The wire to the recruiters is quiet. Your answers are saved, so hit try again in a moment and nothing is lost.");
