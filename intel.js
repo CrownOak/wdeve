@@ -455,7 +455,7 @@ function paintMap(sysId,animate){
         +"<circle cx='"+n.x+"' cy='"+n.y+"' r='"+r+"' fill='"+(n.kills>0?"rgba(255,71,87,.14)":"#101214")+"' stroke='"+sc[1]+"' stroke-width='"+(n.road?2:1.4)+"'/>"
         +"<title>"+esc(n.n)+" &#183; "+n.sec.toFixed(1)+" &#183; "+n.gates+" gates &#183; "+(n.kills?n.kills+" killed this hour":"quiet")+"</title></g>";
       s+="<text class='mn' x='"+n.x+"' y='"+(n.y+r+13)+"' text-anchor='middle'>"+esc(n.n)+"</text>";
-      s+="<text class='ms' x='"+n.x+"' y='"+(n.y+r+23)+"' text-anchor='middle'>"+n.sec.toFixed(1)+(n.road?" &#183; our road":"")+"</text>";
+      s+="<text class='ms' x='"+n.x+"' y='"+(n.y+r+23)+"' text-anchor='middle'>"+n.sec.toFixed(1)+((n.road&&OURS)?" &#183; our road":"")+"</text>";
       if(n.kills) s+="<text class='mk' x='"+n.x+"' y='"+(n.y+4)+"' text-anchor='middle' fill='var(--gob,#ff4757)'>"+n.kills+"</text>";
     });
     s+="</svg>";
@@ -489,7 +489,7 @@ function paintAreaHud(c,nbs){
     +(hottest&&hottest.kills?esc(hottest.n)+" "+hottest.kills:"all quiet")+"</div></div>";
   h+="<div><div class='k'>WAY OUT</div><div class='v' style='font-size:12px'>"+(ls===nbs.length&&nbs.length?"none in highsec":(nbs.length-ls)+" highsec")+"</div></div>";
   h+="<div><div class='k'>TRAFFIC</div><div class='v'>"+c.jumps+"</div></div>";
-  if(roads) h+="<div><div class='k'>OUR ROADS</div><div class='v ok'>"+roads+"</div></div>";
+  if(roads && OURS) h+="<div><div class='k'>OUR ROADS</div><div class='v ok'>"+roads+"</div></div>";
   hud.innerHTML=h;
   /* the trail: where you walked in from, newest last, each one a way back */
   var tr=document.getElementById("maptrail");
@@ -678,8 +678,10 @@ function renderSystem(D,ageMs,partial){
   h+="<div class='idacts'>"
     +"<button class='starb"+(isWatched("sys",D.id)?" on":"")+"' id='starb'>"+(isWatched("sys",D.id)?"&#9733; watching":"&#9734; watch")+"</button>"
     +"<span class='zlink'><a href='https://zkillboard.com/system/"+D.id+"/' target='_blank' rel='noopener'>zKillboard &#8599;</a></span>"
-    +"<span class='zlink'><a href='/cartel/?to="+encodeURIComponent(D.name)+"'>check the road &#8594;</a></span>";
-  if(D.ourRoad) h+="<span class='roadchip' style='margin:0'>OUR ROAD</span>";
+    /* the cartel link is a PBKDF2 locked page: a guaranteed dead end for a stranger,
+       and it advertises that a corridor tool exists. Members only. */
+    + (OURS ? "<span class='zlink'><a href='/cartel/?to="+encodeURIComponent(D.name)+"'>check the road &#8594;</a></span>" : "");
+  if(D.ourRoad && OURS) h+="<span class='roadchip' style='margin:0'>OUR ROAD</span>";
   h+="</div></div></div>";
   /* the sentence */
   if(hot&&calm){
@@ -1518,7 +1520,10 @@ function findNearestFight(){
   Promise.all([loadSysGraph(),esiActivity()]).then(function(res){
     var S=res[0],A=res[1];
     if(!S||!S.d) return;
-    var home=S.byName?S.byName["mohas"]:null; if(home==null) return;
+    /* Public anchors on RENS, which is on our own front page and in the recruitment
+       copy, so a distance measured from it leaks nothing new. Mohas is the home and
+       stays members only. */
+    var home=S.byName?S.byName[OURS?"mohas":"rens"]:null; if(home==null) return;
     var dist={},q=[home],seen={}; seen[home]=1; dist[home]=0;
     while(q.length){
       var cur=q.shift(); if(dist[cur]>=10) continue;

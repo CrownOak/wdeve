@@ -973,6 +973,9 @@
     p.dest_corp = ans.dest === "wd" ? "wd" : "gobsec";
     if (REF) p.ref = REF;
     if (ans.refnote) p.ref_note = ans.refnote;
+    // the combat track retries exactly like the corp one, so it needs the same
+    // replay key or those retries file duplicates
+    p.submit_id = submitId(p);
     return p;
   }
   function payload(){

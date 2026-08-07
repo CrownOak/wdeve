@@ -315,6 +315,9 @@
     "color:var(--muted,#6f776f);font-weight:700;padding-bottom:0;margin-bottom:7px;" +
     "display:flex;align-items:center;gap:8px;}" +
     ".bn-glabel::after{content:\"\";height:1px;width:14px;background:rgba(150,168,158,.28);flex:none;}" +
+    /* display:block beats the bare `hidden` attribute, so gated rows stayed visible
+       and only the group-collapse side effect was hiding them. Make hidden mean it. */
+    ".bn-item[hidden],.bn-foot-l[hidden]{display:none!important;}" +
     ".bn-item{display:block;font-family:var(--mono,ui-monospace,monospace);font-size:12px;letter-spacing:.1em;" +
     "text-transform:uppercase;color:#c8d0c8;text-decoration:none;padding:8px 10px;" +
     /* hover is colour only. A row that MOVES under the cursor feels cheap and makes
