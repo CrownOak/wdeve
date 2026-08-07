@@ -24,6 +24,17 @@ var MARKUP='<div class="pgrid">\n <div class="pmain">\n  <div id="thecall"></div
 window.BONKINTEL={mount:function(root,opts){
   if(!root) return; root.innerHTML=MARKUP;
   var OURS=!!(opts&&opts.ours);
+  /* Pull the footprint for a member desk. Public mounts never ask, so a stranger's
+     browser makes no request for it and there is nothing to intercept. A failure
+     here leaves the maps empty, which is the safe direction. */
+  if(OURS) fetch("/api/roads",{credentials:"same-origin"})
+    .then(function(r){ return r.ok?r.json():null; })
+    .then(function(d){
+      if(!d||!d.ok) return;
+      (d.sys||[]).forEach(function(id){ OUR_SYS[id]=1; });
+      (d.regs||[]).forEach(function(n){ OUR_REG[n]=1; });
+      try{ refreshHud(); }catch(e){}
+    }).catch(function(){});
   if(!OURS){
     /* Remove rather than hide. A display:none tab is still in the DOM for anyone
        who opens devtools, and the whole point is to not publish the map. */
@@ -45,8 +56,14 @@ var TPATH={char:"characterID",corp:"corporationID",alli:"allianceID",sys:"solarS
 var TZW={char:"character",corp:"corporation",alli:"alliance",sys:"system"};
 var OUR_ALLI=99015148;
 var OUR_CORPS={98342394:1,98840038:1,98838780:1,98807741:1};
-var OUR_SYS={30000031:1,30000035:1,30000114:1,30000117:1,30000943:1,30000944:1,30000945:1,30000948:1,30002510:1};
-var OUR_REG={"Derelik":1,"Devoid":1,"Great Wildlands":1};
+/* EMPTY IN THE PUBLIC BUNDLE (2026-08-07). This file is served by Pages to anyone
+   who asks for the URL, so anything hardcoded here is published no matter which
+   pages gate their own rendering. The footprint now arrives from the member gated
+   /api/roads at mount, and only when this instance is running in `ours` posture.
+   Left empty, every consumer already reads as "not one of ours", which is exactly
+   what a stranger should see. */
+var OUR_SYS={};
+var OUR_REG={};
 var RENS=30002510;
 var LSD="bonk_brief_v1::", LSR="bonk_brief_recent_v1", LSW="bonk_brief_watch_v1";
 
@@ -614,8 +631,11 @@ function buildSystem(id){
     }).then(function(res){
       var S=res[0],A=res[1];
       D.live=(A.k[id]||{}); D.jumpsHr=A.j[id]||0;
-      D.jMohas=jumpsBetween(S,30000031,id,12);
-      D.jRens=jumpsBetween(S,30002510,id,12);
+      /* Only a member desk measures distance from home, and only a member desk
+         should be seen asking. Public mounts skip the route walk entirely rather
+         than computing a number they will not render. */
+      D.jMohas=OURS?jumpsBetween(S,30000031,id,12):null;
+      D.jRens=jumpsBetween(S,30002510,id,12);   // Rens is public: front page, recruitment copy
       D.ourRoad=!!OUR_SYS[id];
       /* the neighbours: a calm system beside a camp is not calm */
       D.nb=[];

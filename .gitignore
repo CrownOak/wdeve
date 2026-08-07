@@ -3,3 +3,6 @@
 
 # build staging for the mirror deploy, never source
 .stage/
+
+# stray page snapshots from debugging; the real pages live in their own dirs
+live_*.html

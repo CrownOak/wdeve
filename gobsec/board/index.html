@@ -262,8 +262,18 @@ function renderNow(ours, ground, sysNames){
 /* ---- LIVE ROUTE STATUS off the tripwire wire. The corridor systems are baked
    by id (same names the standing orders carry); status is computed honestly
    from timestamps, and quiet gets said confidently, same rule as band 1. ---- */
-var ROUTES = { "Khabi": 30000117, "7Q-8Z2": 30000943, "SUR-F7": 30000944, "JPL-RA": 30000901 };
-var HOME = { name: "Mohas", id: 30000031 };
+/* EMPTY IN THE SHELL (2026-08-07): this file is public even though the board is
+   not. Route names and the home come from the member gated /api/roads. */
+var ROUTES = {};
+var HOME = { name: "", id: null };
+var ROADS_P = fetch("/api/roads", { credentials: "same-origin" })
+  .then(function (r) { return r.ok ? r.json() : null; })
+  .then(function (d) {
+    if (!d || !d.ok) return null;
+    ROUTES = d.routes || {};
+    if (d.home) HOME = { name: d.home.n, id: d.home.id };
+    return d;
+  }).catch(function () { return null; });
 function sysStats(wire, sid){
   var now = Date.now(), last = 0, k24 = 0, k72 = 0, isk72 = 0;
   (wire||[]).forEach(function(k){
@@ -481,6 +491,10 @@ function showCheckpoint(){
   try { who = await (await fetch("/api/whoami", {credentials:"same-origin"})).json(); } catch(e){}
   if (!who || !who.loggedIn || !who.gobsec){ $("gate").style.display = ""; showCheckpoint(); return; }
   $("app").style.display = "";
+  /* ROUTES and HOME now arrive over the wire (they used to be hardcoded into this
+     public shell), and every render below reads them synchronously, so settle that
+     promise before the first paint or the board draws itself with no home row. */
+  await ROADS_P;
 
   // the four sources land in parallel; any one of them failing leaves the
   // others standing, and every band has an honest empty state

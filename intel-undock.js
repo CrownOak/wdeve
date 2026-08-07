@@ -10,12 +10,24 @@
    block that errors is worse than a rail block that is absent. */
 (function () {
   var ESI = "https://esi.evetech.net/latest";
-  /* the corridor and both homes, the only systems where "ours" means anything */
-  var OURS = {
-    30000031: "Mohas", 30000035: "Nimambal", 30000114: "Ubtes", 30000117: "Khabi",
-    30000943: "7Q-8Z2", 30000944: "SUR-F7", 30000945: "OK-6XN", 30000948: "U3K-4A",
-    30002510: "Rens"
-  };
+  /* The corridor and both homes: the only systems where "ours" means anything.
+
+     EMPTY IN THE FILE (2026-08-07). This script is served by Pages to anybody who
+     asks, so a hardcoded list here was published regardless of the portal's own
+     gate. It now arrives from the member gated /api/roads, which is free: this only
+     ever mounts inside the portal, so the request always carries a session. No
+     footprint, no line, which is the correct failure direction for a rail block
+     that is already designed to say nothing when it has nothing to say. */
+  var OURS = {};
+  fetch("/api/roads", { credentials: "same-origin" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.ok) return;
+      (d.road || []).forEach(function (r) { OURS[r.id] = r.n; });
+      (d.sys || []).forEach(function (id) { if (!OURS[id]) OURS[id] = String(id); });
+      run();
+    })
+    .catch(function () {});
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {

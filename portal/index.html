@@ -2201,7 +2201,21 @@ function renderGoalStrip(){ var el=$("goalStripWrap"); if (el) el.innerHTML = re
 /* ============ the GSS brief (rail): the board compressed to a postcard.
    GOBSEC register. The only figures here are counts off public feeds; the
    detail lives at /gobsec/board/. ============ */
-var GSS_HOME = 30000031, GSS_DOOR = 30000117, GSS_CORRIDOR = [30000943, 30000944, 30000901];
+/* EMPTY IN THE SHELL (2026-08-07). Pages serves this HTML to anybody, so these
+   ids were public no matter that the portal gates its data: they named our home
+   and, worse, the chokepoint. Filled from the member gated /api/roads. The brief
+   simply renders no chips until it arrives, and none at all for a stranger. */
+var GSS_HOME = null, GSS_DOOR = null, GSS_CORRIDOR = [];
+var GSS_NAMES = { home: "", door: "" };
+fetch("/api/roads", { credentials: "same-origin" })
+  .then(function (r) { return r.ok ? r.json() : null; })
+  .then(function (d) {
+    if (!d || !d.ok) return;
+    GSS_HOME = d.home ? d.home.id : null;
+    GSS_DOOR = d.door ? d.door.id : null;
+    GSS_CORRIDOR = (d.corridor || []).map(function (r) { return r.id; });
+    GSS_NAMES = { home: d.home ? d.home.n : "", door: d.door ? d.door.n : "" };
+  }).catch(function () {});
 function gsbHeat(wire, ids){
   var now = Date.now(), last = 0, k24 = 0;
   (wire||[]).forEach(function(k){
@@ -2257,7 +2271,10 @@ function renderGssBrief(){
             + '<span class="k">' + (Number(s.kills) || 0) + '</span></div>'; }).join('');
   }
 
-  var home = gsbHeat(wire, [GSS_HOME]), door = gsbHeat(wire, [GSS_DOOR]), corr = gsbHeat(wire, GSS_CORRIDOR);
+  /* null ids until /api/roads answers, so filter before measuring heat */
+  var home = gsbHeat(wire, [GSS_HOME].filter(Boolean)),
+      door = gsbHeat(wire, [GSS_DOOR].filter(Boolean)),
+      corr = gsbHeat(wire, GSS_CORRIDOR);
   function chip(label, sys, h){
     return '<div class="grow"><span class="gk">' + label + '</span>' +
       '<span data-i18n-skip>' + sys + '</span>' +
@@ -2277,7 +2294,9 @@ function renderGssBrief(){
       word +
       '<div class="gv' + (hot ? " hot" : "") + '">' + verdict + '</div>' +
       hotRows +
-      chip("Home", "Mohas", home) + chip("The door", "Khabi", door) + chip("Corridor", "null run", corr) +
+      (GSS_NAMES.home ? chip("Home", GSS_NAMES.home, home) : "") +
+      (GSS_NAMES.door ? chip("The door", GSS_NAMES.door, door) : "") +
+      (GSS_CORRIDOR.length ? chip("Corridor", "null run", corr) : "") +
       '<div class="gsig">Somebody&rsquo;s gotta undock.</div>' +
       '<a class="gjoin" href="/apply/gobsec">Join GOBSEC</a>' +
     '</div>';
