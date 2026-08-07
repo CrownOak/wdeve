@@ -1,7 +1,22 @@
 name: pages
-# Deploy the site to GitHub Pages. Replaces the legacy branch-deploy pipeline,
-# which 400'd when hourly generator pushes landed close together. The
-# cancel-in-progress concurrency group ensures only the newest push deploys.
+# Deploy the site to CLOUDFLARE PAGES (project bonkeve-mirror), which is where
+# bonkeve.com has actually been served from since the mirror era began on
+# 2026-07-18. This file used to deploy to GitHub Pages, and that is no longer where
+# the site lives, so even with Actions working every generator push would have
+# published to an origin nobody reads.
+#
+# ⚠ TWO THINGS MUST BE TRUE BEFORE THIS RUNS AT ALL
+#   1. Actions must be enabled for the account. As of 2026-08-07 a dispatch returns
+#      "Actions has been disabled for this user", which is why the whole bake set
+#      runs on a laptop instead (see C:\Users\sales\wake-generators.ps1). Getting
+#      that lifted is the single change that restores the cloud cron, because every
+#      generator repo still carries its own run.yml.
+#   2. Two repo secrets must exist: CLOUDFLARE_API_TOKEN (scoped to Pages: Edit on
+#      this account) and CLOUDFLARE_ACCOUNT_ID.
+#
+# Until both are true this file is inert and the laptop keeps baking. It is here so
+# that the day the flag lifts, restoring the cloud cron is a dispatch and not a
+# rebuild.
 on:
   push:
     branches: [main]
@@ -9,9 +24,9 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# Only the newest push deploys: generator pushes land close together and there is
+# no value in publishing an intermediate state that is already superseded.
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -19,51 +34,26 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # Bounds a hung deploy-pages status-poll (it can wait ~10 min per attempt).
-    # A healthy deploy takes <1 min and a fully-flaking retry cycle ~4 min, so
-    # this only trips on a genuinely stuck backend — failing fast so it surfaces
-    # instead of being masked by cancel-in-progress on the next push.
     timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy1.outputs.page_url || steps.deploy2.outputs.page_url || steps.deploy3.outputs.page_url || steps.deploy4.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: .
+      - uses: actions/checkout@v4
 
-      # The Pages backend intermittently returns "Deployment failed, try again
-      # later" mid-sync. The bad window can last a couple of minutes and swallow
-      # closely-spaced attempts, so we retry up to four times with widening
-      # backoff (~4 min total) to outlast it. Only the final attempt is allowed
-      # to fail the run — a real outage still surfaces, transient flakes do not.
-      # A superseded run is cancelled by cancel-in-progress (no failure email),
-      # and any dropped deploy self-heals on the next hourly generator push.
-      # NOTE: continue-on-error is load-bearing on deploy1-3 — it keeps the job
-      # status green so each later attempt's implicit success() gate still fires.
-      # Removing it from any early attempt silently collapses the ladder to one try.
-      - id: deploy1
-        uses: actions/deploy-pages@v5
+      # Direct upload of the working tree, the same shape the laptop runner does
+      # with `git archive | wrangler pages deploy`. No build step: every page here
+      # is either hand written or already baked by the generator that pushed it.
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler@4 pages deploy . --project-name bonkeve-mirror --branch main --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Same check-in the laptop makes, so the portal watchdog cannot tell the
+      # difference between runners and a silent move between them still shows up.
+      - name: Check in with the portal
+        if: always()
         continue-on-error: true
-
-      - if: steps.deploy1.outcome == 'failure'
-        run: sleep 30
-      - id: deploy2
-        if: steps.deploy1.outcome == 'failure'
-        uses: actions/deploy-pages@v5
-        continue-on-error: true
-
-      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
-        run: sleep 60
-      - id: deploy3
-        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
-        uses: actions/deploy-pages@v5
-        continue-on-error: true
-
-      - if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure' && steps.deploy3.outcome == 'failure'
-        run: sleep 120
-      - id: deploy4
-        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure' && steps.deploy3.outcome == 'failure'
-        uses: actions/deploy-pages@v5
+        run: |
+          curl -sS -X POST https://bonkeve.com/api/ops/heartbeat \
+            -H "Content-Type: application/json" \
+            -H "X-Ops-Token: ${{ secrets.OPS_TOKEN }}" \
+            -d "{\"job\":\"deploy\",\"ok\":${{ job.status == 'success' }},\"source\":\"actions\",\"detail\":\"pages deploy\"}"
