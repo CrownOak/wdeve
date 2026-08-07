@@ -2,7 +2,7 @@
    Own module so it can carry its own helpers without colliding with the
    dossier engine's scope. BONKLENS.mount(el) injects the panes and starts. */
 (function(){
-var MARKUP='<div class="modes">\n      <button data-m="local" class="on">Local</button>\n      <button data-m="grid">Grid</button>\n      <button data-m="roam">Roam</button>\n      <button data-m="war">Warzone</button>\n      <button data-m="road">Corridor</button>\n      <button data-m="rocks">Rocks</button>\n      <button data-m="log">Our Log</button>\n    </div>\n\n    <!-- ---------------- LOCAL ---------------- -->\n    <div class="pane on" id="p-local">\n      <div class="row2">\n        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste the names from local, one per line.&#10;Anything we cannot match gets shown back to you so you can see why."></textarea>\n        <div class="ctl">\n          <input id="lsys" type="text" placeholder="system (optional)" autocomplete="off" spellcheck="false">\n          <button class="gobtn" id="lgo">Read the room</button>\n          <button class="btn" id="lmore" style="display:none">Read the rest</button>\n          <div class="hint">You get the dangerous ones first, with what they fly and who they fly\n          with. This is killboard history, not who is online right now.</div>\n        </div>\n      </div>\n      <div class="status" id="lstatus"></div>\n      <div id="lout"><div class="empty">Paste local and read the room.</div></div>\n    </div>\n\n    <!-- ---------------- GRID ---------------- -->\n    <div class="pane" id="p-grid">\n      <div class="row2">\n        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;The hull names are the part that matters."></textarea>\n        <div class="ctl">\n          <button class="gobtn" id="ggo">Read the grid</button>\n          <div class="hint">How many hulls, how much logi, who can hold you down, and whether\n          you can leave.</div>\n        </div>\n      </div>\n      <div class="status" id="gstatus"></div>\n      <div id="gout"><div class="empty">Paste what you see on grid.</div></div>\n    </div>\n\n    <!-- ---------------- ROAM ---------------- -->\n    <div class="pane" id="p-roam">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="rhome" type="text" value="Mohas" placeholder="home system" autocomplete="off" spellcheck="false" style="width:150px">\n          <input id="rjumps" type="number" value="8" min="1" max="15" style="width:80px" title="max jumps from home">\n          <span class="toggle" id="rsec">\n            <button data-s="any" class="on">any</button>\n            <button data-s="hs">high</button>\n            <button data-s="ls">low</button>\n            <button data-s="ns">null</button>\n          </span>\n          <button class="gobtn" id="rgo">Find the fight</button>\n        </div>\n      </div>\n      <div class="hint">Where ships are actually dying right now, inside your jump range. Rats dying\n      does not count.</div>\n      <div class="status" id="rstatus"></div>\n      <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>\n    </div>\n\n    <!-- ---------------- WARZONE ---------------- -->\n    <div class="pane" id="p-war">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <span class="toggle" id="wfront">\n            <button data-w="500003:500002" class="on">Amarr v Minmatar</button>\n            <button data-w="500001:500004">Caldari v Gallente</button>\n            <button data-w="500011:0">Angel insurgency</button>\n            <button data-w="500010:0">Guristas insurgency</button>\n          </span>\n          <input id="whome" type="text" value="Mohas" placeholder="home" autocomplete="off" spellcheck="false" style="width:130px">\n          <button class="gobtn" id="wgo">Read the front</button>\n        </div>\n      </div>\n      <div class="hint">The Amarr and Minmatar front is the closest one to us, about eight jumps.\n      Systems marked flipping are being taken right now, and that is where the fights are.</div>\n      <div class="status" id="wstatus"></div>\n      <div id="wout"><div class="empty">Pick a front and read it.</div></div>\n    </div>\n\n    <!-- ---------------- CORRIDOR ---------------- -->\n    <div class="pane" id="p-road">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <button class="gobtn" id="dgo">Read the road</button>\n          <span class="cnt" id="droad"></span>\n        </div>\n      </div>\n      <div class="hint">Home to the pocket, hop by hop, live. The standing orders on each system\n      are the ones from the Watchtower. Chokepoints never read better than sketchy while anything\n      is dying there.</div>\n      <div class="status" id="dstatus"></div>\n      <div id="dout"><div class="empty">Read the road before the fleet undocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-rocks">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="kreg" list="kregs" placeholder="region" value="Derelik" autocomplete="off" style="width:180px">\n          <datalist id="kregs"></datalist>\n          <input id="khome" value="Mohas" placeholder="home" autocomplete="off" style="width:130px">\n          <button class="gobtn" id="kgo">Find rocks</button>\n        </div>\n      </div>\n      <div class="hint">Belts never move, so they are baked. The danger beside them is live.</div>\n      <div class="status" id="kstatus"></div>\n      <div id="kout"><div class="empty">Pick a region and find the rocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-log">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;gap:10px;align-items:center">\n          <button class="gobtn" id="ogo">Read our log</button>\n        </div>\n      </div>\n      <div class="hint">What we killed and what we lost, live, not from a bake.</div>\n      <div class="status" id="ostatus"></div>\n      <div id="oout"><div class="empty">Read the log.</div></div>\n    </div>';
+var MARKUP='<div class="modes">\n      <button data-m="local" class="on">Local</button>\n      <button data-m="grid">Grid</button>\n      <button data-m="roam">Roam</button>\n      <button data-m="war">Warzone</button>\n      <button data-m="road">Corridor</button>\n      <button data-m="rocks">Rocks</button>\n      <button data-m="log">Our Log</button>\n    </div>\n\n    <!-- ---------------- LOCAL ---------------- -->\n    <div class="pane on" id="p-local">\n      <div class="row2">\n        <textarea class="paste" id="lpaste" spellcheck="false" placeholder="Paste the names from local, one per line.&#10;Anything we cannot match gets shown back to you so you can see why."></textarea>\n        <div class="ctl">\n          <input id="lsys" type="text" placeholder="system (optional)" autocomplete="off" spellcheck="false">\n          <button class="gobtn" id="lgo">Read the room</button>\n          <button class="btn" id="lmore" style="display:none">Read the rest</button>\n          <div class="hint">You get the dangerous ones first, with what they fly and who they fly\n          with. This is killboard history, not who is online right now.</div>\n        </div>\n      </div>\n      <div class="status" id="lstatus"></div>\n      <div id="lout"><div class="empty">Paste local and read the room.</div></div>\n    </div>\n\n    <!-- ---------------- GRID ---------------- -->\n    <div class="pane" id="p-grid">\n      <div class="row2">\n        <textarea class="paste" id="gpaste" spellcheck="false" placeholder="Paste an overview selection or a d-scan.&#10;The hull names are the part that matters."></textarea>\n        <div class="ctl">\n          <button class="gobtn" id="ggo">Read the grid</button>\n          <div class="hint">How many hulls, how much logi, who can hold you down, and whether\n          you can leave.</div>\n        </div>\n      </div>\n      <div class="status" id="gstatus"></div>\n      <div id="gout"><div class="empty">Paste what you see on grid.</div></div>\n    </div>\n\n    <!-- ---------------- ROAM ---------------- -->\n    <div class="pane" id="p-roam">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="rhome" type="text" placeholder="home system" autocomplete="off" spellcheck="false" style="width:150px">\n          <input id="rjumps" type="number" value="8" min="1" max="15" style="width:80px" title="max jumps from home">\n          <span class="toggle" id="rsec">\n            <button data-s="any" class="on">any</button>\n            <button data-s="hs">high</button>\n            <button data-s="ls">low</button>\n            <button data-s="ns">null</button>\n          </span>\n          <button class="gobtn" id="rgo">Find the fight</button>\n        </div>\n      </div>\n      <div class="hint">Where ships are actually dying right now, inside your jump range. Rats dying\n      does not count.</div>\n      <div class="status" id="rstatus"></div>\n      <div id="rout"><div class="empty">Pick a home and a range, then find the fight.</div></div>\n    </div>\n\n    <!-- ---------------- WARZONE ---------------- -->\n    <div class="pane" id="p-war">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <span class="toggle" id="wfront">\n            <button data-w="500003:500002" class="on">Amarr v Minmatar</button>\n            <button data-w="500001:500004">Caldari v Gallente</button>\n            <button data-w="500011:0">Angel insurgency</button>\n            <button data-w="500010:0">Guristas insurgency</button>\n          </span>\n          <input id="whome" type="text" placeholder="home" autocomplete="off" spellcheck="false" style="width:130px">\n          <button class="gobtn" id="wgo">Read the front</button>\n        </div>\n      </div>\n      <div class="hint">The Amarr and Minmatar front is the closest one to us, about eight jumps.\n      Systems marked flipping are being taken right now, and that is where the fights are.</div>\n      <div class="status" id="wstatus"></div>\n      <div id="wout"><div class="empty">Pick a front and read it.</div></div>\n    </div>\n\n    <!-- ---------------- CORRIDOR ---------------- -->\n    <div class="pane" id="p-road">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <button class="gobtn" id="dgo">Read the road</button>\n          <span class="cnt" id="droad"></span>\n        </div>\n      </div>\n      <div class="hint">Home to the pocket, hop by hop, live. The standing orders on each system\n      are the ones from the Watchtower. Chokepoints never read better than sketchy while anything\n      is dying there.</div>\n      <div class="status" id="dstatus"></div>\n      <div id="dout"><div class="empty">Read the road before the fleet undocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-rocks">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;flex-wrap:wrap;gap:10px;align-items:center">\n          <input id="kreg" list="kregs" placeholder="region" autocomplete="off" style="width:180px">\n          <datalist id="kregs"></datalist>\n          <input id="khome" placeholder="home" autocomplete="off" style="width:130px">\n          <button class="gobtn" id="kgo">Find rocks</button>\n        </div>\n      </div>\n      <div class="hint">Belts never move, so they are baked. The danger beside them is live.</div>\n      <div class="status" id="kstatus"></div>\n      <div id="kout"><div class="empty">Pick a region and find the rocks.</div></div>\n    </div>\n\n    <div class="pane" id="p-log">\n      <div class="row2" style="align-items:flex-end">\n        <div class="ctl" style="flex-direction:row;gap:10px;align-items:center">\n          <button class="gobtn" id="ogo">Read our log</button>\n        </div>\n      </div>\n      <div class="hint">What we killed and what we lost, live, not from a bake.</div>\n      <div class="status" id="ostatus"></div>\n      <div id="oout"><div class="empty">Read the log.</div></div>\n    </div>';
 window.BONKLENS={mount:function(root){
   if(!root) return; root.innerHTML=MARKUP;
   /* The corridor is doctrine and lives behind the session now. Only a cleared desk
@@ -10,7 +10,15 @@ window.BONKLENS={mount:function(root){
      leaves ROAD empty and the corridor lens renders nothing rather than guessing. */
   fetch("/api/roads",{credentials:"same-origin"})
     .then(function(r){ return r.ok?r.json():null; })
-    .then(function(d){ if(d&&d.ok&&d.road&&d.road.length) ROAD=d.road; })
+    .then(function(d){
+      if(!d||!d.ok) return;
+      if(d.road&&d.road.length) ROAD=d.road;
+      HOME_N=d.home?d.home.n:"";
+      HOME_REG=(d.regs&&d.regs[0])||"";
+      /* prefill the three home inputs now that we know the name */
+      ["rhome","whome","khome"].forEach(function(k){ var e=$(k); if(e&&!e.value) e.value=HOME_N; });
+      var kr=$("kreg"); if(kr&&!kr.value) kr.value=HOME_REG;
+    })
     .catch(function(){});
 
 var GRP={"25":["Frigate",0],"26":["Cruiser",0],"27":["Battleship",0],"28":["Hauler",1],"29":["Capsule",1],"30":["Titan",0],"31":["Shuttle",1],"237":["Corvette",1],"324":["Assault Frigate",0],"358":["Heavy Assault Cruiser",0],"380":["Deep Space Transport",1],"419":["Combat Battlecruiser",0],"420":["Destroyer",0],"463":["Mining Barge",1],"485":["Dreadnought",0],"513":["Freighter",1],"540":["Command Ship",0],"541":["Interdictor",0],"543":["Exhumer",1],"547":["Carrier",0],"659":["Supercarrier",0],"830":["Covert Ops",0],"831":["Interceptor",0],"832":["Logistics",0],"833":["Force Recon Ship",0],"834":["Stealth Bomber",0],"883":["Capital Industrial Ship",1],"893":["Electronic Attack Ship",0],"894":["Heavy Interdiction Cruiser",0],"898":["Black Ops",0],"900":["Marauder",0],"902":["Jump Freighter",1],"906":["Combat Recon Ship",0],"941":["Industrial Command Ship",1],"963":["Strategic Cruiser",0],"1022":["Prototype Exploration Ship",1],"1201":["Attack Battlecruiser",0],"1202":["Blockade Runner",1],"1246":["Mobile Depot",1],"1249":["Mobile Cyno Inhibitor",1],"1250":["Mobile Tractor Unit",1],"1283":["Expedition Frigate",1],"1305":["Tactical Destroyer",0],"1527":["Logistics Frigate",0],"1534":["Command Destroyer",0],"1538":["Force Auxiliary",0],"1972":["Flag Cruiser",0],"4594":["Lancer Dreadnought",0],"4902":["Expedition Command Ship",0],"5087":["Special Edition Yachts",0],"5120":["Command Carrier",0]};
@@ -482,7 +490,7 @@ $("rsec").addEventListener("click",function(e){
 });
 function findFight(){
   var g=++gen; parked.roam=false;
-  var home=($("rhome").value||"Mohas").trim().toLowerCase();
+  var home=($("rhome").value||HOME_N).trim().toLowerCase();
   var maxJ=Math.max(1,Math.min(15,parseInt($("rjumps").value,10)||8));
   $("rstatus").textContent="mapping...";
   Promise.all([loadSys(),
@@ -526,7 +534,7 @@ function findFight(){
       h+="<tr><td>"+esc(r.n)+"</td><td class='band b-"+(cls==="hs"?"none":cls==="ls"?"ghost":"killer")+"'>"+r.sec.toFixed(1)+"</td>"
         +"<td>"+esc(r.reg||"")+"</td><td class='num'>"+r.j+"</td><td class='num'>"+r.ship+"</td>"
         +"<td class='num'>"+r.pod+"</td><td class='num'>"+(r.ours||"")+"</td>"
-        +"<td><a href='/cartel/?from="+encodeURIComponent($("rhome").value||"Mohas")+"&to="+encodeURIComponent(r.n)+"'>check the road</a></td></tr>";
+        +"<td><a href='/cartel/?from="+encodeURIComponent($("rhome").value||HOME_N)+"&to="+encodeURIComponent(r.n)+"'>check the road</a></td></tr>";
     });
     h+="</tbody></table></div>";
     $("rout").innerHTML=h;
@@ -552,7 +560,7 @@ $("wfront").addEventListener("click",function(e){
 function readFront(){
   var g=++gen; parked.war=false;
   var pair=wfront.split(":").map(Number), A=pair[0], B=pair[1];
-  var home=($("whome").value||"Mohas").trim().toLowerCase();
+  var home=($("whome").value||HOME_N).trim().toLowerCase();
   $("wstatus").textContent="reading the front...";
   Promise.all([
     fetch(ESI+"/fw/systems/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }),
@@ -622,7 +630,7 @@ function readFront(){
         +"<td>"+(r.contested==="contested"?r.pct+"%":"<span style='color:var(--muted)'>quiet</span>")+"</td>"
         +"<td class='num'>"+(r.ship||"")+"</td>"
         +"<td class='num'>"+(r.j!=null?r.j:"")+"</td>"
-        +"<td><a href='/cartel/?from="+encodeURIComponent($("whome").value||"Mohas")+"&to="+encodeURIComponent(r.n)+"'>road</a></td></tr>";
+        +"<td><a href='/cartel/?from="+encodeURIComponent($("whome").value||HOME_N)+"&to="+encodeURIComponent(r.n)+"'>road</a></td></tr>";
     });
     h+="</tbody></table></div>";
     $("wout").innerHTML=h;
@@ -644,7 +652,9 @@ $("wgo").addEventListener("click",readFront);
    page gate never protected it: it was one curl from being a complete target package.
    The corridor now arrives from the member gated /api/roads at mount. Empty means the
    corridor lens simply has no hops to draw, which is the correct failure direction. */
-var ROAD=[];
+/* Filled from /api/roads with ROAD. Empty in the file because this bundle is
+   public and the site names the home system nowhere else. */
+var ROAD=[], HOME_N="", HOME_REG="";
 function tierOf(hop){
   var k=hop.ship||0, p=hop.pod||0;
   if(hop.choke&&(k+p)>0) return k+p>=4||p>=2?["NOPE","b-killer"]:["SKETCHY","b-ghost"];
@@ -699,6 +709,19 @@ function readRoad(){
       clear++;
     }
     var h="<div class='verdict'><span class='vl'>THE ROAD</span><div class='vt'>";
+    /* NO FOOTPRINT IS NOT A CLEAR ROAD. The corridor now arrives from /api/roads,
+       so hops can legitimately be empty (fetch failed, or the session cannot read
+       it), and every branch below was written assuming hops existed: zero hops fell
+       through to "Clear road, all 0 hops. Go make some ore." with a green flag,
+       which is a positive undock call computed from nothing. Silence is never
+       peace, and it is never peace hardest when we are the ones who went quiet. */
+    if(!hops.length){
+      h+="<b style='color:var(--gs)'>No road loaded.</b> The corridor could not be read, "
+        +"so this is not an all clear, it is no answer. Reload, and if it stays empty tell an officer.";
+      h+="</div></div>";
+      $("dout").innerHTML=h;
+      return;
+    }
     if(!worst) h+="Clear road, all "+hops.length+" hops. Go make some ore.";
     else h+="Clear for "+clear+" hop"+(clear===1?"":"s")+", then <b style='color:var(--gs)'>"+esc(worst.n)+"</b> is "
       +tierOf(worst)[0]+". "+(worst.choke?"That one is a chokepoint, so it is the whole run.":"Route around it or wait it out.");
@@ -747,7 +770,7 @@ function loadBelts(){
 }
 function findRocks(){
   var g=++gen; parked.rocks=false;
-  var reg=($("kreg").value||"Derelik").trim(), home=($("khome").value||"Mohas").trim().toLowerCase();
+  var reg=($("kreg").value||HOME_REG).trim(), home=($("khome").value||HOME_N).trim().toLowerCase();
   $("kstatus").textContent="reading belts...";
   Promise.all([loadBelts(),loadSys(),
     fetch(ESI+"/universe/system_kills/?datasource=tranquility").then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; })

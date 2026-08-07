@@ -23,8 +23,13 @@
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (d) {
       if (!d || !d.ok) return;
+      /* `names` covers every id we serve, including the staging hub, which is the
+         only one that is not a corridor hop. Falling back to String(id) here put a
+         bare "30002510" on the rail, and since that hub is the busiest system we
+         watch it was usually the one the line chose to name. */
+      var nm = d.names || {};
       (d.road || []).forEach(function (r) { OURS[r.id] = r.n; });
-      (d.sys || []).forEach(function (id) { if (!OURS[id]) OURS[id] = String(id); });
+      (d.sys || []).forEach(function (id) { if (!OURS[id] && nm[id]) OURS[id] = nm[id]; });
       run();
     })
     .catch(function () {});
@@ -78,6 +83,14 @@
           + (here ? "You are in " + esc(here.n) + ", which is quiet." : "The rest of the road is quiet.");
       } else if (here) {
         line = "You are in <b>" + esc(here.n) + "</b>. Nothing dying there, nothing dying on the road.";
+      } else if (!Object.keys(OURS).length) {
+        /* NO FOOTPRINT IS NOT AN ALL CLEAR. The road now arrives from /api/roads,
+           which an ally session cannot read and which can simply fail, and both of
+           those used to land on "nothing dying on our road": a safety claim derived
+           from zero systems. Say nothing instead, which is what this block was
+           always designed to do when it has nothing to say. */
+        paint("");
+        return;
       } else {
         line = "Nothing dying on our road right now.";
       }

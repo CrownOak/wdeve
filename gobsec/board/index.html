@@ -312,9 +312,11 @@ function renderBrief(b, wire){
   $("fc").innerHTML = b.fc
     ? 'FC today: <b data-i18n-skip>' + esc(b.fc) + '</b>'
     : 'No FC on. Do not start anything you cannot finish alone.';
-  var rows = ['<div class="order home"><span class="os" data-i18n-skip>' + esc(HOME.name) + '</span>' +
+  /* A nameless home asserting it is quiet is worse than no row: HOME is null until
+     /api/roads answers, and on a failure it never does. */
+  var rows = HOME.id ? ['<div class="order home"><span class="os" data-i18n-skip>' + esc(HOME.name) + '</span>' +
     '<span class="ot">HOME. The rock, the Athanor, the whole point. If home is hot, everything else waits.</span>' +
-    '<span class="ost">' + stChip(sysStats(wire, HOME.id)) + '</span></div>'];
+    '<span class="ost">' + stChip(sysStats(wire, HOME.id)) + '</span></div>'] : [];
   (b.standing||[]).forEach(function(o){
     var sid = ROUTES[o.sys];
     rows.push('<div class="order"><span class="os" data-i18n-skip>' + esc(o.sys) + '</span>' +

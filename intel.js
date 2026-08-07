@@ -34,6 +34,7 @@ window.BONKINTEL={mount:function(root,opts){
       (d.sys||[]).forEach(function(id){ OUR_SYS[id]=1; });
       (d.regs||[]).forEach(function(n){ OUR_REG[n]=1; });
       OUR_HOME=d.home?d.home.id:null;
+      OUR_HOME_N=d.home?d.home.n:"";
       try{ refreshHud(); }catch(e){}
     }).catch(function(){});
   if(!OURS){
@@ -65,7 +66,7 @@ var OUR_CORPS={98342394:1,98840038:1,98838780:1,98807741:1};
    what a stranger should see. */
 var OUR_SYS={};
 var OUR_REG={};
-var OUR_HOME=null;   // filled from /api/roads on a member mount; never in this file
+var OUR_HOME=null, OUR_HOME_N="";   // filled from /api/roads on a member mount; never in this file
 var RENS=30002510;
 var LSD="bonk_brief_v1::", LSR="bonk_brief_recent_v1", LSW="bonk_brief_watch_v1";
 
@@ -636,7 +637,7 @@ function buildSystem(id){
       /* Only a member desk measures distance from home, and only a member desk
          should be seen asking. Public mounts skip the route walk entirely rather
          than computing a number they will not render. */
-      D.jMohas=(OURS&&OUR_HOME)?jumpsBetween(S,OUR_HOME,id,12):null;
+      D.jHome=(OURS&&OUR_HOME)?jumpsBetween(S,OUR_HOME,id,12):null;
       D.jRens=jumpsBetween(S,30002510,id,12);   // Rens is public: front page, recruitment copy
       D.ourRoad=!!OUR_SYS[id];
       /* the neighbours: a calm system beside a camp is not calm */
@@ -691,7 +692,7 @@ function renderSystem(D,ageMs,partial){
   var bits=[];
   /* Distance from home names our homes. Members only. */
   if(OURS){
-    if(D.jMohas!=null) bits.push(D.jMohas+" jumps from Mohas");
+    if(D.jHome!=null) bits.push(D.jHome+" jumps from "+(OUR_HOME_N||"home"));
     else if(D.jRens==null) bits.push("more than 12 jumps from home");
     if(D.jRens!=null) bits.push(D.jRens+" from Rens");
   }
@@ -1543,9 +1544,12 @@ function findNearestFight(){
     var S=res[0],A=res[1];
     if(!S||!S.d) return;
     /* Public anchors on RENS, which is on our own front page and in the recruitment
-       copy, so a distance measured from it leaks nothing new. Mohas is the home and
+       copy, so a distance measured from it leaks nothing new. The real home is named
        stays members only. */
-    var home=S.byName?S.byName[OURS?"mohas":"rens"]:null; if(home==null) return;
+    /* Rens is on our own landing page so a public distance from it leaks nothing;
+       the real home is named only by the member-gated payload. */
+    var hn=OURS?(OUR_HOME_N||"").toLowerCase():"rens";
+    var home=(hn&&S.byName)?S.byName[hn]:null; if(home==null) return;
     var dist={},q=[home],seen={}; seen[home]=1; dist[home]=0;
     while(q.length){
       var cur=q.shift(); if(dist[cur]>=10) continue;
