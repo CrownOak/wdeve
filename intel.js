@@ -33,6 +33,7 @@ window.BONKINTEL={mount:function(root,opts){
       if(!d||!d.ok) return;
       (d.sys||[]).forEach(function(id){ OUR_SYS[id]=1; });
       (d.regs||[]).forEach(function(n){ OUR_REG[n]=1; });
+      OUR_HOME=d.home?d.home.id:null;
       try{ refreshHud(); }catch(e){}
     }).catch(function(){});
   if(!OURS){
@@ -64,6 +65,7 @@ var OUR_CORPS={98342394:1,98840038:1,98838780:1,98807741:1};
    what a stranger should see. */
 var OUR_SYS={};
 var OUR_REG={};
+var OUR_HOME=null;   // filled from /api/roads on a member mount; never in this file
 var RENS=30002510;
 var LSD="bonk_brief_v1::", LSR="bonk_brief_recent_v1", LSW="bonk_brief_watch_v1";
 
@@ -634,7 +636,7 @@ function buildSystem(id){
       /* Only a member desk measures distance from home, and only a member desk
          should be seen asking. Public mounts skip the route walk entirely rather
          than computing a number they will not render. */
-      D.jMohas=OURS?jumpsBetween(S,30000031,id,12):null;
+      D.jMohas=(OURS&&OUR_HOME)?jumpsBetween(S,OUR_HOME,id,12):null;
       D.jRens=jumpsBetween(S,30002510,id,12);   // Rens is public: front page, recruitment copy
       D.ourRoad=!!OUR_SYS[id];
       /* the neighbours: a calm system beside a camp is not calm */
