@@ -35,30 +35,47 @@
   // Workbench which is where you go when you already know what you want.
   // MARKET now sits ABOVE INTEL for the same reason: intel serves the mining, not
   // the other way round.
+  /* RESTACKED 2026-08-06. The old MARKET group held SEVEN identically rendered
+     rows in the middle of the panel, which is past the point where a list is read
+     and becomes a texture the eye skips. Those seven were also doing three
+     unrelated jobs, which the comment above admitted and the design never showed.
+
+     Now: no group over three, so every group is COUNTED rather than read, and each
+     heading tells you what you are allowed to skip. THE ROCK answers "what is this
+     worth", THE MARKET is the industry layer.
+
+     Two duplicate destinations removed. "Home" duplicated `.brand`, which already
+     links home and sits directly above the panel. "Buyback Desk" duplicated the
+     .bn-deskbtn door at the foot of the same panel.
+
+     Workbench and Apply moved to the footer strip: /tools/ is the INDEX for four of
+     the rows above it and was listed last among its own children, and Apply is an
+     entry point, not a destination members navigate to.
+
+     PVP Briefing leads INTEL because it is public, needs no account, and is the
+     strongest thing we own for a stranger. It was buried under two locked doors. */
   var ITEMS = [
-    ["Home",        BASE,                     "HOME",   true ],
-    ["Apply",       BASE + "apply/",          "HOME",   false],
-    ["Portal",      BASE + "portal/",         "MEMBER", true ],
-    ["Fleet",       BASE + "fleet/",          "MEMBER", true ],
-    ["Decorations", BASE + "decorations/",    "MEMBER", false],
-    ["Buyback Desk", BASE + "buyback/",       "MEMBER", false],
-    ["Ore Calc",    BASE + "refine/",         "MARKET", false],
-    ["Survey Scan", BASE + "survey/",         "MARKET", false],
-    ["Reprocess",   BASE + "reprocess/",      "MARKET", false],
-    ["Market",      BASE + "market/",         "MARKET", false],
-    ["Blueprints",  BASE + "blueprints/",     "MARKET", false],
-    ["Arbitrage",   BASE + "arbitrage/",      "MARKET", false],
-    ["Workbench",   BASE + "tools/",          "MARKET", false],
-    ["GOBSEC",      BASE + "gobsec/",         "INTEL",  false],
-    ["WATCHTOWER",  BASE + "cartel/",         "INTEL",  false],
-    ["PVP Briefing", BASE + "briefing/",      "INTEL",  false],
+    ["Portal",       BASE + "portal/",         "YOURS",      true ],
+    ["Fleet",        BASE + "fleet/",          "YOURS",      true ],
+    ["Decorations",  BASE + "decorations/",    "YOURS",      false],
+    ["Ore Calc",     BASE + "refine/",         "THE ROCK",   false],
+    ["Survey Scan",  BASE + "survey/",         "THE ROCK",   false],
+    ["Reprocess",    BASE + "reprocess/",      "THE ROCK",   false],
+    ["Market Finder", BASE + "market/",        "THE MARKET", false],
+    ["Blueprints",   BASE + "blueprints/",     "THE MARKET", false],
+    ["Arbitrage",    BASE + "arbitrage/",      "THE MARKET", false],
+    ["PVP Briefing", BASE + "briefing/",       "INTEL",      false],
+    ["GOBSEC",       BASE + "gobsec/",         "INTEL",      false],
+    ["Watchtower",   BASE + "cartel/",         "INTEL",      false],
     // RECRUIT: these came out of the bar in the 12->7 cut and never came back,
     // while their MEMBER_LABELS entries stayed behind. Restored 2026-08-03 with
     // a real gate instead of a redacted label. 5th field is the gate.
     ["Recruiting",  BASE + "bonk-prospects/", "RECRUIT", false, "recruit"],
     ["The Shortlist", BASE + "gobsec/finder/",  "RECRUIT", false, "recruit"]
   ];
-  var GROUPS = ["HOME", "MEMBER", "MARKET", "INTEL", "RECRUIT"];
+  var GROUPS = ["YOURS", "THE ROCK", "THE MARKET", "INTEL", "RECRUIT"];
+  /* Quieter than a group: an index, an entry point and the language toggle. */
+  var FOOT = [["Workbench", BASE + "tools/"], ["Apply", BASE + "apply/"]];
 
   /* ---- GATED ITEMS ----
      A gated item renders HIDDEN and is only revealed once /api/whoami comes back
@@ -144,12 +161,19 @@
       if (ITEMS[i][2] === GROUPS[g]) html += linkHtml(ITEMS[i], "bn-item");
     html += '</div>';
   }
-  html += '<div class="bn-group" data-i18n-skip><div class="bn-glabel">LANGUAGE · ЯЗЫК</div>'
-        + '<button type="button" class="bn-item" data-lang="en">English</button>'
-        + '<button type="button" class="bn-item" data-lang="ru">Русский</button></div>';
-  // The desk gets a door of its own at the bottom of the panel. It is the one
-  // tool every miner needs mid contract, so it glows, gently, like the rock does.
+  // The desk gets a door of its own at the bottom of the panel. It is the one tool
+  // every miner needs mid contract, so it is stated plainly and given its own place
+  // rather than made to pulse for attention.
   html += '<a class="bn-deskbtn" href="' + ORIGIN + BASE + 'buyback/">THE BUYBACK DESK</a>';
+  /* FOOTER. An index, an entry point and the language toggle, all of which are
+     real destinations but none of which a member navigates to on purpose during an
+     op. Small type, one row, no heading: they should be findable, not prominent. */
+  html += '<div class="bn-foot" data-i18n-skip>';
+  for (i = 0; i < FOOT.length; i++)
+    html += '<a class="bn-foot-l" href="' + ORIGIN + FOOT[i][1] + '">' + FOOT[i][0] + '</a>';
+  html += '<span class="bn-foot-s" aria-hidden="true"></span>'
+        + '<button type="button" class="bn-foot-l" data-lang="en">EN</button>'
+        + '<button type="button" class="bn-foot-l" data-lang="ru">RU</button></div>';
   html += '</div>';
   bar.innerHTML = html;
   if (document.body) document.body.insertBefore(bar, document.body.firstChild);
@@ -270,46 +294,78 @@
     "width:min(320px,calc(100vw - 24px));background:var(--steel,#14171a);" +
     "border:1px solid var(--line,rgba(150,168,158,.16));border-top:3px solid var(--ore,#46ff5e);" +
     "box-shadow:0 18px 50px rgba(0,0,0,.55);padding:14px 14px 16px;" +
-    "max-height:calc(100vh - 80px);overflow:auto;animation:bnDrop .14s ease;}" +
+    /* 200ms in on a curve that spends most of its distance early and settles. The
+       default `ease` is what everything uses, which is exactly why it reads as
+       default. Transform and opacity only: never height or top, which are layout
+       properties and stutter on a mid range phone. */
+    "max-height:calc(100vh - 80px);overflow:auto;animation:bnDrop .2s cubic-bezier(.16,1,.3,1);}" +
     ".bn-panel[hidden]{display:none!important;}" +
     "@keyframes bnDrop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}" +
-    "@media(prefers-reduced-motion:reduce){.bn-panel{animation:none;}}" +
-    ".bn-group{margin-top:12px;}.bn-group:first-child{margin-top:0;}" +
-    ".bn-glabel{font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.22em;" +
-    "color:var(--ore,#46ff5e);font-weight:700;border-bottom:1px solid rgba(150,168,158,.28);" +
-    "padding-bottom:5px;margin-bottom:6px;opacity:.85;}" +
+    /* THE ONE FLOURISH. The ore rule across the top draws in from the right, out of
+       the burger that opened it. 260ms, once, and most people will never consciously
+       notice it. That is the whole point of it. */
+    ".bn-panel::before{content:\"\";position:absolute;left:0;right:0;top:-3px;height:3px;" +
+    "background:var(--ore,#46ff5e);transform-origin:right center;animation:bnRule .26s cubic-bezier(.16,1,.3,1) .04s both;}" +
+    "@keyframes bnRule{from{transform:scaleX(0);}to{transform:scaleX(1);}}" +
+    ".bn-group{margin-top:18px;}.bn-group:first-child{margin-top:0;}" +
+    /* Group labels are furniture. They were ore green, which is the colour we use
+       for things you can ACT on, and spending it on five headings devalued it
+       everywhere else. Muted, with a short lead rule instead of a full underline. */
+    ".bn-glabel{font-family:var(--mono,ui-monospace,monospace);font-size:9.5px;letter-spacing:.24em;" +
+    "color:var(--muted,#6f776f);font-weight:700;padding-bottom:0;margin-bottom:7px;" +
+    "display:flex;align-items:center;gap:8px;}" +
+    ".bn-glabel::after{content:\"\";height:1px;width:14px;background:rgba(150,168,158,.28);flex:none;}" +
     ".bn-item{display:block;font-family:var(--mono,ui-monospace,monospace);font-size:12px;letter-spacing:.1em;" +
     "text-transform:uppercase;color:#c8d0c8;text-decoration:none;padding:8px 10px;" +
-    "border-left:2px solid transparent;transition:color .15s,background .15s,border-color .15s;}" +
+    /* hover is colour only. A row that MOVES under the cursor feels cheap and makes
+       precise clicking harder, so the border is painted, not slid. */
+    "border-left:2px solid transparent;transition:color .09s linear,background .09s linear,border-color .09s linear;}" +
+    /* Rows arrive on a 12ms cadence capped at 10, so the last row is never more than
+       120ms behind the first. Anything near 40ms per row is a title sequence and the
+       user is waiting on it. */
+    ".bn-panel .bn-item,.bn-panel .bn-deskbtn,.bn-panel .bn-foot{animation:bnRow .16s ease-out both;}" +
+    "@keyframes bnRow{from{opacity:0;transform:translateX(-4px);}to{opacity:1;transform:none;}}" +
+    ".bn-panel .bn-group:nth-child(1) .bn-item{animation-delay:.02s;}" +
+    ".bn-panel .bn-group:nth-child(2) .bn-item{animation-delay:.044s;}" +
+    ".bn-panel .bn-group:nth-child(3) .bn-item{animation-delay:.068s;}" +
+    ".bn-panel .bn-group:nth-child(4) .bn-item{animation-delay:.092s;}" +
+    ".bn-panel .bn-group:nth-child(5) .bn-item{animation-delay:.116s;}" +
+    ".bn-panel .bn-deskbtn{animation-delay:.13s;}.bn-panel .bn-foot{animation-delay:.145s;}" +
+    /* 44px targets on touch. 12px type at 8px padding is about 33px, which is under
+       every platform minimum and it is the menu, of all things. */
+    "@media(pointer:coarse){.bn-item{padding-top:13px;padding-bottom:13px;}}" +
     ".bn-item:hover{color:var(--ore,#46ff5e);background:rgba(70,255,94,.09);border-left-color:var(--ore,#46ff5e);}" +
     ".bn-item.cur{background:var(--ore,#46ff5e);color:#04140a;font-weight:700;}" +
-    ".bn-live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ore,#46ff5e);" +
-    "margin-left:7px;vertical-align:middle;box-shadow:0 0 6px rgba(70,255,94,.8);" +
-    "animation:bnPulse 1.6s ease-in-out infinite;}" +
-    ".cur .bn-live{background:#04140a;box-shadow:none;}" +
-    ".bn-burger.bn-hot{border-color:rgba(70,255,94,.4);}" +
-    ".bn-burger.bn-hot .bn-lines span{background:var(--ore,#46ff5e);box-shadow:0 0 5px rgba(70,255,94,.6);" +
-    "animation:bnPulse 1.4s ease-in-out infinite;}" +
-    ".bn-burger.bn-hot .bn-lines span:nth-child(2){animation-delay:.2s;}" +
-    ".bn-burger.bn-hot .bn-lines span:nth-child(3){animation-delay:.4s;}" +
-    "@keyframes bnPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.45);opacity:.55;}}" +
-    // the desk stands out quietly: the menu row breathes a faint green, and the
-    // panel ends on a small, confident door. Understated on purpose: it should
-    // catch the corner of the eye, not wave at it. The .cur state keeps the
-    // standard inverted row (ink on ore) or the label vanishes into itself.
-    ".bn-item[data-rel=\"buyback/\"]{color:var(--ore,#46ff5e);animation:bnDeskRow 4.6s ease-in-out infinite;}" +
-    ".bn-item[data-rel=\"buyback/\"].cur{color:#04140a;animation:none;text-shadow:none;}" +
-    "@keyframes bnDeskRow{0%,100%{text-shadow:0 0 0 rgba(70,255,94,0);}50%{text-shadow:0 0 8px rgba(70,255,94,.4);}}" +
+    /* NOTHING IN THIS MENU LOOPS (2026-08-06). There were four perpetual animations
+       running at once: the live dot, the burger lines, the buyback row's text-shadow
+       and the desk button's dot. Perpetual motion is what an interface does when it
+       is not confident the content will hold you, and elite surfaces are still:
+       motion happens in RESPONSE to you, resolves, and stops. Four things pulsing
+       forever is wallpaper, and it trained the eye to skip exactly the row we most
+       wanted read. State is now shown with a static mark. */
+    ".bn-live{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ore,#46ff5e);" +
+    "margin-left:7px;vertical-align:middle;}" +
+    ".cur .bn-live{background:#04140a;}" +
+    ".bn-burger.bn-hot{border-color:rgba(70,255,94,.55);}" +
+    ".bn-burger.bn-hot .bn-lines span{background:var(--ore,#46ff5e);}" +
     ".bn-deskbtn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px;" +
     "padding:10px 12px;text-decoration:none;font-family:var(--mono,ui-monospace,monospace);" +
     "font-size:10.5px;letter-spacing:.24em;color:var(--silver-dim,#9aa39c);" +
     "border:1px solid rgba(70,255,94,.5);color:var(--ore,#46ff5e);transition:color .2s,border-color .2s,background .2s;}" +
     ".bn-deskbtn::before{content:\"\";width:6px;height:6px;border-radius:50%;flex:0 0 auto;" +
-    "background:var(--ore,#46ff5e);animation:bnDeskDot 4.6s ease-in-out infinite;}" +
-    "@keyframes bnDeskDot{0%,100%{opacity:.3;box-shadow:0 0 0 rgba(70,255,94,0);}" +
-    "50%{opacity:1;box-shadow:0 0 7px rgba(70,255,94,.5);}}" +
-    ".bn-deskbtn:hover{color:var(--ore,#46ff5e);border-color:rgba(70,255,94,.4);}" +
-    "@media(prefers-reduced-motion:reduce){.bn-live,.bn-burger.bn-hot .bn-lines span,.bn-deskbtn::before,.bn-item[data-rel=\"buyback/\"]{animation:none;}}" +
+    "background:var(--ore,#46ff5e);}" +
+    ".bn-deskbtn:hover{color:var(--ore,#46ff5e);border-color:var(--ore,#46ff5e);background:rgba(70,255,94,.07);}" +
+    /* the footer: findable, not prominent */
+    ".bn-foot{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:11px;" +
+    "border-top:1px solid rgba(150,168,158,.14);}" +
+    ".bn-foot-s{flex:1 1 auto;}" +
+    ".bn-foot-l{background:none;border:0;padding:0;cursor:pointer;text-decoration:none;" +
+    "font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.14em;" +
+    "text-transform:uppercase;color:var(--muted,#6f776f);transition:color .09s linear;}" +
+    ".bn-foot-l:hover{color:var(--ore,#46ff5e);}" +
+    /* One switch turns every bit of it off. */
+    "@media(prefers-reduced-motion:reduce){.bn-panel,.bn-panel::before,.bn-panel .bn-item," +
+    ".bn-panel .bn-deskbtn,.bn-panel .bn-foot{animation:none!important;}}" +
     "@media(max-width:700px){.topnav nav{display:none;}.bn-burger{margin-left:auto;}" +
     ".bn-panel{position:fixed;top:54px;left:0;right:0;width:auto;border-left:0;border-right:0;" +
     "max-height:calc(100vh - 54px);}}" +
