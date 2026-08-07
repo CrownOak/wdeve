@@ -1936,7 +1936,7 @@ function isOfficer(){ var r=(S.me&&S.me.account&&S.me.account.role)||''; return 
 /* THE GOAL STRIP — the one dictated corp goal, a bar every goblin watches move.
    Progress comes counted from the worker (industry_contributions of the goal
    item since the dictate); nothing is computed client-side but the percent. */
-/* YOUR NEXT TRIP. The member half of the Mohas card, and the numbers are no longer
+/* YOUR NEXT TRIP. The member half of the home card, and the numbers are no longer
    guessed: works_stock_plan.py computes which ore closes the 30 day gap, how many units
    and m3 that is, and how many OPS of ore value it represents, and the portal reads it.
    The whole point is that a member is handed ONE trip, not a spreadsheet: the ore, why it
@@ -2039,9 +2039,9 @@ function renderNextTrip(plan, co){
    encode it cleanly. Kept to the ores we actually run. Do NOT hand-type yields or volumes,
    those are SDE-baked already. Anything not listed falls back to the safe generic line. */
 var ORE_WHERE = {
-  "veldspar":    { band:"HIGHSEC", where:"Every belt has it. Any belt in Mohas will do." },
-  "scordite":    { band:"HIGHSEC", where:"Every belt has it. Any belt in Mohas will do." },
-  "plagioclase": { band:"HIGHSEC", where:"Highsec belts. Warp to a belt in Mohas or a system next door." },
+  "veldspar":    { band:"HIGHSEC", where:"Every belt has it. Any belt at home will do." },
+  "scordite":    { band:"HIGHSEC", where:"Every belt has it. Any belt at home will do." },
+  "plagioclase": { band:"HIGHSEC", where:"Highsec belts. Warp to a belt at home or a system next door." },
   "pyroxeres":   { band:"HIGHSEC", where:"Highsec belts around home." },
   "omber":       { band:"HIGHSEC", where:"Highsec belts, and richer as security drops." },
   "kernite":     { band:"HIGHSEC", where:"Highsec belts, and richer as security drops." }
@@ -2203,7 +2203,7 @@ function renderGoalStrip(){ var el=$("goalStripWrap"); if (el) el.innerHTML = re
    detail lives at /gobsec/board/. ============ */
 /* EMPTY IN THE SHELL (2026-08-07). Pages serves this HTML to anybody, so these
    ids were public no matter that the portal gates its data: they named our home
-   and, worse, the chokepoint. Filled from the member gated /api/roads. The brief
+   and more besides. Filled from the member gated /api/roads. The brief
    simply renders no chips until it arrives, and none at all for a stranger. */
 var GSS_HOME = null, GSS_DOOR = null, GSS_CORRIDOR = [];
 var GSS_NAMES = { home: "", door: "" };
