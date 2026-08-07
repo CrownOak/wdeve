@@ -116,6 +116,17 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .scoutlbl{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
             color:var(--ore); font-weight:700; }
 .scoutnote{ font-family:var(--mono); font-size:11px; color:var(--muted); flex-basis:100%; }
+/* ---- THE RATE HALF, dressed like the console it sits in. It had no layout of
+   its own and borrowed #btbar's label classes WITHOUT their #btbar scope, so
+   the label and the note rendered as bare unstyled text next to finished chips:
+   the exact seam between built and unfinished. The label now matches its
+   sibling "Send to command", the note reads as the instrument's caption. */
+#survbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+#survbar .btlbl{ flex-basis:100%; font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ore); font-weight:700; display:flex; align-items:center; gap:7px; }
+#survbar .btlbl::before{ content:"\25C6"; font-size:8px; line-height:1; opacity:.85; }
+#survbar .btnote{ flex-basis:100%; font-family:var(--mono); font-size:10.5px; line-height:1.55;
+  color:var(--muted); margin-top:2px; }
 /* ---- THE RATE CHIPS: pick a hull, or fly on your own measured numbers ---- */
 .rateChips{ display:flex; flex-wrap:wrap; gap:6px; flex-basis:100%; margin:2px 0 4px; }
 .rchip{ background:transparent; border:1px solid var(--line); color:var(--silver-dim);
@@ -125,6 +136,49 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .rchip.on{ background:var(--ore); color:#04140a; border-color:var(--ore); font-weight:700; }
 .rchip.meas{ border-color:rgba(70,255,94,.45); color:var(--ore); }
 .rchip.meas.on{ color:#04140a; }
+/* ---- THE FIELD REPORT, popped when a filing lands: the same card the fleet
+   console opens on a site (fleet ssPaintDetail), so the scout sees exactly
+   what command will see. Every value under it is server derived. ---- */
+.srmask{ position:fixed; inset:0; z-index:1300; background:rgba(3,5,4,.8);
+  display:flex; align-items:center; justify-content:center; padding:18px; }
+.srcard{ width:min(560px,96vw); max-height:88vh; overflow:auto; background:var(--steel);
+  border:1px solid var(--line-soft); box-shadow:0 34px 90px -24px rgba(0,0,0,.95);
+  padding:13px 15px 15px; }
+.srcard .srtop{ display:flex; align-items:baseline; gap:10px; margin-bottom:10px; }
+.srcard .srtop b{ font-size:15px; letter-spacing:.05em; text-transform:uppercase; color:var(--silver); }
+.srcard .srtop > span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--muted); }
+.srcard .srx{ margin-left:auto; background:none; border:1px solid var(--line); color:var(--muted);
+  font-family:var(--mono); font-size:11px; line-height:1; padding:5px 9px; cursor:pointer; }
+.srcard .srx:hover{ border-color:var(--ore); color:var(--ore); }
+.srep{ position:relative; border:1px solid var(--line-soft); border-left:2px solid var(--ore);
+  background:linear-gradient(180deg, rgba(70,255,94,.05), transparent 60%);
+  padding:9px 11px 10px; margin-bottom:10px; }
+.srep::before, .srep::after{ content:""; position:absolute; width:9px; height:9px;
+  border-color:var(--ore); border-style:solid; opacity:.6; }
+.srep::before{ top:4px; right:4px; border-width:1px 1px 0 0; }
+.srep::after{ bottom:4px; right:4px; border-width:0 1px 1px 0; }
+.srep .srh{ font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--ore); display:flex; align-items:baseline; gap:8px; margin-bottom:7px; }
+.srep .srh i{ font-style:normal; color:var(--muted); letter-spacing:.1em; margin-left:auto; }
+.srep .srl{ font-family:var(--mono); font-size:10.5px; color:var(--silver-dim);
+  display:flex; gap:7px; align-items:baseline; padding:2px 0; }
+.srep .srl u{ text-decoration:none; color:var(--muted); font-size:9px; letter-spacing:.14em;
+  text-transform:uppercase; min-width:74px; display:inline-block; }
+.srep .srdiv{ height:1px; margin:7px 0; background:repeating-linear-gradient(90deg,
+  var(--line-soft) 0 4px, transparent 4px 8px); }
+.srep .srnote{ font-family:var(--mono); font-size:11px; color:var(--silver); }
+.srep .srnote b{ color:var(--ore); }
+.srep .srown{ font-family:var(--mono); font-size:9px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); }
+.srfoot{ font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:7px; }
+/* "shoot the top row first" needs the top row to actually look like the one.
+   (tr.best was classed here and in the board dropdown but never styled.) */
+tr.best td{ color:var(--ore); font-weight:600; }
+@media(prefers-reduced-motion:no-preference){
+  .srcard{ animation:srin .14s ease-out; }
+  @keyframes srin{ from{ opacity:0; transform:translateY(5px); } to{ opacity:1; transform:none; } }
+}
 /* ---- THE SCOUT DECK: a console, not a form ---- */
 #survdeck{ position:relative; overflow:hidden; }
 #survdeck .dcorner{ position:absolute; width:13px; height:13px; border:2px solid var(--ore);
@@ -1128,6 +1182,9 @@ tr.survrow:hover .survmore{ color:var(--ore); }
               " Good for 6 hours.");
           scCondReset();
         }
+        /* the report pops for the duplicate too: "already on the board" plus
+           WHAT is on the board answers the next question before it is asked */
+        if(d.id) scoutReport(d.id, where);
         scoutBoard();
       }).catch(function(){ scoutMsg("Could not reach the portal. Are you logged in?", true); });
   }
@@ -1294,6 +1351,68 @@ tr.survrow:hover .survmore{ color:var(--ore); }
            "</div></div>";
         el.innerHTML=h;
       }).catch(function(){ el.innerHTML=""; });
+  }
+  /* THE FIELD REPORT, popped when a filing lands. The same card the fleet
+     console opens on a site (fleet/index.html ssPaintDetail), so the scout
+     sees exactly what command will see, priced by the same server row. The
+     label rides in from the form because the detail payload does not carry it. */
+  function srStamp(iso){ var t=Date.parse(iso); if(!t) return "--:--";
+    var d=new Date(t); function p(n){ return (n<10?"0":"")+n; }
+    return p(d.getUTCHours())+":"+p(d.getUTCMinutes())+" EVE"; }
+  function srAgo(iso){ var t=Date.parse(iso); if(!t) return "";
+    var m=Math.max(0,Math.round((Date.now()-t)/60000));
+    return m<60 ? m+"m ago" : (m/60).toFixed(1)+"h ago"; }
+  function srClose(){ var m=document.getElementById("srmask"); if(m) m.remove();
+    document.removeEventListener("keydown", srEsc); }
+  function srEsc(e){ if(e.key==="Escape") srClose(); }
+  function scoutReport(id, label){
+    fetch("/api/scout/site?id="+encodeURIComponent(id)).then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!d||!d.ok||d.sighting) return;
+        var h='<div class="srcard"><div class="srtop"><b>'+esc(d.system||"")
+          +(label?' &middot; '+esc(label):"")+'</b><span>scout report</span>'
+          +'<button type="button" class="srx">close &times;</button></div>';
+        h+='<div class="srep"><div class="srh"><span>&#9670; FIELD REPORT</span><i>'
+          +srStamp(d.filed_at)+' &middot; '+srAgo(d.filed_at)+'</i></div>';
+        h+='<div class="srl"><u>eyes</u><span>'+esc(d.scout||"a goblin")+' &middot; '
+          +(d.corroborated?"position confirmed":"position unverified")+'</span></div>';
+        h+='<div class="srl"><u>contact</u><span>';
+        if(d.conditions&&d.conditions.length){
+          for(var c=0;c<d.conditions.length;c++){
+            var mk=scCondLabel(d.conditions[c]);
+            h+='<span class="ccm '+(mk?mk[2]:"")+'">'+(mk?mk[1]:esc(d.conditions[c]))+'</span>'
+              +(c<d.conditions.length-1?'<span class="ccm"> / </span>':"");
+          }
+        } else h+='<span class="ccm">not reported</span>';
+        h+='</span></div>';
+        if(d.note) h+='<div class="srdiv"></div><div class="srnote"><b>&raquo;</b> '+esc(d.note)+'</div>';
+        if(d.own) h+='<div class="srdiv"></div><div class="srown">your filing</div>';
+        h+='</div>';
+        h+='<div class="survgrid">'
+          +'<div><span>pays</span><b>'+(d.pay_per_m3!=null?Number(d.pay_per_m3).toFixed(1):"?")+' /m&sup3;</b></div>'
+          +'<div><span>whole belt</span><b>'+isk(d.pay||0)+' ISK</b></div>'
+          +'<div><span>volume</span><b>'+m3fmt(d.m3||0)+' m&sup3;</b></div>'
+          +'<div><span>rocks</span><b>'+(d.rocks||0)+'</b></div></div>';
+        if(d.unmatched) h+='<div class="srfoot" style="color:var(--amber,#e0b34c)">&#9888; '
+          +d.unmatched+' pasted rows are not ore we know. treat this one carefully.</div>';
+        var os=d.ores||[];
+        if(os.length){
+          h+='<table><thead><tr><th>ore</th><th class="num">rocks</th><th class="num">units</th>'
+            +'<th class="num">m&sup3;</th><th class="num">ISK/m&sup3;</th></tr></thead><tbody>';
+          for(var i=0;i<os.length&&i<10;i++){ var o=os[i];
+            h+='<tr'+(i===0?" class='best'":"")+'><td>'+esc(o.ore)+'</td><td class="num">'+o.n
+              +'</td><td class="num">'+(o.qty||0).toLocaleString()+'</td><td class="num">'
+              +m3fmt(o.m3||0)+'</td><td class="num"><b>'+o.per_m3.toFixed(1)+'</b></td></tr>'; }
+          h+='</tbody></table><div class="srfoot">shoot the top row first. priced at our buyback, not the game\'s ISK column.</div>';
+        }
+        h+='</div>';
+        var mask=document.createElement("div"); mask.className="srmask"; mask.id="srmask";
+        mask.innerHTML=h;
+        document.body.appendChild(mask);
+        mask.addEventListener("click", function(e){ if(e.target===mask) srClose(); });
+        var x=mask.querySelector(".srx"); if(x) x.onclick=srClose;
+        document.addEventListener("keydown", srEsc);
+      }).catch(function(){});
   }
   (function(){
     var g=document.getElementById("scGo"); if(g) g.onclick=scoutFile;
