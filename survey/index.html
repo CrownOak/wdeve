@@ -228,6 +228,8 @@ tr.survrow:hover .survmore{ color:var(--ore); }
 .goatlist td.num{ width:24px; color:var(--muted); }
 .goatlist td.pay{ text-align:right; white-space:nowrap; }
 .goatlist b{ color:var(--silver); font-weight:600; }
+.goatfoot{ font-family:var(--mono); font-size:8.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); margin-top:8px; text-align:right; opacity:.75; }
 /* clickable legends: quiet until hovered, like everything else worth clicking */
 .podium .stand[data-site]{ cursor:pointer; }
 .podium .stand[data-site]:hover .box{ border-color:var(--ore); color:var(--ore); }
@@ -1468,6 +1470,7 @@ tr.best td{ color:var(--ore); font-weight:600; }
               +'<td class="pay"><b>'+isk(r.pay)+'</b></td></tr>'; }
           h+='</tbody></table>';
         }
+        h+='<div class="goatfoot">the house does not compete.</div>';
       }
       host.innerHTML=h;
       /* every legend opens its original filing: same field report card, same
