@@ -182,7 +182,7 @@
     <span class="corner tl"></span><span class="corner tr"></span>
     <span class="corner bl"></span><span class="corner br"></span>
     <div class="sweep" id="sweep"></div>
-    <textarea id="cargo" spellcheck="false" placeholder="Copy ore from your inventory window and paste it here, one line each:&#10;Compressed Kernite	147,327&#10;Veldspar	52,000"></textarea>
+    <textarea id="cargo" spellcheck="false" placeholder="Copy ore or minerals from your inventory window and paste it here, one line each:&#10;Compressed Kernite	147,327&#10;Veldspar	52,000&#10;Tritanium	1,000,000"></textarea>
     <div class="deskrow">
       <button id="go" class="gobtn">Weigh it</button>
       <div class="feed"><span class="dot"></span><span id="feedtxt">price feed live &middot; paste to weigh in</span></div>
@@ -222,9 +222,9 @@
   <div class="board" id="board">
     <div class="bhead">
       <h2>The price board</h2>
-      <span class="bnote" id="bnote">what every rock pays, per unit and per hold space</span>
+      <span class="bnote" id="bnote">what every rock and mineral pays, per unit and per hold space</span>
       <div class="bctl" id="bctl" style="display:none">
-        <input id="bq" type="search" placeholder="filter ore" spellcheck="false">
+        <input id="bq" type="search" placeholder="filter the list" spellcheck="false">
         <label><input id="bcomp" type="checkbox"> compressed</label>
       </div>
     </div>
@@ -244,11 +244,21 @@
     <p>The buyback skips all of it. You drop ore at the home station, ISK appears, you are back in
     the belt before your wallet stops blinking. We do the refining, the hauling, the market grind,
     and the getting shot at. That service is the product.</p></details>
+    <details class="fq"><summary>The desk buys minerals too</summary>
+    <p>Some goblins refine their own rocks. Some build things and have leftovers. Some open the
+    hangar and find forty million Tritanium they cannot explain and do not wish to discuss. The
+    desk does not judge, the desk buys. Paste any of the eight minerals exactly like ore and the
+    number appears.</p>
+    <p>The rule is one sentence: minerals pay 90 percent of the lowest hub price, refreshed
+    hourly. Not a hub we picked and married, just whichever one is lowest at the time. Same
+    contract, same station, same wallet blink. The industry machine eats every unit you bring,
+    so bring the whole stack.</p></details>
     <details class="fq"><summary>The three doors</summary>
     <p>You never have to use the desk. Three doors, always open. Contract it to the corp and get
     paid now. Haul it to a hub yourself and squeeze the top price out of it, we will wave at the
-    gate. Or refine it and build things, the industry program will take every mineral you can make.
-    Pick a different door every day. Nobody keeps score, the rocks certainly do not.</p>
+    gate. Or refine it and build things, the industry program will take every mineral you can make,
+    and so will this desk. Pick a different door every day. Nobody keeps score, the rocks certainly
+    do not.</p>
     <p>Want to compare doors first? <a href="/refine/">The calculator</a> prices your load at every
     hub. The desk quotes what we pay. Both numbers are honest, they are just answering different
     questions: what your ore might be worth somewhere, versus what it is worth right here, right
@@ -388,7 +398,7 @@
     if(!force && text.trim()===lastText.trim()) return;
     var lines=parse(text);
     if(!lines.length){
-      if(force) err("Paste some ore first. Straight from the inventory window works, one line per stack.");
+      if(force) err("Paste some ore or minerals first. Straight from the inventory window works, one line per stack.");
       return;
     }
     busy=true; lastText=text;
@@ -502,7 +512,7 @@
       return (x<y?-1:x>y?1:0)*bDir;
     });
     var h='<div class="bscroll"><table class="btable"><thead><tr>'
-      +'<th data-s="name" class="'+(bSort==="name"?"on":"")+'">ore</th>'
+      +'<th data-s="name" class="'+(bSort==="name"?"on":"")+'">item</th>'
       +'<th data-s="unit" class="'+(bSort==="unit"?"on":"")+'">isk / unit</th>'
       +'<th data-s="m3" class="'+(bSort==="m3"?"on":"")+'">isk / m&sup3;</th>'
       +'</tr></thead><tbody>';
