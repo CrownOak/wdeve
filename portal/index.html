@@ -1245,6 +1245,40 @@
      Stacking it above would put us straight back where we started. */
   .prail{ position:static; max-height:none; overflow:visible; padding-right:0; }
 }
+/* ---------- The Keep Ledger: rail-top raise command view ----------
+   Spec: Downloads/BONK-KEEP-RAIL-WIDGET-SPEC.md. Quiet-card treatment on purpose:
+   elevated by position and type scale, not decoration. One big number, a 3px bar
+   with milestone ticks, the next milestone, one action. Nothing glows. */
+.keep{ background:var(--steel-2, var(--steel)); border:1px solid var(--line-soft);
+       border-left:3px solid var(--ore); padding:12px 14px; margin:0 0 12px; }
+.kp-top{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.kp-kick{ font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.18em;
+          text-transform:uppercase; color:var(--muted); }
+.kp-pct{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.06em; color:var(--ore); }
+.kp-name{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+          font-size:15px; line-height:1.15; color:var(--silver); margin-top:5px; }
+.kp-ctx{ font-family:var(--mono); font-size:9px; letter-spacing:.07em; text-transform:uppercase;
+         color:var(--muted); margin-top:2px; }
+.kp-num{ margin-top:9px; cursor:pointer; }
+.kp-num b{ font-family:var(--display); font-weight:700; font-size:24px; color:var(--ore);
+           font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+.kp-num span{ font-size:11px; color:var(--muted); margin-left:5px; }
+.kp-bar{ position:relative; height:3px; background:var(--line-soft); margin-top:8px; }
+.kp-bar i{ position:absolute; left:0; top:0; bottom:0; background:var(--ore); transition:width .6s ease; }
+.kp-bar u{ position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--silver-dim); opacity:.55; }
+.kp-next{ font-family:var(--mono); font-size:8.5px; letter-spacing:.09em; text-transform:uppercase;
+          color:var(--muted); margin-top:7px; }
+.kp-you{ font-family:var(--mono); font-size:9.5px; color:var(--silver-dim); margin-top:5px; }
+.kp-acts{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+          margin-top:10px; padding-top:9px; border-top:1px solid var(--line-soft); }
+.kp-cta{ font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:.06em;
+         text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.35);
+         background:none; padding:6px 11px; cursor:pointer; }
+.kp-cta:hover{ background:rgba(70,255,94,.08); }
+.kp-wall{ background:none; border:0; padding:0; font-family:var(--mono); font-size:9.5px;
+          color:var(--muted); cursor:pointer; text-decoration:underline; }
+.kp-wall:hover{ color:var(--silver); }
+@media(prefers-reduced-motion:reduce){ .kp-bar i{ transition:none; } }
 
 /* the internal GOBSEC door. Red is an edge here too: a left rule and a word, no fill. */
 .gobcard{ display:block; text-decoration:none; margin:0 0 14px; padding:11px 13px;
@@ -1343,7 +1377,9 @@
       <!-- rail comes AFTER main in the DOM so the mobile stack order is right by default,
            with no order: override for somebody to break later -->
       <aside class="prail">
-        <div id="undockLine"></div>
+        <!-- The Keep Ledger: the raise, always on screen (rail is sticky on desktop).
+             Replaced #undockLine, which was dead markup nothing ever filled. -->
+        <div id="keepWrap"></div>
         <div id="hundredWrap"></div>
         <div id="gssBriefWrap"></div>
         <div id="goalStripWrap"></div>
@@ -1602,6 +1638,7 @@ function renderAll(){
   safeRender(renderAcademy,  $("panelAcademy"));
   safeRender(renderTrophies, $("panelTrophies"));
   safeRender(renderSay,      $("panelSay"));
+  safeRender(renderKeep,     $("keepWrap"));
   safeRender(renderGoalStrip,$("goalStripWrap"));
   safeRender(renderGssBrief, $("gssBriefWrap"));
   safeRender(function(){ var e=$("assayWrap"); if(e) e.innerHTML=renderAssay()+renderAssayBuild(); }, $("assayWrap"));
@@ -2604,6 +2641,69 @@ async function stockPaste(){
 function worksAdd(){
   var item=($("wkItem").value||'').trim(); if(!item){ $("wkErr").textContent='name it'; return; }
   worksAct({action:'add', section:$("wkSec").value, item:item, qty:($("wkQty").value||'').trim()||null, note:($("wkNote").value||'').trim()});
+}
+/* ============ The Keep Ledger (rail top): the raise, always on screen ============
+   Spec: Downloads/BONK-KEEP-RAIL-WIDGET-SPEC.md. Renders nothing while no campaign is
+   live (station_on=0 means /api/me carries no station at all). Number handling mirrors
+   the big campaign card; the CTA opens THAT card's contribute form, never a second one,
+   so the in game Give Money instructions stay in exactly one place. */
+function renderKeep(){
+  var el = $("keepWrap"); if (!el) return;
+  var st = S.me && S.me.station;
+  if (!st || !(Number(st.target) > 0) || st.active_launched){ el.innerHTML = ""; return; }
+  var target = Number(st.target) || 0, raised = Number(st.raised) || 0;
+  var pct = Math.max(0, Math.min(100, Number(st.pct) || 0));
+  var funded = raised >= target;
+  /* milestone ticks parsed from the settings string; a segment that does not lead
+     with an ISK figure is skipped, so bad settings mean no ticks, never a blank widget */
+  var ticks = [], next = null;
+  String(st.milestones || "").split("·").forEach(function(seg){
+    var m = seg.match(/^\s*([\d.]+)\s*B\b\s*(.*)$/);
+    if (!m) return;
+    var v = parseFloat(m[1]) * 1e9;
+    if (!(v > 0)) return;
+    ticks.push(Math.max(0, Math.min(100, v / target * 100)));
+    if (!next && v > raised) next = { v: v, label: m[2] || "" };
+  });
+  var name = st.label ? String(st.label).replace(/^.*?Project:\s*/i, "") : "The raise";
+  var you = st.you || {};
+  var youC = Number(you.contributed) || 0, youP = Number(you.pending) || 0;
+  el.innerHTML = '<div class="keep">' +
+    '<div class="kp-top"><span class="kp-kick">The raise</span>' +
+      '<span class="kp-pct">' + (funded ? 'FUNDED' : pct + '%') + '</span></div>' +
+    '<div class="kp-name" data-i18n-skip>' + esc(name) + '</div>' +
+    (st.structure ? '<div class="kp-ctx" data-i18n-skip>' + esc(st.structure) + '</div>' : '') +
+    '<div class="kp-num" id="kpNum" title="see the wall"><b>' + fmtIsk(raised) + '</b>' +
+      '<span>of ' + fmtIsk(target) + ' ISK</span></div>' +
+    '<div class="kp-bar"><i style="width:' + pct + '%"></i>' +
+      ticks.map(function(t){ return '<u style="left:' + t.toFixed(2) + '%"></u>'; }).join("") +
+    '</div>' +
+    (funded
+      ? '<div class="kp-next">anchoring comes next</div>'
+      : (next ? '<div class="kp-next">next &middot; <span data-i18n-skip>' + fmtIsk(next.v) + ' ' + esc(next.label) + '</span></div>' : '')) +
+    ((youC > 0 || youP > 0)
+      ? '<div class="kp-you">your stake <b>' + fmtIsk(youC) + '</b>' +
+        (youP > 0 ? ' &middot; ' + fmtIsk(youP) + ' pending' : '') + '</div>'
+      : '') +
+    '<div class="kp-acts"><button class="kp-cta" id="kpCta">Put ISK in</button>' +
+      ((st.contributors || []).length
+        ? '<button class="kp-wall" id="kpWall">the wall &rarr;</button>' : '') +
+    '</div></div>';
+  var cta = $("kpCta");
+  if (cta) cta.onclick = function(){
+    var card = document.querySelector(".station");
+    if (!card) return;
+    card.scrollIntoView({ behavior:"smooth", block:"start" });
+    var tog = $("stContrib"), btn = $("stContribBtn");
+    if (tog && tog.style.display === "none" && btn) btn.click();
+  };
+  function kpWallOpen(){
+    /* never depend on the corp strip having rendered first */
+    if (!(S.builders && S.builders.length)) S.builders = st.contributors || [];
+    openBuildersWall();
+  }
+  var w = $("kpWall"); if (w) w.onclick = kpWallOpen;
+  var n = $("kpNum"); if (n) n.onclick = kpWallOpen;
 }
 function renderCorpStrip(){
   var el = $("corpStripWrap");
