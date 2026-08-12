@@ -408,46 +408,29 @@
   /* lives in MAIN now (it is an action, not a read), so it gets panel-weight padding and
    the link row can stretch instead of wrapping in a narrow rail */
   .refcard{ background:var(--steel); border:1px solid var(--line-soft); border-left:3px solid var(--ore);
-            padding:18px 20px 20px; margin:0 0 18px; }
-  /* MAIN EVENT. Elevated on purpose (Kyle 2026-07-29) but kept inside the existing palette:
-     a full ore border plus a lift, not a new colour language. The glow is a wide, very low
-     alpha spread so it reads as raised rather than neon. */
-  .refcard.main{ position:relative; border:1px solid var(--ore); border-left-width:3px;
-    background:var(--steel-2, var(--steel));
-    box-shadow:0 0 0 1px rgba(70,255,94,.09), 0 0 34px -14px rgba(70,255,94,.42),
-               0 16px 44px -26px rgba(70,255,94,.55);
-    animation:refbreath 7s ease-in-out infinite; }
-  /* the halo sits OUTSIDE the border on its own layer, so the lift never touches
-     the text contrast inside the card */
-  .refcard.main::after{ content:""; position:absolute; inset:-1px; pointer-events:none;
-    border:1px solid rgba(70,255,94,.16); }
-  @keyframes refbreath{
-    0%,100%{ box-shadow:0 0 0 1px rgba(70,255,94,.09), 0 0 30px -16px rgba(70,255,94,.38),
-                        0 16px 44px -26px rgba(70,255,94,.5); }
-    50%    { box-shadow:0 0 0 1px rgba(70,255,94,.13), 0 0 42px -12px rgba(70,255,94,.55),
-                        0 16px 44px -26px rgba(70,255,94,.6); } }
-  @media(prefers-reduced-motion:reduce){ .refcard.main{ animation:none; } }
-  /* THE MAIN EVENT, tightened (Kyle 2026-07-31: "it is a huge section... consolidate that
-     space, make better use of the interface, still special but shrink it down and present
-     the data in a more meaningful way").
-     What ate the height: three big cards to say three words, a sentence restating the
-     deadline already in the clock, a legend under the board and a paragraph under that.
-     Same information, a third of the room: prize is a chip row, the rules ride the column
-     labels, and the deadline lives in the clock only. */
-  .mevstack{ display:flex; flex-wrap:wrap; gap:6px; margin:9px 0 0; }
+            padding:12px 14px 14px; margin:0 0 14px; }
+  /* Understated (Kyle 2026-08-11): the glow, the breathing animation and the halo layer
+     are gone. The ore left border is the whole treatment, same as every other panel. */
+  .refcard.main{ background:var(--steel-2, var(--steel)); }
+  /* THE MAIN EVENT, tightened twice (Kyle 2026-07-31 "consolidate that space", then
+     2026-08-11 "smaller, more understated, more professional"). Prize is a chip row,
+     the rules ride the column labels, the deadline lives in the clock only, and the
+     header sits at panel scale rather than hero scale. */
+  .mevstack{ display:flex; flex-wrap:wrap; gap:5px; margin:6px 0 0; }
   .mvp{ display:flex; align-items:baseline; gap:5px; background:var(--black);
-        border:1px solid var(--line-soft); padding:4px 9px; }
-  .mvp b{ font-family:var(--display); font-weight:700; font-size:13px; color:var(--ore); letter-spacing:.02em; }
-  .mvp span{ font-family:var(--mono); font-size:8.5px; letter-spacing:.09em;
+        border:1px solid var(--line-soft); padding:3px 7px; }
+  .mvp b{ font-family:var(--display); font-weight:700; font-size:11.5px; color:var(--ore); letter-spacing:.02em; }
+  .mvp span{ font-family:var(--mono); font-size:8px; letter-spacing:.09em;
              text-transform:uppercase; color:var(--muted); }
-  .mev{ margin:-4px 0 13px; padding:0 0 12px; border-bottom:1px solid var(--line-soft); }
+  .mev{ margin:0 0 10px; padding:0 0 9px; border-bottom:1px solid var(--line-soft); }
   .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-  .mevtag{ font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.34em;
-    text-transform:uppercase; color:#04140a; background:var(--ore); padding:4px 9px; }
-  .mevclock{ font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--muted); }
+  /* outlined, not filled: a label, not a marquee */
+  .mevtag{ font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.35); padding:2px 6px; }
+  .mevclock{ font-family:var(--mono); font-size:10px; letter-spacing:.06em; color:var(--muted); }
   .mevclock b{ color:var(--ore); font-weight:700; }
   .mevname{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
-    font-size:17px; line-height:1.15; color:var(--silver); margin-top:9px; }
+    font-size:13px; line-height:1.15; color:var(--silver); margin-top:6px; }
   .mevboard{ margin-top:11px; }
   .mevhd, .mevrow{ display:grid; grid-template-columns:18px minmax(0,1fr) 52px 44px; gap:9px;
     align-items:baseline; padding:4px 6px; }
@@ -467,28 +450,26 @@
                 font-variant-numeric:tabular-nums; }
   .mevfoot{ margin-top:7px; font-family:var(--mono); font-size:9.5px; letter-spacing:.03em;
             line-height:1.5; color:var(--muted); }
-  /* the empty board is a pitch now, so it gets reading measure and a lit first line */
-  .mevempty{ margin-top:11px; font-size:12.5px; color:var(--muted); line-height:1.55; max-width:54ch; }
+  .mevempty{ margin-top:8px; font-size:11.5px; color:var(--muted); line-height:1.5; max-width:54ch; }
   .mevempty b{ color:var(--silver); }
-  .mevempty i{ font-style:normal; color:var(--ore); }
   /* your own standing when you are past the visible ten */
   .mevmine{ font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted);
     padding:7px 0 0; text-align:right; }
   .mevmine b{ color:var(--ore); }
   .refcard .rt{ font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-                font-size:12.5px; color:var(--ore); }
-  .refcard .rs{ font-size:12.5px; color:var(--silver-dim); line-height:1.5; margin-top:5px; }
+                font-size:11px; color:var(--ore); }
+  .refcard .rs{ font-size:11.5px; color:var(--silver-dim); line-height:1.5; margin-top:4px; }
   /* the link block: label sits ON the row instead of a sentence above and below it */
-  .refl{ margin-top:9px; }
+  .refl{ margin-top:8px; }
   .refl-k{ font-family:var(--mono); font-size:8.5px; letter-spacing:.11em; text-transform:uppercase;
            color:var(--muted); margin-bottom:3px; }
-  .reffoot{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:11px;
-            padding-top:9px; border-top:1px solid var(--line-soft); }
-  .reflink{ display:flex; gap:6px; margin-top:10px; }
+  .reffoot{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:9px;
+            padding-top:8px; border-top:1px solid var(--line-soft); }
+  .reflink{ display:flex; gap:6px; margin-top:4px; }
   .reflink input{ flex:1; min-width:0; background:var(--black); border:1px solid var(--line); color:var(--silver);
-                  font-family:var(--mono); font-size:11px; padding:7px 8px; }
+                  font-family:var(--mono); font-size:10.5px; padding:5px 7px; }
   .refbtn{ background:var(--ore); color:#04140a; border:0; font-family:var(--mono); font-size:10px;
-           font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:7px 11px; cursor:pointer; }
+           font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:5px 9px; cursor:pointer; }
   .refbtn:hover{ background:var(--laser); }
   .refalt{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line-soft); }
   .refalt .ral{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
@@ -2999,11 +2980,6 @@ function renderEventBoard(){
           '<span class="mvj">' + row.joined + '</span>' +
           '<span class="mvh">' + row.held + '</span></div>';
       }).join("") +
-      /* CONTEXT, not just columns. The board used to state the tiebreak rule and nothing
-         else, so a member could read the whole card and still not know what an entry IS
-         or why held exists. Both are one sentence each, and the second one carries the
-         actual point: held is there so this rewards bringing friends home rather than
-         farming signups. */
       /* WHERE YOU STAND, when you are not in the visible ten. The server has always
          computed my_rank over every entrant and nothing ever read it, so a member
          ranked 11th saw a board with no trace of themselves and no sense of how far
@@ -3011,34 +2987,20 @@ function renderEventBoard(){
       ((b.my_rank && b.my_rank > b.board.length)
         ? '<div class="mevmine">You are <b>' + b.my_rank + '</b> of ' + (b.entrants || b.my_rank) + '.</div>'
         : '') +
-      '<div class="mevfoot">Your link, their application, an officer says yes. That is a JOINED. ' +
-        'Still flying with us two weeks later and it becomes a HELD.<br>' +
-        'Joined wins the 500M. Held settles ties, because we are counting goblins who stayed, ' +
-        'not names on a form.</div></div>';
+      '<div class="mevfoot">A JOINED is an approved application through your link. ' +
+        'Two weeks in and it becomes a HELD, which settles ties.</div></div>';
   } else {
-    /* AN EMPTY BOARD IS THE BEST PITCH WE WILL EVER HAVE and it was being wasted on eight
-       words. Everything here is doing a job: first place is currently unoccupied (the ask
-       costs nothing and the reward is the whole pot), the work is shrunk to one concrete
-       action so nobody talks themselves out of it on effort, and it closes on the line from
-       the hundred goblins banner, because "somebody thought to ask" is true of almost every
-       person reading it. Identity beats instruction. */
+    /* Understated on purpose (Kyle 2026-08-11: "smaller, more understated, more
+       professional, just simple direction and general encouragement, nothing over the
+       top"). The three-paragraph pitch is gone; what remains is the state of the board,
+       the one action, and what counts. The encouragement line lives in the Bring a
+       friend block below, once, not twice. */
     h += '<div class="mevempty">' +
-      '<b>Nobody is on the board.</b> Which means first place is currently held by no one, ' +
-      'the 500M is sitting in the pot getting comfortable, and the entire field is whoever ' +
-      'reads this and then does one small thing about it.' +
+      '<b>The board is empty.</b> First name on it takes the lead.' +
       '<br><br>' +
-      'You do not have to pitch anybody. You are not selling timeshares. You send your link ' +
-      'to one person who is out there mining alone in the cold like a Victorian orphan, and ' +
-      'you ask. That is the job. That is the whole job.' +
-      '<br><br>' +
-      /* The JOINED/HELD explainer only rendered inside the non-empty branch, so the
-         one moment it actually matters, an empty board that somebody has to break,
-         was the one moment nobody was told what counts. */
-      '<span style="color:var(--silver-dim)">Your link, their application, an officer says yes. ' +
-      'That is a JOINED, and most joined wins it. Still flying with us two weeks later and it ' +
+      '<span style="color:var(--silver-dim)">Send your link to a friend. They apply, an officer ' +
+      'approves, and that is a JOINED. Most joined wins. Still here two weeks later and it ' +
       'becomes a HELD, which settles ties.</span>' +
-      '<br><br>' +
-      '<i>Almost every one of us is here because somebody thought to ask. Go be the somebody.</i>' +
       '</div>';
   }
   return h + '</div>';
