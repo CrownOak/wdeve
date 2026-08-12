@@ -411,7 +411,23 @@
             padding:12px 14px 14px; margin:0 0 14px; }
   /* Understated (Kyle 2026-08-11): the glow, the breathing animation and the halo layer
      are gone. The ore left border is the whole treatment, same as every other panel. */
-  .refcard.main{ background:var(--steel-2, var(--steel)); }
+  .refcard.main{ position:relative; background:var(--steel-2, var(--steel)); }
+  /* minimize toggle (Kyle 2026-08-11). Collapsed, the card is ONE line whose whole job
+     is the one-click copy; the + brings the event board back. State in localStorage. */
+  .refhide{ position:absolute; top:5px; right:5px; background:none; border:0; color:var(--muted);
+            font-family:var(--mono); font-size:13px; line-height:1; cursor:pointer; padding:3px 6px; }
+  .refhide:hover{ color:var(--silver); }
+  .refmin{ display:flex; align-items:center; gap:8px; background:var(--steel);
+           border:1px solid var(--line-soft); border-left:3px solid var(--ore);
+           padding:7px 10px; margin:0 0 14px; cursor:pointer; }
+  .refmin .rm-t{ font-family:var(--display); font-weight:700; text-transform:uppercase;
+                 letter-spacing:.05em; font-size:10.5px; color:var(--ore); }
+  .refmin .rm-c{ font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+                 text-transform:uppercase; color:var(--muted); }
+  .refmin:hover .rm-c{ color:var(--silver); }
+  .refmin .rm-x{ margin-left:auto; background:none; border:0; color:var(--muted);
+                 font-family:var(--mono); font-size:12px; line-height:1; cursor:pointer; padding:2px 5px; }
+  .refmin .rm-x:hover{ color:var(--silver); }
   /* THE MAIN EVENT, tightened twice (Kyle 2026-07-31 "consolidate that space", then
      2026-08-11 "smaller, more understated, more professional"). Prize is a chip row,
      the rules ride the column labels, the deadline lives in the clock only, and the
@@ -423,7 +439,8 @@
   .mvp span{ font-family:var(--mono); font-size:8px; letter-spacing:.09em;
              text-transform:uppercase; color:var(--muted); }
   .mev{ margin:0 0 10px; padding:0 0 9px; border-bottom:1px solid var(--line-soft); }
-  .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  /* right padding clears the absolute minimize button so the clock never sits under it */
+  .mevtop{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding-right:24px; }
   /* outlined, not filled: a label, not a marquee */
   .mevtag{ font-family:var(--mono); font-size:8.5px; font-weight:700; letter-spacing:.18em;
     text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.35); padding:2px 6px; }
@@ -3051,11 +3068,48 @@ function renderHundred(){
     })
     .catch(function(){});
 }
+/* clipboard with the legacy fallback the copy buttons already rely on, usable from
+   the minimized bar where no input element exists to select */
+function copyRefLink(t){
+  try { navigator.clipboard.writeText(t); }
+  catch(e){
+    try {
+      var i = document.createElement("input"); i.value = t;
+      document.body.appendChild(i); i.select();
+      document.execCommand("copy"); document.body.removeChild(i);
+    } catch(e2){ return false; }
+  }
+  return true;
+}
 function renderReferral(){
   var el = $("referralWrap"); if (!el) return;
   var r = S.ref;
   if (!r || !r.url || isAlly()){ el.innerHTML = ""; return; }
-  el.innerHTML = '<div class="refcard main">' + renderEventBoard() +
+  /* minimized: one line, and the line IS the copy button (Kyle 2026-08-11) */
+  var min = false;
+  try { min = localStorage.getItem("bonk_ref_min") === "1"; } catch(e){}
+  if (min){
+    el.innerHTML = '<div class="refmin" id="refMin" title="copy your referral link">' +
+      '<span>&#129689;</span>' +
+      '<span class="rm-t">Referral link</span>' +
+      '<span class="rm-c">click to copy</span>' +
+      '<button class="rm-x" id="refExpand" title="expand">+</button>' +
+    '</div>';
+    var bar = $("refMin");
+    if (bar) bar.onclick = function(){
+      if (copyRefLink(r.url)) toast("Link copied. Go find some goblins.");
+    };
+    var ex = $("refExpand");
+    if (ex) ex.onclick = function(ev){
+      ev.stopPropagation();
+      try { localStorage.setItem("bonk_ref_min", "0"); } catch(e){}
+      safeRender(renderReferral, $("referralWrap"));
+    };
+    return;
+  }
+  el.innerHTML = '<div class="refcard main">' +
+    '<button class="refhide" id="refMinBtn" title="minimize">&#8722;</button>' +
+    renderEventBoard() +
     '<div class="rt">&#129689; Bring a friend</div>' +
     /* Relaxed and human (Kyle 2026-07-29), and now SHORT (Kyle 2026-07-31). Two sentences
        of setup plus a caption under each link was four lines of prose wrapped around two
@@ -3078,6 +3132,11 @@ function renderReferral(){
       : 'No one yet. Whenever you are ready.') + '</span>' +
     '<button class="refrot" id="refRot">fresh link</button></div>' +
   '</div>';
+  var mn = $("refMinBtn");
+  if (mn) mn.onclick = function(){
+    try { localStorage.setItem("bonk_ref_min", "1"); } catch(e){}
+    safeRender(renderReferral, $("referralWrap"));
+  };
   var c = $("refCopy");
   if (c) c.onclick = function(){
     var i = $("refUrl"); i.select();
