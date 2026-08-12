@@ -751,6 +751,24 @@
   .arsenal a.feat .tnk{ color:var(--ore); }
   .arsenal a.all{ justify-content:center; align-items:flex-start; }
   .arsenal a.all .tnk{ color:var(--muted); }
+  /* ---------- sidekick: EVE Buddy, the external companion app (Kyle 2026-08-12).
+     Its own area below the Arsenal on purpose: the Arsenal promises "one login opens
+     them all" and this is a third party download, so it does not belong in that row. */
+  .sidekick{ background:var(--steel); border:1px solid var(--line-soft); padding:14px 20px 16px;
+             margin:0 0 18px; position:relative; }
+  .sidekick::before{ content:""; position:absolute; left:0; top:0; height:3px; width:46px; background:var(--ore); }
+  .sidekick h3{ font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+                color:var(--muted); margin:0 0 3px; }
+  .sidekick .sksub{ font-family:var(--mono); font-size:11px; color:var(--muted); margin:0 0 10px; }
+  .sidekick .skrow{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .sidekick .skb{ flex:1 1 320px; font-size:12.5px; line-height:1.55; color:var(--silver-dim); }
+  .sidekick .skb b{ color:var(--silver); }
+  .sidekick .skbtn{ font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em;
+                    text-transform:uppercase; color:var(--ore); border:1px solid rgba(70,255,94,.45);
+                    padding:8px 14px; text-decoration:none; white-space:nowrap; }
+  .sidekick .skbtn:hover{ background:rgba(70,255,94,.08); }
+  .sidekick .skplat{ margin-top:7px; font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+                     text-transform:uppercase; color:var(--muted); }
   .signoff{ font-family:var(--mono); font-size:12.5px; color:var(--silver); letter-spacing:.03em;
             border-top:1px solid var(--line); padding-top:18px; margin-top:8px; }
   #toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:200;
@@ -1346,6 +1364,18 @@
         <a class="tn" href="/kills/"><span class="tnk">Kill Log</span><span class="tnd">who got got</span></a>
         <a class="tn all" href="/tools/"><span class="tnk">All tools &rarr;</span><span class="tnd">the shed</span></a>
       </div>
+    </div>
+    <div class="sidekick">
+      <h3>&#127890; The Field Kit</h3>
+      <div class="sksub">your pilots in your pocket</div>
+      <div class="skrow">
+        <div class="skb"><b>Watch the empire from anywhere.</b> Skill queues, wallets, assets
+          and EVE mail for every pilot you own, on your desktop or your phone, with a ping
+          when something actually needs you. Set it up once and it keeps watch while you
+          live your life.</div>
+        <a class="skbtn" href="https://github.com/ErikKalkoken/evebuddy/releases" target="_blank" rel="noopener">Get the kit &rarr;</a>
+      </div>
+      <div class="skplat">Windows &middot; Mac &middot; Linux &middot; Android &middot; free &middot; runs on the open source EVE Buddy</div>
     </div>
     <div class="footacts" id="footActs"></div>
     <div class="signoff">The ore must flow. The goblins must eat. &#129704;&#129482;</div>
