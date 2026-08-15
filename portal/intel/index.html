@@ -44,6 +44,32 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
 .gss-stamp2{ margin-top:7px; font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted); }
 @media(prefers-reduced-motion:reduce){ .gss-stamp .rec{ animation:none; } .prox-ring{ animation:none!important; } .ddot.hot{ animation:none!important; } }
 
+/* omnibox. Fuzzy search over every name on the board: files, aliases, tickers, roster sightings. */
+.omni{ position:relative; margin:0 0 14px; max-width:560px; background:#06070a; }
+.omni input{ width:100%; box-sizing:border-box; position:relative; z-index:2; background:transparent;
+  border:1px solid var(--line); color:var(--silver); font-family:var(--mono); font-size:12.5px;
+  padding:8px 11px; letter-spacing:.04em; }
+.omni input:focus{ outline:none; border-color:var(--ice); }
+.omni input::placeholder{ color:var(--muted); letter-spacing:.06em; }
+.omni-ghost{ position:absolute; inset:0; z-index:1; padding:8px 11px; box-sizing:border-box;
+  border:1px solid transparent; font-family:var(--mono); font-size:12.5px; letter-spacing:.04em;
+  white-space:pre; overflow:hidden; pointer-events:none; display:flex; align-items:center; }
+.omni-ghost .gq{ visibility:hidden; }
+.omni-ghost .gr{ color:var(--ice-dim); }
+.omni-drop{ position:absolute; top:100%; left:0; right:0; z-index:60; background:#0a0c0f;
+  border:1px solid var(--line); border-top:0; max-height:340px; overflow-y:auto; }
+.omni-row{ display:flex; align-items:baseline; gap:9px; padding:7px 11px; cursor:pointer;
+  border-bottom:1px solid var(--line-soft); }
+.omni-row:last-child{ border-bottom:0; }
+.omni-row.on, .omni-row:hover{ background:rgba(143,183,201,.08); }
+.omni-row .odot{ width:7px; height:7px; border-radius:50%; flex:none; align-self:center; }
+.omni-row .oname{ font-family:var(--display); font-size:13px; font-weight:700; color:var(--silver);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.omni-row .otick{ font-family:var(--mono); font-size:10px; color:var(--muted); }
+.omni-row .ohint{ margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--muted);
+  letter-spacing:.04em; white-space:nowrap; }
+.omni-none{ padding:9px 11px; font-family:var(--mono); font-size:11px; color:var(--muted); }
+
 /* status strip */
 .strip{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 18px; }
 .strip .sline{ font-family:var(--mono); font-size:11px; color:var(--silver-dim); letter-spacing:.03em; margin-right:6px; }
@@ -337,6 +363,14 @@ body::before{ content:""; position:fixed; inset:0; pointer-events:none; z-index:
     </div>
     <div class="subline">We watch, we record, we know. There is always a file.</div>
 
+    <div class="omni" id="omniWrap">
+      <div class="omni-ghost" id="omniGhost" aria-hidden="true"></div>
+      <input id="omni" type="text" autocomplete="off" spellcheck="false"
+        placeholder="search the files · name, alias, ticker, or anyone seen in a room · press /"
+        aria-label="search the files" role="combobox" aria-expanded="false" aria-controls="omniDrop">
+      <div class="omni-drop" id="omniDrop" style="display:none" role="listbox"></div>
+    </div>
+
     <div class="strip" id="strip"></div>
 
     <div class="wb">
@@ -464,6 +498,158 @@ function showCheckpoint(){
   document.getElementById("gsspwgo").addEventListener("click",tryCode);
   document.getElementById("gsspw").addEventListener("keydown",function(e){ if(e.key==="Enter") tryCode(); });
 }
+/* ---- OMNIBOX. Fuzzy over every name the board knows: files, aliases, tickers, and
+   every roster name recorded in a room or on a grid. Names only by design. Tab or
+   ArrowRight accepts the ghost completion, Enter opens the file, / focuses. ---- */
+var OMNI={ ix:null, loading:false, rows:[], sel:0, open:false };
+function omniLoad(){
+  if(OMNI.ix||OMNI.loading) return;
+  OMNI.loading=true;
+  api("/gss/search-index").then(function(d){
+    OMNI.loading=false;
+    if(d&&d.ok){ OMNI.ix=d.index||[]; if(document.activeElement===document.getElementById("omni")) omniRun(); }
+  }).catch(function(){ OMNI.loading=false; });
+}
+function dlev(a,b){
+  var al=a.length, bl=b.length, i, j;
+  if(!al) return bl; if(!bl) return al;
+  var d=[]; for(i=0;i<=al;i++){ d[i]=[i]; } for(j=0;j<=bl;j++){ d[0][j]=j; }
+  for(i=1;i<=al;i++) for(j=1;j<=bl;j++){
+    var c=a.charAt(i-1)===b.charAt(j-1)?0:1;
+    var v=Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+c);
+    if(i>1&&j>1&&a.charAt(i-1)===b.charAt(j-2)&&a.charAt(i-2)===b.charAt(j-1)) v=Math.min(v, d[i-2][j-2]+1);
+    d[i][j]=v;
+  }
+  return d[al][bl];
+}
+function fzScore(q,s){
+  var sl=String(s||"").toLowerCase();
+  if(!q||!sl) return -1;
+  var idx=sl.indexOf(q);
+  if(idx===0) return 1000 - sl.length*0.5;
+  if(idx>0) return (/[^a-z0-9]/.test(sl.charAt(idx-1))?800:640) - idx - sl.length*0.2;
+  var si=0, sc=0, last=-2, ok=true, i, f;
+  for(i=0;i<q.length;i++){
+    f=sl.indexOf(q.charAt(i), si);
+    if(f<0){ ok=false; break; }
+    sc += 1 + (f===last+1?3:0) + ((f===0||/[^a-z0-9]/.test(sl.charAt(f-1)))?5:0);
+    last=f; si=f+1;
+  }
+  if(ok) return 300 + sc - sl.length*0.5;
+  if(q.length<3) return -1;
+  var words=sl.split(/[^a-z0-9]+/), best=-1, cap=q.length<=5?1:2, wi, w, dd, t;
+  for(wi=0;wi<words.length;wi++){
+    w=words[wi]; if(!w) continue;
+    dd=Math.min(dlev(q,w), dlev(q,w.substring(0,Math.min(w.length,q.length+1))));
+    if(dd<=cap){ t=180 - dd*50 - sl.length*0.2; if(t>best) best=t; }
+  }
+  return best;
+}
+function omniRun(){
+  var el=document.getElementById("omni"), drop=document.getElementById("omniDrop");
+  var q=el.value.trim().toLowerCase();
+  document.getElementById("omniGhost").innerHTML="";
+  if(!q){ OMNI.rows=[]; omniClose(); return; }
+  if(!OMNI.ix){
+    omniLoad();
+    drop.innerHTML="<div class='omni-none'>reading the files...</div>";
+    drop.style.display="block"; OMNI.open=true; el.setAttribute("aria-expanded","true");
+    return;
+  }
+  var seen={}, out=[], i, it, s, s2, k;
+  for(i=0;i<OMNI.ix.length;i++){
+    it=OMNI.ix[i];
+    s=fzScore(q, it.n);
+    if(it.x){ s2=fzScore(q, it.x); if(s2>s) s=s2; }
+    if(s<0) continue;
+    if(it.t==="e") s+=30; else if(it.t==="a") s+=15;
+    k=it.t+":"+it.id+":"+String(it.n).toLowerCase();
+    if(seen[k]!=null){ if(s>out[seen[k]]._s) out[seen[k]]._s=s; continue; }
+    seen[k]=out.length; out.push({ _s:s, it:it });
+  }
+  out.sort(function(a,b){ return b._s-a._s; });
+  OMNI.rows=out.slice(0,8); OMNI.sel=0;
+  omniPaint();
+}
+function omniPaint(){
+  var drop=document.getElementById("omniDrop"), el=document.getElementById("omni");
+  if(!OMNI.rows.length){
+    drop.innerHTML="<div class='omni-none'>No file, no sighting. Nothing by that name.</div>";
+    drop.style.display="block"; OMNI.open=true; el.setAttribute("aria-expanded","true");
+    document.getElementById("omniGhost").innerHTML="";
+    return;
+  }
+  var h="", i, it, ci, hint;
+  for(i=0;i<OMNI.rows.length;i++){
+    it=OMNI.rows[i].it; ci=clsInfo(it.c);
+    if(it.t==="e") hint=esc((it.et||"file")+" · "+ci.l);
+    else if(it.t==="a") hint="aka of "+esc(it.of||"");
+    else hint="seen in "+esc(it.room||"")+(it.seen>1?(" ×"+it.seen):"");
+    h+="<div class='omni-row"+(i===OMNI.sel?" on":"")+"' data-i='"+i+"' role='option'"+(i===OMNI.sel?" aria-selected='true'":"")+">"
+      +"<span class='odot' style='background:"+ci.c+"'></span>"
+      +"<span class='oname'>"+esc(it.n)+(it.x?(" <span class='otick'>["+esc(it.x)+"]</span>"):"")+"</span>"
+      +"<span class='ohint'>"+hint+"</span></div>";
+  }
+  drop.innerHTML=h; drop.style.display="block"; OMNI.open=true; el.setAttribute("aria-expanded","true");
+  omniGhostTop();
+}
+function omniGhostTop(){
+  var el=document.getElementById("omni"), q=el.value, g="";
+  if(OMNI.rows.length && q){
+    var top=String(OMNI.rows[OMNI.sel].it.n);
+    if(top.toLowerCase().indexOf(q.toLowerCase())===0 && top.length>q.length) g=top.substring(q.length);
+  }
+  document.getElementById("omniGhost").innerHTML = g ? "<span class='gq'>"+esc(q)+"</span><span class='gr'>"+esc(g)+"</span>" : "";
+}
+function omniClose(){
+  OMNI.open=false;
+  var drop=document.getElementById("omniDrop"), el=document.getElementById("omni");
+  if(drop) drop.style.display="none";
+  if(el) el.setAttribute("aria-expanded","false");
+  var gh=document.getElementById("omniGhost"); if(gh) gh.innerHTML="";
+}
+function omniGo(i){
+  var r=OMNI.rows[i]; if(!r) return;
+  omniClose();
+  openEntity(r.it.id);
+}
+function omniFill(){
+  var r=OMNI.rows[OMNI.sel]; if(!r) return;
+  var el=document.getElementById("omni");
+  el.value=r.it.n;
+  omniRun();
+}
+function omniInit(){
+  var el=document.getElementById("omni"), drop=document.getElementById("omniDrop");
+  if(!el) return;
+  el.addEventListener("focus", function(){ omniLoad(); if(el.value) omniRun(); });
+  el.addEventListener("input", omniRun);
+  el.addEventListener("keydown", function(ev){
+    if(ev.key==="ArrowDown"){ ev.preventDefault(); if(OMNI.rows.length){ OMNI.sel=(OMNI.sel+1)%OMNI.rows.length; omniPaint(); } }
+    else if(ev.key==="ArrowUp"){ ev.preventDefault(); if(OMNI.rows.length){ OMNI.sel=(OMNI.sel-1+OMNI.rows.length)%OMNI.rows.length; omniPaint(); } }
+    else if(ev.key==="Tab"){ if(OMNI.open&&OMNI.rows.length){ ev.preventDefault(); omniFill(); } }
+    else if(ev.key==="ArrowRight"){
+      var gh=document.getElementById("omniGhost");
+      if(gh.innerHTML && el.selectionStart===el.value.length){ ev.preventDefault(); omniFill(); }
+    }
+    else if(ev.key==="Enter"){ ev.preventDefault(); if(OMNI.rows.length) omniGo(OMNI.sel); }
+    else if(ev.key==="Escape"){ if(el.value){ el.value=""; } omniClose(); }
+  });
+  el.addEventListener("blur", function(){ setTimeout(omniClose, 140); });
+  drop.addEventListener("mousedown", function(ev){
+    var row=ev.target.closest? ev.target.closest(".omni-row") : null;
+    if(!row) return;
+    ev.preventDefault();
+    omniGo(+row.getAttribute("data-i"));
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key!=="/"||ev.ctrlKey||ev.metaKey||ev.altKey) return;
+    var t=ev.target, tag=(t&&t.tagName||"").toLowerCase();
+    if(tag==="input"||tag==="textarea"||tag==="select"||(t&&t.isContentEditable)) return;
+    ev.preventDefault(); el.focus(); el.select();
+  });
+}
+
 function init(){
   api("/whoami").then(function(w){
     // the ONLY true way in: a cleared session (officer, admin, or designated GSS)
@@ -471,7 +657,7 @@ function init(){
       document.getElementById("gate").style.display="none";
       document.getElementById("app").style.display="block";
       loadBoard(); loadBoard2();
-  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0); loadEntities(""); loadGraph(); loadPersons(); loadDanger();
+  setTimeout(function(){ var g=document.getElementById('pgo'); if(g) g.onclick=tracePath; },0); loadEntities(""); loadGraph(); loadPersons(); loadDanger(); omniInit(); omniLoad();
       setInterval(loadDanger, 300000);
       return;
     }
