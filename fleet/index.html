@@ -1804,6 +1804,36 @@ tr.haulrow{ cursor:pointer; }
     });
   }
 
+  /* COMMAND STEERING (2026-08-16). The command word is lane-blind, and typing
+     it is how an FC says "I want to run a fleet" — so entering it on a lane
+     that already has a LIVE op under somebody else used to quietly make you
+     second command of THEIR op (Malcolm, 8/16). Now: if this lane's round is
+     led by someone else and not finished, probe the other lane with the same
+     token; if that lane is idle, say so and move there. Both lanes live = stay
+     put and say who holds what. The officer auto-arm on page load does NOT
+     call this — opening the page with command rights is not the same as
+     asking to start a fleet. */
+  function steerToFreeLane(){
+    var lead=P&&P.lead, fin=P&&(P.finished===true);
+    if(!lead || lead===who || fin) return;      // this lane is free to take
+    var other=null;
+    for(var i=0;i<LANES.length;i++) if(LANES[i]!==LANE){ other=LANES[i]; break; }
+    if(!other) return;
+    fetch(WORKER+"/sync?f="+other,{ method:"POST",
+      headers:{ "X-Token":token, "Content-Type":"application/json" },
+      body: JSON.stringify({who:who}) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(!(d&&d.ok)) return;
+        if(!d.lead || d.lead===who || d.finished===true){
+          toast(LANE.toUpperCase()+" is "+lead+"'s live op. Moving you to "+other.toUpperCase()+" to run your own fleet.");
+          setTimeout(function(){ setLane(other); }, 1400);
+        } else {
+          toast("Both fleets are live: "+lead+" here, "+d.lead+" on "+other.toUpperCase()+". You have command on this one — coordinate with "+lead+".");
+        }
+      }).catch(function(){});
+  }
+
   // ---------- prices (AMEND-2): scrape refine's live DATA blob, cache, degrade loudly ----------
   function pxNote(msg,bad){ var b=el("pxbar");
     if(!msg){ b.style.display="none"; return; }
@@ -2060,6 +2090,7 @@ tr.haulrow{ cursor:pointer; }
       role=d.role||""; lsSet(LS_TOK,pw); P=d; lsSet(LS_CACHE, JSON.stringify(d));
       rswShow(false); renderRoleChip(); renderAll(); bump();
       toast(role===prevRole ? "Same role, password refreshed." : "Switched to "+roleLabel(role)+".");
+      if(role==="op") steerToFreeLane();
     }).catch(function(err){
       token=prev; role=prevRole; // keep the working session intact
       if(err==="unauthorized") rswErr("Wrong password.");
