@@ -1649,7 +1649,7 @@ tr.haulrow{ cursor:pointer; }
      so a member who never touches the toggle sees exactly what they always saw.
      Every request carries ?f=<lane>; the worker keeps one shared Haul Log, so
      the toggle changes which op you are IN, never which history you can see. */
-  var LANES=["alpha","bravo"];
+  var LANES=["alpha","bravo","charlie"];
   var LANE=(function(){ var v=null; try{ v=localStorage.getItem(LS_LANE); }catch(e){}
     return LANES.indexOf(v)>=0 ? v : "alpha"; })();
 
@@ -1816,22 +1816,31 @@ tr.haulrow{ cursor:pointer; }
   function steerToFreeLane(){
     var lead=P&&P.lead, fin=P&&(P.finished===true);
     if(!lead || lead===who || fin) return;      // this lane is free to take
-    var other=null;
-    for(var i=0;i<LANES.length;i++) if(LANES[i]!==LANE){ other=LANES[i]; break; }
-    if(!other) return;
-    fetch(WORKER+"/sync?f="+other,{ method:"POST",
-      headers:{ "X-Token":token, "Content-Type":"application/json" },
-      body: JSON.stringify({who:who}) })
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(!(d&&d.ok)) return;
-        if(!d.lead || d.lead===who || d.finished===true){
-          toast(LANE.toUpperCase()+" is "+lead+"'s live op. Moving you to "+other.toUpperCase()+" to run your own fleet.");
-          setTimeout(function(){ setLane(other); }, 1400);
-        } else {
-          toast("Both fleets are live: "+lead+" here, "+d.lead+" on "+other.toUpperCase()+". You have command on this one — coordinate with "+lead+".");
-        }
-      }).catch(function(){});
+    var others=[];
+    for(var i=0;i<LANES.length;i++) if(LANES[i]!==LANE) others.push(LANES[i]);
+    if(!others.length) return;
+    var busy=[LANE.toUpperCase()+" ("+lead+")"];
+    (function probe(k){
+      if(k>=others.length){
+        toast("Every fleet is live: "+busy.join(", ")+". You have command here — coordinate with "+lead+".");
+        return;
+      }
+      var l=others[k];
+      fetch(WORKER+"/sync?f="+l,{ method:"POST",
+        headers:{ "X-Token":token, "Content-Type":"application/json" },
+        body: JSON.stringify({who:who}) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(!(d&&d.ok)) return; // worker unreachable mid-probe: stay put quietly
+          if(!d.lead || d.lead===who || d.finished===true){
+            toast(LANE.toUpperCase()+" is "+lead+"'s live op. Moving you to "+l.toUpperCase()+" to run your own fleet.");
+            setTimeout(function(){ setLane(l); }, 1400);
+          } else {
+            busy.push(l.toUpperCase()+" ("+d.lead+")");
+            probe(k+1);
+          }
+        }).catch(function(){});
+    })(0);
   }
 
   // ---------- prices (AMEND-2): scrape refine's live DATA blob, cache, degrade loudly ----------
